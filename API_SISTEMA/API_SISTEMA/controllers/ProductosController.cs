@@ -3,6 +3,7 @@ using API_SISTEMA.models;
 using API_SISTEMA.services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.controllers
 {
@@ -19,8 +20,7 @@ namespace API_SISTEMA.controllers
         {
             _Service = service;
         }
-        //listar producto
-
+        
         [HttpGet]
         public async Task<IActionResult> ListarProductos()
         {
@@ -29,34 +29,36 @@ namespace API_SISTEMA.controllers
     
         }
 
-      /*  [HttpGet("buscar")]
-        public async Task<IActionResult> Buscar(string texto)
+
+        [HttpPost]
+        public async Task<IActionResult> CrearProductos([FromBody] productocrear dto)
         {
-            var productos = await _Service.BuscarPorNombre(texto);
-            return Ok(productos);
+            var producto = await _Service.CrearProducto(dto);
 
-        }*/
-
-        [HttpPost("crear")]
-        public async Task<IActionResult> Crear([FromForm] productocrear productoDto)
-        {
-            try
+            return Ok(new
             {
-                var nuevoProducto = await _Service.CrearProducto(productoDto,productoDto.imagen);
-
-                return Ok(new
-                {
-                    mensaje = "Producto creado correctamente",
-                    id_producto = nuevoProducto.id_producto,
-                    nombre = nuevoProducto.nombre
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { mensaje = ex.Message });
-            }
+                id_producto = producto.id_producto,
+                mensaje = "Producto creado correctamente"
+            });
         }
 
+        [HttpPost("{id}/imagen")]
+        public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
+        {
+            if (imagen == null || imagen.Length == 0)
+                return BadRequest("Debe subir una imagen.");
+
+            var producto = await _Service.SubirImagen(id, imagen);
+
+            if (producto == null)
+                return NotFound("Producto no encontrado.");
+
+            return Ok(new
+            {
+                mensaje = "Imagen subida correctamente",
+                imagen = producto.imagen
+            });
+        }
 
         [HttpGet("buscar")]
         public async Task<IActionResult> Buscar([FromQuery] string texto)

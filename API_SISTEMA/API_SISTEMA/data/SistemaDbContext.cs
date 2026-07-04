@@ -31,6 +31,7 @@ namespace API_SISTEMA.data
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
+        public DbSet<Producto_Presentacion> producto_presentaciones { get; set; }
 
 
 
@@ -71,6 +72,9 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<EstadoVenta>().ToTable("estado_venta");
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Producto_Presentacion>().ToTable("producto_presentacion ");
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Rol_permisocs>()
                 .HasOne(rp => rp.Rol)
                 .WithMany(r => r.RolPermisos)
@@ -103,6 +107,12 @@ modelBuilder.Entity<Producto_precio>()
     .HasOne(v => v.TipoCliente)
     .WithMany()
     .HasForeignKey(v => v.id_tipo_cliente);
+
+
+            modelBuilder.Entity<Producto_Presentacion>()
+    .HasOne(pp => pp.Producto)
+    .WithMany(p => p.ProductoPresentaciones)
+    .HasForeignKey(pp => pp.id_producto);
         }
             
 

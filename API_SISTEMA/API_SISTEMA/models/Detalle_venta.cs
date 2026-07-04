@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API_SISTEMA.models
@@ -13,7 +14,8 @@ namespace API_SISTEMA.models
         public decimal precio { get; set; }
         public decimal? descuento { get; set; }
         public decimal subtotal { get; set; }
-
+        public int id_producto_presentacion { get; set; }
+        public int unidades_descontadas { get; set; }
 
         [ForeignKey("id_producto")]
         public Productos Producto { get; set; }

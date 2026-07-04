@@ -35,62 +35,51 @@ namespace API_SISTEMA.services
         }
 
         //Ingresar producto
-        public async Task<Productos> CrearProducto(productocrear productoDto, IFormFile? imagen)
+
+        public async Task<Productos> CrearProducto(productocrear productoDto)
         {
+            if (productoDto.presentaciones == null || productoDto.presentaciones.Count == 0)
+                throw new Exception("Debe ingresar al menos una presentación del producto.");
+
+            bool existeCodigo = await _context.productos
+                     .AnyAsync(p => p.codigo_barra == productoDto.codigo_barra);
+
+            if (existeCodigo)
+                throw new Exception("Ya existe un producto con ese código de barras.");
+
             var producto = new Productos
             {
                 codigo_barra = productoDto.codigo_barra,
                 nombre = productoDto.nombre,
                 descripcion = productoDto.descripcion,
                 id_categoria = productoDto.id_categoria,
-                precio_compra = productoDto.precio_compra,
                 stock = productoDto.stock,
+                precio_compra = productoDto.precio_compra,
                 stock_minimo = productoDto.stock_minimo,
                 impuesto = productoDto.impuesto,
                 fecha_creacion = DateTime.Now
             };
 
-            if (imagen != null && imagen.Length > 0)
-            {
-                string nombreArchivo = $"{Guid.NewGuid()}_{imagen.FileName}";
-                string rutaCarpeta = Path.Combine("wwwroot", "imagenes", "productos");
-                string rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
+            if (productoDto.stock <= 0)
+                throw new Exception("El stock debe ser mayor a 0.");
 
-                Directory.CreateDirectory(rutaCarpeta);
-
-                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
-                {
-                    await imagen.CopyToAsync(stream);
-                }
-
-                producto.imagen = nombreArchivo;
-            }
-
+            producto.costo_unitario = (productoDto.precio_compra / productoDto.stock);
 
             _context.productos.Add(producto);
             await _context.SaveChangesAsync();
 
-            if (productoDto.precios == null)
+            foreach (var item in productoDto.presentaciones)
             {
-                throw new Exception("La lista es NULL");
-            }
-
-            if (productoDto.precios.Count == 0)
-            {
-                throw new Exception("La lista está vacía");
-            }
-
-            foreach (var item in productoDto.precios)
-            {
-                var precio = new Producto_precio
+                var presentacion = new Producto_Presentacion
                 {
                     id_producto = producto.id_producto,
-                    id_tipo_cliente = item.id_tipo_cliente,
+                    descripcion = item.descripcion,
+                    unidades_equivalentes = item.unidades_equivalentes,
                     precio = item.precio,
                     estado = true
                 };
 
-                _context.producto_precios.Add(precio);
+                _context.producto_presentaciones.Add(presentacion);
             }
 
             await _context.SaveChangesAsync();
@@ -98,6 +87,32 @@ namespace API_SISTEMA.services
             return producto;
         }
 
+
+        //para subir imagenes
+        public async Task<Productos?> SubirImagen(int id, IFormFile imagen)
+        {
+            var producto = await _context.productos.FindAsync(id);
+
+            if (producto == null)
+                return null;
+
+            string nombreArchivo = $"{Guid.NewGuid()}_{imagen.FileName}";
+            string rutaCarpeta = Path.Combine("wwwroot", "imagenes", "productos");
+            string rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
+
+            Directory.CreateDirectory(rutaCarpeta);
+
+            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            {
+                await imagen.CopyToAsync(stream);
+            }
+
+            producto.imagen = nombreArchivo;
+
+            await _context.SaveChangesAsync();
+
+            return producto;
+        }
 
         public async Task<List<ProductoBuscarDTOs>> BuscarProductos(string texto)
         {
