@@ -19,6 +19,12 @@ namespace API_SISTEMA.services
             return await _context.productos.ToListAsync();
         }
 
+        public async Task<List<Producto_Presentacion>> ListarPresentaciones(int idProducto)
+        {
+            return await _context.producto_presentaciones
+                .Where(p => p.id_producto == idProducto)
+                .ToListAsync();
+        }
 
         public async Task<List<Productos>> BuscarPorNombre(string texto)
         {

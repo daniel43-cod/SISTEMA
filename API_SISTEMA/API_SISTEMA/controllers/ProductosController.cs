@@ -28,6 +28,13 @@ namespace API_SISTEMA.controllers
             return Ok(listar);
     
         }
+        //para presentacion de productos
+        [HttpGet("{id}/presentaciones")]
+        public async Task<IActionResult> ListarPresentaciones(int id)
+        {
+            var presentaciones = await _Service.ListarPresentaciones(id);
+            return Ok(presentaciones);
+        }
 
 
         [HttpPost]
