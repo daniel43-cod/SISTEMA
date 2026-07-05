@@ -1,13 +1,17 @@
 # Visual Studio
 .vs/
+**/.vs/
 
-# Compilación
+# Archivos compilados
+bin/
+obj/
 **/bin/
 **/obj/
 
 # Archivos de usuario
 *.user
 *.suo
+*.userosscache
 
-# Logs
+# Archivos temporales
 *.log
