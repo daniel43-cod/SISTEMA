@@ -35,10 +35,16 @@ namespace API_SISTEMA.services
                     c.nit.Contains(texto))
                 .Select(c => new ClienteBuscarDTOs
                 {
-                    id_cliente = c.id_Cliente,
+                    id_Cliente = c.id_Cliente,
                     nombre = c.nombre,
                     apellido = c.apellido,
-                    nit = c.nit
+                    nit = c.nit,
+                    telefono = c.telefono,
+                    dpi = c.dpi,
+                    correo_electronico=c.correo_electronico,
+                    direccion=c.direccion,
+
+
                 })
                 .Take(10)
                 .ToListAsync();

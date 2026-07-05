@@ -12,12 +12,10 @@ namespace API_SISTEMA.DTOs.Productos
         public int stock { get; set; }
         public int stock_minimo { get; set; }
         public decimal impuesto { get; set; }
-       // public IFormFile? imagen { get; set; }
-
-       // public int unidades_por_empaque { get; set; }
+    
 
         public List<ProductoPresentacionDTO> presentaciones { get; set; } = new();
-        //public List<ProductoPrecioDTO> precios { get; set; }
+        
 
     }
 }

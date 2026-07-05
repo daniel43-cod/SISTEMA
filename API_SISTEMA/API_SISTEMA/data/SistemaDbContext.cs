@@ -103,10 +103,6 @@ modelBuilder.Entity<Producto_precio>()
     .WithMany(e => e.Ventas)
     .HasForeignKey(v => v.id_estado_venta);
 
-            modelBuilder.Entity<Ventas>()
-    .HasOne(v => v.TipoCliente)
-    .WithMany()
-    .HasForeignKey(v => v.id_tipo_cliente);
 
 
             modelBuilder.Entity<Producto_Presentacion>()

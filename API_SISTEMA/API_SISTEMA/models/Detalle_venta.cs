@@ -12,10 +12,11 @@ namespace API_SISTEMA.models
         public int id_producto { get; set; }
         public int cantidad { get; set; }
         public decimal precio { get; set; }
-        public decimal? descuento { get; set; }
+        public decimal descuento { get; set; }
         public decimal subtotal { get; set; }
         public int id_producto_presentacion { get; set; }
         public int unidades_descontadas { get; set; }
+        public decimal ganancia { get; set; }
 
         [ForeignKey("id_producto")]
         public Productos Producto { get; set; }

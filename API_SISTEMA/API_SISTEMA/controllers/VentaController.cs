@@ -1,5 +1,5 @@
 ﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs;
+using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
 using Microsoft.AspNetCore.Http;
