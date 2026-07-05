@@ -5,17 +5,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ClienteController : ControllerBase
-    {
-
-        private readonly ClienteService _Service;
-
-        public ClienteController(ClienteService service)
+        [Route("api/[controller]")]
+        [ApiController]
+        public class ClienteController : ControllerBase
         {
-            _Service = service;
-        }
+
+            private readonly ClienteService _Service;
+
+            public ClienteController(ClienteService service)
+            {
+                _Service = service;
+            }
 
         [HttpGet]
         public async Task<IActionResult> listar()
