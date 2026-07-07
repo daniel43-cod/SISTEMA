@@ -32,7 +32,7 @@ namespace SISTEMA_FROTEND.presentacion
         private List<ClienteBuscarDTOs> clientesEncontrados = new();
         private ClienteService clienteService = new ClienteService();
 
-        
+
         private void button1_Click(object sender, EventArgs e)
         {
             Close();
@@ -58,7 +58,7 @@ namespace SISTEMA_FROTEND.presentacion
             _productos = await _productoService.ListarProducto();
 
             var colProducto = (DataGridViewTextBoxColumn)dataGridView1.Columns["producto"];
-           
+
         }
 
         private void groupBox1_Enter(object sender, EventArgs e)
@@ -163,7 +163,7 @@ namespace SISTEMA_FROTEND.presentacion
             texdpi.Text = cliente.dpi ?? "";
         }
 
-      
+
         private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             if (dataGridView1.CurrentCell.OwningColumn.Name == "producto")
@@ -181,7 +181,7 @@ namespace SISTEMA_FROTEND.presentacion
                 }
             }
         }
-    
+
         //calcula el subtotal 
         private void CalcularSubtotal(int rowIndex)
         {
@@ -192,6 +192,8 @@ namespace SISTEMA_FROTEND.presentacion
             decimal descuento = Convert.ToDecimal(fila.Cells["descuento"].Value ?? 0);
 
             fila.Cells["subtotal"].Value = (cantidad * precio) - descuento;
+
+            RecalcularTotales();
         }
 
 
@@ -239,6 +241,33 @@ namespace SISTEMA_FROTEND.presentacion
             {
                 CalcularSubtotal(e.RowIndex);
             }
-        }   
+        }
+
+        private void RecalcularTotales()
+        {
+            decimal subtotalGeneral = 0;
+            decimal descuentoGeneral = 0;
+
+            foreach (DataGridViewRow fila in dataGridView1.Rows)
+            {
+                if (fila.IsNewRow) continue; // saltar la fila fantasma vacía
+                if (fila.Tag == null) continue; // saltar filas sin producto válido
+
+                decimal cantidad = Convert.ToDecimal(fila.Cells["cantidad"].Value ?? 0);
+                decimal precio = Convert.ToDecimal(fila.Cells["precio"].Value ?? 0);
+                decimal descuento = Convert.ToDecimal(fila.Cells["descuento"].Value ?? 0);
+
+                subtotalGeneral += cantidad * precio;
+                descuentoGeneral += descuento;
+            }
+
+            decimal totalGeneral = subtotalGeneral - descuentoGeneral;
+
+            texsubtotal.Text = subtotalGeneral.ToString("N2");
+            texdescuento.Text = descuentoGeneral.ToString("N2");
+            textotal.Text = totalGeneral.ToString("N2");
+        }
+
+
     }
 }

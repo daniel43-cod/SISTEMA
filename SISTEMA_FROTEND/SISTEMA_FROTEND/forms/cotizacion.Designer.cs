@@ -45,23 +45,30 @@
             texapellido = new TextBox();
             label1 = new Label();
             dataGridView1 = new DataGridView();
-            btncotizar = new Button();
-            button2 = new Button();
-            lblUsuario = new Label();
             cantidad = new DataGridViewTextBoxColumn();
             producto = new DataGridViewTextBoxColumn();
             stock = new DataGridViewTextBoxColumn();
             descuento = new DataGridViewTextBoxColumn();
             precio = new DataGridViewTextBoxColumn();
             subtotal = new DataGridViewTextBoxColumn();
+            btncotizar = new Button();
+            button2 = new Button();
+            lblUsuario = new Label();
+            texsubtotal = new TextBox();
+            texdescuento = new TextBox();
+            textotal = new TextBox();
+            label2 = new Label();
+            label7 = new Label();
+            label8 = new Label();
+            button3 = new Button();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
             // button1
             // 
-            button1.BackColor = Color.Red;
-            button1.Location = new Point(920, 664);
+            button1.BackColor = Color.White;
+            button1.Location = new Point(215, 739);
             button1.Name = "button1";
             button1.Size = new Size(158, 42);
             button1.TabIndex = 0;
@@ -219,42 +226,7 @@
             dataGridView1.Size = new Size(931, 287);
             dataGridView1.TabIndex = 10;
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
-          //  dataGridView1.CellValueChanged += dataGridView1_CellValueChanged;
-           // dataGridView1.CurrentCellDirtyStateChanged += dataGridView1_CurrentCellDirtyStateChanged;
             dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
-            // 
-            // btncotizar
-            // 
-            btncotizar.BackColor = Color.Green;
-            btncotizar.Location = new Point(205, 664);
-            btncotizar.Name = "btncotizar";
-            btncotizar.Size = new Size(158, 42);
-            btncotizar.TabIndex = 12;
-            btncotizar.Text = "COTIZAR";
-            btncotizar.UseVisualStyleBackColor = false;
-            btncotizar.Click += btncotizar_Click;
-            // 
-            // button2
-            // 
-            button2.BackColor = Color.Green;
-            button2.Location = new Point(569, 664);
-            button2.Name = "button2";
-            button2.Size = new Size(158, 42);
-            button2.TabIndex = 13;
-            button2.Text = "CANCELAR";
-            button2.UseVisualStyleBackColor = false;
-            button2.Click += button2_Click;
-            button2.HelpRequested += button2_HelpRequested;
-            button2.KeyDown += button2_KeyDown;
-            // 
-            // lblUsuario
-            // 
-            lblUsuario.AutoSize = true;
-            lblUsuario.Location = new Point(1280, 53);
-            lblUsuario.Name = "lblUsuario";
-            lblUsuario.Size = new Size(71, 20);
-            lblUsuario.TabIndex = 14;
-            lblUsuario.Text = "USUARIO";
             // 
             // cantidad
             // 
@@ -275,6 +247,7 @@
             stock.HeaderText = "Existencia";
             stock.MinimumWidth = 6;
             stock.Name = "stock";
+            stock.ReadOnly = true;
             stock.Width = 125;
             // 
             // descuento
@@ -297,13 +270,112 @@
             subtotal.HeaderText = "Subtotal";
             subtotal.MinimumWidth = 6;
             subtotal.Name = "subtotal";
+            subtotal.ReadOnly = true;
             subtotal.Width = 125;
+            // 
+            // btncotizar
+            // 
+            btncotizar.BackColor = Color.White;
+            btncotizar.Location = new Point(453, 739);
+            btncotizar.Name = "btncotizar";
+            btncotizar.Size = new Size(158, 42);
+            btncotizar.TabIndex = 12;
+            btncotizar.Text = "REGISTRAR VENTA";
+            btncotizar.UseVisualStyleBackColor = false;
+            btncotizar.Click += btncotizar_Click;
+            // 
+            // button2
+            // 
+            button2.BackColor = Color.White;
+            button2.Location = new Point(978, 739);
+            button2.Name = "button2";
+            button2.Size = new Size(158, 42);
+            button2.TabIndex = 13;
+            button2.Text = "CANCELAR";
+            button2.UseVisualStyleBackColor = false;
+            button2.Click += button2_Click;
+            button2.HelpRequested += button2_HelpRequested;
+            button2.KeyDown += button2_KeyDown;
+            // 
+            // lblUsuario
+            // 
+            lblUsuario.AutoSize = true;
+            lblUsuario.Location = new Point(1280, 53);
+            lblUsuario.Name = "lblUsuario";
+            lblUsuario.Size = new Size(71, 20);
+            lblUsuario.TabIndex = 14;
+            lblUsuario.Text = "USUARIO";
+            // 
+            // texsubtotal
+            // 
+            texsubtotal.Location = new Point(1011, 611);
+            texsubtotal.Name = "texsubtotal";
+            texsubtotal.Size = new Size(125, 27);
+            texsubtotal.TabIndex = 15;
+            // 
+            // texdescuento
+            // 
+            texdescuento.Location = new Point(1011, 651);
+            texdescuento.Name = "texdescuento";
+            texdescuento.Size = new Size(125, 27);
+            texdescuento.TabIndex = 16;
+            // 
+            // textotal
+            // 
+            textotal.Location = new Point(1011, 695);
+            textotal.Name = "textotal";
+            textotal.Size = new Size(125, 27);
+            textotal.TabIndex = 17;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(897, 615);
+            label2.Name = "label2";
+            label2.Size = new Size(76, 20);
+            label2.TabIndex = 18;
+            label2.Text = "SUBTOTAL";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Location = new Point(897, 658);
+            label7.Name = "label7";
+            label7.Size = new Size(92, 20);
+            label7.TabIndex = 19;
+            label7.Text = "DESCUENTO";
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Location = new Point(897, 702);
+            label8.Name = "label8";
+            label8.Size = new Size(50, 20);
+            label8.TabIndex = 20;
+            label8.Text = "TOTAL";
+            // 
+            // button3
+            // 
+            button3.BackColor = Color.White;
+            button3.Location = new Point(706, 739);
+            button3.Name = "button3";
+            button3.Size = new Size(158, 42);
+            button3.TabIndex = 21;
+            button3.Text = "COBRAR";
+            button3.UseVisualStyleBackColor = false;
             // 
             // cotizacion
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1438, 822);
+            Controls.Add(button3);
+            Controls.Add(label8);
+            Controls.Add(label7);
+            Controls.Add(label2);
+            Controls.Add(textotal);
+            Controls.Add(texdescuento);
+            Controls.Add(texsubtotal);
             Controls.Add(lblUsuario);
             Controls.Add(button2);
             Controls.Add(btncotizar);
@@ -348,5 +420,12 @@
         private DataGridViewTextBoxColumn descuento;
         private DataGridViewTextBoxColumn precio;
         private DataGridViewTextBoxColumn subtotal;
+        private TextBox texsubtotal;
+        private TextBox texdescuento;
+        private TextBox textotal;
+        private Label label2;
+        private Label label7;
+        private Label label8;
+        private Button button3;
     }
 }
