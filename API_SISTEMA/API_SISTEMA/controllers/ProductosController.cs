@@ -24,7 +24,7 @@ namespace API_SISTEMA.controllers
         [HttpGet]
         public async Task<IActionResult> ListarProductos()
         {
-            var listar = await _Service.ListarProductos();
+            var listar = await _Service.ObtenerTodosProductosVenta();
             return Ok(listar);
     
         }
@@ -72,7 +72,7 @@ namespace API_SISTEMA.controllers
         {
             try
             {
-                var productos = await _Service.BuscarProductos(texto);
+                var productos = await _Service.BuscarProductosVenta(texto);
                 return Ok(productos);
             }
             catch (Exception ex)

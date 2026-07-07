@@ -48,6 +48,12 @@
             btncotizar = new Button();
             button2 = new Button();
             lblUsuario = new Label();
+            cantidad = new DataGridViewTextBoxColumn();
+            producto = new DataGridViewTextBoxColumn();
+            stock = new DataGridViewTextBoxColumn();
+            descuento = new DataGridViewTextBoxColumn();
+            precio = new DataGridViewTextBoxColumn();
+            subtotal = new DataGridViewTextBoxColumn();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
@@ -206,11 +212,16 @@
             // dataGridView1
             // 
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(205, 333);
+            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { cantidad, producto, stock, descuento, precio, subtotal });
+            dataGridView1.Location = new Point(205, 318);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 51;
-            dataGridView1.Size = new Size(873, 287);
+            dataGridView1.Size = new Size(931, 287);
             dataGridView1.TabIndex = 10;
+            dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
+          //  dataGridView1.CellValueChanged += dataGridView1_CellValueChanged;
+           // dataGridView1.CurrentCellDirtyStateChanged += dataGridView1_CurrentCellDirtyStateChanged;
+            dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
             // 
             // btncotizar
             // 
@@ -244,6 +255,49 @@
             lblUsuario.Size = new Size(71, 20);
             lblUsuario.TabIndex = 14;
             lblUsuario.Text = "USUARIO";
+            // 
+            // cantidad
+            // 
+            cantidad.HeaderText = "Cantidad";
+            cantidad.MinimumWidth = 6;
+            cantidad.Name = "cantidad";
+            cantidad.Width = 125;
+            // 
+            // producto
+            // 
+            producto.HeaderText = "Producto";
+            producto.MinimumWidth = 6;
+            producto.Name = "producto";
+            producto.Width = 250;
+            // 
+            // stock
+            // 
+            stock.HeaderText = "Existencia";
+            stock.MinimumWidth = 6;
+            stock.Name = "stock";
+            stock.Width = 125;
+            // 
+            // descuento
+            // 
+            descuento.HeaderText = "Descuento";
+            descuento.MinimumWidth = 6;
+            descuento.Name = "descuento";
+            descuento.Width = 125;
+            // 
+            // precio
+            // 
+            precio.HeaderText = "Precio";
+            precio.MinimumWidth = 6;
+            precio.Name = "precio";
+            precio.ReadOnly = true;
+            precio.Width = 125;
+            // 
+            // subtotal
+            // 
+            subtotal.HeaderText = "Subtotal";
+            subtotal.MinimumWidth = 6;
+            subtotal.Name = "subtotal";
+            subtotal.Width = 125;
             // 
             // cotizacion
             // 
@@ -288,5 +342,11 @@
         private TextBox textelefono;
         private Label lblUsuario;
         private ComboBox comCliente;
+        private DataGridViewTextBoxColumn cantidad;
+        private DataGridViewTextBoxColumn producto;
+        private DataGridViewTextBoxColumn stock;
+        private DataGridViewTextBoxColumn descuento;
+        private DataGridViewTextBoxColumn precio;
+        private DataGridViewTextBoxColumn subtotal;
     }
 }

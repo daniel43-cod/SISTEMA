@@ -14,9 +14,25 @@ namespace API_SISTEMA.services
             _context = context;
         }
 
-        public async Task<List<Productos>> ListarProductos()
+    
+
+        public async Task<List<ProductoVentaBuscarDTO>> ObtenerTodosProductosVenta()
         {
-            return await _context.productos.ToListAsync();
+            var productos = await _context.producto_presentaciones
+                .Include(p => p.Producto)
+                .Select(p => new ProductoVentaBuscarDTO
+                {
+                    id_producto = p.id_producto,
+                    id_producto_presentacion = p.id_producto_presentacion,
+                    nombre_producto = p.Producto.nombre,
+                    presentacion = p.descripcion,
+                    unidades_equivalentes = p.unidades_equivalentes,
+                    precio = p.precio,
+                    stock = p.Producto.stock
+                })
+                .ToListAsync();
+
+            return productos;
         }
 
         public async Task<List<Producto_Presentacion>> ListarPresentaciones(int idProducto)
@@ -26,18 +42,37 @@ namespace API_SISTEMA.services
                 .ToListAsync();
         }
 
-        public async Task<List<Productos>> BuscarPorNombre(string texto)
+
+        //buscar producto para agregarlo a la venta
+        public async Task<List<ProductoVentaBuscarDTO>> BuscarProductosVenta(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
-            {
-                return new List<Productos>();
-            }
+                return new List<ProductoVentaBuscarDTO>();
 
-            var textoLower = texto.ToLower();
+            texto = texto.Trim();
 
-            return await _context.productos
-                .Where(p => p.nombre.ToLower().Contains(textoLower))
+            var productos = await _context.producto_presentaciones
+                .Include(p => p.Producto)
+                .Where(p =>
+                    p.Producto.nombre.Contains(texto) ||
+                    p.descripcion.Contains(texto) ||
+                    p.Producto.codigo_barra.Contains(texto))
+                .Select(p => new ProductoVentaBuscarDTO
+                {
+                    id_producto = p.id_producto,
+                    id_producto_presentacion = p.id_producto_presentacion,
+
+                    nombre_producto = p.Producto.nombre,
+                    presentacion = p.descripcion,
+
+                    unidades_equivalentes = p.unidades_equivalentes,
+                    precio = p.precio,
+                    stock = p.Producto.stock
+                })
+                .Take(10)
                 .ToListAsync();
+
+            return productos;
         }
 
         //Ingresar producto
@@ -120,28 +155,7 @@ namespace API_SISTEMA.services
             return producto;
         }
 
-        public async Task<List<ProductoBuscarDTOs>> BuscarProductos(string texto)
-        {
-            if (string.IsNullOrWhiteSpace(texto))
-                return new List<ProductoBuscarDTOs>();
-
-            texto = texto.Trim();
-
-            var productos = await _context.productos
-                .Where(p =>
-                    p.nombre.Contains(texto) ||
-                    p.codigo_barra.Contains(texto))
-                .Select(p => new ProductoBuscarDTOs
-                {
-                    id_producto = p.id_producto,
-                    codigo_barra = p.codigo_barra,
-                    nombre = p.nombre
-                })
-                .Take(10)
-                .ToListAsync();
-
-            return productos;
-        }
+      
 
 
     }
