@@ -47,6 +47,9 @@ namespace SISTEMA_FROTEND.presentacion
         private async void cotizacion_Load(object sender, EventArgs e)
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
+            texsubtotal.Enabled = false ;
+            texdescuento.Enabled = false ;
+            textotal.Enabled = false;
 
             comCliente.DropDownStyle = ComboBoxStyle.DropDown;
             comCliente.AutoCompleteMode = AutoCompleteMode.None;
