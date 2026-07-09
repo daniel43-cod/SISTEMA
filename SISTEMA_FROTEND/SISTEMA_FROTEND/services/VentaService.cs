@@ -23,19 +23,22 @@ namespace SISTEMA_FROTEND.services
             return await _httpClient.GetFromJsonAsync<List<Ventas>>("Venta");
         }
 
-        public async Task<VentaDTOs?> CrearVenta(DetalleDTOs venta)
+        public async Task<VentaDTOs?> CrearVenta(VentaDTOs ventaDto)
         {
-            var response = await _httpClient.PostAsJsonAsync("Ventas/crear", venta);
+            var response = await _httpClient.PostAsJsonAsync("Venta/crear", ventaDto);
 
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<VentaDTOs>();
             }
 
-            string error = await response.Content.ReadAsStringAsync();
-            throw new Exception(error);
-        }
+            var error = await response.Content.ReadAsStringAsync();
 
+            throw new Exception(
+                $"Código: {(int)response.StatusCode}\n" +
+                $"Estado: {response.StatusCode}\n" +
+                $"Respuesta:\n{error}");
+        }
 
     }
 }

@@ -176,7 +176,7 @@ namespace API_SISTEMA.services
                             id_venta = venta.id_ventas,
                             id_usuario = (int)ventaDto.id_usuario,
                             monto = ventaDto.pago.monto_pagado,
-                            metodo_pago = ventaDto.pago.metodo_pago,
+                           // metodo_pago = ventaDto.pago.metodo_pago,
                             observacion = ventaDto.observacion_pago,
                             fecha_pago = DateTime.Now
                         };

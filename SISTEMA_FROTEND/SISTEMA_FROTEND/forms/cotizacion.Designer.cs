@@ -363,6 +363,7 @@
             button3.TabIndex = 21;
             button3.Text = "COBRAR";
             button3.UseVisualStyleBackColor = false;
+            button3.Click += button3_Click;
             // 
             // cotizacion
             // 

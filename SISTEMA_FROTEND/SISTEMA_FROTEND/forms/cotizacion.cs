@@ -1,10 +1,13 @@
 ﻿using SISTEMA_FROTEND.DTOs.Cliente;
 using SISTEMA_FROTEND.DTOs.Productos;
+using SISTEMA_FROTEND.DTOs.Ventas;
+using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Text;
@@ -16,9 +19,8 @@ namespace SISTEMA_FROTEND.presentacion
 {
     public partial class cotizacion : Form
     {
-        private TextBox comboProductoActual;
-        private bool cargandoProductoGrid = false;
-        private System.Windows.Forms.Timer _debounceTimer;
+        //datos que se llena en los campos si el usuario confirma la eleccion de algun cliente existente
+        private ClienteBuscarDTOs clienteSeleccionadoActual = null;
         public cotizacion()
         {
             InitializeComponent();
@@ -26,10 +28,15 @@ namespace SISTEMA_FROTEND.presentacion
             dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
         }
 
+        //instanciamos el servicio de productos para poder acceder a la lista de productos y sus detalles
         private ProductoService _productoService = new ProductoService();
+        //guardamos la lista de productos en memoria para poder acceder a ellos sin tener que hacer otra consulta a la api
         private List<ProductoVentaBuscarDTO> _productos;
+        //evita que el metodo autocomplete se ejecute varias veces al mismo tiempo, lo que podria causar errores o resultados inesperados
         private bool cargandoClientes = false;
+        //duda
         private List<ClienteBuscarDTOs> clientesEncontrados = new();
+        //instanciamos el servicio de clientes para poder acceder a la lista de clientes y sus detalles
         private ClienteService clienteService = new ClienteService();
 
 
@@ -38,18 +45,25 @@ namespace SISTEMA_FROTEND.presentacion
             Close();
         }
 
-        private void btncotizar_Click(object sender, EventArgs e)
-        {
 
+        private async void btncotizar_Click(object sender, EventArgs e)
+        {
+     
         }
 
 
         private async void cotizacion_Load(object sender, EventArgs e)
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
-            texsubtotal.Enabled = false ;
-            texdescuento.Enabled = false ;
+            texsubtotal.Enabled = false;
+            texdescuento.Enabled = false;
             textotal.Enabled = false;
+
+            if (!dataGridView1.Columns.Contains("id_producto"))
+            {
+                dataGridView1.Columns.Add("id_producto", "id_producto");
+                dataGridView1.Columns["id_producto"].Visible = false;
+            }
 
             comCliente.DropDownStyle = ComboBoxStyle.DropDown;
             comCliente.AutoCompleteMode = AutoCompleteMode.None;
@@ -74,7 +88,7 @@ namespace SISTEMA_FROTEND.presentacion
         {
         }
 
-
+        //evento que consulta a la api
         private async void comCliente_TextChanged(object sender, EventArgs e)
         {
             if (cargandoClientes)
@@ -92,6 +106,7 @@ namespace SISTEMA_FROTEND.presentacion
                 comCliente.DroppedDown = false;
 
                 clientesEncontrados = await clienteService.BuscarClientes(texto);
+                comCliente.DataSource = clientesEncontrados;
 
                 comCliente.DataSource = null;
                 comCliente.DisplayMember = "nombreCompleto";
@@ -113,11 +128,13 @@ namespace SISTEMA_FROTEND.presentacion
 
         }
 
+        //evento que se dispara cuando se selecciona un cliente de la lista desplegable, llenando los campos correspondientes con la información del cliente seleccionado
         private void comCliente_SelectionChangeCommitted(object sender, EventArgs e)
         {
             if (comCliente.SelectedItem is ClienteBuscarDTOs cliente)
             {
-                //  texapellido.Text = cliente.apellido;
+                clienteSeleccionadoActual = cliente;
+
                 texnit.Text = cliente.nit ?? "";
                 textelefono.Text = cliente.telefono ?? "";
                 texcorreo.Text = cliente.correo_electronico ?? "";
@@ -148,11 +165,21 @@ namespace SISTEMA_FROTEND.presentacion
 
         }
 
+
+        //permite seleccionar un producto con el enter y llenar los campos de precio y descuento automaticamente
         private void button2_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter && comCliente.SelectedItem is ClienteBuscarDTOs cliente)
+            if (e.KeyCode == Keys.Enter)
             {
-                LlenarDatosCliente(cliente);
+                var cliente = clientesEncontrados.FirstOrDefault(c =>
+                    c.nombreCompleto.Equals(comCliente.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (cliente != null)
+                {
+                    comCliente.SelectedItem = cliente;
+                    LlenarDatosCliente(cliente);
+                }
+
                 e.Handled = true;
             }
         }
@@ -166,7 +193,7 @@ namespace SISTEMA_FROTEND.presentacion
             texdpi.Text = cliente.dpi ?? "";
         }
 
-
+        //arma el autocompletado en la celda producto 
         private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             if (dataGridView1.CurrentCell.OwningColumn.Name == "producto")
@@ -221,6 +248,7 @@ namespace SISTEMA_FROTEND.presentacion
 
                 if (producto == null) return;
                 // se llena automaticamente los campos de precio y descuento con los valores del producto encontrado
+                dataGridView1.Rows[e.RowIndex].Cells["id_producto"].Value = producto.id_producto;
                 dataGridView1.Rows[e.RowIndex].Cells["stock"].Value = producto.stock;
                 dataGridView1.Rows[e.RowIndex].Cells["precio"].Value = producto.precio;
                 // Solo poner 1 por defecto si la celda de cantidad está vacía
@@ -271,6 +299,62 @@ namespace SISTEMA_FROTEND.presentacion
             textotal.Text = totalGeneral.ToString("N2");
         }
 
+        private void button3_Click(object sender, EventArgs e)
+        {
 
+            //se crea el objeto
+            VentaDTOs venta = new VentaDTOs
+            {
+                id_usuario = Sesion.IdUsuario,
+                origen = "VENTA",
+                detalles = new List<DetalleDTOs>()
+            };
+
+            //recorre todas las filas del DataGridView y agrega los detalles de cada producto a la lista de detalles de la venta
+            foreach (DataGridViewRow fila in dataGridView1.Rows)
+            {
+                if (fila.IsNewRow) continue;
+                if (fila.Tag == null) continue;
+
+                venta.detalles.Add(new DetalleDTOs
+                {
+                    id_producto=Convert.ToInt32(fila.Cells["id_producto"].Value),
+                    id_producto_presentacion = Convert.ToInt32(fila.Tag),
+                    cantidad = Convert.ToInt32(fila.Cells["cantidad"].Value),
+                    descuento = Convert.ToDecimal(fila.Cells["descuento"].Value)
+                });
+            }
+
+            if (venta.detalles.Count == 0)
+            {
+                MessageBox.Show("Agrega al menos un producto.");
+                return;
+            }
+            ClienteBuscarDTOs cliente1 = null;
+
+            if (comCliente.SelectedItem is ClienteBuscarDTOs clienteSeleccionado)
+            {
+                cliente1 = clienteSeleccionado;
+            }
+            else
+            {
+                cliente1 = clientesEncontrados.FirstOrDefault(c =>
+                    c.nombreCompleto.Equals(comCliente.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (clienteSeleccionadoActual == null)
+            {
+                MessageBox.Show("Selecciona un cliente válido de la lista.");
+                return;
+            }
+
+            venta.id_cliente = clienteSeleccionadoActual.id_Cliente;
+            venta.nombre_cliente = clienteSeleccionadoActual.nombreCompleto;
+            venta.clienteNuevo = null;
+
+            formCobro frm = new formCobro(venta, Convert.ToDecimal(textotal.Text));
+            frm.ShowDialog();
+
+        }
     }
 }

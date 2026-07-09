@@ -32,6 +32,11 @@ namespace API_SISTEMA.data
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
         public DbSet<Producto_Presentacion> producto_presentaciones { get; set; }
+        public DbSet<DetalleCompra> detalle_compras { get; set; }
+        public DbSet<RegistroCompras> registroCompras { get; set; }
+        public DbSet<EstadoCompra> estado_compras { get; set; }
+        public DbSet<PagosCompra> pagosCompras { get; set; }
+
 
 
 
@@ -43,6 +48,9 @@ namespace API_SISTEMA.data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Cliente>().ToTable("cliente");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Ventas>().ToTable("ventas");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Productos>().ToTable("productos");
@@ -73,6 +81,21 @@ namespace API_SISTEMA.data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Producto_Presentacion>().ToTable("producto_presentacion ");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<DetalleCompra>().ToTable("detalle_compra");
+            base.OnModelCreating(modelBuilder);
+            
+            modelBuilder.Entity<RegistroCompras>().ToTable("registro_compras");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<EstadoCompra>().ToTable("estado_compra");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Empresa>().ToTable("empresa");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PagosCompra>().ToTable("pagos_compra");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Rol_permisocs>()
