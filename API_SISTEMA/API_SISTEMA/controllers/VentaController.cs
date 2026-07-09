@@ -21,7 +21,7 @@ namespace API_SISTEMA.controllers
             _context = service;
         }
 
-        [HttpGet]
+        [HttpGet("listar")]
         public async Task<IActionResult> ListarVentas()
         {
             var listar = await _context.ListarVentes();

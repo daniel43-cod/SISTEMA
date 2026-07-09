@@ -35,7 +35,7 @@ namespace API_SISTEMA.services
                     c.nit.Contains(texto))
                 .Select(c => new ClienteBuscarDTOs
                 {
-                    id_Cliente = c.id_Cliente,
+                    id_Cliente = c.id_cliente,
                     nombre = c.nombre,
                     apellido = c.apellido,
                     nit = c.nit,

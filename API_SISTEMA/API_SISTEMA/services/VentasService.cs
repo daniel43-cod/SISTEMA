@@ -18,14 +18,42 @@ namespace API_SISTEMA.services
             
         }
 
-        
-        public async Task<List<Ventas>> ListarVentes()
-        {
-            return await _context.ventas.ToListAsync();
-        }
-        //crear venta nueva
 
-            public async Task<Ventas> CrearVenta(VentasDTOs ventaDto)
+        /*  public async Task<List<Ventas>> ListarVentes()
+          {
+              return await _context.ventas.ToListAsync();
+          }*/
+        //crear venta nueva 
+        public async Task<List<ListarVentasDTOs>> ListarVentes()
+        {
+            return await _context.ventas
+                .Select(v => new ListarVentasDTOs
+                {
+                    id_ventas = v.id_ventas,
+                    subtotal = v.subtotal,
+                    descuento = v.descuento,
+                    impuesto = v.impuesto,
+                    total = v.total,
+                    fecha_venta = v.fecha_venta,
+
+                    id_cliente = v.id_cliente,
+                    cliente = v.cliente.nombre,
+
+                    id_usuario = v.id_usuario,
+                    usuario = v.usuario.nombre,
+
+                    estado = v.EstadoVenta.descripcion,
+                    origen = v.origen,
+
+                    monto_pagado = v.monto_pagado,
+                    saldo_pendiente = v.saldo_pendiente,
+                    observacion = v.observacion
+                })
+                .ToListAsync();
+        }
+
+
+        public async Task<Ventas> CrearVenta(VentasDTOs ventaDto)
             {
                 using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -36,7 +64,7 @@ namespace API_SISTEMA.services
                         if (ventaDto.id_cliente > 0)
                         {
                             cliente = await _context.cliente
-                                .FirstOrDefaultAsync(c => c.id_Cliente == ventaDto.id_cliente);
+                                .FirstOrDefaultAsync(c => c.id_cliente == ventaDto.id_cliente);
 
                             if (cliente == null)
                                 throw new Exception("El cliente seleccionado no existe.");
@@ -74,8 +102,8 @@ namespace API_SISTEMA.services
 
                         var venta = new Ventas
                         {
-                            id_cliente = cliente.id_Cliente,
-                            id_usuario = ventaDto.id_usuario,
+                            id_cliente = cliente.id_cliente,
+                            id_usuario = (int)ventaDto.id_usuario,
                             observacion = ventaDto.observacion_pago,
                             origen = ventaDto.origen,
                             fecha_venta = DateTime.Now,

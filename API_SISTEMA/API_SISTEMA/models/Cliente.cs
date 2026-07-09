@@ -7,7 +7,7 @@ namespace API_SISTEMA.models
     {
       
             [Key]
-            public int id_Cliente { get; set; }
+            public int id_cliente { get; set; }
 
             public string nombre { get; set; } = string.Empty;
             public string? apellido { get; set; }

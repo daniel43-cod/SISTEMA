@@ -132,6 +132,24 @@ modelBuilder.Entity<Producto_precio>()
     .HasOne(pp => pp.Producto)
     .WithMany(p => p.ProductoPresentaciones)
     .HasForeignKey(pp => pp.id_producto);
+
+
+
+
+            modelBuilder.Entity<Ventas>()
+                .HasOne(v => v.cliente)
+                .WithMany()
+                .HasForeignKey(v => v.id_cliente);
+
+            modelBuilder.Entity<Ventas>()
+                .HasOne(v => v.usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario);
+
+            modelBuilder.Entity<Ventas>()
+                .HasOne(v => v.EstadoVenta)
+                .WithMany()
+                .HasForeignKey(v => v.id_estado_venta);
         }
             
 
