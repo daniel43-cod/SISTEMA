@@ -17,7 +17,7 @@
 
         public string estado { get; set; }
         public string origen { get; set; }
-
+        public decimal ganancia_total { get; set; }
         public decimal monto_pagado { get; set; }
         public decimal saldo_pendiente { get; set; }
         public string? observacion { get; set; }

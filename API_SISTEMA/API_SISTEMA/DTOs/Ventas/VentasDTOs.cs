@@ -11,7 +11,7 @@ namespace API_SISTEMA.DTOs.Ventas
         public ClienteDTOs? clienteNuevo { get; set; }
         public int? id_usuario { get; set; }
         public decimal monto_pagado { get; set; }
-        public string observacion_pago { get; set; }
+        public string? observacion_pago { get; set; }
         public string origen {  get; set; }
         public PagosDTO pago {  get; set; }
         public List<DetalleDTOs> detalles { get; set; } = new();

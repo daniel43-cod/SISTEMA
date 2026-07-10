@@ -16,14 +16,13 @@ namespace API_SISTEMA.controllers
             _Service = service;
         }
 
-        
-      /*  [HttpGet("Detalle/{idVenta}")]
+
+        [HttpGet("listar/{idVenta}")]
         public async Task<IActionResult> ListarDetalle(int idVenta)
         {
-            var detalle = await _Service.ListarPorVenta(idVenta);
+            var detalle = await _Service.ListarDetalleVenta(idVenta);
 
             return Ok(detalle);
         }
-      */
     }
 }

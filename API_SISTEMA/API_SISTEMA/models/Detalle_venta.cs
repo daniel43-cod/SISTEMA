@@ -18,6 +18,8 @@ namespace API_SISTEMA.models
         public int unidades_descontadas { get; set; }
         public decimal ganancia { get; set; }
 
+        public Producto_Presentacion producto_presentacion { get; set; }
+
         [ForeignKey("id_producto")]
         public Productos Producto { get; set; }
 

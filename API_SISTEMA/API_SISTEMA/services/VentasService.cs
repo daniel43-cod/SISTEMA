@@ -44,10 +44,12 @@ namespace API_SISTEMA.services
 
                     estado = v.EstadoVenta.descripcion,
                     origen = v.origen,
+                    ganancia_total = v.ganancia_total,
 
                     monto_pagado = v.monto_pagado,
                     saldo_pendiente = v.saldo_pendiente,
                     observacion = v.observacion
+
                 })
                 .ToListAsync();
         }
