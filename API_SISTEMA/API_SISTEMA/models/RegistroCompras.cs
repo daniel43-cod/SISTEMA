@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Primitives;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography.X509Certificates;
 
 namespace API_SISTEMA.models
 {
@@ -16,6 +17,10 @@ namespace API_SISTEMA.models
         [Required]
         public DateTime fecha_compra { get; set; }
         [Required]
-        public decimal total { get; set; }
+        public decimal total_compra { get; set; }
+
+        public Usuario usuario { get; set; }
+        public Empresa empresa { get; set; }
+        public EstadoCompra estado_compra { get; set; }
     }
 }

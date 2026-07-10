@@ -36,6 +36,7 @@ namespace API_SISTEMA.data
         public DbSet<RegistroCompras> registroCompras { get; set; }
         public DbSet<EstadoCompra> estado_compras { get; set; }
         public DbSet<PagosCompra> pagosCompras { get; set; }
+        public DbSet<Empresa> empresa { get; set; }
 
 
 
@@ -151,10 +152,29 @@ modelBuilder.Entity<Producto_precio>()
                 .HasOne(v => v.producto_presentacion)
                 .WithMany()
                 .HasForeignKey(v => v.id_producto_presentacion);
-        }
+
+
+            modelBuilder.Entity<RegistroCompras>()
+                .HasOne(v => v.usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario);
+
+            modelBuilder.Entity<RegistroCompras>()
+                .HasOne(v => v.empresa)
+                .WithMany()
+                .HasForeignKey(v => v.id_empresa);
+
+            modelBuilder.Entity<RegistroCompras>()
+                .HasOne(v => v.estado_compra)
+                .WithMany()
+                .HasForeignKey(v => v.id_estado_compra);
 
             
+        }
 
 
 
-}}
+
+
+    }
+}

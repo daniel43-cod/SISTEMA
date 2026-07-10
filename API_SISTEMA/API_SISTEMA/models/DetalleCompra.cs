@@ -6,6 +6,7 @@ namespace API_SISTEMA.models
     {
         [Key]
         public int id_detalle_compra { get; set; }
+        public int id_registro_compra { get; set; }
         [Required]
         public int id_compra { get; set; }
         [Required]
