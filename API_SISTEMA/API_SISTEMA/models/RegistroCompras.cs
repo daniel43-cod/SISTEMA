@@ -15,7 +15,7 @@ namespace API_SISTEMA.models
         [Required]
         public int id_estado_compra { get; set; }
         [Required]
-        public DateTime fecha_compra { get; set; }
+        public DateTime fecha_ingreso { get; set; }
         [Required]
         public decimal total_compra { get; set; }
 

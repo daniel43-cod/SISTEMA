@@ -76,7 +76,7 @@ namespace API_SISTEMA.services
                     id_usuario = compraDto.id_usuario,
                     id_empresa = compraDto.id_empresa,
                     id_estado_compra = compraDto.id_estado_compra,
-                    fecha_compra = DateTime.Now,
+                    fecha_ingreso = DateTime.Now,
                     total_compra = totalCompra
                 };
 

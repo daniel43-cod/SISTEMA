@@ -27,7 +27,9 @@ builder.Services.AddScoped<RolPermisoService>();
 builder.Services.AddScoped<PermisoService>();
 builder.Services.AddScoped<ProductoPrecioService>();
 builder.Services.AddScoped<LoginService>();
-builder.Services.AddScoped<Pagos>();    
+builder.Services.AddScoped<PagoService>();
+builder.Services.AddScoped<EmpresaService>();
+builder.Services.AddScoped<CompraService>();
 
 var app = builder.Build();
 
