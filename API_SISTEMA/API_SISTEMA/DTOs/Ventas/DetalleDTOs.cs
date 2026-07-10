@@ -8,7 +8,7 @@ namespace API_SISTEMA.DTOs.Ventas
         public int cantidad { get; set; }
         public decimal descuento { get; set; }
         public int id_producto_presentacion { get; set; }
-      
+       
 
 
 

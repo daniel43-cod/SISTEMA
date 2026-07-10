@@ -14,7 +14,6 @@
 
         public int id_usuario { get; set; }
         public string usuario { get; set; }
-
         public string estado { get; set; }
         public string origen { get; set; }
         public decimal ganancia_total { get; set; }

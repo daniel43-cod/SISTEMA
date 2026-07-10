@@ -28,30 +28,10 @@ namespace API_SISTEMA.services
                     id_producto_presentacion = dv.id_producto_presentacion,
                     descripcion_resentacion = dv.producto_presentacion.descripcion,
                     cantidad = dv.cantidad,
+                    precio = dv.producto_presentacion.precio
                 })
                 .ToListAsync();
             return detalleVenta;
         }
-
-        /*   public async Task<List<DetalleDTOs>> ListarPorVenta(int idVenta)
-           {
-               return await _context.detalle_Ventas
-                   //solo filtra los detalles del idventa ingresada en idVenta
-                   .Where(d => d.id_venta == idVenta)
-                   .Select(d => new DetalleDTOs
-                   {
-                       id_detalle_venta = d.id_detalle_venta,
-                       id_venta = d.id_venta,
-                       id_producto = d.id_producto,
-                       nombre_producto = d.Producto.nombre, // si tienes la navegación
-                       cantidad = d.cantidad,
-                       precio = d.precio,
-                       descuento = d.descuento,
-                       subtotal = d.subtotal
-                   })
-                   .ToListAsync();
-           }*/
-
-
     }
 }
