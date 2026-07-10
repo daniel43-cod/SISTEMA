@@ -23,23 +23,26 @@ namespace SISTEMA_FROTEND.presentacion
         VentaService _service = new VentaService();
         private async void frmregistro_ventas_Load(object sender, EventArgs e)
         {
-            CargarProductos();
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
             var ventas = await _service.ListarVentas();
             dataregistrodiario.DataSource = ventas;
-            dataregistrodiario.Columns["id_ventas"].Visible = false; // aquí, una sola vez
-            dataregistrodiario.Columns["id_cliente"].Visible = false; // aquí, una sola vez
-            //dataregistrodiario.Columns["id_producto"].Visible = false; // aquí, una sola vez
 
-            //boton para ver detalle.
-            DataGridViewButtonColumn btnDetalle = new DataGridViewButtonColumn();
-            btnDetalle.Name = "Detalle";
-            btnDetalle.HeaderText = "Ver detalle";
-            btnDetalle.Text = "Ver";
-            btnDetalle.UseColumnTextForButtonValue = true;
+            dataregistrodiario.Columns["id_ventas"].Visible = false;
+            dataregistrodiario.Columns["id_cliente"].Visible = false;
+            dataregistrodiario.Columns["id_usuario"].Visible = false;
 
-            dataregistrodiario.Columns.Add(btnDetalle);
+            if (!dataregistrodiario.Columns.Contains("Detalle"))
+            {
+                DataGridViewButtonColumn btnDetalle = new DataGridViewButtonColumn();
+                btnDetalle.Name = "Detalle";
+                btnDetalle.HeaderText = "Ver detalle";
+                btnDetalle.Text = "Ver";
+                btnDetalle.UseColumnTextForButtonValue = true;
+
+                dataregistrodiario.Columns.Add(btnDetalle);
+            }
+
 
         }
 

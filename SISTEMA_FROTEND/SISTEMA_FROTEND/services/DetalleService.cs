@@ -20,7 +20,7 @@ namespace SISTEMA_FROTEND.services
 
         public async Task<List<DetalleDTOs>> ListarDetalle(int _idventa)
         {
-            return await _httpClient.GetFromJsonAsync<List<DetalleDTOs>>($"DetalleVenta_/Detalle/{_idventa}");
+            return await _httpClient.GetFromJsonAsync<List<DetalleDTOs>>($"DetalleVenta_/listar/{_idventa}");
         }
     }
 

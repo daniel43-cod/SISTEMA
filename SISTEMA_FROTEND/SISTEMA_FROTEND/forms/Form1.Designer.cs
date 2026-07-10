@@ -68,18 +68,18 @@
             // 
             // btningreso
             // 
-            btningreso.BackColor = Color.FromArgb(0, 192, 0);
+            btningreso.BackColor = Color.Gray;
             btningreso.Location = new Point(12, 281);
             btningreso.Name = "btningreso";
             btningreso.Size = new Size(188, 63);
             btningreso.TabIndex = 5;
-            btningreso.Text = "INGRESO";
+            btningreso.Text = "INGRESAR NUEVO PRODUCTO";
             btningreso.UseVisualStyleBackColor = false;
             btningreso.Click += btningreso_Click;
             // 
             // btncreditos
             // 
-            btncreditos.BackColor = Color.FromArgb(0, 192, 0);
+            btncreditos.BackColor = Color.Gray;
             btncreditos.Location = new Point(12, 367);
             btncreditos.Name = "btncreditos";
             btncreditos.Size = new Size(188, 63);
@@ -90,29 +90,29 @@
             // 
             // btnregistroventas
             // 
-            btnregistroventas.BackColor = Color.FromArgb(0, 192, 0);
+            btnregistroventas.BackColor = Color.Gray;
             btnregistroventas.Location = new Point(12, 108);
             btnregistroventas.Name = "btnregistroventas";
             btnregistroventas.Size = new Size(188, 63);
             btnregistroventas.TabIndex = 1;
-            btnregistroventas.Text = "REGISTRO DE VENTAS DIARIO";
+            btnregistroventas.Text = "REGISTRO DE VENTA DEL DIA";
             btnregistroventas.UseVisualStyleBackColor = false;
             btnregistroventas.Click += btnregistroventas_Click;
             // 
             // btnproductos
             // 
-            btnproductos.BackColor = Color.FromArgb(0, 192, 0);
+            btnproductos.BackColor = Color.Gray;
             btnproductos.Location = new Point(12, 194);
             btnproductos.Name = "btnproductos";
             btnproductos.Size = new Size(188, 63);
             btnproductos.TabIndex = 2;
-            btnproductos.Text = "PRODUCTOS";
+            btnproductos.Text = "COMPRAS";
             btnproductos.UseVisualStyleBackColor = false;
             btnproductos.Click += btnproductos_Click;
             // 
             // btnusuarios
             // 
-            btnusuarios.BackColor = Color.FromArgb(0, 192, 0);
+            btnusuarios.BackColor = Color.Gray;
             btnusuarios.Location = new Point(12, 454);
             btnusuarios.Name = "btnusuarios";
             btnusuarios.Size = new Size(188, 63);
@@ -123,12 +123,12 @@
             // 
             // btnregistrar
             // 
-            btnregistrar.BackColor = Color.FromArgb(0, 192, 0);
+            btnregistrar.BackColor = Color.Gray;
             btnregistrar.Location = new Point(12, 19);
             btnregistrar.Name = "btnregistrar";
             btnregistrar.Size = new Size(188, 63);
             btnregistrar.TabIndex = 0;
-            btnregistrar.Text = "REGISTRAR";
+            btnregistrar.Text = "REGISTRAR VENTA";
             btnregistrar.UseVisualStyleBackColor = false;
             btnregistrar.Click += btnregistrar_Click;
             // 

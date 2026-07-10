@@ -18,9 +18,9 @@ namespace SISTEMA_FROTEND.services
             _httpClient.BaseAddress = new Uri("https://localhost:44308/api/");
         }
 
-        public async Task<List<Ventas>> ListarVentas()
+        public async Task<List<ListarVentasDTOs>> ListarVentas()
         {
-            return await _httpClient.GetFromJsonAsync<List<Ventas>>("Venta");
+            return await _httpClient.GetFromJsonAsync<List<ListarVentasDTOs>>("Venta/listar");
         }
 
         public async Task<VentaDTOs?> CrearVenta(VentaDTOs ventaDto)

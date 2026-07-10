@@ -27,45 +27,54 @@ namespace SISTEMA_FROTEND.forms
             _idVenta = idVenta;
         }
 
+        private DetalleService _detalleService = new DetalleService();
+
         private async void frmDetalleVenta_Load(object sender, EventArgs e)
         {
-            DetalleService service = new DetalleService();
-            var detalle = await service.ListarDetalle(_idVenta);
-            // MessageBox.Show(detalle[0].nombre_producto);
-
-            // datadetalle.DataSource = detalle;
-            datadetalle.DataSource = detalle;
-            //MessageBox.Show(detalle[0].nomb);
 
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
+            var detalle = await _detalleService.ListarDetalle(_idVenta);
 
-            posicion_columnas();
+           
+            datadetalle.AutoGenerateColumns = true;
+            datadetalle.DataSource = detalle;
+            datadetalle.Columns["id_producto"].Visible = false;
+            datadetalle.Columns["id_producto_presentacion"].Visible = false;
+
+
+
+
         }
 
 
         private void posicion_columnas()
         {
+            /*
+                        // Configuración de columnas
+                        datadetalle.Columns["cantidad"].DisplayIndex = 0;
+                        datadetalle.Columns["nombre_producto"].DisplayIndex = 1;
+                        datadetalle.Columns["precio"].DisplayIndex = 2;
+                        datadetalle.Columns["descuento"].DisplayIndex = 3;
+                        datadetalle.Columns["subtotal"].DisplayIndex = 4;
 
-            // Configuración de columnas
-            datadetalle.Columns["cantidad"].DisplayIndex = 0;
-            datadetalle.Columns["nombre_producto"].DisplayIndex = 1;
-            datadetalle.Columns["precio"].DisplayIndex = 2;
-            datadetalle.Columns["descuento"].DisplayIndex = 3;
-            datadetalle.Columns["subtotal"].DisplayIndex = 4;
+                        datadetalle.Columns["id_detalle_venta"].Visible = false;
+                        datadetalle.Columns["id_venta"].Visible = false;
+                        datadetalle.Columns["id_producto"].Visible = false;
 
-            datadetalle.Columns["id_detalle_venta"].Visible = false;
-            datadetalle.Columns["id_venta"].Visible = false;
-            datadetalle.Columns["id_producto"].Visible = false;
-
-            datadetalle.Columns["cantidad"].HeaderText = "Cantidad";
-            datadetalle.Columns["nombre_producto"].HeaderText = "Producto";
-            datadetalle.Columns["precio"].HeaderText = "Precio";
-            datadetalle.Columns["descuento"].HeaderText = "Descuento";
-            datadetalle.Columns["subtotal"].HeaderText = "Subtotal";
+                        datadetalle.Columns["cantidad"].HeaderText = "Cantidad";
+                        datadetalle.Columns["nombre_producto"].HeaderText = "Producto";
+                        datadetalle.Columns["precio"].HeaderText = "Precio";
+                        datadetalle.Columns["descuento"].HeaderText = "Descuento";
+                        datadetalle.Columns["subtotal"].HeaderText = "Subtotal";*/
         }
 
         private void lblUsuario_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void datadetalle_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
         }
