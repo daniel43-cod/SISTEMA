@@ -15,6 +15,11 @@ namespace API_SISTEMA.services
         {
             _context = context;
         }
+        
+        public async Task<List<RegistroCompras>> listarcompras()
+        {
+            return await _context.registroCompras.ToListAsync();
+        }
 
         public async Task<RegistroCompras> CrearCompra(RegistroComprasDTO compraDto)
         {

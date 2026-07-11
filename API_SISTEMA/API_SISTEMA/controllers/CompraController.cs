@@ -18,6 +18,14 @@ namespace API_SISTEMA.controllers
             _context = service;
         }
 
+        [HttpGet("listar")]
+        public async Task<IActionResult> listar()
+        {
+           var compras = await _context.listarcompras();
+            return Ok(compras);
+        }
+
+
         [HttpPost("crear")]
         public async Task<IActionResult> Crear([FromBody] RegistroComprasDTO compraDto)
         {
