@@ -29,22 +29,60 @@
         private void InitializeComponent()
         {
             datacompras = new DataGridView();
+            producto = new DataGridViewTextBoxColumn();
+            cantidad = new DataGridViewTextBoxColumn();
+            precio = new DataGridViewTextBoxColumn();
+            preciounitario = new DataGridViewTextBoxColumn();
             lblUsuario = new Label();
             label1 = new Label();
             texEmpresa = new TextBox();
+            butguardar = new Button();
+            textotalcompras = new TextBox();
+            label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)datacompras).BeginInit();
             SuspendLayout();
             // 
             // datacompras
             // 
             datacompras.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            datacompras.Columns.AddRange(new DataGridViewColumn[] { producto, cantidad, precio, preciounitario });
             datacompras.Location = new Point(44, 260);
             datacompras.Name = "datacompras";
             datacompras.RowHeadersWidth = 51;
             datacompras.Size = new Size(1429, 396);
             datacompras.TabIndex = 0;
             datacompras.CellContentClick += dataGridView1_CellContentClick;
+            datacompras.CellEndEdit += datacompras_CellEndEdit;
+            datacompras.EditingControlShowing += datacompras_EditingControlShowing;
             datacompras.SelectionChanged += dataProductos_SelectionChanged;
+            // 
+            // producto
+            // 
+            producto.HeaderText = "producto";
+            producto.MinimumWidth = 6;
+            producto.Name = "producto";
+            producto.Width = 350;
+            // 
+            // cantidad
+            // 
+            cantidad.HeaderText = "cantidad";
+            cantidad.MinimumWidth = 6;
+            cantidad.Name = "cantidad";
+            cantidad.Width = 125;
+            // 
+            // precio
+            // 
+            precio.HeaderText = "precio";
+            precio.MinimumWidth = 6;
+            precio.Name = "precio";
+            precio.Width = 125;
+            // 
+            // preciounitario
+            // 
+            preciounitario.HeaderText = "precio unitario";
+            preciounitario.MinimumWidth = 6;
+            preciounitario.Name = "preciounitario";
+            preciounitario.Width = 200;
             // 
             // lblUsuario
             // 
@@ -71,11 +109,40 @@
             texEmpresa.Size = new Size(481, 27);
             texEmpresa.TabIndex = 17;
             // 
+            // butguardar
+            // 
+            butguardar.Location = new Point(998, 695);
+            butguardar.Name = "butguardar";
+            butguardar.Size = new Size(94, 53);
+            butguardar.TabIndex = 18;
+            butguardar.Text = "GUARDAR";
+            butguardar.UseVisualStyleBackColor = true;
+            butguardar.Click += butguardar_Click;
+            // 
+            // textotalcompras
+            // 
+            textotalcompras.Location = new Point(448, 704);
+            textotalcompras.Name = "textotalcompras";
+            textotalcompras.Size = new Size(125, 27);
+            textotalcompras.TabIndex = 19;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(357, 711);
+            label2.Name = "label2";
+            label2.Size = new Size(50, 20);
+            label2.TabIndex = 20;
+            label2.Text = "TOTAL";
+            // 
             // frmcompras
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1554, 716);
+            ClientSize = new Size(1554, 760);
+            Controls.Add(label2);
+            Controls.Add(textotalcompras);
+            Controls.Add(butguardar);
             Controls.Add(texEmpresa);
             Controls.Add(label1);
             Controls.Add(lblUsuario);
@@ -94,5 +161,12 @@
         private Label lblUsuario;
         private Label label1;
         private TextBox texEmpresa;
+        private DataGridViewTextBoxColumn producto;
+        private DataGridViewTextBoxColumn cantidad;
+        private DataGridViewTextBoxColumn precio;
+        private DataGridViewTextBoxColumn preciounitario;
+        private Button butguardar;
+        private TextBox textotalcompras;
+        private Label label2;
     }
 }

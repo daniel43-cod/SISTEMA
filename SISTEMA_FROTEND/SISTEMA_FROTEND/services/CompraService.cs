@@ -20,7 +20,7 @@ namespace SISTEMA_FROTEND.services
         public async Task<ComprasDTOs?> CrearCompra(ComprasDTOs compra)
         {
             var response = await _httpClient.PostAsJsonAsync(
-                "crear",
+                "Compra/crear",
                 compra);
 
             if (response.IsSuccessStatusCode)

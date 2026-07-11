@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.DTOs.Productos;
+﻿using SISTEMA_FROTEND.DTOs.Compras;
+using SISTEMA_FROTEND.DTOs.Productos;
 using SISTEMA_FROTEND.models;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace SISTEMA_FROTEND.services
         {
             return await _httpClient.GetFromJsonAsync<List<ProductoVentaBuscarDTO>>("Productos");
         }
+
      
         public async Task<List<Productos>> BuscarProducto(string texto)
         {
