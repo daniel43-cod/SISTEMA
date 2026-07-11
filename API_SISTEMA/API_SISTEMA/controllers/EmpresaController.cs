@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.controllers
 {
+
+    [Route("api/[controller]")]
+    [ApiController]
     public class EmpresaController : Controller
     {
         private readonly EmpresaService _empresaService;
@@ -34,6 +37,13 @@ namespace API_SISTEMA.controllers
                     mensaje = ex.Message
                 });
             }
+        }
+
+        [HttpGet("listar")]
+        public async Task<IActionResult> Listar()
+        {
+            var empresas = await _empresaService.ListarEmpresa();
+            return Ok(empresas);
         }
 
     }

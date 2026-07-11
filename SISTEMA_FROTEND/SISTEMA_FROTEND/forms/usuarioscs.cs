@@ -20,6 +20,7 @@ namespace SISTEMA_FROTEND
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
+
         }
     }
 }

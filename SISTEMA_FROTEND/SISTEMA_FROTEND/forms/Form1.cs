@@ -44,7 +44,7 @@ namespace SISTEMA_FROTEND
 
         private void btnproductos_Click(object sender, EventArgs e)
         {
-            AbrirFormulario(new frmproductos());
+            AbrirFormulario(new frmcompras());
         }
 
         private void btncreditos_Click(object sender, EventArgs e)

@@ -1,4 +1,6 @@
-﻿using SISTEMA_FROTEND.helpers;
+﻿using SISTEMA_FROTEND.DTOs;
+using SISTEMA_FROTEND.DTOs.Productos;
+using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.models;
 using SISTEMA_FROTEND.services;
 using System;
@@ -11,9 +13,12 @@ using System.Windows.Forms;
 
 namespace SISTEMA_FROTEND.forms
 {
-    public partial class frmproductos : Form
+    public partial class frmcompras : Form
     {
-        public frmproductos()
+        private EmpresaService _empresaService = new EmpresaService();
+        private List<EmpresaDTOs> _empresas;
+        private EmpresaDTOs _empresaSeleccionada;
+        public frmcompras()
         {
             InitializeComponent();
         }
@@ -29,7 +34,14 @@ namespace SISTEMA_FROTEND.forms
 
         private async void frmproductos_Load(object sender, EventArgs e)
         {
-            lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
+            _empresas = await _empresaService.ListarEmpresas();
+
+            var fuenteEmpresas = new AutoCompleteStringCollection();
+            fuenteEmpresas.AddRange(_empresas.Select(e => e.nombre_empresa).ToArray());
+
+            texEmpresa.AutoCompleteMode = AutoCompleteMode.Suggest;
+            texEmpresa.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            texEmpresa.AutoCompleteCustomSource = fuenteEmpresas;
         }
 
         private async void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -38,24 +50,48 @@ namespace SISTEMA_FROTEND.forms
 
 
         }
-       
+
         private async void combuscar_TextChanged(object sender, EventArgs e)
         {
-           
-        }
 
+        }
         private void dataProductos_SelectionChanged(object sender, EventArgs e)
         {
 
         }
 
-        //metodo para mostrar todos los productos si el usuario no tiene nada escrito en el combuscar
         private async void combuscar_Enter(object sender, EventArgs e)
         {
+
         }
 
         private async Task CargarTodosLosProductos()
         {
+        }
+
+        private void comempresa_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comempresa_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            
+        }
+        private void texEmpresa_Leave(object sender, EventArgs e)
+        {
+            var empresa = _empresas.FirstOrDefault(x =>
+                x.nombre_empresa.Trim().Equals(texEmpresa.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (empresa == null)
+            {
+                MessageBox.Show("Seleccioná una empresa válida de la lista.");
+                _empresaSeleccionada = null;
+                texEmpresa.Text = "";
+                return;
+            }
+
+            _empresaSeleccionada = empresa;
         }
     }
 }

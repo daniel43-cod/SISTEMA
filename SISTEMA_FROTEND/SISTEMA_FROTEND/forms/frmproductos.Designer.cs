@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND.forms
 {
-    partial class frmproductos
+    partial class frmcompras
     {
         /// <summary>
         /// Required designer variable.
@@ -28,97 +28,71 @@
         /// </summary>
         private void InitializeComponent()
         {
-            dataProductos = new DataGridView();
-            label1 = new Label();
-            label2 = new Label();
-            combuscar = new ComboBox();
-            comcategoria = new ComboBox();
+            datacompras = new DataGridView();
             lblUsuario = new Label();
-            ((System.ComponentModel.ISupportInitialize)dataProductos).BeginInit();
+            label1 = new Label();
+            texEmpresa = new TextBox();
+            ((System.ComponentModel.ISupportInitialize)datacompras).BeginInit();
             SuspendLayout();
             // 
-            // dataProductos
+            // datacompras
             // 
-            dataProductos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataProductos.Location = new Point(26, 200);
-            dataProductos.Name = "dataProductos";
-            dataProductos.RowHeadersWidth = 51;
-            dataProductos.Size = new Size(1339, 425);
-            dataProductos.TabIndex = 0;
-            dataProductos.CellContentClick += dataGridView1_CellContentClick;
-            dataProductos.SelectionChanged += dataProductos_SelectionChanged;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(78, 96);
-            label1.Name = "label1";
-            label1.Size = new Size(122, 20);
-            label1.TabIndex = 1;
-            label1.Text = "Buscar Productos";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(454, 96);
-            label2.Name = "label2";
-            label2.Size = new Size(124, 20);
-            label2.TabIndex = 4;
-            label2.Text = "Ver Por Categoria";
-            // 
-            // combuscar
-            // 
-            combuscar.FormattingEnabled = true;
-            combuscar.Location = new Point(205, 88);
-            combuscar.Name = "combuscar";
-            combuscar.Size = new Size(151, 28);
-            combuscar.TabIndex = 5;
-            combuscar.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
-            combuscar.TextChanged += combuscar_TextChanged;
-            // 
-            // comcategoria
-            // 
-            comcategoria.FormattingEnabled = true;
-            comcategoria.Location = new Point(590, 88);
-            comcategoria.Name = "comcategoria";
-            comcategoria.Size = new Size(151, 28);
-            comcategoria.TabIndex = 6;
+            datacompras.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            datacompras.Location = new Point(44, 260);
+            datacompras.Name = "datacompras";
+            datacompras.RowHeadersWidth = 51;
+            datacompras.Size = new Size(1429, 396);
+            datacompras.TabIndex = 0;
+            datacompras.CellContentClick += dataGridView1_CellContentClick;
+            datacompras.SelectionChanged += dataProductos_SelectionChanged;
             // 
             // lblUsuario
             // 
             lblUsuario.AutoSize = true;
-            lblUsuario.Location = new Point(832, 43);
+            lblUsuario.Location = new Point(1285, 34);
             lblUsuario.Name = "lblUsuario";
             lblUsuario.Size = new Size(71, 20);
             lblUsuario.TabIndex = 15;
             lblUsuario.Text = "USUARIO";
             // 
-            // frmproductos
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(170, 69);
+            label1.Name = "label1";
+            label1.Size = new Size(138, 20);
+            label1.TabIndex = 16;
+            label1.Text = "NOMBRE EMPRESA";
+            // 
+            // texEmpresa
+            // 
+            texEmpresa.Location = new Point(336, 62);
+            texEmpresa.Name = "texEmpresa";
+            texEmpresa.Size = new Size(481, 27);
+            texEmpresa.TabIndex = 17;
+            // 
+            // frmcompras
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1554, 716);
-            Controls.Add(lblUsuario);
-            Controls.Add(comcategoria);
-            Controls.Add(combuscar);
-            Controls.Add(label2);
+            Controls.Add(texEmpresa);
             Controls.Add(label1);
-            Controls.Add(dataProductos);
-            Name = "frmproductos";
-            Text = "frmproductos";
+            Controls.Add(lblUsuario);
+            Controls.Add(datacompras);
+            Name = "frmcompras";
+            Text = "COMPRAS";
             Load += frmproductos_Load;
-            ((System.ComponentModel.ISupportInitialize)dataProductos).EndInit();
+            ((System.ComponentModel.ISupportInitialize)datacompras).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private DataGridView dataProductos;
-        private Label label1;
-        private Label label2;
-        private ComboBox combuscar;
-        private ComboBox comcategoria;
+        private DataGridView datacompras;
         private Label lblUsuario;
+        private Label label1;
+        private TextBox texEmpresa;
     }
 }

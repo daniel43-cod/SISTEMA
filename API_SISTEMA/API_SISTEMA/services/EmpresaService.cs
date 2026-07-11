@@ -1,6 +1,7 @@
 ﻿using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Empresa;
 using API_SISTEMA.DTOs.EmpresaDTOs;
+using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,6 +46,13 @@ namespace API_SISTEMA.services
 
             return empresa;
         }
+
+        public async Task<List<Empresa>> ListarEmpresa()
+        {
+            return await _context.empresa.ToListAsync();
+        }
+
+
     }
 }
 
