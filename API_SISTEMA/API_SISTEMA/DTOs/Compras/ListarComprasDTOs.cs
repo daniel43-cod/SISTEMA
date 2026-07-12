@@ -8,5 +8,7 @@
         public int id_estado_compra { get; set; }
         public DateTime fecha_ingreso { get; set; }
         public decimal total_compra { get; set; }
+
+
     }
 }
