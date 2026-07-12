@@ -21,7 +21,7 @@ namespace SISTEMA_FROTEND.services
         public async Task<ComprasDTOs?> CrearCompra(ComprasDTOs compra)
         {
             var response = await _httpClient.PostAsJsonAsync(
-                "Compra/crear",
+                "crear",
                 compra);
 
             if (response.IsSuccessStatusCode)
@@ -42,6 +42,11 @@ namespace SISTEMA_FROTEND.services
         public async Task<List<ListarComprasDTOs>> ListarCompras()
         {
             return await _httpClient.GetFromJsonAsync<List<ListarComprasDTOs>>("listar")?? new List<ListarComprasDTOs>();
+        }
+
+        public async Task<List<ListarDetalleComprasDTOs>> ListarDetalleCompras(int id_compra)
+        {
+            return await _httpClient.GetFromJsonAsync<List<ListarDetalleComprasDTOs>>($"detalle/{id_compra}") ?? new List<ListarDetalleComprasDTOs>();
         }
 
 

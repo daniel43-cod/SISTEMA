@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.helpers;
+﻿using SISTEMA_FROTEND.forms;
+using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
 using System;
 using System.Collections.Generic;
@@ -16,15 +17,16 @@ namespace SISTEMA_FROTEND.presentacion
         public creditos()
         {
             InitializeComponent();
+            dataGridView1.CellContentClick +=dataGridView1_CellContentClick;
         }
 
-        private async Task creditos_Load(object sender, EventArgs e)
+        private async void creditos_Load(object sender, EventArgs e)
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
             await cargarDatos();
             columnasocultas();
-
+            AgregarBotonDetalle();
 
         }
         private void columnasocultas()
@@ -51,6 +53,44 @@ namespace SISTEMA_FROTEND.presentacion
                     "Error al listar compras",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+        }
+
+        private void AgregarBotonDetalle()
+        {
+            if (dataGridView1.Columns["Detalle"] != null)
+                return;
+
+            DataGridViewButtonColumn botonDetalle =
+                new DataGridViewButtonColumn();
+
+            botonDetalle.Name = "Detalle";
+            botonDetalle.HeaderText = "Acción";
+            botonDetalle.Text = "Ver detalle";
+            botonDetalle.UseColumnTextForButtonValue = true;
+
+            dataGridView1.Columns.Add(botonDetalle);
+        }
+
+
+        private void dataGridView1_CellContentClick(
+    object sender,
+    DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+                return;
+
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Detalle")
+            {
+                int idCompra = Convert.ToInt32(
+                    dataGridView1.Rows[e.RowIndex]
+                        .Cells["id_compra"]
+                        .Value);
+
+                formdetallecompra frm =
+                    new formdetallecompra(idCompra);
+
+                frm.ShowDialog();
             }
         }
     }
