@@ -18,14 +18,24 @@ namespace SISTEMA_FROTEND.presentacion
             InitializeComponent();
         }
 
-        private void creditos_Load(object sender, EventArgs e)
+        private async Task creditos_Load(object sender, EventArgs e)
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
-            cargarDatos();
+
+            await cargarDatos();
+            columnasocultas();
+
 
         }
-
-        private async void cargarDatos()
+        private void columnasocultas()
+        {
+            dataGridView1.Columns["id_compra"].Visible = false;
+            dataGridView1.Columns["id_usuario"].Visible = false;
+            dataGridView1.Columns["id_empresa"].Visible = false;
+            dataGridView1.Columns["id_estado_compra"].Visible = false;
+          
+        }
+        private async Task cargarDatos()
         {
             try
             {

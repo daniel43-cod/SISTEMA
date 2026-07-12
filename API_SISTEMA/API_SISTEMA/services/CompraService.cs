@@ -22,8 +22,11 @@ namespace API_SISTEMA.services
             {
                 id_compra = c.id_compra,
                 id_usuario = c.id_usuario,
+                nombre_usuario = c.usuario.nombre,
                 id_empresa = c.id_empresa,
+                nombre_empresa = c.empresa.nombre_empresa,
                 id_estado_compra = c.id_estado_compra,
+                descripcion_estado_compra = c.estado_compra.descripcion,
                 fecha_ingreso = c.fecha_ingreso,
                 total_compra = c.total_compra
             }).ToListAsync();

@@ -71,7 +71,7 @@
             Controls.Add(lblUsuario);
             Name = "creditos";
             Text = "creditos";
-            Load += creditos_Load;
+            Load += async (sender, e) => await creditos_Load(sender, e);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ResumeLayout(false);
             PerformLayout();
