@@ -16,9 +16,17 @@ namespace API_SISTEMA.services
             _context = context;
         }
         
-        public async Task<List<RegistroCompras>> listarcompras()
+        public async Task<List<ListarComprasDTOs>> listarcompras()
         {
-            return await _context.registroCompras.ToListAsync();
+            return await _context.registroCompras.Select(c => new ListarComprasDTOs
+            {
+                id_compra = c.id_compra,
+                id_usuario = c.id_usuario,
+                id_empresa = c.id_empresa,
+                id_estado_compra = c.id_estado_compra,
+                fecha_ingreso = c.fecha_ingreso,
+                total_compra = c.total_compra
+            }).ToListAsync();
         }
 
         public async Task<RegistroCompras> CrearCompra(RegistroComprasDTO compraDto)
