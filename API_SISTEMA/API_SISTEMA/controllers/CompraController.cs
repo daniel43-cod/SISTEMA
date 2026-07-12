@@ -49,5 +49,24 @@ namespace API_SISTEMA.controllers
             }
         }
 
+        //listar detallecompras
+        [HttpGet("detalle/{id_compra}")] 
+        public async Task<IActionResult> ListarDetalleCompra(int id_compra)
+        {
+            try
+            {
+                var detalleCompra = await _context.ListarDetalleCompra(id_compra);
+                return Ok(detalleCompra);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message,
+                    detalle = ex.ToString()
+                });
+            }
+        }
+
     }
 }

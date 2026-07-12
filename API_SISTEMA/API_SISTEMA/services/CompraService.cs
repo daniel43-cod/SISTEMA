@@ -126,5 +126,26 @@ namespace API_SISTEMA.services
                 throw;
             }
         }
+
+
+        //LISTAR DETALLE DE COMPRA
+        public async Task<List<ListarDetalleCompraDTOs>> ListarDetalleCompra(int id_compra)
+        {
+            var detalles = await _context.detalle_compras
+                .Where(d => d.id_registro_compra == id_compra)
+                .Select(d => new ListarDetalleCompraDTOs
+                {
+                    id_detalle_compra = d.id_detalle_compra,
+                    id_registro_compra = d.id_registro_compra,
+                    subtotal = d.subtotal,
+                    id_producto = d.id_producto,
+                    nombre_producto = d.Productos.nombre,
+                    cantidad = d.cantidad,
+                    precio = d.precio
+                })
+              
+                .ToListAsync();
+            return detalles;
+        }
     }
 }

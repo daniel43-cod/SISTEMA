@@ -84,7 +84,7 @@
             btncreditos.Name = "btncreditos";
             btncreditos.Size = new Size(188, 63);
             btncreditos.TabIndex = 4;
-            btncreditos.Text = "CREDITOS";
+            btncreditos.Text = "REGISTRO DE COMPRAS DEL DIA";
             btncreditos.UseVisualStyleBackColor = false;
             btncreditos.Click += btncreditos_Click;
             // 

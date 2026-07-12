@@ -46,10 +46,10 @@
             // 
             datacompras.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             datacompras.Columns.AddRange(new DataGridViewColumn[] { producto, cantidad, precio, preciounitario });
-            datacompras.Location = new Point(44, 260);
+            datacompras.Location = new Point(240, 221);
             datacompras.Name = "datacompras";
             datacompras.RowHeadersWidth = 51;
-            datacompras.Size = new Size(1429, 396);
+            datacompras.Size = new Size(852, 396);
             datacompras.TabIndex = 0;
             datacompras.CellContentClick += dataGridView1_CellContentClick;
             datacompras.CellEndEdit += datacompras_CellEndEdit;
@@ -96,7 +96,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(170, 69);
+            label1.Location = new Point(251, 108);
             label1.Name = "label1";
             label1.Size = new Size(138, 20);
             label1.TabIndex = 16;
@@ -104,14 +104,14 @@
             // 
             // texEmpresa
             // 
-            texEmpresa.Location = new Point(336, 62);
+            texEmpresa.Location = new Point(417, 101);
             texEmpresa.Name = "texEmpresa";
             texEmpresa.Size = new Size(481, 27);
             texEmpresa.TabIndex = 17;
             // 
             // butguardar
             // 
-            butguardar.Location = new Point(998, 695);
+            butguardar.Location = new Point(1013, 695);
             butguardar.Name = "butguardar";
             butguardar.Size = new Size(94, 53);
             butguardar.TabIndex = 18;
@@ -121,7 +121,7 @@
             // 
             // textotalcompras
             // 
-            textotalcompras.Location = new Point(448, 704);
+            textotalcompras.Location = new Point(982, 640);
             textotalcompras.Name = "textotalcompras";
             textotalcompras.Size = new Size(125, 27);
             textotalcompras.TabIndex = 19;
@@ -129,7 +129,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(357, 711);
+            label2.Location = new Point(891, 647);
             label2.Name = "label2";
             label2.Size = new Size(50, 20);
             label2.TabIndex = 20;

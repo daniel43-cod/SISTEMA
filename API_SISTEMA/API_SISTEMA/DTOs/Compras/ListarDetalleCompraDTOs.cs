@@ -1,21 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.DTOs.Compras
 {
-    public class DetalleCompra
+    public class ListarDetalleCompraDTOs
     {
-        [Key]
+        
         public int id_detalle_compra { get; set; }
         public int id_registro_compra { get; set; }
-        [Required]
         public decimal subtotal { get; set; }
-        [Required]
         public int id_producto { get; set; }
-        [Required]
         public int cantidad { get; set; }
-        [Required]
+        public string nombre_producto { get; set; }
         public decimal precio { get; set; }
-
-        public Productos Productos { get; set; }
     }
 }
