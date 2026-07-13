@@ -52,7 +52,28 @@ namespace API_SISTEMA.services
             return clientes;
         }
 
+        public async Task<List<ListarClienteDTOs>> ListarClientes()
+        {
+            return await _context.cliente
+                .Select(c => new ListarClienteDTOs
+                {
+                    id_Cliente = c.id_cliente,
+                    nombre = c.nombre,
+                    apellido = c.apellido,
+                    nit = c.nit,
+                    telefono = c.telefono,
+                    dpi = c.dpi,
+                    correo_electronico = c.correo_electronico,
+                    direccion = c.direccion,
+                    
+                })
+                .ToListAsync();
+        }
 
     }
+             
+        
+
+    
 }
 

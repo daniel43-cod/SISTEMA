@@ -85,7 +85,6 @@ namespace API_SISTEMA.services
                                 telefono = ventaDto.clienteNuevo.telefono,
                                 correo_electronico = ventaDto.clienteNuevo.correo_electronico,
                                 direccion = ventaDto.clienteNuevo.direccion,
-                                limite_Credito = ventaDto.clienteNuevo.limite_Credito,
                                 estado = true
                             };
 

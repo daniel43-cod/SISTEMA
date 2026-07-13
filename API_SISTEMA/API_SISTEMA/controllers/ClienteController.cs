@@ -17,7 +17,7 @@ namespace API_SISTEMA.controllers
                 _Service = service;
             }
 
-        [HttpGet]
+        [HttpGet("listar")]
         public async Task<IActionResult> listar()
         {
             var listar = await _Service.ListarCliente();
