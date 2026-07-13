@@ -175,6 +175,63 @@ modelBuilder.Entity<Producto_precio>()
                 .HasForeignKey(v => v.id_producto);
 
 
+            modelBuilder.Entity<SesionCaja>()
+                .HasOne(v => v.caja)
+                .WithMany()
+                .HasForeignKey(v => v.id_caja);
+
+
+            modelBuilder.Entity<SesionCaja>()
+                .HasOne(v => v.usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario_cierre);
+
+            modelBuilder.Entity<SesionCaja>()
+                .HasOne(v => v.usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario_apertura);
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.sesionCaja)
+                .WithMany()
+                .HasForeignKey(v => v.id_sesion_caja);
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.tipoMovimientoCaja)
+                .WithMany()
+                .HasForeignKey(v => v.id_tipo_movimiento);
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario);
+
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.venta)
+                .WithMany()
+                .HasForeignKey(v => v.id_venta);
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.RegistroCompras)
+                .WithMany()
+                .HasForeignKey(v => v.id_compra);
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.pagos)
+                .WithMany()
+                .HasForeignKey(v => v.id_pago_venta);
+
+            modelBuilder.Entity<MovimientoCaja>()
+                .HasOne(v => v.pagosCompra)
+                .WithMany()
+                .HasForeignKey(v => v.id_pago_compra);
+
+
+
+
+
+
 
         }
 
