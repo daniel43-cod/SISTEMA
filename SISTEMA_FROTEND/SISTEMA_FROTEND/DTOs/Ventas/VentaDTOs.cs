@@ -9,7 +9,7 @@ namespace SISTEMA_FROTEND.DTOs.Ventas
     {
         public int? id_cliente { get; set; }
         public string? nombre_cliente { get; set; }
-        public ClienteBuscarDTOs? clienteNuevo { get; set; }
+        public ClienteNuevoDTOs? clienteNuevo { get; set; }
         public int? id_usuario { get; set; }
       //  public decimal monto_pagado { get; set; }
         public string? observacion_pago { get; set; }

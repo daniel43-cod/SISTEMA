@@ -20,5 +20,10 @@ namespace SISTEMA_FROTEND.services
         {
             return await _httpClient.GetFromJsonAsync<List<ClienteBuscarDTOs>>($"Cliente/buscar?texto={Uri.EscapeDataString(texto)}")?? new List<ClienteBuscarDTOs>();
         }
+
+        public async Task<List<ListarClienteDTOs>> ListarClientes()
+        {
+            return await _httpClient.GetFromJsonAsync<List<ListarClienteDTOs>>("Cliente/listar");
+        }
     }
 }

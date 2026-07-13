@@ -1,4 +1,6 @@
-﻿using SISTEMA_FROTEND.DTOs.Ventas;
+﻿using SISTEMA_FROTEND.DTOs.Cliente;
+using SISTEMA_FROTEND.DTOs.Ventas;
+using SISTEMA_FROTEND.models;
 using SISTEMA_FROTEND.services;
 using System;
 using System.Collections.Generic;
@@ -11,23 +13,63 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace SISTEMA_FROTEND.forms
 {
+
     public partial class formCobro : Form
     {
         private VentaDTOs _venta;
         private decimal _total;
 
-        public formCobro(VentaDTOs venta, decimal total)
+        public formCobro(
+            List<DetalleDTOs> detalles,
+            ListarClienteDTOs clienteSeleccionado,
+            string nombreCliente,
+            string nitCliente,
+            string telefonoCliente,
+            string correoCliente,
+            string direccionCliente,
+            string dpiCliente,
+            int idUsuario,
+            decimal subtotal,
+            decimal descuentoTotal,
+            decimal total)
         {
             InitializeComponent();
-            _venta = venta;
-            _total = total;
-        }
 
+            _total = total;
+
+            _venta = new VentaDTOs
+            {
+                id_usuario = idUsuario,
+                origen = "WinForms",
+                detalles = detalles
+            };
+
+            if (clienteSeleccionado != null)
+            {
+                _venta.id_cliente = clienteSeleccionado.id_Cliente;
+                _venta.clienteNuevo = null;
+            }
+            else
+            {
+                _venta.id_cliente = 0;
+                _venta.clienteNuevo = new ClienteNuevoDTOs
+                {
+                    nombre = nombreCliente,
+                    nit = nitCliente,
+                    telefono = telefonoCliente,
+                    correo_electronico = correoCliente,
+                    direccion = direccionCliente,
+                    dpi = dpiCliente
+                };  
+              
+            }
+
+            textotal.Text = _total.ToString("N2");
+        }
 
         private void formCobro_Load(object sender, EventArgs e)
         {
             textotal.Enabled = false;
-        
             textotal.Text = _total.ToString("N2");
         }
 
@@ -50,21 +92,19 @@ namespace SISTEMA_FROTEND.forms
                 MessageBox.Show("El efectivo debe ser mayor a 0.");
                 return;
             }
+
             decimal montoPagado;
             decimal cambio = 0;
             decimal saldoPendiente = 0;
 
-
             if (efectivo >= total)
             {
-                // Pagó todo o de más
                 montoPagado = total;
                 cambio = efectivo - total;
                 saldoPendiente = 0;
             }
             else
             {
-                // Pagó solo una parte
                 montoPagado = efectivo;
                 cambio = 0;
                 saldoPendiente = total - efectivo;
@@ -90,7 +130,7 @@ namespace SISTEMA_FROTEND.forms
                     $"Saldo pendiente: Q {saldoPendiente:N2}"
                 );
 
-                this.Close();
+                DialogResult = DialogResult.OK; // agregado: para que cotizacion sepa que se guardó bien
             }
             catch (Exception ex)
             {
@@ -98,5 +138,5 @@ namespace SISTEMA_FROTEND.forms
             }
         }
     }
-    
+
 }

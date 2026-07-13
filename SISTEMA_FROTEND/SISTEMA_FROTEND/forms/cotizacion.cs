@@ -19,6 +19,13 @@ namespace SISTEMA_FROTEND.presentacion
 {
     public partial class cotizacion : Form
     {
+
+
+        private ClienteService _clienteService = new ClienteService();
+        private ListarClienteDTOs _clienteSeleccionado; 
+        private List<ListarClienteDTOs> _clientes;
+
+
         //datos que se llena en los campos si el usuario confirma la eleccion de algun cliente existente
         private ClienteBuscarDTOs clienteSeleccionadoActual = null;
         public cotizacion()
@@ -26,6 +33,7 @@ namespace SISTEMA_FROTEND.presentacion
             InitializeComponent();
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
             dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
+            texclientes.Leave += texclientes_Leave;
         }
 
         //instanciamos el servicio de productos para poder acceder a la lista de productos y sus detalles
@@ -58,6 +66,14 @@ namespace SISTEMA_FROTEND.presentacion
             texsubtotal.Enabled = false;
             texdescuento.Enabled = false;
             textotal.Enabled = false;
+            _clientes = await _clienteService.ListarClientes(); // ajustá el nombre real del método
+
+            var fuenteClientes = new AutoCompleteStringCollection();
+            fuenteClientes.AddRange(_clientes.Select(c => c.nombre).ToArray());
+
+            texclientes.AutoCompleteMode = AutoCompleteMode.Suggest;
+            texclientes.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            texclientes.AutoCompleteCustomSource = fuenteClientes;
 
             if (!dataGridView1.Columns.Contains("id_producto"))
             {
@@ -65,9 +81,7 @@ namespace SISTEMA_FROTEND.presentacion
                 dataGridView1.Columns["id_producto"].Visible = false;
             }
 
-            comCliente.DropDownStyle = ComboBoxStyle.DropDown;
-            comCliente.AutoCompleteMode = AutoCompleteMode.None;
-            comCliente.AutoCompleteSource = AutoCompleteSource.None;
+          
 
             texapellido.Visible = false;
             labapellido.Visible = false;
@@ -82,6 +96,60 @@ namespace SISTEMA_FROTEND.presentacion
         {
 
         }
+        //EVENTO PARA SELECCIONAR EL CLIENTE DE LA LISTA DE AUTOCOMPLETADO
+        private void texclientes_Leave(object sender, EventArgs e)
+        {
+            string texto = texclientes.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(texto))
+            {
+                _clienteSeleccionado = null;
+                LimpiarCamposCliente(habilitar: true);
+                return;
+            }
+
+            var cliente = _clientes.FirstOrDefault(c =>
+                c.nombre.Trim().Equals(texto, StringComparison.OrdinalIgnoreCase));
+
+            if (cliente != null)
+            {
+                // Cliente existente: llenar y bloquear
+                _clienteSeleccionado = cliente;
+
+                texnit.Text = cliente.nit ?? "";
+                textelefono.Text = cliente.telefono ?? "";
+                texcorreo.Text = cliente.correo_electronico ?? "";
+                texdireccion.Text = cliente.direccion ?? "";
+                texdpi.Text = cliente.dpi ?? "";
+
+                texnit.ReadOnly = true;
+                textelefono.ReadOnly = true;
+                texcorreo.ReadOnly = true;
+                texdireccion.ReadOnly = true;
+                texdpi.ReadOnly = true;
+            }
+            else
+            {
+                // Cliente nuevo: limpiar y habilitar para que el usuario escriba
+                _clienteSeleccionado = null;
+                LimpiarCamposCliente(habilitar: true);
+            }
+        }
+
+        private void LimpiarCamposCliente(bool habilitar)
+        {
+            texnit.Text = "";
+            textelefono.Text = "";
+            texcorreo.Text = "";
+            texdireccion.Text = "";
+            texdpi.Text = "";
+
+            texnit.ReadOnly = !habilitar;
+            textelefono.ReadOnly = !habilitar;
+            texcorreo.ReadOnly = !habilitar;
+            texdireccion.ReadOnly = !habilitar;
+            texdpi.ReadOnly = !habilitar;
+        }
 
 
         private async void comCliente_SelectedIndexChanged(object sender, EventArgs e)
@@ -91,63 +159,20 @@ namespace SISTEMA_FROTEND.presentacion
         //evento que consulta a la api
         private async void comCliente_TextChanged(object sender, EventArgs e)
         {
-            if (cargandoClientes)
-                return;
 
-            string texto = comCliente.Text;
-
-            if (texto.Length < 3)
-                return;
-
-            cargandoClientes = true;
-
-            try
-            {
-                comCliente.DroppedDown = false;
-
-                clientesEncontrados = await clienteService.BuscarClientes(texto);
-                comCliente.DataSource = clientesEncontrados;
-
-                comCliente.DataSource = null;
-                comCliente.DisplayMember = "nombreCompleto";
-                comCliente.ValueMember = "id_cliente";
-                comCliente.DataSource = clientesEncontrados;
-
-                comCliente.Text = texto;
-
-                if (texto.Length <= comCliente.Text.Length)
-                    comCliente.SelectionStart = texto.Length;
-
-                if (clientesEncontrados.Count > 0)
-                    comCliente.DroppedDown = true;
-            }
-            finally
-            {
-                cargandoClientes = false;
-            }
 
         }
 
         //evento que se dispara cuando se selecciona un cliente de la lista desplegable, llenando los campos correspondientes con la información del cliente seleccionado
         private void comCliente_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            if (comCliente.SelectedItem is ClienteBuscarDTOs cliente)
-            {
-                clienteSeleccionadoActual = cliente;
-
-                texnit.Text = cliente.nit ?? "";
-                textelefono.Text = cliente.telefono ?? "";
-                texcorreo.Text = cliente.correo_electronico ?? "";
-                texdireccion.Text = cliente.direccion ?? "";
-                texdpi.Text = cliente.dpi ?? "";
-            }
+           
         }
 
 
         private void limpiar()
         {
             textelefono.Text = "";
-            comCliente.Text = "";
             texapellido.Text = "";
             texnit.Text = "";
             texdpi.Text = "";
@@ -169,19 +194,7 @@ namespace SISTEMA_FROTEND.presentacion
         //permite seleccionar un producto con el enter y llenar los campos de precio y descuento automaticamente
         private void button2_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-            {
-                var cliente = clientesEncontrados.FirstOrDefault(c =>
-                    c.nombreCompleto.Equals(comCliente.Text.Trim(), StringComparison.OrdinalIgnoreCase));
-
-                if (cliente != null)
-                {
-                    comCliente.SelectedItem = cliente;
-                    LlenarDatosCliente(cliente);
-                }
-
-                e.Handled = true;
-            }
+            
         }
 
         private void LlenarDatosCliente(ClienteBuscarDTOs cliente)
@@ -263,7 +276,7 @@ namespace SISTEMA_FROTEND.presentacion
                     fila.Cells["descuento"].Value = 0;
                 }
 
-                dataGridView1.Rows[e.RowIndex].Tag = producto.id_producto_presentacion;
+                dataGridView1.Rows[e.RowIndex].Tag = producto;
 
                 CalcularSubtotal(e.RowIndex);
             }
@@ -302,59 +315,68 @@ namespace SISTEMA_FROTEND.presentacion
         private void button3_Click(object sender, EventArgs e)
         {
 
-            //se crea el objeto
-            VentaDTOs venta = new VentaDTOs
-            {
-                id_usuario = Sesion.IdUsuario,
-                origen = "VENTA",
-                detalles = new List<DetalleDTOs>()
-            };
+            dataGridView1.EndEdit(); // confirma cualquier edición pendiente en el grid
 
-            //recorre todas las filas del DataGridView y agrega los detalles de cada producto a la lista de detalles de la venta
+            var detalles = new List<DetalleDTOs>();
+            decimal subtotal = 0;
+            decimal descuentoTotal = 0;
+
             foreach (DataGridViewRow fila in dataGridView1.Rows)
             {
                 if (fila.IsNewRow) continue;
-                if (fila.Tag == null) continue;
+                if (fila.Tag is not ProductoVentaBuscarDTO producto) continue; // ahora Tag es el objeto completo
 
-                venta.detalles.Add(new DetalleDTOs
+                int cantidad = Convert.ToInt32(fila.Cells["cantidad"].Value ?? 0);
+                decimal descuento = Convert.ToDecimal(fila.Cells["descuento"].Value ?? 0);
+
+                if (cantidad <= 0) continue;
+
+                detalles.Add(new DetalleDTOs
                 {
-                    id_producto=Convert.ToInt32(fila.Cells["id_producto"].Value),
-                    id_producto_presentacion = Convert.ToInt32(fila.Tag),
-                    cantidad = Convert.ToInt32(fila.Cells["cantidad"].Value),
-                    descuento = Convert.ToDecimal(fila.Cells["descuento"].Value)
+                    id_producto = producto.id_producto,
+                    id_producto_presentacion = producto.id_producto_presentacion,
+                    cantidad = cantidad,
+                    descuento = descuento
                 });
+
+                subtotal += cantidad * producto.precio;
+                descuentoTotal += descuento;
             }
 
-            if (venta.detalles.Count == 0)
+            if (detalles.Count == 0)
             {
-                MessageBox.Show("Agrega al menos un producto.");
-                return;
-            }
-            ClienteBuscarDTOs cliente1 = null;
-
-            if (comCliente.SelectedItem is ClienteBuscarDTOs clienteSeleccionado)
-            {
-                cliente1 = clienteSeleccionado;
-            }
-            else
-            {
-                cliente1 = clientesEncontrados.FirstOrDefault(c =>
-                    c.nombreCompleto.Equals(comCliente.Text.Trim(), StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (clienteSeleccionadoActual == null)
-            {
-                MessageBox.Show("Selecciona un cliente válido de la lista.");
+                MessageBox.Show("Agregá al menos un producto antes de cobrar.");
                 return;
             }
 
-            venta.id_cliente = clienteSeleccionadoActual.id_Cliente;
-            venta.nombre_cliente = clienteSeleccionadoActual.nombreCompleto;
-            venta.clienteNuevo = null;
+            // Validación de cliente: o ya existe (_clienteSeleccionado) o se va a crear uno nuevo
+            if (_clienteSeleccionado == null && string.IsNullOrWhiteSpace(texclientes.Text.Trim()))
+            {
+                MessageBox.Show("Ingresá o seleccioná un cliente antes de cobrar.");
+                return;
+            }
 
-            formCobro frm = new formCobro(venta, Convert.ToDecimal(textotal.Text));
-            frm.ShowDialog();
+            decimal total = subtotal - descuentoTotal;
 
+            using var formCobro = new formCobro(
+                detalles,
+                _clienteSeleccionado,      // puede ser null (cliente nuevo) o el cliente existente
+                texclientes.Text.Trim(),   // nombre escrito, por si hay que crear cliente nuevo
+                texnit.Text.Trim(),
+                textelefono.Text.Trim(),
+                texcorreo.Text.Trim(),
+                texdireccion.Text.Trim(),
+                texdpi.Text.Trim(),
+                Sesion.IdUsuario,
+                subtotal,
+                descuentoTotal,
+                total
+            );
+
+            if (formCobro.ShowDialog() == DialogResult.OK)
+            {
+                limpiar();
+            }
         }
     }
 }

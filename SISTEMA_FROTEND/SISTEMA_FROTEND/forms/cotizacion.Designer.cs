@@ -30,7 +30,8 @@
         {
             button1 = new Button();
             groupBox1 = new GroupBox();
-            comCliente = new ComboBox();
+            cliente = new Label();
+            texclientes = new TextBox();
             labtelefono = new Label();
             textelefono = new TextBox();
             label6 = new Label();
@@ -78,7 +79,8 @@
             // 
             // groupBox1
             // 
-            groupBox1.Controls.Add(comCliente);
+            groupBox1.Controls.Add(cliente);
+            groupBox1.Controls.Add(texclientes);
             groupBox1.Controls.Add(labtelefono);
             groupBox1.Controls.Add(textelefono);
             groupBox1.Controls.Add(label6);
@@ -100,16 +102,21 @@
             groupBox1.Text = "Datos del Cliente";
             groupBox1.Enter += groupBox1_Enter;
             // 
-            // comCliente
+            // cliente
             // 
-            comCliente.FormattingEnabled = true;
-            comCliente.Location = new Point(177, 36);
-            comCliente.Name = "comCliente";
-            comCliente.Size = new Size(151, 28);
-            comCliente.TabIndex = 15;
-            comCliente.SelectedIndexChanged += comCliente_SelectedIndexChanged;
-            comCliente.SelectionChangeCommitted += comCliente_SelectionChangeCommitted;
-            comCliente.TextChanged += comCliente_TextChanged;
+            cliente.AutoSize = true;
+            cliente.Location = new Point(93, 29);
+            cliente.Name = "cliente";
+            cliente.Size = new Size(53, 20);
+            cliente.TabIndex = 17;
+            cliente.Text = "cliente";
+            // 
+            // texclientes
+            // 
+            texclientes.Location = new Point(176, 34);
+            texclientes.Name = "texclientes";
+            texclientes.Size = new Size(152, 27);
+            texclientes.TabIndex = 16;
             // 
             // labtelefono
             // 
@@ -210,7 +217,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(96, 33);
+            label1.Location = new Point(-168, 162);
             label1.Name = "label1";
             label1.Size = new Size(64, 20);
             label1.TabIndex = 2;
@@ -414,7 +421,6 @@
         private Label labtelefono;
         private TextBox textelefono;
         private Label lblUsuario;
-        private ComboBox comCliente;
         private DataGridViewTextBoxColumn cantidad;
         private DataGridViewTextBoxColumn producto;
         private DataGridViewTextBoxColumn stock;
@@ -428,5 +434,7 @@
         private Label label7;
         private Label label8;
         private Button button3;
+        private Label cliente;
+        private TextBox texclientes;
     }
 }
