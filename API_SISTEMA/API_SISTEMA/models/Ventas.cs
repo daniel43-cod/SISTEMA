@@ -17,13 +17,14 @@ namespace API_SISTEMA.models
         public decimal ganancia_total { get; set; }
         public string origen { get; set; }
         public int id_estado_venta { get; set; }
+        public int id_sesion_caja { get; set; }
         public decimal monto_pagado { get; set; }
         public decimal saldo_pendiente { get; set; }
         public string? observacion { get; set; }
         public EstadoVenta EstadoVenta { get; set; }
         public Usuario usuario { get; set; }
         public Cliente cliente { get; set; }
-
+        public SesionCaja sesionCaja { get; set; }
         public List<Detalle_venta> DetalleVentas { get; set; } = new();
     }
 }
