@@ -1,17 +1,20 @@
+# IDEs y herramientas de desarrollo
+.idea/
+.gradle/
+
+# Archivos específicos de Gradle
+gradle/gradle-daemon-jvm.properties
+
 # Visual Studio
 .vs/
 **/.vs/
 
-# Archivos compilados
+# Archivos compilados y temporales
 bin/
 obj/
 **/bin/
 **/obj/
-
-# Archivos de usuario
 *.user
 *.suo
 *.userosscache
-
-# Archivos temporales
 *.log

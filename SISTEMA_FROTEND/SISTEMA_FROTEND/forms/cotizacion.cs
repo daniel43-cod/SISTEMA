@@ -22,7 +22,7 @@ namespace SISTEMA_FROTEND.presentacion
 
 
         private ClienteService _clienteService = new ClienteService();
-        private ListarClienteDTOs _clienteSeleccionado; 
+        private ListarClienteDTOs _clienteSeleccionado;
         private List<ListarClienteDTOs> _clientes;
 
 
@@ -54,10 +54,6 @@ namespace SISTEMA_FROTEND.presentacion
         }
 
 
-        private async void btncotizar_Click(object sender, EventArgs e)
-        {
-     
-        }
 
 
         private async void cotizacion_Load(object sender, EventArgs e)
@@ -81,7 +77,7 @@ namespace SISTEMA_FROTEND.presentacion
                 dataGridView1.Columns["id_producto"].Visible = false;
             }
 
-          
+
 
             texapellido.Visible = false;
             labapellido.Visible = false;
@@ -92,10 +88,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         }
 
-        private void groupBox1_Enter(object sender, EventArgs e)
-        {
 
-        }
         //EVENTO PARA SELECCIONAR EL CLIENTE DE LA LISTA DE AUTOCOMPLETADO
         private void texclientes_Leave(object sender, EventArgs e)
         {
@@ -152,22 +145,7 @@ namespace SISTEMA_FROTEND.presentacion
         }
 
 
-        private async void comCliente_SelectedIndexChanged(object sender, EventArgs e)
-        {
-        }
 
-        //evento que consulta a la api
-        private async void comCliente_TextChanged(object sender, EventArgs e)
-        {
-
-
-        }
-
-        //evento que se dispara cuando se selecciona un cliente de la lista desplegable, llenando los campos correspondientes con la información del cliente seleccionado
-        private void comCliente_SelectionChangeCommitted(object sender, EventArgs e)
-        {
-           
-        }
 
 
         private void limpiar()
@@ -185,30 +163,9 @@ namespace SISTEMA_FROTEND.presentacion
             limpiar();
         }
 
-        private void button2_HelpRequested(object sender, HelpEventArgs hlpevent)
-        {
-
-        }
-
-
-        //permite seleccionar un producto con el enter y llenar los campos de precio y descuento automaticamente
-        private void button2_KeyDown(object sender, KeyEventArgs e)
-        {
-            
-        }
-
-        private void LlenarDatosCliente(ClienteBuscarDTOs cliente)
-        {
-            texnit.Text = cliente.nit ?? "";
-            textelefono.Text = cliente.telefono ?? "";
-            texcorreo.Text = cliente.correo_electronico ?? "";
-            texdireccion.Text = cliente.direccion ?? "";
-            texdpi.Text = cliente.dpi ?? "";
-        }
-
         //arma el autocompletado en la celda producto 
         private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-        {
+        {/*
             if (dataGridView1.CurrentCell.OwningColumn.Name == "producto")
             {
                 var textBox = e.Control as TextBox;
@@ -222,7 +179,78 @@ namespace SISTEMA_FROTEND.presentacion
                     fuente.AddRange(_productos.Select(p => p.nombreMostrar).ToArray());
                     textBox.AutoCompleteCustomSource = fuente;
                 }
+            }*/
+
+            if (e.Control is not TextBox textBox)
+                return;
+
+            // Es importante quitar primero el evento para evitar
+            // que se conecte varias veces.
+            textBox.KeyPress -= SoloEnteros_KeyPress;
+            textBox.KeyPress -= SoloDecimales_KeyPress;
+
+            string columna = dataGridView1.CurrentCell.OwningColumn.Name;
+
+            if (columna == "producto")
+            {
+                textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
+                textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+
+                var fuente = new AutoCompleteStringCollection();
+
+                fuente.AddRange(
+                    _productos.Select(p => p.nombreMostrar).ToArray());
+
+                textBox.AutoCompleteCustomSource = fuente;
             }
+            else
+            {
+                // Quita el autocompletado al editar otra columna.
+                textBox.AutoCompleteMode = AutoCompleteMode.None;
+                textBox.AutoCompleteSource = AutoCompleteSource.None;
+                textBox.AutoCompleteCustomSource = null;
+            }
+
+            if (columna == "cantidad")
+            {
+                textBox.KeyPress += SoloEnteros_KeyPress;
+            }
+
+            if (columna == "descuento")
+            {
+                textBox.KeyPress += SoloDecimales_KeyPress;
+            }
+
+
+
+        }
+
+        private void SoloEnteros_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsDigit(e.KeyChar) &&
+                !char.IsControl(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void SoloDecimales_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+
+            char separador = Convert.ToChar(
+                System.Globalization.CultureInfo.CurrentCulture
+                .NumberFormat.NumberDecimalSeparator);
+
+            if (char.IsDigit(e.KeyChar) ||
+                char.IsControl(e.KeyChar))
+                return;
+
+            if (e.KeyChar == separador &&
+                !textBox.Text.Contains(separador))
+                return;
+
+            e.Handled = true;
         }
 
         //calcula el subtotal 
@@ -294,8 +322,8 @@ namespace SISTEMA_FROTEND.presentacion
 
             foreach (DataGridViewRow fila in dataGridView1.Rows)
             {
-                if (fila.IsNewRow) continue; // saltar la fila fantasma vacía
-                if (fila.Tag == null) continue; // saltar filas sin producto válido
+                if (fila.IsNewRow) continue;
+                if (fila.Tag == null) continue;
 
                 decimal cantidad = Convert.ToDecimal(fila.Cells["cantidad"].Value ?? 0);
                 decimal precio = Convert.ToDecimal(fila.Cells["precio"].Value ?? 0);
@@ -315,7 +343,7 @@ namespace SISTEMA_FROTEND.presentacion
         private void button3_Click(object sender, EventArgs e)
         {
 
-            dataGridView1.EndEdit(); // confirma cualquier edición pendiente en el grid
+            dataGridView1.EndEdit();
 
             var detalles = new List<DetalleDTOs>();
             decimal subtotal = 0;
@@ -324,7 +352,7 @@ namespace SISTEMA_FROTEND.presentacion
             foreach (DataGridViewRow fila in dataGridView1.Rows)
             {
                 if (fila.IsNewRow) continue;
-                if (fila.Tag is not ProductoVentaBuscarDTO producto) continue; // ahora Tag es el objeto completo
+                if (fila.Tag is not ProductoVentaBuscarDTO producto) continue;
 
                 int cantidad = Convert.ToInt32(fila.Cells["cantidad"].Value ?? 0);
                 decimal descuento = Convert.ToDecimal(fila.Cells["descuento"].Value ?? 0);
@@ -349,7 +377,6 @@ namespace SISTEMA_FROTEND.presentacion
                 return;
             }
 
-            // Validación de cliente: o ya existe (_clienteSeleccionado) o se va a crear uno nuevo
             if (_clienteSeleccionado == null && string.IsNullOrWhiteSpace(texclientes.Text.Trim()))
             {
                 MessageBox.Show("Ingresá o seleccioná un cliente antes de cobrar.");
@@ -360,8 +387,8 @@ namespace SISTEMA_FROTEND.presentacion
 
             using var formCobro = new formCobro(
                 detalles,
-                _clienteSeleccionado,      // puede ser null (cliente nuevo) o el cliente existente
-                texclientes.Text.Trim(),   // nombre escrito, por si hay que crear cliente nuevo
+                _clienteSeleccionado,
+                texclientes.Text.Trim(),
                 texnit.Text.Trim(),
                 textelefono.Text.Trim(),
                 texcorreo.Text.Trim(),
@@ -378,5 +405,7 @@ namespace SISTEMA_FROTEND.presentacion
                 limpiar();
             }
         }
+
+    
     }
 }

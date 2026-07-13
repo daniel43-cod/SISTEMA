@@ -51,7 +51,7 @@ namespace SISTEMA_FROTEND.forms
             }
             else
             {
-                _venta.id_cliente = 0;
+                _venta.id_cliente = null;
                 _venta.clienteNuevo = new ClienteNuevoDTOs
                 {
                     nombre = nombreCliente,

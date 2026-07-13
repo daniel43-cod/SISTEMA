@@ -12,15 +12,15 @@ namespace SISTEMA_FROTEND
             //separacion de los paneles
             panelMenu.Dock = DockStyle.None;
             panelMenu.Location = new Point(0, 0);
-            panelMenu.Size = new Size(225, this.ClientSize.Height);
+            panelMenu.Size = new Size(375, this.ClientSize.Height);
             panelMenu.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
 
             panelContenido.Dock = DockStyle.None;
-            panelContenido.Location = new Point(225, 0);
+            panelContenido.Location = new Point(375, 0);
             panelContenido.Size = new Size(this.ClientSize.Width - 225, this.ClientSize.Height);
             panelContenido.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         }
-        
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -86,6 +86,16 @@ namespace SISTEMA_FROTEND
         }
 
         private void panelMenu_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panelContenido_Paint(object sender, PaintEventArgs e)
         {
 
         }

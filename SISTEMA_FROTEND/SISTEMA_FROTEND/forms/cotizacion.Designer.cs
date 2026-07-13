@@ -52,7 +52,6 @@
             descuento = new DataGridViewTextBoxColumn();
             precio = new DataGridViewTextBoxColumn();
             subtotal = new DataGridViewTextBoxColumn();
-            btncotizar = new Button();
             button2 = new Button();
             lblUsuario = new Label();
             texsubtotal = new TextBox();
@@ -69,7 +68,7 @@
             // button1
             // 
             button1.BackColor = Color.White;
-            button1.Location = new Point(215, 739);
+            button1.Location = new Point(284, 749);
             button1.Name = "button1";
             button1.Size = new Size(158, 42);
             button1.TabIndex = 0;
@@ -100,7 +99,6 @@
             groupBox1.TabIndex = 11;
             groupBox1.TabStop = false;
             groupBox1.Text = "Datos del Cliente";
-            groupBox1.Enter += groupBox1_Enter;
             // 
             // cliente
             // 
@@ -280,29 +278,16 @@
             subtotal.ReadOnly = true;
             subtotal.Width = 125;
             // 
-            // btncotizar
-            // 
-            btncotizar.BackColor = Color.White;
-            btncotizar.Location = new Point(453, 739);
-            btncotizar.Name = "btncotizar";
-            btncotizar.Size = new Size(158, 42);
-            btncotizar.TabIndex = 12;
-            btncotizar.Text = "REGISTRAR VENTA";
-            btncotizar.UseVisualStyleBackColor = false;
-            btncotizar.Click += btncotizar_Click;
-            // 
             // button2
             // 
             button2.BackColor = Color.White;
-            button2.Location = new Point(978, 739);
+            button2.Location = new Point(603, 749);
             button2.Name = "button2";
             button2.Size = new Size(158, 42);
             button2.TabIndex = 13;
             button2.Text = "CANCELAR";
             button2.UseVisualStyleBackColor = false;
             button2.Click += button2_Click;
-            button2.HelpRequested += button2_HelpRequested;
-            button2.KeyDown += button2_KeyDown;
             // 
             // lblUsuario
             // 
@@ -364,7 +349,7 @@
             // button3
             // 
             button3.BackColor = Color.White;
-            button3.Location = new Point(706, 739);
+            button3.Location = new Point(940, 749);
             button3.Name = "button3";
             button3.Size = new Size(158, 42);
             button3.TabIndex = 21;
@@ -386,7 +371,6 @@
             Controls.Add(texsubtotal);
             Controls.Add(lblUsuario);
             Controls.Add(button2);
-            Controls.Add(btncotizar);
             Controls.Add(groupBox1);
             Controls.Add(dataGridView1);
             Controls.Add(button1);
@@ -416,7 +400,6 @@
         private TextBox texapellido;
         private Label label1;
         private DataGridView dataGridView1;
-        private Button btncotizar;
         private Button button2;
         private Label labtelefono;
         private TextBox textelefono;
