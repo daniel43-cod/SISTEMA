@@ -231,6 +231,16 @@ modelBuilder.Entity<Producto_precio>()
                 .WithMany()
                 .HasForeignKey(v => v.id_sesion_caja);
 
+            modelBuilder.Entity<Gastos>()
+                .HasOne(v => v.usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario);
+
+            modelBuilder.Entity<Gastos>()
+                .HasOne(v => v.sesionCaja)
+                .WithMany()
+                .HasForeignKey(v => v.id_sesion_caja);
+
 
 
 
