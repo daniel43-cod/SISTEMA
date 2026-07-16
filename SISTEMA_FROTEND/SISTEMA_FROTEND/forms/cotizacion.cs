@@ -79,8 +79,7 @@ namespace SISTEMA_FROTEND.presentacion
 
 
 
-            texapellido.Visible = false;
-            labapellido.Visible = false;
+         
 
             _productos = await _productoService.ListarProducto();
 
@@ -151,7 +150,6 @@ namespace SISTEMA_FROTEND.presentacion
         private void limpiar()
         {
             textelefono.Text = "";
-            texapellido.Text = "";
             texnit.Text = "";
             texdpi.Text = "";
             texdireccion.Text = "";
@@ -406,6 +404,9 @@ namespace SISTEMA_FROTEND.presentacion
             }
         }
 
-    
+        private void cliente_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

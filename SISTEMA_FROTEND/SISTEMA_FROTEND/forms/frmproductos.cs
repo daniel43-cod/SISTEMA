@@ -57,6 +57,14 @@ namespace SISTEMA_FROTEND.forms
             texEmpresa.AutoCompleteSource = AutoCompleteSource.CustomSource;
             texEmpresa.AutoCompleteCustomSource = fuenteEmpresas;
 
+            datacompras.DefaultCellStyle.ForeColor = Color.Black;
+            datacompras.DefaultCellStyle.BackColor = Color.White;
+
+            datacompras.DefaultCellStyle.SelectionForeColor = Color.White;
+            datacompras.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+            datacompras.EnableHeadersVisualStyles = false;
+            datacompras.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            datacompras.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
 
         }
 

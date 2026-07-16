@@ -18,3 +18,7 @@ obj/
 *.suo
 *.userosscache
 *.log
+
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json

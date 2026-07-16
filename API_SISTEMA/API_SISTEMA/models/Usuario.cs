@@ -15,5 +15,6 @@ namespace API_SISTEMA.models
         public string password { get; set; }
         public bool estado { get; set; }
         public  DateTime fecha_Creacion {  get; set; }
+        public Rol rol { get; set; }
     }
 }

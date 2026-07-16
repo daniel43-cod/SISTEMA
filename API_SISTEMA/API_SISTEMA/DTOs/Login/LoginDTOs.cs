@@ -1,4 +1,4 @@
-﻿namespace API_SISTEMA.DTOs
+﻿namespace API_SISTEMA.DTOs.Login
 {
     public class LoginDTOs
     {

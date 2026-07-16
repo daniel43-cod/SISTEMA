@@ -32,6 +32,9 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             panelContenido = new Panel();
             panelMenu = new Panel();
+            label7 = new Label();
+            button1 = new Button();
+            imageList1 = new ImageList(components);
             label6 = new Label();
             label5 = new Label();
             label4 = new Label();
@@ -39,14 +42,11 @@
             label2 = new Label();
             label1 = new Label();
             btningreso = new Button();
-            imageList1 = new ImageList(components);
             btncreditos = new Button();
             btnregistroventas = new Button();
             btnproductos = new Button();
             btnusuarios = new Button();
             btnregistrar = new Button();
-            label7 = new Label();
-            button1 = new Button();
             panelMenu.SuspendLayout();
             SuspendLayout();
             // 
@@ -86,6 +86,42 @@
             panelMenu.Size = new Size(377, 677);
             panelMenu.TabIndex = 4;
             panelMenu.Paint += panelMenu_Paint;
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label7.ForeColor = Color.White;
+            label7.Location = new Point(24, 134);
+            label7.Name = "label7";
+            label7.Size = new Size(108, 25);
+            label7.TabIndex = 12;
+            label7.Text = "CATALOGO";
+            // 
+            // button1
+            // 
+            button1.BackColor = Color.Gainsboro;
+            button1.ImageIndex = 6;
+            button1.ImageList = imageList1;
+            button1.Location = new Point(262, 116);
+            button1.Name = "button1";
+            button1.Size = new Size(75, 65);
+            button1.TabIndex = 11;
+            button1.UseVisualStyleBackColor = false;
+            // 
+            // imageList1
+            // 
+            imageList1.ColorDepth = ColorDepth.Depth32Bit;
+            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
+            imageList1.TransparentColor = Color.Transparent;
+            imageList1.Images.SetKeyName(0, "Venta.png");
+            imageList1.Images.SetKeyName(1, "Registro.png");
+            imageList1.Images.SetKeyName(2, "Compras.png");
+            imageList1.Images.SetKeyName(3, "Pedidos.png");
+            imageList1.Images.SetKeyName(4, "Crear.png");
+            imageList1.Images.SetKeyName(5, "Configuracion.png");
+            imageList1.Images.SetKeyName(6, "Catalogo.png");
+            imageList1.Images.SetKeyName(7, "Cancelar.png");
             // 
             // label6
             // 
@@ -169,19 +205,6 @@
             btningreso.UseVisualStyleBackColor = false;
             btningreso.Click += btningreso_Click;
             // 
-            // imageList1
-            // 
-            imageList1.ColorDepth = ColorDepth.Depth32Bit;
-            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
-            imageList1.TransparentColor = Color.Transparent;
-            imageList1.Images.SetKeyName(0, "Venta.png");
-            imageList1.Images.SetKeyName(1, "Registro.png");
-            imageList1.Images.SetKeyName(2, "Compras.png");
-            imageList1.Images.SetKeyName(3, "Pedidos.png");
-            imageList1.Images.SetKeyName(4, "Crear.png");
-            imageList1.Images.SetKeyName(5, "Configuracion.png");
-            imageList1.Images.SetKeyName(6, "Catalogo.png");
-            // 
             // btncreditos
             // 
             btncreditos.BackColor = Color.Gainsboro;
@@ -243,28 +266,6 @@
             btnregistrar.TabIndex = 0;
             btnregistrar.UseVisualStyleBackColor = false;
             btnregistrar.Click += btnregistrar_Click;
-            // 
-            // label7
-            // 
-            label7.AutoSize = true;
-            label7.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label7.ForeColor = Color.White;
-            label7.Location = new Point(24, 134);
-            label7.Name = "label7";
-            label7.Size = new Size(108, 25);
-            label7.TabIndex = 12;
-            label7.Text = "CATALOGO";
-            // 
-            // button1
-            // 
-            button1.BackColor = Color.Gainsboro;
-            button1.ImageIndex = 6;
-            button1.ImageList = imageList1;
-            button1.Location = new Point(262, 116);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 65);
-            button1.TabIndex = 11;
-            button1.UseVisualStyleBackColor = false;
             // 
             // Form1
             // 

@@ -2,13 +2,17 @@ using API_SISTEMA.controllers;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 //agregue la coneciom del appsetings
 builder.Services.AddDbContext<SistemaDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSQL")));
-
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -30,6 +34,28 @@ builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<PagoService>();
 builder.Services.AddScoped<EmpresaService>();
 builder.Services.AddScoped<CompraService>();
+builder.Services.AddScoped<JwtService>();
+
+
+//a partir de aqui todas las peticiones deberan traer o autenticarse para ser autorizadas
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters =
+        new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+});
 
 var app = builder.Build();
 
@@ -38,7 +64,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

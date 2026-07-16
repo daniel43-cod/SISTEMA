@@ -27,9 +27,6 @@ namespace SISTEMA_FROTEND.presentacion
             texcantidad.KeyDown += EnterComoTab;
             texminima.KeyDown += EnterComoTab;
             texpreciocompra.KeyDown += EnterComoTab;
-            texpreciomin.KeyDown += EnterComoTab;
-            texpreciomayor.KeyDown += EnterComoTab;
-           
         }
         //metodo para moverse entre los campos de texto con el enter
         private void EnterComoTab(object sender, KeyEventArgs e)
@@ -84,29 +81,29 @@ namespace SISTEMA_FROTEND.presentacion
                 MostrarError(labpreciocompra, "Ingresa el precio");
                 return;
             }
-           if (!decimal.TryParse(texpreciocompra.Text, out _))
+            if (!decimal.TryParse(texpreciocompra.Text, out _))
             {
                 MostrarError(labpreciocompra, "Ingresa un preci3 válido");
                 return;
             }
-          /*  if (!string.IsNullOrWhiteSpace(texpreciomin.Text) &&
-                !int.TryParse(texpreciomin.Text, out _))
-            {
-                MostrarError(labpreciomenor, "Ingrese un número válido");
-                return;
-            }
-            if (!string.IsNullOrWhiteSpace(texpreciomayor.Text) &&
-                !int.TryParse(texpreciomayor.Text, out _))
-            {
-                MostrarError(labpreciomayor, "Ingrese un número válido");
-                return;
-            }
-            if (!string.IsNullOrWhiteSpace(texminima.Text) &&
-                !int.TryParse(texminima.Text, out _))
-            {
-                MostrarError(labexistenciamin, "Ingrese un número válido");
-                return;
-            }*/
+            /*  if (!string.IsNullOrWhiteSpace(texpreciomin.Text) &&
+                  !int.TryParse(texpreciomin.Text, out _))
+              {
+                  MostrarError(labpreciomenor, "Ingrese un número válido");
+                  return;
+              }
+              if (!string.IsNullOrWhiteSpace(texpreciomayor.Text) &&
+                  !int.TryParse(texpreciomayor.Text, out _))
+              {
+                  MostrarError(labpreciomayor, "Ingrese un número válido");
+                  return;
+              }
+              if (!string.IsNullOrWhiteSpace(texminima.Text) &&
+                  !int.TryParse(texminima.Text, out _))
+              {
+                  MostrarError(labexistenciamin, "Ingrese un número válido");
+                  return;
+              }*/
 
             List<ProductoPresentacionDTO> presentaciones = new();
 
@@ -147,7 +144,7 @@ namespace SISTEMA_FROTEND.presentacion
                 id_categoria = Convert.ToInt32(comcategoria.SelectedValue),
                 presentaciones = presentaciones,
                 imagen = rutaimagen,
-       
+
             };
 
             try
@@ -188,7 +185,7 @@ namespace SISTEMA_FROTEND.presentacion
             labpreciocompra.Text = "";
             labcodigobarras.Text = "";
             labpreciomayor.Text = "";
-            labpreciomenor.Text = "";
+      
 
 
         }
@@ -266,8 +263,6 @@ namespace SISTEMA_FROTEND.presentacion
             texpreciocompra.Text = string.Empty;
             picimagen.Image = null;
             texcantidad.Text = string.Empty;
-            texpreciomayor.Text = string.Empty;
-            texpreciomin.Text = string.Empty;
             dgvPresentaciones.Rows.Clear();
 
         }
@@ -289,7 +284,7 @@ namespace SISTEMA_FROTEND.presentacion
             timer1.Stop();
         }
 
-        
+
 
         private void butsalir_Click(object sender, EventArgs e)
         {
@@ -324,6 +319,11 @@ namespace SISTEMA_FROTEND.presentacion
                 HeaderText = "Precio",
                 DataPropertyName = "precio"
             });
+        }
+
+        private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
         }
     }
 }

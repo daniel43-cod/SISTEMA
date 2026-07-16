@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.DTOs;
+﻿using API_SISTEMA.DTOs.Login;
 using API_SISTEMA.services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,5 +27,28 @@ namespace API_SISTEMA.controllers
 
             return Ok(respuesta);
         }
+
+        [HttpPost("crear")]
+        public async Task<IActionResult> Login(CrearCuentaDTOs dto)
+        {
+            try
+            {
+                await _Service.CrearUsuario(dto);
+
+                return Ok(new
+                {
+                    mensaje = "Usuario creado correctamente."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message,
+                    detalle = ex.ToString()
+                });
+            }
+        }
     }
+    
 }
