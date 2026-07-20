@@ -2,11 +2,14 @@
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace API_SISTEMA.controllers
 {
@@ -23,6 +26,7 @@ namespace API_SISTEMA.controllers
             _context = service;
         }
 
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("listar")]
         public async Task<IActionResult> ListarVentas()
         {
@@ -30,12 +34,20 @@ namespace API_SISTEMA.controllers
             return Ok(listar);
         }
 
-
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("crear")]
         public async Task<IActionResult> Crear([FromBody] VentasDTOs ventaDto)
         {
             try
             {
+                //se obtiene el id del usuario
+                var idUsuario = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(idUsuario))
+                    return Unauthorized();
+
+                ventaDto.id_usuario = int.Parse(idUsuario); // ignora lo que mande el cliente, usa el del token
+
                 var venta = await _context.CrearVenta(ventaDto);
 
                 return Ok(new

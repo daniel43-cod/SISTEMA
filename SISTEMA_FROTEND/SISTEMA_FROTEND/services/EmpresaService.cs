@@ -1,24 +1,24 @@
-﻿using SISTEMA_FROTEND.DTOs;
+﻿using SISTEMA_FROTEND.Conexion;
+using SISTEMA_FROTEND.DTOs;
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http.Json;
 
 namespace SISTEMA_FROTEND.services
 {
     public class EmpresaService
     {
-       private readonly HttpClient _httpClient;
-        public EmpresaService()
-        {
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/");
-        }
+        private HttpClient Cliente =>
+          ApiClient.ObtenerClienteAutenticado();
 
         public async Task<List<EmpresaDTOs>> ListarEmpresas()
         {
-            return await _httpClient.GetFromJsonAsync<List<EmpresaDTOs>>("Empresa/listar");
+            return await Cliente.GetFromJsonAsync<List<EmpresaDTOs>>
+            (
+                "Empresa/listar"
+            ) ?? new List<EmpresaDTOs>();
         }
     }
 }

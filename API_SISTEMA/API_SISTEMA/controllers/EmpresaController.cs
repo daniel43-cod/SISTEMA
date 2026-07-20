@@ -1,11 +1,13 @@
 ﻿using API_SISTEMA.DTOs.EmpresaDTOs;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.controllers
 {
-
+    [Authorize(Roles =Roles.Administrador)]
     [Route("api/[controller]")]
     [ApiController]
     public class EmpresaController : Controller

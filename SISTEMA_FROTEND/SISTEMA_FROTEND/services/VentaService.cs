@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.DTOs.Ventas;
+﻿using SISTEMA_FROTEND.Conexion;
+using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.models;
 using System;
 using System.Collections.Generic;
@@ -9,27 +10,29 @@ namespace SISTEMA_FROTEND.services
 {
     internal class VentaService
     {
-
-
-        private readonly HttpClient _httpClient;
-        public VentaService()
-        {
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/");
-        }
+        private HttpClient Cliente =>
+        ApiClient.ObtenerClienteAutenticado();
 
         public async Task<List<ListarVentasDTOs>> ListarVentas()
         {
-            return await _httpClient.GetFromJsonAsync<List<ListarVentasDTOs>>("Venta/listar");
+            return await Cliente
+                .GetFromJsonAsync<List<ListarVentasDTOs>>(
+                    "Venta/listar"
+                )
+                ?? new List<ListarVentasDTOs>();
         }
 
         public async Task<VentaDTOs?> CrearVenta(VentaDTOs ventaDto)
         {
-            var response = await _httpClient.PostAsJsonAsync("Venta/crear", ventaDto);
+            var response = await Cliente.PostAsJsonAsync(
+                "Venta/crear",
+                ventaDto
+            );
 
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<VentaDTOs>();
+                return await response.Content
+                    .ReadFromJsonAsync<VentaDTOs>();
             }
 
             var error = await response.Content.ReadAsStringAsync();
@@ -37,8 +40,8 @@ namespace SISTEMA_FROTEND.services
             throw new Exception(
                 $"Código: {(int)response.StatusCode}\n" +
                 $"Estado: {response.StatusCode}\n" +
-                $"Respuesta:\n{error}");
+                $"Respuesta:\n{error}"
+            );
         }
-
     }
 }

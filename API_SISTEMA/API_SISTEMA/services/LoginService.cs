@@ -56,6 +56,7 @@ namespace API_SISTEMA.services
                 correo = dto.corre_electronico,
                 telefono = dto.telefono,
                 fecha_Creacion = DateTime.Now,
+                estado=true,
 
                 // Aquí se hashea la contraseña
                 password = BCrypt.Net.BCrypt.HashPassword(dto.password),

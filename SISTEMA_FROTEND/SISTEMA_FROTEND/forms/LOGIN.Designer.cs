@@ -102,6 +102,7 @@
             button2.TabIndex = 6;
             button2.Text = "CANCELAR";
             button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
             // 
             // LOGIN
             // 
@@ -113,6 +114,7 @@
             Controls.Add(groupBox1);
             Name = "LOGIN";
             Text = "LOGIN";
+            Load += LOGIN_Load;
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             ResumeLayout(false);

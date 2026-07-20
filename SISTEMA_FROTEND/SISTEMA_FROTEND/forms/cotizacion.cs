@@ -4,6 +4,7 @@ using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
+using SISTEMA_FROTEND.Utilidades;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -58,7 +59,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async void cotizacion_Load(object sender, EventArgs e)
         {
-            lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
+            lblUsuario.Text = $"Usuario: {SesionUsuario.Nombre}";
             texsubtotal.Enabled = false;
             texdescuento.Enabled = false;
             textotal.Enabled = false;
@@ -84,6 +85,17 @@ namespace SISTEMA_FROTEND.presentacion
             _productos = await _productoService.ListarProducto();
 
             var colProducto = (DataGridViewTextBoxColumn)dataGridView1.Columns["producto"];
+
+
+
+            dataGridView1.DefaultCellStyle.ForeColor = Color.Black;
+            dataGridView1.DefaultCellStyle.BackColor = Color.White;
+
+            dataGridView1.DefaultCellStyle.SelectionForeColor = Color.White;
+            dataGridView1.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
 
         }
 

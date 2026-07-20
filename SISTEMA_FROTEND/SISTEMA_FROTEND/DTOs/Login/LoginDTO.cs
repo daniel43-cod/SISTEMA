@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SISTEMA_FROTEND.DTOs
+namespace SISTEMA_FROTEND.DTOs.Login
 {
     public class LoginDTO
     {

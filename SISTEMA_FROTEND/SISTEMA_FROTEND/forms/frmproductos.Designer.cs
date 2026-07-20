@@ -48,6 +48,8 @@
             label3 = new Label();
             imageList2 = new ImageList(components);
             label4 = new Label();
+            label5 = new Label();
+            button1 = new Button();
             ((System.ComponentModel.ISupportInitialize)datacompras).BeginInit();
             SuspendLayout();
             // 
@@ -146,7 +148,7 @@
             // 
             butguardar.ImageIndex = 1;
             butguardar.ImageList = imageList1;
-            butguardar.Location = new Point(1238, 623);
+            butguardar.Location = new Point(1245, 491);
             butguardar.Name = "butguardar";
             butguardar.Size = new Size(75, 65);
             butguardar.TabIndex = 18;
@@ -160,6 +162,7 @@
             imageList1.TransparentColor = Color.Transparent;
             imageList1.Images.SetKeyName(0, "Usuario.png");
             imageList1.Images.SetKeyName(1, "Guardar.png");
+            imageList1.Images.SetKeyName(2, "Cerrar.png");
             // 
             // textotalcompras
             // 
@@ -200,11 +203,32 @@
             // 
             label4.AutoSize = true;
             label4.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label4.Location = new Point(1131, 645);
+            label4.Location = new Point(1138, 513);
             label4.Name = "label4";
             label4.Size = new Size(93, 23);
             label4.TabIndex = 22;
             label4.Text = "GUARDAR";
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label5.Location = new Point(1138, 630);
+            label5.Name = "label5";
+            label5.Size = new Size(98, 23);
+            label5.TabIndex = 24;
+            label5.Text = "CANCELAR";
+            // 
+            // button1
+            // 
+            button1.ImageIndex = 2;
+            button1.ImageList = imageList1;
+            button1.Location = new Point(1245, 608);
+            button1.Name = "button1";
+            button1.Size = new Size(75, 65);
+            button1.TabIndex = 23;
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // frmcompras
             // 
@@ -212,6 +236,8 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Gray;
             ClientSize = new Size(1554, 760);
+            Controls.Add(label5);
+            Controls.Add(button1);
             Controls.Add(label4);
             Controls.Add(label3);
             Controls.Add(label2);
@@ -246,5 +272,7 @@
         private DataGridViewTextBoxColumn cantidad;
         private DataGridViewTextBoxColumn precio;
         private DataGridViewTextBoxColumn preciounitario;
+        private Label label5;
+        private Button button1;
     }
 }

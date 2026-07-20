@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.DTOs.Compras;
+﻿using SISTEMA_FROTEND.Conexion;
+using SISTEMA_FROTEND.DTOs.Compras;
 using SISTEMA_FROTEND.DTOs.Ventas;
 using System;
 using System.Collections.Generic;
@@ -10,19 +11,15 @@ namespace SISTEMA_FROTEND.services
 {
     public class CompraService
     {
-
-        private readonly HttpClient _httpClient;
-        public CompraService()
-        {
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/Compra/");
-        }
+        private HttpClient Cliente =>
+            ApiClient.ObtenerClienteAutenticado();
 
         public async Task<ComprasDTOs?> CrearCompra(ComprasDTOs compra)
         {
-            var response = await _httpClient.PostAsJsonAsync(
-                "crear",
-                compra);
+            var response = await Cliente.PostAsJsonAsync(
+                "Compra/crear",
+                compra
+            );
 
             if (response.IsSuccessStatusCode)
             {
@@ -35,20 +32,27 @@ namespace SISTEMA_FROTEND.services
             throw new Exception(
                 $"Código: {(int)response.StatusCode}\n" +
                 $"Estado: {response.StatusCode}\n" +
-                $"Respuesta:\n{error}");
+                $"Respuesta:\n{error}"
+            );
         }
 
-        //listar las compras
         public async Task<List<ListarComprasDTOs>> ListarCompras()
         {
-            return await _httpClient.GetFromJsonAsync<List<ListarComprasDTOs>>("listar")?? new List<ListarComprasDTOs>();
+            return await Cliente
+                .GetFromJsonAsync<List<ListarComprasDTOs>>(
+                    "Compra/listar"
+                )
+                ?? new List<ListarComprasDTOs>();
         }
 
-        public async Task<List<ListarDetalleComprasDTOs>> ListarDetalleCompras(int id_compra)
+        public async Task<List<ListarDetalleComprasDTOs>> ListarDetalleCompras(
+            int id_compra)
         {
-            return await _httpClient.GetFromJsonAsync<List<ListarDetalleComprasDTOs>>($"detalle/{id_compra}") ?? new List<ListarDetalleComprasDTOs>();
+            return await Cliente
+                .GetFromJsonAsync<List<ListarDetalleComprasDTOs>>(
+                    $"Compra/detalle/{id_compra}"
+                )
+                ?? new List<ListarDetalleComprasDTOs>();
         }
-
-
     }
 }

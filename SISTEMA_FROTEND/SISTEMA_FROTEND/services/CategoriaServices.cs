@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.DTOs;
+﻿using SISTEMA_FROTEND.Conexion;
+using SISTEMA_FROTEND.DTOs;
 using SISTEMA_FROTEND.models;
 using System;
 using System.Collections.Generic;
@@ -10,25 +11,24 @@ namespace SISTEMA_FROTEND.services
 {
     public class CategoriaServices
     {
-        private readonly HttpClient _httpClient;
-
-        public CategoriaServices()
-        {
-            _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/");
-        }
+        private HttpClient Cliente =>
+        ApiClient.ObtenerClienteAutenticado();
 
         public async Task<List<CategoriaDto>> GetCategoriasAsync()
         {
-            var response = await _httpClient.GetAsync("categoria");
+            var response = await Cliente.GetAsync("categoria");
+
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
 
-            return JsonSerializer.Deserialize<List<CategoriaDto>>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<CategoriaDto>();
+            return JsonSerializer.Deserialize<List<CategoriaDto>>(
+                json,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }
+            ) ?? new List<CategoriaDto>();
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using API_SISTEMA.DTOs.Compras;
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,9 @@ namespace API_SISTEMA.controllers
             _context = service;
         }
 
+
+        [Authorize(Roles = Roles.Administrador)]
+
         [HttpGet("listar")]
         public async Task<IActionResult> listar()
         {
@@ -25,6 +30,7 @@ namespace API_SISTEMA.controllers
             return Ok(compras);
         }
 
+        [Authorize(Roles = Roles.Administrador)]
 
         [HttpPost("crear")]
         public async Task<IActionResult> Crear([FromBody] RegistroComprasDTO compraDto)
@@ -49,6 +55,7 @@ namespace API_SISTEMA.controllers
             }
         }
 
+        [Authorize(Roles = Roles.Administrador)]
         //listar detallecompras
         [HttpGet("detalle/{id_compra}")] 
         public async Task<IActionResult> ListarDetalleCompra(int id_compra)

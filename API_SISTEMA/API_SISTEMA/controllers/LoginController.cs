@@ -1,5 +1,7 @@
 ﻿using API_SISTEMA.DTOs.Login;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +18,7 @@ namespace API_SISTEMA.controllers
         {
             _Service = service;
         }
-
+        [AllowAnonymous]
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginDTOs dto)
         {
@@ -28,6 +30,8 @@ namespace API_SISTEMA.controllers
             return Ok(respuesta);
         }
 
+
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
         public async Task<IActionResult> Login(CrearCuentaDTOs dto)
         {

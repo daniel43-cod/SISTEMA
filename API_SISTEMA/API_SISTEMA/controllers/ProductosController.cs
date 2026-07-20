@@ -1,9 +1,11 @@
 ﻿using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 
 namespace API_SISTEMA.controllers
 {
@@ -20,7 +22,7 @@ namespace API_SISTEMA.controllers
         {
             _Service = service;
         }
-        
+        [Authorize(Roles ="ADMINISTRADOR")]
         [HttpGet]
         public async Task<IActionResult> ListarProductos()
         {
@@ -36,7 +38,7 @@ namespace API_SISTEMA.controllers
             return Ok(presentaciones);
         }
 
-
+        [Authorize(Roles ="ADMINISTRADOR")]
         [HttpPost]
         public async Task<IActionResult> CrearProductos([FromBody] productocrear dto)
         {

@@ -4,6 +4,7 @@ using SISTEMA_FROTEND.DTOs.Productos;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.models;
 using SISTEMA_FROTEND.services;
+using SISTEMA_FROTEND.Utilidades;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,20 +17,20 @@ namespace SISTEMA_FROTEND.forms
 {
     public partial class frmcompras : Form
     {
-            private ProductoService _productoService = new ProductoService();
-            private List<ProductoVentaBuscarDTO> _productos;
-            private EmpresaService _empresaService = new EmpresaService();
-            private List<EmpresaDTOs> _empresas;
-            private EmpresaDTOs _empresaSeleccionada;
+        private ProductoService _productoService = new ProductoService();
+        private List<ProductoVentaBuscarDTO> _productos;
+        private EmpresaService _empresaService = new EmpresaService();
+        private List<EmpresaDTOs> _empresas;
+        private EmpresaDTOs _empresaSeleccionada;
 
-            private CompraService _compraService = new CompraService();
-            public frmcompras()
-            {
-                InitializeComponent();
-                datacompras.CellEndEdit += datacompras_CellEndEdit;
-                datacompras.EditingControlShowing += datacompras_EditingControlShowing;
-                texEmpresa.Leave += texEmpresa_Leave;
-            }
+        private CompraService _compraService = new CompraService();
+        public frmcompras()
+        {
+            InitializeComponent();
+            datacompras.CellEndEdit += datacompras_CellEndEdit;
+            datacompras.EditingControlShowing += datacompras_EditingControlShowing;
+            texEmpresa.Leave += texEmpresa_Leave;
+        }
 
         private CancellationTokenSource _cts;
 
@@ -42,12 +43,12 @@ namespace SISTEMA_FROTEND.forms
 
         private async void frmproductos_Load(object sender, EventArgs e)
         {
-            lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
+            lblUsuario.Text = $"Usuario: {SesionUsuario.Nombre}";
 
             _empresas = await _empresaService.ListarEmpresas();
 
             _productos = await _productoService.ListarProducto();
-           // _empresas = await _empresaService.ListarEmpresa();
+            // _empresas = await _empresaService.ListarEmpresa();
 
 
             var fuenteEmpresas = new AutoCompleteStringCollection();
@@ -104,7 +105,7 @@ namespace SISTEMA_FROTEND.forms
         }
         private void texEmpresa_Leave(object sender, EventArgs e)
         {
-            var empresa = _empresas.FirstOrDefault(x =>x.nombre_empresa.Trim().Equals(texEmpresa.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+            var empresa = _empresas.FirstOrDefault(x => x.nombre_empresa.Trim().Equals(texEmpresa.Text.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (empresa == null)
             {
@@ -248,6 +249,17 @@ namespace SISTEMA_FROTEND.forms
             {
                 butguardar.Enabled = true;
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            limpiar();
+        }
+
+        private void limpiar()
+        {
+            texEmpresa.Text = "";
+            datacompras.Rows.Clear();
         }
     }
 }

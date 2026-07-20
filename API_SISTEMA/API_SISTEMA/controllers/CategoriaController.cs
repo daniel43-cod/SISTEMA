@@ -1,6 +1,9 @@
 ﻿using API_SISTEMA.services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using API_SISTEMA.Utilidades;
+
 
 namespace API_SISTEMA.controllers
 {
@@ -15,6 +18,8 @@ namespace API_SISTEMA.controllers
         {
             _Service = service;
         }
+
+        [Authorize(Roles =Roles.Administrador + ","+ Roles.Vendedor)]
         //listar los datos
         [HttpGet]
         public async Task<IActionResult>Listar()

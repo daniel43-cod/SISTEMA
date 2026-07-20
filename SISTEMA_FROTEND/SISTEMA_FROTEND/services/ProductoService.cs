@@ -1,4 +1,6 @@
-﻿using SISTEMA_FROTEND.DTOs.Compras;
+﻿using SISTEMA_FROTEND.Conexion;
+using SISTEMA_FROTEND.DTOs.Cliente;
+using SISTEMA_FROTEND.DTOs.Compras;
 using SISTEMA_FROTEND.DTOs.Productos;
 using SISTEMA_FROTEND.models;
 using System;
@@ -19,10 +21,12 @@ namespace SISTEMA_FROTEND.services
 
         public async Task<List<ProductoVentaBuscarDTO>> ListarProducto()
         {
-            return await _httpClient.GetFromJsonAsync<List<ProductoVentaBuscarDTO>>("Productos");
+            HttpClient cliente = ApiClient.ObtenerClienteAutenticado();
+            return await cliente.GetFromJsonAsync<List<ProductoVentaBuscarDTO>>
+                ("Productos") ?? new List<ProductoVentaBuscarDTO>();
         }
 
-     
+
         public async Task<List<Productos>> BuscarProducto(string texto)
         {
             return await _httpClient.GetFromJsonAsync<List<Productos>>($"Productos/buscar?texto={texto}");
