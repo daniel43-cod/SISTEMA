@@ -78,6 +78,7 @@ builder.Services.AddScoped<PagoService>();
 builder.Services.AddScoped<EmpresaService>();
 builder.Services.AddScoped<CompraService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<CajaService>();
 
 
 var app = builder.Build();

@@ -37,6 +37,10 @@ namespace API_SISTEMA.data
         public DbSet<EstadoCompra> estado_compras { get; set; }
         public DbSet<PagosCompra> pagosCompras { get; set; }
         public DbSet<Empresa> empresa { get; set; }
+        public DbSet<caja> caja { get; set; }
+        public DbSet<SesionCaja> sesioncaja { get; set; }
+        public DbSet<TipoMovimientoCaja> tipomovimientocaja {  get; set; }
+        public DbSet<MovimientoCaja> movimientocaja { get; set; }
 
 
 
@@ -98,6 +102,20 @@ namespace API_SISTEMA.data
 
             modelBuilder.Entity<PagosCompra>().ToTable("pagos_compra");
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<caja>().ToTable("caja");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<MovimientoCaja>().ToTable("movimiento_caja");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<SesionCaja>().ToTable("sesion_caja");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<TipoMovimientoCaja>().ToTable("tipo_movimiento_caja");
+            base.OnModelCreating(modelBuilder);
+
+
 
             modelBuilder.Entity<Rol_permisocs>()
                 .HasOne(rp => rp.Rol)
@@ -174,17 +192,19 @@ modelBuilder.Entity<Producto_precio>()
             modelBuilder.Entity<SesionCaja>()
                 .HasOne(v => v.caja)
                 .WithMany()
-                .HasForeignKey(v => v.id_caja);
+                .HasForeignKey(v => v.id_caja); 
 
             modelBuilder.Entity<SesionCaja>()
-                .HasOne(v => v.usuario)
+                .HasOne(s => s.usuarioapertura)
                 .WithMany()
-                .HasForeignKey(v => v.id_usuario_cierre);
+                .HasForeignKey(s => s.id_usuario_apertura)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SesionCaja>()
-                .HasOne(v => v.usuario)
+                .HasOne(s => s.usuariocierre)
                 .WithMany()
-                .HasForeignKey(v => v.id_usuario_apertura);
+                .HasForeignKey(s => s.id_usuario_cierre)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<MovimientoCaja>()
                 .HasOne(v => v.sesionCaja)
