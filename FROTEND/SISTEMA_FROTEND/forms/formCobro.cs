@@ -20,18 +20,18 @@ namespace SISTEMA_FROTEND.forms
         private decimal _total;
 
         public formCobro(
-            List<DetalleDTOs> detalles,
-            ListarClienteDTOs clienteSeleccionado,
-            string nombreCliente,
-            string nitCliente,
-            string telefonoCliente,
-            string correoCliente,
-            string direccionCliente,
-            string dpiCliente,
-            int idUsuario,
-            decimal subtotal,
-            decimal descuentoTotal,
-            decimal total)
+    List<DetalleDTOs> detalles,
+    ListarClienteDTOs clienteSeleccionado,
+    string nombreCliente,
+    string nitCliente,
+    string telefonoCliente,
+    string correoCliente,
+    string direccionCliente,
+    string dpiCliente,
+    int idUsuario,
+    decimal subtotal,
+    decimal descuentoTotal,
+    decimal total)
         {
             InitializeComponent();
 
@@ -51,17 +51,17 @@ namespace SISTEMA_FROTEND.forms
             }
             else
             {
-                _venta.id_cliente = null;
+                _venta.id_cliente = 0;
+
                 _venta.clienteNuevo = new ClienteNuevoDTOs
                 {
-                    nombre = nombreCliente,
-                    nit = nitCliente,
-                    telefono = telefonoCliente,
-                    correo_electronico = correoCliente,
-                    direccion = direccionCliente,
-                    dpi = dpiCliente
-                };  
-              
+                    nombre = nombreCliente.Trim(),
+                    nit = nitCliente.Trim(),
+                    telefono = telefonoCliente.Trim(),
+                    correo_electronico = correoCliente.Trim(),
+                    direccion = direccionCliente.Trim(),
+                    dpi = dpiCliente.Trim()
+                };
             }
 
             textotal.Text = _total.ToString("N2");

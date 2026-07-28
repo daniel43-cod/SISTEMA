@@ -24,6 +24,13 @@ namespace SISTEMA_FROTEND.Conexion
 
         public static HttpClient ObtenerClienteAutenticado()
         {
+            if (!ConfiguracionApp.EstaConfigurada())
+            {
+                throw new Exception(
+                    "El servidor y la caja no están configurados."
+                );
+            }
+
             if (string.IsNullOrWhiteSpace(SesionUsuario.Token))
             {
                 throw new UnauthorizedAccessException(

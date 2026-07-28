@@ -112,8 +112,7 @@ namespace SISTEMA_FROTEND.presentacion
                 return;
             }
 
-            var cliente = _clientes.FirstOrDefault(c =>
-                c.nombre.Trim().Equals(texto, StringComparison.OrdinalIgnoreCase));
+            var cliente = _clientes.FirstOrDefault(c =>c.nombre.Trim().Equals(texto, StringComparison.OrdinalIgnoreCase));
 
             if (cliente != null)
             {
@@ -175,22 +174,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         //arma el autocompletado en la celda producto 
         private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-        {/*
-            if (dataGridView1.CurrentCell.OwningColumn.Name == "producto")
-            {
-                var textBox = e.Control as TextBox;
-
-                if (textBox != null)
-                {
-                    textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
-                    textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
-
-                    var fuente = new AutoCompleteStringCollection();
-                    fuente.AddRange(_productos.Select(p => p.nombreMostrar).ToArray());
-                    textBox.AutoCompleteCustomSource = fuente;
-                }
-            }*/
-
+        {
             if (e.Control is not TextBox textBox)
                 return;
 
@@ -395,8 +379,7 @@ namespace SISTEMA_FROTEND.presentacion
 
             decimal total = subtotal - descuentoTotal;
 
-            using var formCobro = new formCobro(
-                detalles,
+            using var formCobro = new formCobro(detalles,
                 _clienteSeleccionado,
                 texclientes.Text.Trim(),
                 texnit.Text.Trim(),

@@ -45,12 +45,13 @@ namespace API_SISTEMA.controllers
                 return Ok(new
                 {
                     mensaje = "Caja abierta correctamente.",
-                   /* id_sesion_caja = sesionCaja.id_sesion_caja,
-                    id_caja = sesionCaja.id_caja,
-                    id_usuario_apertura =
-                        sesionCaja.id_usuario_apertura,
-                    fecha_apertura = sesionCaja.fecha_apertura,
-                    monto_inicial = sesionCaja.monto_inicial*/
+                    monto_inicial = sesionCaja.monto_inicial
+                    /* id_sesion_caja = sesionCaja.id_sesion_caja,
+                     id_caja = sesionCaja.id_caja,
+                     id_usuario_apertura =
+                         sesionCaja.id_usuario_apertura,
+                     fecha_apertura = sesionCaja.fecha_apertura,
+                     monto_inicial = sesionCaja.monto_inicial*/
                 });
             }
             catch (Exception ex)
