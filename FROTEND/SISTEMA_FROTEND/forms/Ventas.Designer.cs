@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND.presentacion
 {
-    partial class cotizacion
+    partial class Ventas
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(cotizacion));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Ventas));
             button1 = new Button();
             groupBox1 = new GroupBox();
             cliente = new Label();

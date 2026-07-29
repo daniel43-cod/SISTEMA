@@ -1,4 +1,5 @@
 ﻿using SISTEMA_FROTEND.Conexion;
+using SISTEMA_FROTEND.DTOs.Catalogo;
 using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.models;
 using System;
@@ -41,6 +42,30 @@ namespace SISTEMA_FROTEND.services
                 $"Código: {(int)response.StatusCode}\n" +
                 $"Estado: {response.StatusCode}\n" +
                 $"Respuesta:\n{error}"
+            );
+        }
+
+        //CATALOGO 
+        public async Task<List<ProductoCatalogoDTO>> ListarCatalogo()
+        {
+            var cliente = ApiClient.ObtenerClienteAutenticado();
+
+            var respuesta = await cliente.GetAsync("Venta/catalogo");
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                return await respuesta.Content
+                    .ReadFromJsonAsync<List<ProductoCatalogoDTO>>()
+                    ?? new List<ProductoCatalogoDTO>();
+            }
+
+            var error = await respuesta.Content.ReadAsStringAsync();
+
+            throw new Exception(
+                $"No se pudo cargar el catálogo.\n" +
+                $"Código: {(int)respuesta.StatusCode}\n" +
+                $"Estado: {respuesta.StatusCode}\n" +
+                $"Respuesta: {error}"
             );
         }
     }

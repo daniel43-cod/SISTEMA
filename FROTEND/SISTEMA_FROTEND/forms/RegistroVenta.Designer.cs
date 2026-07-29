@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND.presentacion
 {
-    partial class frmregistro_ventas
+    partial class RegistroVenta
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmregistro_ventas));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RegistroVenta));
             comboBox1 = new ComboBox();
             label1 = new Label();
             dataregistrodiario = new DataGridView();
@@ -83,7 +83,7 @@
             imageList1.ColorDepth = ColorDepth.Depth32Bit;
             imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
             imageList1.TransparentColor = Color.Transparent;
-            imageList1.Images.SetKeyName(0, "Usuario.png");
+           // imageList1.Images.SetKeyName(0, "Usuario.png");
             // 
             // label2
             // 
@@ -110,7 +110,7 @@
             Controls.Add(comboBox1);
             Name = "frmregistro_ventas";
             Text = "frmregistro_ventas";
-            Load += frmregistro_ventas_Load;
+            Load += RegistroVenta_load;
             ((System.ComponentModel.ISupportInitialize)dataregistrodiario).EndInit();
             ResumeLayout(false);
             PerformLayout();

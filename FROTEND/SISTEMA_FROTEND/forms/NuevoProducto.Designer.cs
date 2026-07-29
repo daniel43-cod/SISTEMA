@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND.presentacion
 {
-    partial class ingreso
+    partial class NuevoProducto
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ingreso));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NuevoProducto));
             label1 = new Label();
             texcantidad = new TextBox();
             texpreciocompra = new TextBox();

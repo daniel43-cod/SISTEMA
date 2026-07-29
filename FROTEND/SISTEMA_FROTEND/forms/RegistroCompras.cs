@@ -11,10 +11,10 @@ using System.Windows.Forms;
 
 namespace SISTEMA_FROTEND.presentacion
 {
-    public partial class creditos : Form
+    public partial class RegistroCompras : Form
     {
         private readonly CompraService _compraService = new CompraService();
-        public creditos()
+        public RegistroCompras()
         {
             InitializeComponent();
             dataGridView1.CellContentClick +=dataGridView1_CellContentClick;
@@ -27,6 +27,17 @@ namespace SISTEMA_FROTEND.presentacion
             await cargarDatos();
             columnasocultas();
             AgregarBotonDetalle();
+
+
+
+            dataGridView1.DefaultCellStyle.ForeColor = Color.Black;
+            dataGridView1.DefaultCellStyle.BackColor = Color.White;
+            dataGridView1.DefaultCellStyle.SelectionForeColor = Color.White;
+            dataGridView1.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+
+            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
 
         }
         private void columnasocultas()

@@ -27,7 +27,17 @@ namespace SISTEMA_FROTEND.forms
             ocultarcolumnas();
             ConfiguracionColumnas();
 
-            
+
+            dataGridView1.DefaultCellStyle.ForeColor = Color.Black;
+            dataGridView1.DefaultCellStyle.BackColor = Color.White;
+
+            dataGridView1.DefaultCellStyle.SelectionForeColor = Color.White;
+            dataGridView1.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
+
+
         }
 
         private void ocultarcolumnas()

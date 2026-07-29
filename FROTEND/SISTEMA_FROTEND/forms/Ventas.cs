@@ -18,7 +18,7 @@ using static System.Net.WebRequestMethods;
 
 namespace SISTEMA_FROTEND.presentacion
 {
-    public partial class cotizacion : Form
+    public partial class Ventas : Form
     {
 
 
@@ -29,7 +29,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         //datos que se llena en los campos si el usuario confirma la eleccion de algun cliente existente
         private ClienteBuscarDTOs clienteSeleccionadoActual = null;
-        public cotizacion()
+        public Ventas()
         {
             InitializeComponent();
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;

@@ -13,9 +13,9 @@ using System.Windows.Forms;
 
 namespace SISTEMA_FROTEND.presentacion
 {
-    public partial class ingreso : Form
+    public partial class NuevoProducto : Form
     {
-        public ingreso()
+        public NuevoProducto()
         {
             InitializeComponent();
             ConfigurarComboCategoria();
@@ -39,7 +39,6 @@ namespace SISTEMA_FROTEND.presentacion
                     true,
                     true,
                     true);
-
                 e.SuppressKeyPress = true;
             }
         }
@@ -165,9 +164,18 @@ namespace SISTEMA_FROTEND.presentacion
                 MessageBox.Show("Producto registrado correctamente.");
                 limpiar();
             }
-            catch (Exception ex)
+            /*catch (Exception ex)
             {
                 MessageBox.Show($"Error al registrar el producto: {ex.Message}");
+            }*/
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error al registrar el producto: {ex.Message}\n\nDetalles técnicos:\n{ex.StackTrace}",
+                    "Detalle del Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
 
 

@@ -1,4 +1,5 @@
 ﻿using API_SISTEMA.data;
+using API_SISTEMA.DTOs.Catalogo;
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
 using Microsoft.EntityFrameworkCore;
@@ -267,6 +268,54 @@ namespace API_SISTEMA.services
             }
         }
 
+        //catalodo
+        public async Task<List<ProductoCatalogoDTOs>> ListarCatalogo()
+        {
+            var productos = await _context.productos
+                .AsNoTracking()
+                .Select(p => new ProductoCatalogoDTOs
+                {
+                    id_producto = p.id_producto,
+                    nombre = p.nombre,
+                    imagen = p.imagen,
+                    stock = p.stock,
+
+                    presentaciones = p.ProductoPresentaciones
+                        .Where(pp =>
+                            pp.unidades_equivalentes > 0 &&
+                            pp.precio > 0)
+                        .OrderBy(pp => pp.unidades_equivalentes)
+                        .Select(pp => new PresentacionCatalogoDTOs
+                        {
+                            id_producto_presentacion =
+                                pp.id_producto_presentacion,
+
+                            presentacion = pp.descripcion,
+
+                            unidades_equivalentes =
+                                pp.unidades_equivalentes,
+
+                            precio = pp.precio
+                        })
+                        .ToList()
+                })
+                .OrderBy(p => p.nombre)
+                .ToListAsync();
+
+            // Validación de máximo 5 presentaciones activas
+            var productoConDemasiadasPresentaciones =
+                productos.FirstOrDefault(p => p.presentaciones.Count > 5);
+
+            if (productoConDemasiadasPresentaciones != null)
+            {
+                throw new InvalidOperationException(
+                    $"El producto '{productoConDemasiadasPresentaciones.nombre}' " +
+                    "tiene más de 5 presentaciones registradas."
+                );
+            }
+
+            return productos;
+        }
 
 
     }

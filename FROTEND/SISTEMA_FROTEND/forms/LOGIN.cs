@@ -60,7 +60,7 @@ namespace SISTEMA_FROTEND.forms
 
                     );
 
-                Form1 frm = new Form1();
+                MenuPrincipal frm = new MenuPrincipal();
                 frm.Show();
 
                 this.Hide();

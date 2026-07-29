@@ -44,6 +44,16 @@ namespace SISTEMA_FROTEND.forms
 
 
 
+            datadetalle.DefaultCellStyle.ForeColor = Color.Black;
+            datadetalle.DefaultCellStyle.BackColor = Color.White;
+
+            datadetalle.DefaultCellStyle.SelectionForeColor = Color.White;
+            datadetalle.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+            datadetalle.EnableHeadersVisualStyles = false;
+            datadetalle.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            datadetalle .ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
+
+
 
         }
 

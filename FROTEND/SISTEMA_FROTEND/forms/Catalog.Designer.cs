@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND.forms
 {
-    partial class formdetallecompra
+    partial class Catalog
     {
         /// <summary>
         /// Required designer variable.
@@ -28,34 +28,36 @@
         /// </summary>
         private void InitializeComponent()
         {
-            dataGridView1 = new DataGridView();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            flowCatalogo = new FlowLayoutPanel();
             SuspendLayout();
             // 
-            // dataGridView1
+            // flowCatalogo
             // 
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(99, 138);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.RowHeadersWidth = 51;
-            dataGridView1.Size = new Size(791, 250);
-            dataGridView1.TabIndex = 0;
+            flowCatalogo.AutoScroll = true;
+            flowCatalogo.Location = new Point(12, 152);
+            flowCatalogo.Name = "flowCatalogo";
+            flowCatalogo.Size = new Size(1368, 625);
+            flowCatalogo.TabIndex = 0;
+            flowCatalogo.Paint += flowCatalogo_Paint;
             // 
-            // formdetallecompra
+            // Catalog
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(954, 557);
-            Controls.Add(dataGridView1);
-            Name = "formdetallecompra";
-            Text = "formdetallecompra";
-            Load += formdetallecompra_Load;
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ClientSize = new Size(1412, 801);
+            Controls.Add(flowCatalogo);
+            Name = "Catalog";
+            Text = "Form1";
+            Load += Catalog_Load;
             ResumeLayout(false);
         }
 
+
+
+
+
         #endregion
 
-        private DataGridView dataGridView1;
+        private FlowLayoutPanel flowCatalogo;
     }
 }

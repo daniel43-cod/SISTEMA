@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND.presentacion
 {
-    partial class creditos
+    partial class RegistroCompras
     {
         /// <summary>
         /// Required designer variable.
@@ -61,15 +61,16 @@
             label1.TabIndex = 17;
             label1.Text = "REGISTRO DE COMPRA DIARIA";
             // 
-            // creditos
+            // RegistroCompras
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.Gray;
             ClientSize = new Size(1270, 694);
             Controls.Add(label1);
             Controls.Add(dataGridView1);
             Controls.Add(lblUsuario);
-            Name = "creditos";
+            Name = "RegistroCompras";
             Text = "creditos";
             Load += creditos_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();

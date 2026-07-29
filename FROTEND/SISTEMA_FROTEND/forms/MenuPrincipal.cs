@@ -3,9 +3,9 @@ using SISTEMA_FROTEND.presentacion;
 
 namespace SISTEMA_FROTEND
 {
-    public partial class Form1 : Form
+    public partial class MenuPrincipal : Form
     {
-        public Form1()
+        public MenuPrincipal()
         {
             InitializeComponent();
 
@@ -34,12 +34,12 @@ namespace SISTEMA_FROTEND
 
         private void btnregistrar_Click(object sender, EventArgs e)
         {
-            AbrirFormulario(new cotizacion());
+            AbrirFormulario(new Ventas());
         }
 
         private void btnregistroventas_Click(object sender, EventArgs e)
         {
-            AbrirFormulario(new frmregistro_ventas());
+            AbrirFormulario(new RegistroVenta());
         }
 
         private void btnproductos_Click(object sender, EventArgs e)
@@ -51,7 +51,7 @@ namespace SISTEMA_FROTEND
         {
 
 
-            AbrirFormulario(new creditos());
+            AbrirFormulario(new RegistroCompras());
         }
 
         private void btnusuarios_Click(object sender, EventArgs e)
@@ -62,7 +62,7 @@ namespace SISTEMA_FROTEND
 
         private void btningreso_Click(object sender, EventArgs e)
         {
-            AbrirFormulario(new ingreso());
+            AbrirFormulario(new NuevoProducto());
 
         }
 
@@ -98,6 +98,11 @@ namespace SISTEMA_FROTEND
         private void panelContenido_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            AbrirFormulario(new Catalog());
         }
     }
 }

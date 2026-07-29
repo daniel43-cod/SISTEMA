@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND
 {
-    partial class Form1
+    partial class MenuPrincipal 
     {
         /// <summary>
         ///  Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MenuPrincipal));
             panelContenido = new Panel();
             panelMenu = new Panel();
             label7 = new Label();
@@ -41,10 +41,10 @@
             label3 = new Label();
             label2 = new Label();
             label1 = new Label();
-            btningreso = new Button();
-            btncreditos = new Button();
+            btnnuevoproducto = new Button();
+            btnregistrocompras = new Button();
             btnregistroventas = new Button();
-            btnproductos = new Button();
+            btncompras = new Button();
             btnusuarios = new Button();
             btnregistrar = new Button();
             panelMenu.SuspendLayout();
@@ -74,10 +74,10 @@
             panelMenu.Controls.Add(label3);
             panelMenu.Controls.Add(label2);
             panelMenu.Controls.Add(label1);
-            panelMenu.Controls.Add(btningreso);
-            panelMenu.Controls.Add(btncreditos);
+            panelMenu.Controls.Add(btnnuevoproducto);
+            panelMenu.Controls.Add(btnregistrocompras);
             panelMenu.Controls.Add(btnregistroventas);
-            panelMenu.Controls.Add(btnproductos);
+            panelMenu.Controls.Add(btncompras);
             panelMenu.Controls.Add(btnusuarios);
             panelMenu.Controls.Add(btnregistrar);
             panelMenu.Dock = DockStyle.Left;
@@ -108,6 +108,7 @@
             button1.Size = new Size(75, 65);
             button1.TabIndex = 11;
             button1.UseVisualStyleBackColor = false;
+            button1.Click += button1_Click;
             // 
             // imageList1
             // 
@@ -193,31 +194,31 @@
             label1.TabIndex = 6;
             label1.Text = "VENTA";
             // 
-            // btningreso
+            // btnnuevoproducto
             // 
-            btningreso.BackColor = Color.Gainsboro;
-            btningreso.ImageIndex = 4;
-            btningreso.ImageList = imageList1;
-            btningreso.Location = new Point(262, 520);
-            btningreso.Name = "btningreso";
-            btningreso.Size = new Size(75, 65);
-            btningreso.TabIndex = 5;
-            btningreso.UseVisualStyleBackColor = false;
-            btningreso.Click += btningreso_Click;
+            btnnuevoproducto.BackColor = Color.Gainsboro;
+            btnnuevoproducto.ImageIndex = 4;
+            btnnuevoproducto.ImageList = imageList1;
+            btnnuevoproducto.Location = new Point(262, 520);
+            btnnuevoproducto.Name = "btnnuevoproducto";
+            btnnuevoproducto.Size = new Size(75, 65);
+            btnnuevoproducto.TabIndex = 5;
+            btnnuevoproducto.UseVisualStyleBackColor = false;
+            btnnuevoproducto.Click += btningreso_Click;
             // 
-            // btncreditos
+            // btnregistrocompras
             // 
-            btncreditos.BackColor = Color.Gainsboro;
-            btncreditos.ForeColor = Color.Gainsboro;
-            btncreditos.ImageIndex = 3;
-            btncreditos.ImageList = imageList1;
-            btncreditos.Location = new Point(262, 409);
-            btncreditos.Margin = new Padding(0);
-            btncreditos.Name = "btncreditos";
-            btncreditos.Size = new Size(75, 65);
-            btncreditos.TabIndex = 4;
-            btncreditos.UseVisualStyleBackColor = false;
-            btncreditos.Click += btncreditos_Click;
+            btnregistrocompras.BackColor = Color.Gainsboro;
+            btnregistrocompras.ForeColor = Color.Gainsboro;
+            btnregistrocompras.ImageIndex = 3;
+            btnregistrocompras.ImageList = imageList1;
+            btnregistrocompras.Location = new Point(262, 409);
+            btnregistrocompras.Margin = new Padding(0);
+            btnregistrocompras.Name = "btnregistrocompras";
+            btnregistrocompras.Size = new Size(75, 65);
+            btnregistrocompras.TabIndex = 4;
+            btnregistrocompras.UseVisualStyleBackColor = false;
+            btnregistrocompras.Click += btncreditos_Click;
             // 
             // btnregistroventas
             // 
@@ -231,17 +232,17 @@
             btnregistroventas.UseVisualStyleBackColor = false;
             btnregistroventas.Click += btnregistroventas_Click;
             // 
-            // btnproductos
+            // btncompras
             // 
-            btnproductos.BackColor = Color.Gainsboro;
-            btnproductos.ImageIndex = 2;
-            btnproductos.ImageList = imageList1;
-            btnproductos.Location = new Point(262, 306);
-            btnproductos.Name = "btnproductos";
-            btnproductos.Size = new Size(75, 65);
-            btnproductos.TabIndex = 2;
-            btnproductos.UseVisualStyleBackColor = false;
-            btnproductos.Click += btnproductos_Click;
+            btncompras.BackColor = Color.Gainsboro;
+            btncompras.ImageIndex = 2;
+            btncompras.ImageList = imageList1;
+            btncompras.Location = new Point(262, 306);
+            btncompras.Name = "btncompras";
+            btncompras.Size = new Size(75, 65);
+            btncompras.TabIndex = 2;
+            btncompras.UseVisualStyleBackColor = false;
+            btncompras.Click += btnproductos_Click;
             // 
             // btnusuarios
             // 
@@ -267,7 +268,7 @@
             btnregistrar.UseVisualStyleBackColor = false;
             btnregistrar.Click += btnregistrar_Click;
             // 
-            // Form1
+            // MenuPrincipal
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -275,7 +276,7 @@
             ClientSize = new Size(1374, 677);
             Controls.Add(panelMenu);
             Controls.Add(panelContenido);
-            Name = "Form1";
+            Name = "MenuPrincipal";
             Text = "POOS";
             WindowState = FormWindowState.Maximized;
             Load += Form1_Load_2;
@@ -303,5 +304,8 @@
         private Label label6;
         private Label label7;
         private Button button1;
+        private Button btncompras;
+        private Button btnregistrocompras;
+        private Button btnnuevoproducto;
     }
 }

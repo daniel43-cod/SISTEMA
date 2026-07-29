@@ -34,6 +34,32 @@ namespace API_SISTEMA.controllers
             return Ok(listar);
         }
 
+        //catalogo
+        [Authorize(Roles =Roles.Administrador + "," + Roles.Vendedor)]
+        [HttpGet("catalogo")]
+        public async Task<IActionResult> ListarCatalogo()
+        {
+            try
+            {
+                var catalogo = await _context.ListarCatalogo();
+
+                return Ok(catalogo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje1 = "A ocurrido un error al cargar la imagen",
+                    mensaje = ex.Message,
+                    detalle = ex.ToString()
+                });
+            }
+
+        }
+
+
+
+
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("crear")]
         public async Task<IActionResult> Crear([FromBody] VentasDTOs ventaDto)
@@ -75,35 +101,8 @@ if (!int.TryParse(idUsuarioClaim, out int idUsuario))
                 });
             }
 
-            /*{
-  "id_cliente": 0,
-  "clienteNuevo": {
-    "id_Cliente": 0,
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "nit": "CF",
-    "dpi": "1234567890101",
-    "telefono": "55555555",
-    "correo_electronico": "juan@example.com",
-    "direccion": "Cobán, Alta Verapaz"
-  },
-  "id_usuario": 0,
-  "monto_pagado": 100,
-  "observacion_pago": "Venta de prueba",
-  "origen": "Mostrador",
-  "id_sesion_caja": 0,
-  "pago": {
-    "monto_pagado": 100
-  },
-  "detalles": [
-    {
-      "id_producto": 1054,
-      "cantidad": 1,
-      "descuento": 0,
-      "id_producto_presentacion": 1
-    }
-  ]
-}*/
+
+
         }
 
     }
