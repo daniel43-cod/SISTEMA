@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.services;
+﻿using SISTEMA_FROTEND.DTOs.Catalogo;
+using SISTEMA_FROTEND.services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,8 +12,9 @@ namespace SISTEMA_FROTEND.forms
 {
     public partial class Catalog : Form
     {
-
+        public event EventHandler<List<ProductoSeleccionadoDTO>>? ProductosSeleccionados;
         private VentaService _ventaService = new VentaService();
+        private ProductoCatalogoDTO? _productoActual;
 
         public Catalog()
         {
@@ -38,7 +40,13 @@ namespace SISTEMA_FROTEND.forms
                 {
                     var tarjeta = new Catalogo();
 
-                    tarjeta.CargarProducto(producto);
+                    tarjeta.CargarProducto(
+                        producto,
+                        producto.imagen ?? ""
+                    );
+
+                    tarjeta.ProductosAgregados +=
+                        Tarjeta_ProductosAgregados;
 
                     flowCatalogo.Controls.Add(tarjeta);
                 }
@@ -57,15 +65,14 @@ namespace SISTEMA_FROTEND.forms
         {
 
         }
+        private void Tarjeta_ProductosAgregados( object? sender, List<ProductoSeleccionadoDTO> productos)
+        {
+            ProductosSeleccionados?.Invoke(this, productos);
+        }
+
+      
+
     }
-
-
-
-
-
-
-
-
 }
 
 

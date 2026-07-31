@@ -79,7 +79,7 @@ namespace API_SISTEMA.services
 
         public async Task<Productos> CrearProducto(productocrear productoDto)
         {
-            if (productoDto.presentaciones == null || productoDto.presentaciones.Count == 0)
+            if (productoDto.presentaciones == null || productoDto.presentaciones.Count == 0)    
                 throw new Exception("Debe ingresar al menos una presentación del producto.");
 
             bool existeCodigo = await _context.productos

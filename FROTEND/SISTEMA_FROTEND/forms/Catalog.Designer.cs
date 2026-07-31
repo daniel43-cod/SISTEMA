@@ -36,7 +36,7 @@
             flowCatalogo.AutoScroll = true;
             flowCatalogo.Location = new Point(12, 152);
             flowCatalogo.Name = "flowCatalogo";
-            flowCatalogo.Size = new Size(1368, 625);
+            flowCatalogo.Size = new Size(1535, 659);
             flowCatalogo.TabIndex = 0;
             flowCatalogo.Paint += flowCatalogo_Paint;
             // 
@@ -44,7 +44,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1412, 801);
+            ClientSize = new Size(1559, 823);
             Controls.Add(flowCatalogo);
             Name = "Catalog";
             Text = "Form1";

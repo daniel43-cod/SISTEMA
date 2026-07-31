@@ -35,30 +35,41 @@
             lblPresentacion3 = new Label();
             lblPresentacion2 = new Label();
             lblPresentacion1 = new Label();
-            button1 = new Button();
-            button2 = new Button();
-            button3 = new Button();
-            button4 = new Button();
-            button5 = new Button();
-            button6 = new Button();
-            button7 = new Button();
-            button8 = new Button();
-            button9 = new Button();
-            button10 = new Button();
-            textBox1 = new TextBox();
-            textBox2 = new TextBox();
-            textBox3 = new TextBox();
-            textBox4 = new TextBox();
-            textBox5 = new TextBox();
+            btnMenos1 = new Button();
+            btnMenos5 = new Button();
+            btnMas5 = new Button();
+            btnMenos4 = new Button();
+            btnMas4 = new Button();
+            btnMenos3 = new Button();
+            btnMas3 = new Button();
+            btnMenos2 = new Button();
+            btnMas2 = new Button();
+            btnMas1 = new Button();
+            txtCantidad1 = new TextBox();
+            txtCantidad2 = new TextBox();
+            txtCantidad3 = new TextBox();
+            txtCantidad4 = new TextBox();
+            txtCantidad5 = new TextBox();
             lbldisponible = new Label();
+            panelPresentacion1 = new Panel();
+            panelPresentacion2 = new Panel();
+            panelPresentacion3 = new Panel();
+            panelPresentacion4 = new Panel();
+            panelPresentacion5 = new Panel();
+            btnAgregarVenta = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            panelPresentacion1.SuspendLayout();
+            panelPresentacion2.SuspendLayout();
+            panelPresentacion3.SuspendLayout();
+            panelPresentacion4.SuspendLayout();
+            panelPresentacion5.SuspendLayout();
             SuspendLayout();
             // 
             // pictureBox1
             // 
-            pictureBox1.Location = new Point(34, 83);
+            pictureBox1.Location = new Point(30, 37);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(293, 168);
+            pictureBox1.Size = new Size(293, 194);
             pictureBox1.TabIndex = 6;
             pictureBox1.TabStop = false;
             // 
@@ -66,7 +77,7 @@
             // 
             lblproducto.AutoSize = true;
             lblproducto.ForeColor = Color.Black;
-            lblproducto.Location = new Point(34, 29);
+            lblproducto.Location = new Point(30, 14);
             lblproducto.Name = "lblproducto";
             lblproducto.Size = new Size(69, 20);
             lblproducto.TabIndex = 7;
@@ -76,7 +87,7 @@
             // 
             lblPresentacion5.AutoSize = true;
             lblPresentacion5.ForeColor = Color.Black;
-            lblPresentacion5.Location = new Point(74, 408);
+            lblPresentacion5.Location = new Point(41, 5);
             lblPresentacion5.Name = "lblPresentacion5";
             lblPresentacion5.Size = new Size(94, 20);
             lblPresentacion5.TabIndex = 8;
@@ -86,7 +97,7 @@
             // 
             lblPresentacion4.AutoSize = true;
             lblPresentacion4.ForeColor = Color.Black;
-            lblPresentacion4.Location = new Point(74, 374);
+            lblPresentacion4.Location = new Point(37, 3);
             lblPresentacion4.Name = "lblPresentacion4";
             lblPresentacion4.Size = new Size(94, 20);
             lblPresentacion4.TabIndex = 9;
@@ -96,7 +107,7 @@
             // 
             lblPresentacion3.AutoSize = true;
             lblPresentacion3.ForeColor = Color.Black;
-            lblPresentacion3.Location = new Point(74, 340);
+            lblPresentacion3.Location = new Point(39, 4);
             lblPresentacion3.Name = "lblPresentacion3";
             lblPresentacion3.Size = new Size(94, 20);
             lblPresentacion3.TabIndex = 10;
@@ -106,7 +117,7 @@
             // 
             lblPresentacion2.AutoSize = true;
             lblPresentacion2.ForeColor = Color.Black;
-            lblPresentacion2.Location = new Point(74, 306);
+            lblPresentacion2.Location = new Point(40, 5);
             lblPresentacion2.Name = "lblPresentacion2";
             lblPresentacion2.Size = new Size(94, 20);
             lblPresentacion2.TabIndex = 11;
@@ -117,190 +128,251 @@
             // 
             lblPresentacion1.AutoSize = true;
             lblPresentacion1.ForeColor = Color.Black;
-            lblPresentacion1.Location = new Point(74, 272);
+            lblPresentacion1.Location = new Point(38, 4);
             lblPresentacion1.Name = "lblPresentacion1";
             lblPresentacion1.Size = new Size(94, 20);
             lblPresentacion1.TabIndex = 12;
             lblPresentacion1.Text = "presentacion";
             // 
-            // button1
+            // btnMenos1
             // 
-            button1.ForeColor = Color.Black;
-            button1.Location = new Point(34, 262);
-            button1.Name = "button1";
-            button1.Size = new Size(34, 29);
-            button1.TabIndex = 13;
-            button1.Text = "-";
-            button1.UseVisualStyleBackColor = true;
+            btnMenos1.ForeColor = Color.Black;
+            btnMenos1.Location = new Point(-2, 0);
+            btnMenos1.Name = "btnMenos1";
+            btnMenos1.Size = new Size(34, 29);
+            btnMenos1.TabIndex = 13;
+            btnMenos1.Text = "-";
+            btnMenos1.UseVisualStyleBackColor = true;
             // 
-            // button2
+            // btnMenos5
             // 
-            button2.ForeColor = Color.Black;
-            button2.Location = new Point(34, 398);
-            button2.Name = "button2";
-            button2.Size = new Size(34, 29);
-            button2.TabIndex = 14;
-            button2.Text = "-";
-            button2.UseVisualStyleBackColor = true;
+            btnMenos5.ForeColor = Color.Black;
+            btnMenos5.Location = new Point(-1, 0);
+            btnMenos5.Name = "btnMenos5";
+            btnMenos5.Size = new Size(34, 29);
+            btnMenos5.TabIndex = 14;
+            btnMenos5.Text = "-";
+            btnMenos5.UseVisualStyleBackColor = true;
             // 
-            // button3
+            // btnMas5
             // 
-            button3.ForeColor = Color.Black;
-            button3.Location = new Point(215, 399);
-            button3.Name = "button3";
-            button3.Size = new Size(34, 29);
-            button3.TabIndex = 15;
-            button3.Text = "+";
-            button3.UseVisualStyleBackColor = true;
+            btnMas5.ForeColor = Color.Black;
+            btnMas5.Location = new Point(182, 0);
+            btnMas5.Name = "btnMas5";
+            btnMas5.Size = new Size(34, 29);
+            btnMas5.TabIndex = 15;
+            btnMas5.Text = "+";
+            btnMas5.UseVisualStyleBackColor = true;
             // 
-            // button4
+            // btnMenos4
             // 
-            button4.ForeColor = Color.Black;
-            button4.Location = new Point(34, 364);
-            button4.Name = "button4";
-            button4.Size = new Size(34, 29);
-            button4.TabIndex = 16;
-            button4.Text = "-";
-            button4.UseVisualStyleBackColor = true;
+            btnMenos4.ForeColor = Color.Black;
+            btnMenos4.Location = new Point(-3, 0);
+            btnMenos4.Name = "btnMenos4";
+            btnMenos4.Size = new Size(34, 29);
+            btnMenos4.TabIndex = 16;
+            btnMenos4.Text = "-";
+            btnMenos4.UseVisualStyleBackColor = true;
             // 
-            // button5
+            // btnMas4
             // 
-            button5.ForeColor = Color.Black;
-            button5.Location = new Point(215, 365);
-            button5.Name = "button5";
-            button5.Size = new Size(34, 29);
-            button5.TabIndex = 17;
-            button5.Text = "+";
-            button5.UseVisualStyleBackColor = true;
+            btnMas4.ForeColor = Color.Black;
+            btnMas4.Location = new Point(180, 0);
+            btnMas4.Name = "btnMas4";
+            btnMas4.Size = new Size(34, 29);
+            btnMas4.TabIndex = 17;
+            btnMas4.Text = "+";
+            btnMas4.UseVisualStyleBackColor = true;
             // 
-            // button6
+            // btnMenos3
             // 
-            button6.ForeColor = Color.Black;
-            button6.Location = new Point(34, 330);
-            button6.Name = "button6";
-            button6.Size = new Size(34, 29);
-            button6.TabIndex = 18;
-            button6.Text = "-";
-            button6.UseVisualStyleBackColor = true;
+            btnMenos3.ForeColor = Color.Black;
+            btnMenos3.Location = new Point(-3, 0);
+            btnMenos3.Name = "btnMenos3";
+            btnMenos3.Size = new Size(34, 29);
+            btnMenos3.TabIndex = 18;
+            btnMenos3.Text = "-";
+            btnMenos3.UseVisualStyleBackColor = true;
             // 
-            // button7
+            // btnMas3
             // 
-            button7.ForeColor = Color.Black;
-            button7.Location = new Point(215, 331);
-            button7.Name = "button7";
-            button7.Size = new Size(34, 29);
-            button7.TabIndex = 19;
-            button7.Text = "+";
-            button7.UseVisualStyleBackColor = true;
+            btnMas3.ForeColor = Color.Black;
+            btnMas3.Location = new Point(178, 0);
+            btnMas3.Name = "btnMas3";
+            btnMas3.Size = new Size(34, 29);
+            btnMas3.TabIndex = 19;
+            btnMas3.Text = "+";
+            btnMas3.UseVisualStyleBackColor = true;
             // 
-            // button8
+            // btnMenos2
             // 
-            button8.ForeColor = Color.Black;
-            button8.Location = new Point(34, 296);
-            button8.Name = "button8";
-            button8.Size = new Size(34, 29);
-            button8.TabIndex = 20;
-            button8.Text = "-";
-            button8.UseVisualStyleBackColor = true;
+            btnMenos2.ForeColor = Color.Black;
+            btnMenos2.Location = new Point(-2, 0);
+            btnMenos2.Name = "btnMenos2";
+            btnMenos2.Size = new Size(34, 29);
+            btnMenos2.TabIndex = 20;
+            btnMenos2.Text = "-";
+            btnMenos2.UseVisualStyleBackColor = true;
             // 
-            // button9
+            // btnMas2
             // 
-            button9.ForeColor = Color.Black;
-            button9.Location = new Point(215, 297);
-            button9.Name = "button9";
-            button9.Size = new Size(34, 29);
-            button9.TabIndex = 21;
-            button9.Text = "+";
-            button9.UseVisualStyleBackColor = true;
+            btnMas2.ForeColor = Color.Black;
+            btnMas2.Location = new Point(181, 2);
+            btnMas2.Name = "btnMas2";
+            btnMas2.Size = new Size(34, 29);
+            btnMas2.TabIndex = 21;
+            btnMas2.Text = "+";
+            btnMas2.UseVisualStyleBackColor = true;
             // 
-            // button10
+            // btnMas1
             // 
-            button10.ForeColor = Color.Black;
-            button10.Location = new Point(215, 263);
-            button10.Name = "button10";
-            button10.Size = new Size(34, 29);
-            button10.TabIndex = 22;
-            button10.Text = "+";
-            button10.UseVisualStyleBackColor = true;
+            btnMas1.ForeColor = Color.Black;
+            btnMas1.Location = new Point(181, 0);
+            btnMas1.Name = "btnMas1";
+            btnMas1.Size = new Size(34, 29);
+            btnMas1.TabIndex = 22;
+            btnMas1.Text = "+";
+            btnMas1.UseVisualStyleBackColor = true;
             // 
-            // textBox1
+            // txtCantidad1
             // 
-            textBox1.Location = new Point(262, 265);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(66, 27);
-            textBox1.TabIndex = 23;
+            txtCantidad1.Location = new Point(228, 1);
+            txtCantidad1.Name = "txtCantidad1";
+            txtCantidad1.Size = new Size(66, 27);
+            txtCantidad1.TabIndex = 23;
             // 
-            // textBox2
+            // txtCantidad2
             // 
-            textBox2.Location = new Point(261, 298);
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(66, 27);
-            textBox2.TabIndex = 24;
+            txtCantidad2.Location = new Point(227, 1);
+            txtCantidad2.Name = "txtCantidad2";
+            txtCantidad2.Size = new Size(66, 27);
+            txtCantidad2.TabIndex = 24;
             // 
-            // textBox3
+            // txtCantidad3
             // 
-            textBox3.Location = new Point(261, 331);
-            textBox3.Name = "textBox3";
-            textBox3.Size = new Size(66, 27);
-            textBox3.TabIndex = 25;
+            txtCantidad3.Location = new Point(228, 1);
+            txtCantidad3.Name = "txtCantidad3";
+            txtCantidad3.Size = new Size(66, 27);
+            txtCantidad3.TabIndex = 25;
             // 
-            // textBox4
+            // txtCantidad4
             // 
-            textBox4.Location = new Point(262, 364);
-            textBox4.Name = "textBox4";
-            textBox4.Size = new Size(66, 27);
-            textBox4.TabIndex = 26;
+            txtCantidad4.Location = new Point(228, 1);
+            txtCantidad4.Name = "txtCantidad4";
+            txtCantidad4.Size = new Size(66, 27);
+            txtCantidad4.TabIndex = 26;
             // 
-            // textBox5
+            // txtCantidad5
             // 
-            textBox5.Location = new Point(262, 397);
-            textBox5.Name = "textBox5";
-            textBox5.Size = new Size(66, 27);
-            textBox5.TabIndex = 27;
+            txtCantidad5.Location = new Point(228, 1);
+            txtCantidad5.Name = "txtCantidad5";
+            txtCantidad5.Size = new Size(66, 27);
+            txtCantidad5.TabIndex = 27;
             // 
             // lbldisponible
             // 
             lbldisponible.AutoSize = true;
             lbldisponible.ForeColor = Color.Black;
-            lbldisponible.Location = new Point(34, 49);
+            lbldisponible.Location = new Point(213, 14);
             lbldisponible.Name = "lbldisponible";
             lbldisponible.Size = new Size(81, 20);
             lbldisponible.TabIndex = 28;
             lbldisponible.Text = "Disponible";
+            // 
+            // panelPresentacion1
+            // 
+            panelPresentacion1.Controls.Add(txtCantidad1);
+            panelPresentacion1.Controls.Add(lblPresentacion1);
+            panelPresentacion1.Controls.Add(btnMenos1);
+            panelPresentacion1.Controls.Add(btnMas1);
+            panelPresentacion1.Location = new Point(33, 237);
+            panelPresentacion1.Name = "panelPresentacion1";
+            panelPresentacion1.Size = new Size(293, 29);
+            panelPresentacion1.TabIndex = 29;
+            // 
+            // panelPresentacion2
+            // 
+            panelPresentacion2.Controls.Add(txtCantidad2);
+            panelPresentacion2.Controls.Add(lblPresentacion2);
+            panelPresentacion2.Controls.Add(btnMenos2);
+            panelPresentacion2.Controls.Add(btnMas2);
+            panelPresentacion2.Location = new Point(33, 272);
+            panelPresentacion2.Name = "panelPresentacion2";
+            panelPresentacion2.Size = new Size(293, 29);
+            panelPresentacion2.TabIndex = 30;
+            // 
+            // panelPresentacion3
+            // 
+            panelPresentacion3.Controls.Add(txtCantidad3);
+            panelPresentacion3.Controls.Add(lblPresentacion3);
+            panelPresentacion3.Controls.Add(btnMenos3);
+            panelPresentacion3.Controls.Add(btnMas3);
+            panelPresentacion3.Location = new Point(33, 307);
+            panelPresentacion3.Name = "panelPresentacion3";
+            panelPresentacion3.Size = new Size(293, 29);
+            panelPresentacion3.TabIndex = 31;
+            // 
+            // panelPresentacion4
+            // 
+            panelPresentacion4.Controls.Add(txtCantidad4);
+            panelPresentacion4.Controls.Add(lblPresentacion4);
+            panelPresentacion4.Controls.Add(btnMenos4);
+            panelPresentacion4.Controls.Add(btnMas4);
+            panelPresentacion4.Location = new Point(33, 342);
+            panelPresentacion4.Name = "panelPresentacion4";
+            panelPresentacion4.Size = new Size(293, 29);
+            panelPresentacion4.TabIndex = 32;
+            // 
+            // panelPresentacion5
+            // 
+            panelPresentacion5.Controls.Add(txtCantidad5);
+            panelPresentacion5.Controls.Add(lblPresentacion5);
+            panelPresentacion5.Controls.Add(btnMenos5);
+            panelPresentacion5.Controls.Add(btnMas5);
+            panelPresentacion5.Location = new Point(33, 377);
+            panelPresentacion5.Name = "panelPresentacion5";
+            panelPresentacion5.Size = new Size(293, 29);
+            panelPresentacion5.TabIndex = 33;
+            // 
+            // btnAgregarVenta
+            // 
+            btnAgregarVenta.Location = new Point(74, 412);
+            btnAgregarVenta.Name = "btnAgregarVenta";
+            btnAgregarVenta.Size = new Size(190, 29);
+            btnAgregarVenta.TabIndex = 34;
+            btnAgregarVenta.Text = "Agregar a la venta";
+            btnAgregarVenta.UseVisualStyleBackColor = true;
+            btnAgregarVenta.Click += btnAgregarVenta_Click;
             // 
             // Catalogo
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Gray;
+            Controls.Add(btnAgregarVenta);
+            Controls.Add(panelPresentacion5);
+            Controls.Add(panelPresentacion4);
+            Controls.Add(panelPresentacion3);
+            Controls.Add(panelPresentacion2);
+            Controls.Add(panelPresentacion1);
             Controls.Add(lblproducto);
             Controls.Add(lbldisponible);
-            Controls.Add(textBox5);
-            Controls.Add(textBox4);
-            Controls.Add(textBox3);
-            Controls.Add(textBox2);
-            Controls.Add(textBox1);
-            Controls.Add(button10);
-            Controls.Add(button9);
-            Controls.Add(button8);
-            Controls.Add(button7);
-            Controls.Add(button6);
-            Controls.Add(button5);
-            Controls.Add(button4);
-            Controls.Add(button3);
-            Controls.Add(button2);
-            Controls.Add(button1);
-            Controls.Add(lblPresentacion1);
-            Controls.Add(lblPresentacion2);
-            Controls.Add(lblPresentacion3);
-            Controls.Add(lblPresentacion4);
-            Controls.Add(lblPresentacion5);
             Controls.Add(pictureBox1);
             ForeColor = Color.Gray;
             Name = "Catalogo";
-            Size = new Size(373, 462);
+            Size = new Size(359, 453);
             Load += Catalogo_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            panelPresentacion1.ResumeLayout(false);
+            panelPresentacion1.PerformLayout();
+            panelPresentacion2.ResumeLayout(false);
+            panelPresentacion2.PerformLayout();
+            panelPresentacion3.ResumeLayout(false);
+            panelPresentacion3.PerformLayout();
+            panelPresentacion4.ResumeLayout(false);
+            panelPresentacion4.PerformLayout();
+            panelPresentacion5.ResumeLayout(false);
+            panelPresentacion5.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -315,21 +387,27 @@
         private Label lblPresentacion3;
         private Label lblPresentacion2;
         private Label lblPresentacion1;
-        private Button button1;
-        private Button button2;
-        private Button button3;
-        private Button button4;
-        private Button button5;
-        private Button button6;
-        private Button button7;
-        private Button button8;
-        private Button button9;
-        private Button button10;
-        private TextBox textBox1;
-        private TextBox textBox2;
-        private TextBox textBox3;
-        private TextBox textBox4;
-        private TextBox textBox5;
+        private Button btnMenos1;
+        private Button btnMenos5;
+        private Button btnMas5;
+        private Button btnMenos4;
+        private Button btnMas4;
+        private Button btnMenos3;
+        private Button btnMas3;
+        private Button btnMenos2;
+        private Button btnMas2;
+        private Button btnMas1;
+        private TextBox txtCantidad1;
+        private TextBox txtCantidad2;
+        private TextBox txtCantidad3;
+        private TextBox txtCantidad4;
+        private TextBox txtCantidad5;
         private Label lbldisponible;
+        private Panel panelPresentacion1;
+        private Panel panelPresentacion2;
+        private Panel panelPresentacion3;
+        private Panel panelPresentacion4;
+        private Panel panelPresentacion5;
+        private Button btnAgregarVenta;
     }
 }

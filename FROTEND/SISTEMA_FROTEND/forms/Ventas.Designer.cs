@@ -31,6 +31,7 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Ventas));
             button1 = new Button();
+            imageList1 = new ImageList(components);
             groupBox1 = new GroupBox();
             cliente = new Label();
             texclientes = new TextBox();
@@ -46,6 +47,12 @@
             texnit = new TextBox();
             label1 = new Label();
             dataGridView1 = new DataGridView();
+            cantidad = new DataGridViewTextBoxColumn();
+            producto = new DataGridViewTextBoxColumn();
+            stock = new DataGridViewTextBoxColumn();
+            descuento = new DataGridViewTextBoxColumn();
+            precio = new DataGridViewTextBoxColumn();
+            subtotal = new DataGridViewTextBoxColumn();
             button2 = new Button();
             lblUsuario = new Label();
             texsubtotal = new TextBox();
@@ -55,16 +62,11 @@
             label7 = new Label();
             label8 = new Label();
             button3 = new Button();
-            cantidad = new DataGridViewTextBoxColumn();
-            producto = new DataGridViewTextBoxColumn();
-            stock = new DataGridViewTextBoxColumn();
-            descuento = new DataGridViewTextBoxColumn();
-            precio = new DataGridViewTextBoxColumn();
-            subtotal = new DataGridViewTextBoxColumn();
-            imageList1 = new ImageList(components);
             label9 = new Label();
             label10 = new Label();
             label11 = new Label();
+            btnCatalogo = new Button();
+            id_producto_presentacion = new DataGridViewTextBoxColumn();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
@@ -80,6 +82,15 @@
             button1.TabIndex = 0;
             button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click;
+            // 
+            // imageList1
+            // 
+            imageList1.ColorDepth = ColorDepth.Depth32Bit;
+            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
+            imageList1.TransparentColor = Color.Transparent;
+            imageList1.Images.SetKeyName(0, "Cancelar.png");
+            imageList1.Images.SetKeyName(1, "Cerrar.png");
+            imageList1.Images.SetKeyName(2, "Cobrar.png");
             // 
             // groupBox1
             // 
@@ -227,7 +238,7 @@
             // 
             dataGridView1.BackgroundColor = Color.Gray;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { cantidad, producto, stock, descuento, precio, subtotal });
+            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { cantidad, producto, stock, descuento, precio, subtotal, id_producto_presentacion });
             dataGridView1.Location = new Point(205, 318);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 51;
@@ -235,6 +246,51 @@
             dataGridView1.TabIndex = 10;
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
             dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
+            // 
+            // cantidad
+            // 
+            cantidad.HeaderText = "CANTIDAD";
+            cantidad.MinimumWidth = 6;
+            cantidad.Name = "cantidad";
+            cantidad.Width = 125;
+            // 
+            // producto
+            // 
+            producto.HeaderText = "PRODUCTO";
+            producto.MinimumWidth = 6;
+            producto.Name = "producto";
+            producto.Width = 250;
+            // 
+            // stock
+            // 
+            stock.HeaderText = "EXISTENCIA";
+            stock.MinimumWidth = 6;
+            stock.Name = "stock";
+            stock.ReadOnly = true;
+            stock.Width = 125;
+            // 
+            // descuento
+            // 
+            descuento.HeaderText = "DESCUENTO";
+            descuento.MinimumWidth = 6;
+            descuento.Name = "descuento";
+            descuento.Width = 125;
+            // 
+            // precio
+            // 
+            precio.HeaderText = "PRECIO";
+            precio.MinimumWidth = 6;
+            precio.Name = "precio";
+            precio.ReadOnly = true;
+            precio.Width = 125;
+            // 
+            // subtotal
+            // 
+            subtotal.HeaderText = "SUBTOTAL";
+            subtotal.MinimumWidth = 6;
+            subtotal.Name = "subtotal";
+            subtotal.ReadOnly = true;
+            subtotal.Width = 125;
             // 
             // button2
             // 
@@ -324,60 +380,6 @@
             button3.UseVisualStyleBackColor = false;
             button3.Click += button3_Click;
             // 
-            // cantidad
-            // 
-            cantidad.HeaderText = "CANTIDAD";
-            cantidad.MinimumWidth = 6;
-            cantidad.Name = "cantidad";
-            cantidad.Width = 125;
-            // 
-            // producto
-            // 
-            producto.HeaderText = "PRODUCTO";
-            producto.MinimumWidth = 6;
-            producto.Name = "producto";
-            producto.Width = 250;
-            // 
-            // stock
-            // 
-            stock.HeaderText = "EXISTENCIA";
-            stock.MinimumWidth = 6;
-            stock.Name = "stock";
-            stock.ReadOnly = true;
-            stock.Width = 125;
-            // 
-            // descuento
-            // 
-            descuento.HeaderText = "DESCUENTO";
-            descuento.MinimumWidth = 6;
-            descuento.Name = "descuento";
-            descuento.Width = 125;
-            // 
-            // precio
-            // 
-            precio.HeaderText = "PRECIO";
-            precio.MinimumWidth = 6;
-            precio.Name = "precio";
-            precio.ReadOnly = true;
-            precio.Width = 125;
-            // 
-            // subtotal
-            // 
-            subtotal.HeaderText = "SUBTOTAL";
-            subtotal.MinimumWidth = 6;
-            subtotal.Name = "subtotal";
-            subtotal.ReadOnly = true;
-            subtotal.Width = 125;
-            // 
-            // imageList1
-            // 
-            imageList1.ColorDepth = ColorDepth.Depth32Bit;
-            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
-            imageList1.TransparentColor = Color.Transparent;
-            imageList1.Images.SetKeyName(0, "Cancelar.png");
-            imageList1.Images.SetKeyName(1, "Cerrar.png");
-            imageList1.Images.SetKeyName(2, "Cobrar.png");
-            // 
             // label9
             // 
             label9.AutoSize = true;
@@ -408,12 +410,30 @@
             label11.TabIndex = 24;
             label11.Text = "COBRAR";
             // 
-            // cotizacion
+            // btnCatalogo
+            // 
+            btnCatalogo.Location = new Point(29, 80);
+            btnCatalogo.Name = "btnCatalogo";
+            btnCatalogo.Size = new Size(94, 29);
+            btnCatalogo.TabIndex = 25;
+            btnCatalogo.Text = "CATALOGO";
+            btnCatalogo.UseVisualStyleBackColor = true;
+            btnCatalogo.Click += button4_Click;
+            // 
+            // id_producto_presentacion
+            // 
+            id_producto_presentacion.HeaderText = "Column1";
+            id_producto_presentacion.MinimumWidth = 6;
+            id_producto_presentacion.Name = "id_producto_presentacion";
+            id_producto_presentacion.Width = 125;
+            // 
+            // Ventas
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.DimGray;
             ClientSize = new Size(1438, 822);
+            Controls.Add(btnCatalogo);
             Controls.Add(label11);
             Controls.Add(label10);
             Controls.Add(label9);
@@ -429,7 +449,7 @@
             Controls.Add(groupBox1);
             Controls.Add(dataGridView1);
             Controls.Add(button1);
-            Name = "cotizacion";
+            Name = "Ventas";
             Text = "VENTAS";
             Load += cotizacion_Load;
             groupBox1.ResumeLayout(false);
@@ -476,5 +496,7 @@
         private Label label9;
         private Label label10;
         private Label label11;
+        private Button btnCatalogo;
+        private DataGridViewTextBoxColumn id_producto_presentacion;
     }
 }

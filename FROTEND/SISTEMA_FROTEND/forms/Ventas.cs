@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.DTOs.Cliente;
+﻿using SISTEMA_FROTEND.DTOs.Catalogo;
+using SISTEMA_FROTEND.DTOs.Cliente;
 using SISTEMA_FROTEND.DTOs.Productos;
 using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.forms;
@@ -20,8 +21,6 @@ namespace SISTEMA_FROTEND.presentacion
 {
     public partial class Ventas : Form
     {
-
-
         private ClienteService _clienteService = new ClienteService();
         private ListarClienteDTOs _clienteSeleccionado;
         private List<ListarClienteDTOs> _clientes;
@@ -54,9 +53,6 @@ namespace SISTEMA_FROTEND.presentacion
             Close();
         }
 
-
-
-
         private async void cotizacion_Load(object sender, EventArgs e)
         {
             lblUsuario.Text = $"Usuario: {SesionUsuario.Nombre}";
@@ -78,15 +74,11 @@ namespace SISTEMA_FROTEND.presentacion
                 dataGridView1.Columns["id_producto"].Visible = false;
             }
 
-
-
-         
+            dataGridView1.Columns["id_producto_presentacion"].Visible = false;
 
             _productos = await _productoService.ListarProducto();
 
             var colProducto = (DataGridViewTextBoxColumn)dataGridView1.Columns["producto"];
-
-
 
             dataGridView1.DefaultCellStyle.ForeColor = Color.Black;
             dataGridView1.DefaultCellStyle.BackColor = Color.White;
@@ -98,7 +90,6 @@ namespace SISTEMA_FROTEND.presentacion
             dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
 
         }
-
 
         //EVENTO PARA SELECCIONAR EL CLIENTE DE LA LISTA DE AUTOCOMPLETADO
         private void texclientes_Leave(object sender, EventArgs e)
@@ -112,19 +103,17 @@ namespace SISTEMA_FROTEND.presentacion
                 return;
             }
 
-            var cliente = _clientes.FirstOrDefault(c =>c.nombre.Trim().Equals(texto, StringComparison.OrdinalIgnoreCase));
+            var cliente = _clientes.FirstOrDefault(c => c.nombre.Trim().Equals(texto, StringComparison.OrdinalIgnoreCase));
 
             if (cliente != null)
             {
                 // Cliente existente: llenar y bloquear
                 _clienteSeleccionado = cliente;
-
                 texnit.Text = cliente.nit ?? "";
                 textelefono.Text = cliente.telefono ?? "";
                 texcorreo.Text = cliente.correo_electronico ?? "";
                 texdireccion.Text = cliente.direccion ?? "";
                 texdpi.Text = cliente.dpi ?? "";
-
                 texnit.ReadOnly = true;
                 textelefono.ReadOnly = true;
                 texcorreo.ReadOnly = true;
@@ -146,17 +135,12 @@ namespace SISTEMA_FROTEND.presentacion
             texcorreo.Text = "";
             texdireccion.Text = "";
             texdpi.Text = "";
-
             texnit.ReadOnly = !habilitar;
             textelefono.ReadOnly = !habilitar;
             texcorreo.ReadOnly = !habilitar;
             texdireccion.ReadOnly = !habilitar;
             texdpi.ReadOnly = !habilitar;
         }
-
-
-
-
 
         private void limpiar()
         {
@@ -379,18 +363,8 @@ namespace SISTEMA_FROTEND.presentacion
 
             decimal total = subtotal - descuentoTotal;
 
-            using var formCobro = new formCobro(detalles,
-                _clienteSeleccionado,
-                texclientes.Text.Trim(),
-                texnit.Text.Trim(),
-                textelefono.Text.Trim(),
-                texcorreo.Text.Trim(),
-                texdireccion.Text.Trim(),
-                texdpi.Text.Trim(),
-                Sesion.IdUsuario,
-                subtotal,
-                descuentoTotal,
-                total
+            using var formCobro = new formCobro(detalles, _clienteSeleccionado,texclientes.Text.Trim(), texnit.Text.Trim(),textelefono.Text.Trim(),texcorreo.Text.Trim(),texdireccion.Text.Trim(),
+                texdpi.Text.Trim(),Sesion.IdUsuario,subtotal, descuentoTotal,total
             );
 
             if (formCobro.ShowDialog() == DialogResult.OK)
@@ -403,5 +377,87 @@ namespace SISTEMA_FROTEND.presentacion
         {
 
         }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            var catalogo = new Catalog();
+
+            catalogo.ProductosSeleccionados += Catalogo_ProductosSeleccionados;
+
+            catalogo.ShowDialog();
+        }
+
+        private void Catalogo_ProductosSeleccionados(
+    object? sender,
+    List<ProductoSeleccionadoDTO> productos)
+        {
+            foreach (var producto in productos)
+            {
+                AgregarProductoAlGrid(producto);
+            }
+        }
+
+        private void AgregarProductoAlGrid(  ProductoSeleccionadoDTO producto)
+        {
+            var productoGrid = new ProductoVentaBuscarDTO
+            {
+                id_producto = producto.id_producto,
+                id_producto_presentacion =producto.id_producto_presentacion,
+                nombre_producto =producto.nombre_producto,
+                presentacion = producto.presentacion,
+              //  nombreMostrar =$"{producto.nombre_producto} - {producto.presentacion}",
+                precio = producto.precio,
+                stock = producto.stock,
+                unidades_equivalentes = producto.unidades_equivalentes
+            };
+
+            DataGridViewRow? filaExistente = null;
+
+            foreach (DataGridViewRow fila in dataGridView1.Rows)
+            {
+                if (fila.IsNewRow)continue;
+
+                int idProducto = Convert.ToInt32(fila.Cells["id_producto"].Value ?? 0);
+                int idPresentacion = Convert.ToInt32(fila.Cells["id_producto_presentacion"].Value ?? 0);
+
+                if (idProducto == producto.id_producto &&idPresentacion ==producto.id_producto_presentacion)
+                {
+                    filaExistente = fila;
+                    break;
+                }
+            }
+
+            if (filaExistente != null)
+            {
+                int cantidadActual = Convert.ToInt32( filaExistente.Cells["cantidad"].Value ?? 0);
+
+                int nuevaCantidad = cantidadActual + producto.cantidad;
+
+                filaExistente.Cells["cantidad"].Value =  nuevaCantidad;
+
+                filaExistente.Tag = productoGrid;
+
+                CalcularSubtotal(filaExistente.Index);
+
+                return;
+            }
+
+            int indice = dataGridView1.Rows.Add();
+
+            DataGridViewRow nuevaFila =
+                dataGridView1.Rows[indice];
+
+            nuevaFila.Cells["id_producto"].Value =producto.id_producto;
+            nuevaFila.Cells["id_producto_presentacion"].Value =producto.id_producto_presentacion;
+            nuevaFila.Cells["producto"].Value =$"{producto.nombre_producto} - {producto.presentacion}";
+            nuevaFila.Cells["cantidad"].Value =producto.cantidad;
+            nuevaFila.Cells["precio"].Value = producto.precio;
+            nuevaFila.Cells["stock"].Value = producto.stock;
+            nuevaFila.Cells["descuento"].Value = 0;
+            nuevaFila.Tag = productoGrid;
+
+            CalcularSubtotal(indice);
+        }
+
     }
 }
