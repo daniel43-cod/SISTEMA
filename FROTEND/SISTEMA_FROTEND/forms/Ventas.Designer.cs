@@ -53,6 +53,7 @@
             descuento = new DataGridViewTextBoxColumn();
             precio = new DataGridViewTextBoxColumn();
             subtotal = new DataGridViewTextBoxColumn();
+            id_producto_presentacion = new DataGridViewTextBoxColumn();
             button2 = new Button();
             lblUsuario = new Label();
             texsubtotal = new TextBox();
@@ -66,7 +67,6 @@
             label10 = new Label();
             label11 = new Label();
             btnCatalogo = new Button();
-            id_producto_presentacion = new DataGridViewTextBoxColumn();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
@@ -292,6 +292,13 @@
             subtotal.ReadOnly = true;
             subtotal.Width = 125;
             // 
+            // id_producto_presentacion
+            // 
+            id_producto_presentacion.HeaderText = "Column1";
+            id_producto_presentacion.MinimumWidth = 6;
+            id_producto_presentacion.Name = "id_producto_presentacion";
+            id_producto_presentacion.Width = 125;
+            // 
             // button2
             // 
             button2.BackColor = Color.White;
@@ -412,20 +419,14 @@
             // 
             // btnCatalogo
             // 
-            btnCatalogo.Location = new Point(29, 80);
+            btnCatalogo.ForeColor = Color.Black;
+            btnCatalogo.Location = new Point(1231, 48);
             btnCatalogo.Name = "btnCatalogo";
-            btnCatalogo.Size = new Size(94, 29);
+            btnCatalogo.Size = new Size(94, 67);
             btnCatalogo.TabIndex = 25;
             btnCatalogo.Text = "CATALOGO";
             btnCatalogo.UseVisualStyleBackColor = true;
             btnCatalogo.Click += button4_Click;
-            // 
-            // id_producto_presentacion
-            // 
-            id_producto_presentacion.HeaderText = "Column1";
-            id_producto_presentacion.MinimumWidth = 6;
-            id_producto_presentacion.Name = "id_producto_presentacion";
-            id_producto_presentacion.Width = 125;
             // 
             // Ventas
             // 

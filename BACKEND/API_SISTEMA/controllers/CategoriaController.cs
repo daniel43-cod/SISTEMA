@@ -31,7 +31,7 @@ namespace API_SISTEMA.controllers
 
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpGet("ListarPorCategoria{id}")]
+        [HttpGet("ListarPorCategoria/{id}")]
        public async Task<IActionResult> ListarProductoPorCategoria(int id) 
        {
             try

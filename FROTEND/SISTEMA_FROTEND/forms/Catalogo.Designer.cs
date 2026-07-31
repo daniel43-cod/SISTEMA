@@ -348,7 +348,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.Gray;
+            BackColor = Color.White;
             Controls.Add(btnAgregarVenta);
             Controls.Add(panelPresentacion5);
             Controls.Add(panelPresentacion4);

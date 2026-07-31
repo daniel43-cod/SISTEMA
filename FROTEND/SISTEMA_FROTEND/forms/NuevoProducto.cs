@@ -240,7 +240,7 @@ namespace SISTEMA_FROTEND.presentacion
         {
             try
             {
-                _categorias = await _categoriaServices.GetCategoriasAsync();
+                _categorias = await _categoriaServices.ListarCategorias();
 
                 // _categorias.Insert(0, new CategoriaDto { Id = 0, Nombre = "" }); // fila vacía
 

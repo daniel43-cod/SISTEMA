@@ -24,6 +24,7 @@ namespace SISTEMA_FROTEND.forms
 
         private void Catalogo_Load(object sender, EventArgs e)
         {
+           
         }
 
         private void label7_Click(object sender, EventArgs e)
@@ -42,9 +43,10 @@ namespace SISTEMA_FROTEND.forms
             // Nombre del producto
             lblproducto.Text = producto.nombre;
 
-            // Stock disponible
+         
             lbldisponible.Text = $"Disponible: {producto.stock}";
 
+         
 
             //CargarImagen(producto.imagen);
 
@@ -59,10 +61,21 @@ namespace SISTEMA_FROTEND.forms
           {
               _productoActual = producto;
 
-              lblproducto.Text = producto.nombre;
-              lbldisponible.Text = $"Stock: {producto.stock}";
+               lblproducto.Text = producto.nombre;
+            // lbldisponible.Text = $"Stock: {producto.stock}";*/
+            if (producto.stock > 0)
+            {
+                lbldisponible.Text = "Diponible";
+                lbldisponible.ForeColor = Color.Green;
+            }
+            else
+            {
+                lbldisponible.Text = "Agotado";
+                lbldisponible.ForeColor = Color.Red;
+            }
 
-              CargarPresentaciones(producto.presentaciones);
+
+            CargarPresentaciones(producto.presentaciones);
 
               // Cargar imagen...
               pictureBox1.Image = null;
@@ -77,20 +90,7 @@ namespace SISTEMA_FROTEND.forms
 
           }
 
-        /*
-                private void CargarImagen(string? nombreImagen)
-                {
-                    pictureBox1.Image = null;
-
-                    if (string.IsNullOrWhiteSpace(nombreImagen))
-                        return;
-
-                    string urlImagen = $"{nombreImagen}";
-
-                    pictureBox1.LoadAsync(urlImagen);
-                }*/
-
-        //Carga las presentacion dependiento cuantos son
+       
 
         private void CargarPresentaciones(List<PresentacionCatalogoDTO> presentaciones)
         {
