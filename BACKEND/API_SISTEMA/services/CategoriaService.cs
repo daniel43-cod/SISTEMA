@@ -1,5 +1,6 @@
 ﻿using API_SISTEMA.data;
 using API_SISTEMA.DTOs;
+using API_SISTEMA.DTOs.Catalogo;
 using API_SISTEMA.models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.Json;
@@ -28,6 +29,32 @@ namespace API_SISTEMA.services
                  Nombre = c.nombre_categoria
              })
              .ToListAsync();
+        }
+
+        public async Task<List<ProductoCatalogoDTOs>> ListarCatalogoPorCategoria(int idCategoria)
+        {
+            var productos = await _context.productos
+                .Where(p => p.id_categoria == idCategoria)
+                .Select(p => new ProductoCatalogoDTOs
+                {
+                    id_producto = p.id_producto,
+                    nombre = p.nombre,
+                    imagen = p.imagen,
+                    stock = p.stock,
+
+                    presentaciones = p.ProductoPresentaciones
+                        .Select(pp => new PresentacionCatalogoDTOs
+                        {
+                            id_producto_presentacion = pp.id_producto_presentacion,
+                            presentacion = pp.descripcion,
+                            unidades_equivalentes = pp.unidades_equivalentes,
+                            precio = pp.precio
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return productos;
         }
     }
 }
