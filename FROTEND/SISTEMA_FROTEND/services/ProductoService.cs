@@ -16,16 +16,16 @@ namespace SISTEMA_FROTEND.services
         public ProductoService()
         {
             _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/Productos");
+            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/Productos/");
         }
 
-        public async Task<List<ProductoVentaBuscarDTO>> ListarProducto()
+       public async Task<List<ProductoVentaBuscarDTO>> ListarProducto()
         {
             HttpClient cliente = ApiClient.ObtenerClienteAutenticado();
             return await cliente.GetFromJsonAsync<List<ProductoVentaBuscarDTO>>
-                ("Productos") ?? new List<ProductoVentaBuscarDTO>();
+                ("Productos/listar") ?? new List<ProductoVentaBuscarDTO>();
         }
-
+            
 
         public async Task<List<Productos>> BuscarProducto(string texto)
         {

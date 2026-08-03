@@ -142,6 +142,12 @@ namespace SISTEMA_FROTEND.presentacion
             texdpi.ReadOnly = !habilitar;
         }
 
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            limpiar();
+        }
+
         private void limpiar()
         {
             textelefono.Text = "";
@@ -149,12 +155,13 @@ namespace SISTEMA_FROTEND.presentacion
             texdpi.Text = "";
             texdireccion.Text = "";
             texcorreo.Text = "";
+            texclientes.Text = "";
+            dataGridView1.Rows.Clear();
+            textotal.Text = "";
+            texdescuento.Text = "";
+            texsubtotal.Text = "";
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            limpiar();
-        }
 
         //arma el autocompletado en la celda producto 
         private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)

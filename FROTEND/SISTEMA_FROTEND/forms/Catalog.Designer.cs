@@ -69,6 +69,8 @@
             textBox1.Name = "textBox1";
             textBox1.Size = new Size(314, 27);
             textBox1.TabIndex = 3;
+            textBox1.TextChanged += textBox1_TextChanged;
+            textBox1.KeyDown += textBox1_KeyDown;
             // 
             // label3
             // 

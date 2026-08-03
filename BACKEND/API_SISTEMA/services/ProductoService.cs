@@ -61,10 +61,10 @@ namespace API_SISTEMA.services
                 {
                     id_producto = p.id_producto,
                     id_producto_presentacion = p.id_producto_presentacion,
-
+                    
                     nombre_producto = p.Producto.nombre,
                     presentacion = p.descripcion,
-
+                    
                     unidades_equivalentes = p.unidades_equivalentes,
                     precio = p.precio,
                     stock = p.Producto.stock
@@ -155,9 +155,7 @@ namespace API_SISTEMA.services
             return producto;
         }
 
-      
-
-
+       
     }
 
 }

@@ -1,11 +1,14 @@
 ﻿using SISTEMA_FROTEND.DTOs;
 using SISTEMA_FROTEND.DTOs.Catalogo;
+using SISTEMA_FROTEND.DTOs.Productos;
+using SISTEMA_FROTEND.models;
 using SISTEMA_FROTEND.services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.Text;
 using System.Windows.Forms;
 
@@ -19,11 +22,13 @@ namespace SISTEMA_FROTEND.forms
         private readonly CategoriaServices _categoriaServices = new CategoriaServices();
         private List<CategoriaDto> _categorias = new();
         private bool _cargandoCategorias;
+        private List<ProductoCatalogoDTO> _productos = new();
         public Catalog()
         {
             InitializeComponent();
             comboCategorias.SelectedIndexChanged += comboCategorias_SelectedIndexChanged;
-       
+            textBox1.TextChanged += textBox1_TextChanged;
+            textBox1.KeyDown += textBox1_KeyDown;
         }
 
 
@@ -31,6 +36,9 @@ namespace SISTEMA_FROTEND.forms
         {
             await CargarCategorias();
             //await CargarCatalogo();
+
+            await CargarProductosEnMemoria();
+            //_productos = await _ventaService.ListarCatalogo();
 
         }
 
@@ -54,7 +62,7 @@ namespace SISTEMA_FROTEND.forms
                 comboCategorias.ValueMember = "Id";
                 comboCategorias.SelectedIndex = -1;
 
-                
+
             }
             catch (Exception ex)
             {
@@ -115,7 +123,7 @@ namespace SISTEMA_FROTEND.forms
 
         private async void comboCategorias_SelectedIndexChanged(object sender, EventArgs e)
         {
-   
+
             if (_cargandoCategorias)
                 return;
 
@@ -131,7 +139,7 @@ namespace SISTEMA_FROTEND.forms
                 MessageBox.Show("No se pudo obtener el ID de la categoría.");
                 return;
             }
-            if(idCategoria == 0)
+            if (idCategoria == 0)
             {
                 await CargarCatalogo();
             }
@@ -140,7 +148,7 @@ namespace SISTEMA_FROTEND.forms
                 await CargarCatalogoPorCategoria(idCategoria);
             }
 
-          
+
 
         }
 
@@ -179,6 +187,121 @@ namespace SISTEMA_FROTEND.forms
                     MessageBoxIcon.Error
                 );
             }
+        }
+
+
+
+        private async Task CargarProductosEnMemoria()
+        {
+            try
+            {
+                _productos = await _ventaService.ListarCatalogo();
+
+                var fuente = new AutoCompleteStringCollection();
+
+                fuente.AddRange(
+                    _productos
+                        .Where(p => !string.IsNullOrWhiteSpace(p.nombre))
+                        .Select(p => p.nombre)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(nombre => nombre)
+                        .ToArray()
+                );
+
+                textBox1.AutoCompleteMode =
+                    AutoCompleteMode.SuggestAppend;
+
+                textBox1.AutoCompleteSource =
+                    AutoCompleteSource.CustomSource;
+
+                textBox1.AutoCompleteCustomSource =
+                    fuente;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Error al cargar productos",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            /*string texto = textBox1.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(texto))
+            {
+                flowCatalogo.Controls.Clear();
+                return;
+            }
+
+            var coincidencias = _productos
+                .Where(p =>
+                    !string.IsNullOrWhiteSpace(p.nombre) &&
+                    p.nombre.Contains(
+                        texto,
+                        StringComparison.OrdinalIgnoreCase
+                    ))
+                .ToList();
+
+            MostrarProductos(coincidencias);*/
+        }
+
+       
+
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+                return;
+
+            e.SuppressKeyPress = true;
+
+            string texto = textBox1.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(texto))
+                return;
+
+            var producto = _productos.FirstOrDefault(p =>
+                p.nombre.Trim().Equals(
+                    texto,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+            if (producto == null)
+            {
+                MessageBox.Show(
+                    "No se encontró un producto con ese nombre.",
+                    "Buscar producto",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                return;
+            }
+
+            MostrarProducto(producto);
+        }
+
+        private void MostrarProducto(
+    ProductoCatalogoDTO producto)
+        {
+            flowCatalogo.Controls.Clear();
+
+            var tarjeta = new Catalogo();
+
+            tarjeta.CargarProducto(
+                producto,
+                producto.imagen ?? string.Empty
+            );
+
+            tarjeta.ProductosAgregados +=
+                Tarjeta_ProductosAgregados;
+
+            flowCatalogo.Controls.Add(tarjeta);
         }
     }
 }

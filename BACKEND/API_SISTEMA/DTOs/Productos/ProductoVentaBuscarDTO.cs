@@ -9,7 +9,7 @@
         public string presentacion { get; set; }
 
         //  public string nombreMostrar => $"{presentacion} - {nombre_producto}";
-
+       // public string nombre { get; set; }
         public int unidades_equivalentes { get; set; }
         public decimal precio { get; set; }
         public int stock { get; set; }

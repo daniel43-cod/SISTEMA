@@ -47,7 +47,7 @@ namespace SISTEMA_FROTEND.forms
 
             _empresas = await _empresaService.ListarEmpresas();
 
-            _productos = await _productoService.ListarProducto();
+            //_productos = await _productoService.ListarProducto();
             // _empresas = await _empresaService.ListarEmpresa();
 
 

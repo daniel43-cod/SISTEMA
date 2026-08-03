@@ -1,6 +1,7 @@
 ﻿using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ namespace API_SISTEMA.controllers
             _Service = service;
         }
         [Authorize(Roles ="ADMINISTRADOR")]
-        [HttpGet]
+        [HttpGet("listar")]
         public async Task<IActionResult> ListarProductos()
         {
             var listar = await _Service.ObtenerTodosProductosVenta();
@@ -39,7 +40,7 @@ namespace API_SISTEMA.controllers
         }
 
         [Authorize(Roles ="ADMINISTRADOR")]
-        [HttpPost]
+        [HttpPost("crear")]
         public async Task<IActionResult> CrearProductos([FromBody] productocrear dto)
         {
             var producto = await _Service.CrearProducto(dto);
@@ -82,5 +83,9 @@ namespace API_SISTEMA.controllers
                 return BadRequest(new { mensaje = ex.Message });
             }
         }
+
+
+
+        
     }
 }
