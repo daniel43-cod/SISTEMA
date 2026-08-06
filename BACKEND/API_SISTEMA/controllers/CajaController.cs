@@ -110,6 +110,29 @@ namespace API_SISTEMA.controllers
                     mensaje = ex.Message
                 });
             }
+
+
+        }
+
+
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("ListarSesionesCaja/{idCaja}")]
+        public async Task<IActionResult> ListarSesionesCaja(int idCaja)
+        {
+            try
+            {
+                var sesiones = await _cajaService.ListarSesionesCaja(idCaja);
+
+                return Ok(sesiones);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "Ocurrió un error al listar las sesiones de la caja.",
+                    detalle = ex.Message
+                });
+            }
         }
     }
 }

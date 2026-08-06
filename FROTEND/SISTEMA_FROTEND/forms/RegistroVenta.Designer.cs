@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RegistroVenta));
             comboBox1 = new ComboBox();
             label1 = new Label();
             dataregistrodiario = new DataGridView();
@@ -64,7 +63,7 @@
             dataregistrodiario.Location = new Point(12, 149);
             dataregistrodiario.Name = "dataregistrodiario";
             dataregistrodiario.RowHeadersWidth = 51;
-            dataregistrodiario.Size = new Size(1602, 280);
+            dataregistrodiario.Size = new Size(1602, 477);
             dataregistrodiario.TabIndex = 2;
             dataregistrodiario.CellContentClick += dataregistrodiario_CellContentClick;
             // 
@@ -81,14 +80,12 @@
             // imageList1
             // 
             imageList1.ColorDepth = ColorDepth.Depth32Bit;
-            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
+            imageList1.ImageSize = new Size(16, 16);
             imageList1.TransparentColor = Color.Transparent;
-           // imageList1.Images.SetKeyName(0, "Usuario.png");
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.ImageIndex = 0;
             label2.ImageList = imageList1;
             label2.Location = new Point(108, 49);
             label2.Name = "label2";
@@ -97,18 +94,18 @@
             label2.Text = ".";
             label2.Click += label2_Click;
             // 
-            // frmregistro_ventas
+            // RegistroVenta
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Gray;
-            ClientSize = new Size(1773, 575);
+            ClientSize = new Size(1773, 650);
             Controls.Add(label2);
             Controls.Add(lblUsuario);
             Controls.Add(dataregistrodiario);
             Controls.Add(label1);
             Controls.Add(comboBox1);
-            Name = "frmregistro_ventas";
+            Name = "RegistroVenta";
             Text = "frmregistro_ventas";
             Load += RegistroVenta_load;
             ((System.ComponentModel.ISupportInitialize)dataregistrodiario).EndInit();

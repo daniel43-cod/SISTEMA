@@ -41,5 +41,35 @@ namespace SISTEMA_FROTEND.services
             );
         }
 
+        public async Task<RespuetaCierreDTO> CerrarCaja(
+      CierreCajaDTOs cierreCaja)
+        {
+            var cliente = ApiClient.ObtenerClienteAutenticado();
+
+            var response = await cliente.PostAsJsonAsync(
+                "Caja/cerrar",
+                cierreCaja
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                var resultado = await response.Content
+                    .ReadFromJsonAsync<RespuetaCierreDTO>();
+
+                return resultado
+                    ?? throw new Exception(
+                        "La API cerró la caja, pero no devolvió los datos del cierre."
+                    );
+            }
+
+            string error = await response.Content.ReadAsStringAsync();
+
+            throw new Exception(
+                $"No se pudo cerrar la caja.\n" +
+                $"Código: {(int)response.StatusCode}\n" +
+                $"Respuesta: {error}"
+            );
+        }
+
     }
 }

@@ -57,7 +57,7 @@ namespace SISTEMA_FROTEND
         private void btnusuarios_Click(object sender, EventArgs e)
         {
 
-            AbrirFormulario(new usuarioscs());
+            AbrirFormulario(new Caja());
         }
 
         private void btningreso_Click(object sender, EventArgs e)

@@ -32,8 +32,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MenuPrincipal));
             panelContenido = new Panel();
             panelMenu = new Panel();
-            label7 = new Label();
-            button1 = new Button();
             imageList1 = new ImageList(components);
             label6 = new Label();
             label5 = new Label();
@@ -66,8 +64,6 @@
             // panelMenu
             // 
             panelMenu.BackColor = Color.FromArgb(64, 64, 64);
-            panelMenu.Controls.Add(label7);
-            panelMenu.Controls.Add(button1);
             panelMenu.Controls.Add(label6);
             panelMenu.Controls.Add(label5);
             panelMenu.Controls.Add(label4);
@@ -86,29 +82,6 @@
             panelMenu.Size = new Size(377, 677);
             panelMenu.TabIndex = 4;
             panelMenu.Paint += panelMenu_Paint;
-            // 
-            // label7
-            // 
-            label7.AutoSize = true;
-            label7.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label7.ForeColor = Color.White;
-            label7.Location = new Point(24, 134);
-            label7.Name = "label7";
-            label7.Size = new Size(108, 25);
-            label7.TabIndex = 12;
-            label7.Text = "CATALOGO";
-            // 
-            // button1
-            // 
-            button1.BackColor = Color.Gainsboro;
-            button1.ImageIndex = 6;
-            button1.ImageList = imageList1;
-            button1.Location = new Point(262, 116);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 65);
-            button1.TabIndex = 11;
-            button1.UseVisualStyleBackColor = false;
-            button1.Click += button1_Click;
             // 
             // imageList1
             // 
@@ -129,19 +102,19 @@
             label6.AutoSize = true;
             label6.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label6.ForeColor = Color.White;
-            label6.Location = new Point(24, 644);
+            label6.Location = new Point(24, 531);
             label6.Margin = new Padding(0);
             label6.Name = "label6";
-            label6.Size = new Size(162, 25);
+            label6.Size = new Size(57, 25);
             label6.TabIndex = 10;
-            label6.Text = "CONFIGURACION";
+            label6.Text = "CAJA";
             // 
             // label5
             // 
             label5.AutoSize = true;
             label5.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label5.ForeColor = Color.White;
-            label5.Location = new Point(24, 538);
+            label5.Location = new Point(24, 443);
             label5.Margin = new Padding(0);
             label5.Name = "label5";
             label5.Size = new Size(178, 25);
@@ -153,7 +126,7 @@
             label4.AutoSize = true;
             label4.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label4.ForeColor = Color.White;
-            label4.Location = new Point(24, 427);
+            label4.Location = new Point(24, 332);
             label4.Margin = new Padding(0);
             label4.Name = "label4";
             label4.Size = new Size(221, 25);
@@ -166,7 +139,7 @@
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label3.ForeColor = SystemColors.ButtonFace;
-            label3.Location = new Point(24, 324);
+            label3.Location = new Point(24, 230);
             label3.Name = "label3";
             label3.Size = new Size(100, 25);
             label3.TabIndex = 8;
@@ -177,7 +150,7 @@
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label2.ForeColor = Color.White;
-            label2.Location = new Point(24, 224);
+            label2.Location = new Point(24, 127);
             label2.Name = "label2";
             label2.Size = new Size(202, 25);
             label2.TabIndex = 7;
@@ -199,7 +172,7 @@
             btnnuevoproducto.BackColor = Color.Gainsboro;
             btnnuevoproducto.ImageIndex = 4;
             btnnuevoproducto.ImageList = imageList1;
-            btnnuevoproducto.Location = new Point(262, 520);
+            btnnuevoproducto.Location = new Point(262, 425);
             btnnuevoproducto.Name = "btnnuevoproducto";
             btnnuevoproducto.Size = new Size(75, 65);
             btnnuevoproducto.TabIndex = 5;
@@ -212,7 +185,7 @@
             btnregistrocompras.ForeColor = Color.Gainsboro;
             btnregistrocompras.ImageIndex = 3;
             btnregistrocompras.ImageList = imageList1;
-            btnregistrocompras.Location = new Point(262, 409);
+            btnregistrocompras.Location = new Point(262, 314);
             btnregistrocompras.Margin = new Padding(0);
             btnregistrocompras.Name = "btnregistrocompras";
             btnregistrocompras.Size = new Size(75, 65);
@@ -225,7 +198,7 @@
             btnregistroventas.BackColor = Color.Gainsboro;
             btnregistroventas.ImageIndex = 1;
             btnregistroventas.ImageList = imageList1;
-            btnregistroventas.Location = new Point(262, 206);
+            btnregistroventas.Location = new Point(262, 109);
             btnregistroventas.Name = "btnregistroventas";
             btnregistroventas.Size = new Size(75, 65);
             btnregistroventas.TabIndex = 1;
@@ -237,7 +210,7 @@
             btncompras.BackColor = Color.Gainsboro;
             btncompras.ImageIndex = 2;
             btncompras.ImageList = imageList1;
-            btncompras.Location = new Point(262, 306);
+            btncompras.Location = new Point(262, 212);
             btncompras.Name = "btncompras";
             btncompras.Size = new Size(75, 65);
             btncompras.TabIndex = 2;
@@ -249,7 +222,7 @@
             btnusuarios.BackColor = Color.Gainsboro;
             btnusuarios.ImageIndex = 5;
             btnusuarios.ImageList = imageList1;
-            btnusuarios.Location = new Point(262, 626);
+            btnusuarios.Location = new Point(262, 513);
             btnusuarios.Name = "btnusuarios";
             btnusuarios.Size = new Size(75, 65);
             btnusuarios.TabIndex = 3;
@@ -302,8 +275,6 @@
         private Label label4;
         private Label label5;
         private Label label6;
-        private Label label7;
-        private Button button1;
         private Button btncompras;
         private Button btnregistrocompras;
         private Button btnnuevoproducto;

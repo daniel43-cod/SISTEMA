@@ -112,5 +112,52 @@ namespace API_SISTEMA.services
             return sesionCaja;
         }
 
+        //Listar solo una caja
+            public async  Task<List<ListarSesionesDTOs>> ListarSesionesCaja(int idCaja)
+            {
+                var sesiones = await _context.sesioncaja
+                    .Where(s => s.id_caja == idCaja)
+                    .Select(s => new ListarSesionesDTOs
+                    {
+                        id_sesion_caja = s.id_sesion_caja,  
+                        id_caja = s.id_caja,
+                        id_usuario_apertura = s.id_usuario_apertura,
+                        id_usuario_cierre = s.id_usuario_cierre,
+                        fecha_apertura = s.fecha_apertura,
+                        fecha_cierre = s.fecha_cierre,
+                        monto_inicial = s.monto_inicial,
+                        monto_final = s.monto_contado,
+                        diferencia = s.diferencia,
+                        observacion_apertura = s.observacion_apertura,
+                        observacion_cierre = s.observacion_cierre
+                    })
+                    .ToListAsync();
+                return sesiones;
+            }
+
+        //listar todas las sesiones de la caja
+
+        public async Task<List<ListarSesionesDTOs>> ListarSesionesCaja()
+        {
+            var sesiones = await _context.sesioncaja
+                .Select(s => new ListarSesionesDTOs
+                {
+                    id_sesion_caja = s.id_sesion_caja,
+                    id_caja = s.id_caja,
+                    id_usuario_apertura = s.id_usuario_apertura,
+                    id_usuario_cierre = s.id_usuario_cierre,
+                    fecha_apertura = s.fecha_apertura,
+                    fecha_cierre = s.fecha_cierre,
+                    monto_inicial = s.monto_inicial,
+                    monto_final = s.monto_contado,
+                    diferencia = s.diferencia,
+                    observacion_apertura = s.observacion_apertura,
+                    observacion_cierre = s.observacion_cierre
+                })
+                .ToListAsync();
+
+            return sesiones;
+        }
+
     }
 }

@@ -32,7 +32,7 @@ namespace SISTEMA_FROTEND.presentacion
 
             if (dataregistrodiario.Columns["id_usuario"] != null)
                 dataregistrodiario.Columns["id_usuario"].Visible = false;
-
+            dataregistrodiario.Columns["origen"].Visible = false;
             if (!dataregistrodiario.Columns.Contains("Detalle"))
             {
                 DataGridViewButtonColumn btnDetalle = new DataGridViewButtonColumn

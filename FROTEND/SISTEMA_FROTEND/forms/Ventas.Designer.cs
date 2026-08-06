@@ -76,7 +76,7 @@
             button1.BackColor = Color.White;
             button1.ImageIndex = 1;
             button1.ImageList = imageList1;
-            button1.Location = new Point(1303, 579);
+            button1.Location = new Point(1351, 573);
             button1.Name = "button1";
             button1.Size = new Size(75, 65);
             button1.TabIndex = 0;
@@ -109,7 +109,7 @@
             groupBox1.Controls.Add(texnit);
             groupBox1.Controls.Add(label1);
             groupBox1.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
-            groupBox1.Location = new Point(205, 23);
+            groupBox1.Location = new Point(269, 24);
             groupBox1.Name = "groupBox1";
             groupBox1.Size = new Size(931, 242);
             groupBox1.TabIndex = 11;
@@ -239,10 +239,10 @@
             dataGridView1.BackgroundColor = Color.Gray;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { cantidad, producto, stock, descuento, precio, subtotal, id_producto_presentacion });
-            dataGridView1.Location = new Point(205, 318);
+            dataGridView1.Location = new Point(269, 317);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 51;
-            dataGridView1.Size = new Size(931, 441);
+            dataGridView1.Size = new Size(931, 442);
             dataGridView1.TabIndex = 10;
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
             dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
@@ -304,7 +304,7 @@
             button2.BackColor = Color.White;
             button2.ImageIndex = 0;
             button2.ImageList = imageList1;
-            button2.Location = new Point(1303, 661);
+            button2.Location = new Point(1351, 655);
             button2.Name = "button2";
             button2.Size = new Size(75, 65);
             button2.TabIndex = 13;
@@ -324,7 +324,7 @@
             // texsubtotal
             // 
             texsubtotal.BackColor = Color.FromArgb(64, 64, 64);
-            texsubtotal.Location = new Point(308, 771);
+            texsubtotal.Location = new Point(362, 770);
             texsubtotal.Name = "texsubtotal";
             texsubtotal.Size = new Size(125, 27);
             texsubtotal.TabIndex = 15;
@@ -332,7 +332,7 @@
             // texdescuento
             // 
             texdescuento.BackColor = Color.FromArgb(64, 64, 64);
-            texdescuento.Location = new Point(679, 771);
+            texdescuento.Location = new Point(743, 770);
             texdescuento.Name = "texdescuento";
             texdescuento.Size = new Size(125, 27);
             texdescuento.TabIndex = 16;
@@ -340,7 +340,7 @@
             // textotal
             // 
             textotal.BackColor = Color.FromArgb(64, 64, 64);
-            textotal.Location = new Point(1011, 771);
+            textotal.Location = new Point(1075, 766);
             textotal.Name = "textotal";
             textotal.Size = new Size(125, 27);
             textotal.TabIndex = 17;
@@ -349,7 +349,7 @@
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label2.Location = new Point(208, 775);
+            label2.Location = new Point(262, 774);
             label2.Name = "label2";
             label2.Size = new Size(94, 23);
             label2.TabIndex = 18;
@@ -359,7 +359,7 @@
             // 
             label7.AutoSize = true;
             label7.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label7.Location = new Point(564, 775);
+            label7.Location = new Point(619, 774);
             label7.Name = "label7";
             label7.Size = new Size(109, 23);
             label7.TabIndex = 19;
@@ -369,7 +369,7 @@
             // 
             label8.AutoSize = true;
             label8.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label8.Location = new Point(944, 775);
+            label8.Location = new Point(997, 771);
             label8.Name = "label8";
             label8.Size = new Size(61, 23);
             label8.TabIndex = 20;
@@ -380,7 +380,7 @@
             button3.BackColor = Color.White;
             button3.ImageIndex = 2;
             button3.ImageList = imageList1;
-            button3.Location = new Point(1303, 745);
+            button3.Location = new Point(1351, 739);
             button3.Name = "button3";
             button3.Size = new Size(75, 65);
             button3.TabIndex = 21;
@@ -391,7 +391,7 @@
             // 
             label9.AutoSize = true;
             label9.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label9.Location = new Point(1166, 681);
+            label9.Location = new Point(1214, 675);
             label9.Name = "label9";
             label9.Size = new Size(98, 23);
             label9.TabIndex = 22;
@@ -401,7 +401,7 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label10.Location = new Point(1166, 599);
+            label10.Location = new Point(1214, 593);
             label10.Name = "label10";
             label10.Size = new Size(57, 23);
             label10.TabIndex = 23;
@@ -411,7 +411,7 @@
             // 
             label11.AutoSize = true;
             label11.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label11.Location = new Point(1166, 772);
+            label11.Location = new Point(1214, 766);
             label11.Name = "label11";
             label11.Size = new Size(79, 23);
             label11.TabIndex = 24;

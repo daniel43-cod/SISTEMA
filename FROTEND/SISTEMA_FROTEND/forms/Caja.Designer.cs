@@ -1,6 +1,6 @@
 ﻿namespace SISTEMA_FROTEND
 {
-    partial class usuarioscs
+    partial class Caja
     {
         /// <summary>
         /// Required designer variable.
@@ -30,14 +30,15 @@
         {
             tabcaja = new TabControl();
             tabPage1 = new TabPage();
+            lblUsuario = new Label();
             lblCaja = new Label();
             groupBox2 = new GroupBox();
-            button3 = new Button();
-            textBox5 = new TextBox();
+            button1 = new Button();
+            texmontoesperado = new TextBox();
             label6 = new Label();
-            textBox3 = new TextBox();
+            texobservacioncierre = new TextBox();
             button2 = new Button();
-            textBox4 = new TextBox();
+            texmontocontado = new TextBox();
             label4 = new Label();
             label5 = new Label();
             groupBox1 = new GroupBox();
@@ -48,10 +49,13 @@
             label2 = new Label();
             label1 = new Label();
             tabPage2 = new TabPage();
+            dataGridView1 = new DataGridView();
             tabcaja.SuspendLayout();
             tabPage1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox1.SuspendLayout();
+            tabPage2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
             // tabcaja
@@ -66,6 +70,7 @@
             // 
             // tabPage1
             // 
+            tabPage1.Controls.Add(lblUsuario);
             tabPage1.Controls.Add(lblCaja);
             tabPage1.Controls.Add(groupBox2);
             tabPage1.Controls.Add(groupBox1);
@@ -79,6 +84,15 @@
             tabPage1.UseVisualStyleBackColor = true;
             tabPage1.Click += tabPage1_Click;
             // 
+            // lblUsuario
+            // 
+            lblUsuario.AutoSize = true;
+            lblUsuario.Location = new Point(30, 19);
+            lblUsuario.Name = "lblUsuario";
+            lblUsuario.Size = new Size(50, 20);
+            lblUsuario.TabIndex = 15;
+            lblUsuario.Text = "label7";
+            // 
             // lblCaja
             // 
             lblCaja.AutoSize = true;
@@ -90,73 +104,81 @@
             // 
             // groupBox2
             // 
-            groupBox2.Controls.Add(button3);
-            groupBox2.Controls.Add(textBox5);
+            groupBox2.Controls.Add(button1);
+            groupBox2.Controls.Add(texmontoesperado);
             groupBox2.Controls.Add(label6);
-            groupBox2.Controls.Add(textBox3);
+            groupBox2.Controls.Add(texobservacioncierre);
             groupBox2.Controls.Add(button2);
-            groupBox2.Controls.Add(textBox4);
+            groupBox2.Controls.Add(texmontocontado);
             groupBox2.Controls.Add(label4);
             groupBox2.Controls.Add(label5);
+            groupBox2.ForeColor = Color.Black;
             groupBox2.Location = new Point(492, 95);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(464, 294);
             groupBox2.TabIndex = 13;
             groupBox2.TabStop = false;
             groupBox2.Text = "CIERRE";
+            groupBox2.Enter += groupBox2_Enter;
             // 
-            // button3
+            // button1
             // 
-            button3.Location = new Point(323, 249);
-            button3.Name = "button3";
-            button3.Size = new Size(94, 29);
-            button3.TabIndex = 14;
-            button3.Text = "Cerrar";
-            button3.UseVisualStyleBackColor = true;
+            button1.ForeColor = Color.Black;
+            button1.Location = new Point(306, 249);
+            button1.Name = "button1";
+            button1.Size = new Size(94, 29);
+            button1.TabIndex = 15;
+            button1.Text = "Cerrar";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click_1;
             // 
-            // textBox5
+            // texmontoesperado
             // 
-            textBox5.Location = new Point(222, 101);
-            textBox5.Name = "textBox5";
-            textBox5.Size = new Size(178, 27);
-            textBox5.TabIndex = 12;
+            texmontoesperado.Location = new Point(222, 101);
+            texmontoesperado.Name = "texmontoesperado";
+            texmontoesperado.Size = new Size(178, 27);
+            texmontoesperado.TabIndex = 12;
             // 
             // label6
             // 
             label6.AutoSize = true;
+            label6.ForeColor = Color.Black;
             label6.Location = new Point(47, 108);
             label6.Name = "label6";
             label6.Size = new Size(119, 20);
             label6.TabIndex = 13;
             label6.Text = "Monto Esperado";
             // 
-            // textBox3
+            // texobservacioncierre
             // 
-            textBox3.Location = new Point(222, 156);
-            textBox3.Multiline = true;
-            textBox3.Name = "textBox3";
-            textBox3.Size = new Size(178, 75);
-            textBox3.TabIndex = 9;
+            texobservacioncierre.Location = new Point(222, 156);
+            texobservacioncierre.Multiline = true;
+            texobservacioncierre.Name = "texobservacioncierre";
+            texobservacioncierre.Size = new Size(178, 75);
+            texobservacioncierre.TabIndex = 9;
             // 
             // button2
             // 
+            button2.ForeColor = Color.Black;
             button2.Location = new Point(183, 249);
             button2.Name = "button2";
             button2.Size = new Size(94, 29);
             button2.TabIndex = 11;
             button2.Text = "Ver";
             button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
             // 
-            // textBox4
+            // texmontocontado
             // 
-            textBox4.Location = new Point(222, 33);
-            textBox4.Name = "textBox4";
-            textBox4.Size = new Size(178, 27);
-            textBox4.TabIndex = 7;
+            texmontocontado.Location = new Point(222, 33);
+            texmontocontado.Name = "texmontocontado";
+            texmontocontado.Size = new Size(178, 27);
+            texmontocontado.TabIndex = 7;
             // 
             // label4
             // 
             label4.AutoSize = true;
+            label4.ForeColor = Color.Black;
             label4.Location = new Point(38, 185);
             label4.Name = "label4";
             label4.Size = new Size(153, 20);
@@ -166,6 +188,7 @@
             // label5
             // 
             label5.AutoSize = true;
+            label5.ForeColor = Color.Black;
             label5.Location = new Point(47, 40);
             label5.Name = "label5";
             label5.Size = new Size(114, 20);
@@ -242,23 +265,33 @@
             // 
             // tabPage2
             // 
+            tabPage2.Controls.Add(dataGridView1);
             tabPage2.Location = new Point(4, 29);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
             tabPage2.Size = new Size(989, 467);
             tabPage2.TabIndex = 1;
-            tabPage2.Text = "tabPage2";
+            tabPage2.Text = "SESION DE CAJA";
             tabPage2.UseVisualStyleBackColor = true;
             tabPage2.Click += tabPage2_Click;
             // 
-            // usuarioscs
+            // dataGridView1
+            // 
+            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView1.Location = new Point(34, 48);
+            dataGridView1.Name = "dataGridView1";
+            dataGridView1.RowHeadersWidth = 51;
+            dataGridView1.Size = new Size(921, 379);
+            dataGridView1.TabIndex = 0;
+            // 
+            // Caja
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Gray;
             ClientSize = new Size(1021, 568);
             Controls.Add(tabcaja);
-            Name = "usuarioscs";
+            Name = "Caja";
             Text = "usuarioscs";
             Load += usuarioscs_Load;
             tabcaja.ResumeLayout(false);
@@ -268,8 +301,12 @@
             groupBox2.PerformLayout();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
+            tabPage2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ResumeLayout(false);
         }
+
+
 
         #endregion
 
@@ -283,15 +320,17 @@
         private TextBox textmontoinicial;
         private Label label1;
         private GroupBox groupBox2;
-        private TextBox textBox3;
+        private TextBox texobservacioncierre;
         private Button button2;
-        private TextBox textBox4;
+        private TextBox texmontocontado;
         private Label label4;
         private Label label5;
         private GroupBox groupBox1;
-        private Button button3;
-        private TextBox textBox5;
+        private TextBox texmontoesperado;
         private Label label6;
         private Label lblCaja;
+        private Button button1;
+        private Label lblUsuario;
+        private DataGridView dataGridView1;
     }
 }

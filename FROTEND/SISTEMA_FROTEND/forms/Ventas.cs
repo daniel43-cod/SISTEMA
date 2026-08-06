@@ -75,6 +75,7 @@ namespace SISTEMA_FROTEND.presentacion
             }
 
             dataGridView1.Columns["id_producto_presentacion"].Visible = false;
+          //  dataGridView1.Columns["impuesto"].Visible = true;
 
             _productos = await _productoService.ListarProducto();
 
