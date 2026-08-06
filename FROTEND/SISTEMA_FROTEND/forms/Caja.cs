@@ -26,14 +26,21 @@ namespace SISTEMA_FROTEND
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
+            datasesiones.DefaultCellStyle.ForeColor = Color.Black;
+            datasesiones.DefaultCellStyle.BackColor = Color.White;
 
+            datasesiones.DefaultCellStyle.SelectionForeColor = Color.White;
+            datasesiones.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+            datasesiones.EnableHeadersVisualStyles = false;
+            datasesiones.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            datasesiones.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
         }
 
         private async void button1_Click_1(object sender, EventArgs e)
         {
 
 
-            if (!decimal.TryParse(texmontocontado.Text,out decimal montoContado))
+            if (!decimal.TryParse(texmontocontado.Text, out decimal montoContado))
             {
                 MessageBox.Show(
                     "Ingrese un monto contado válido.",
@@ -93,15 +100,15 @@ namespace SISTEMA_FROTEND
 
         private void groupBox2_Enter(object sender, EventArgs e)
         {
-           
+
         }
 
-        private void tabPage2_Click(object sender, EventArgs e)
+        private async void tabPage2_Click(object sender, EventArgs e)
         {
 
         }
 
-        private  async void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
 
             if (!decimal.TryParse(textmontoinicial.Text, out decimal monto))
@@ -112,7 +119,7 @@ namespace SISTEMA_FROTEND
 
             var apertura_caja = new AperturaCajaDT0s
             {
-                id_caja= ConfiguracionApp.IdCaja,
+                id_caja = ConfiguracionApp.IdCaja,
                 monto_inicial = decimal.Parse(textmontoinicial.Text),
                 observacion = texobservacionapertura.Text
 
@@ -152,6 +159,36 @@ namespace SISTEMA_FROTEND
             }
 
             lblCaja.Text = ConfiguracionApp.NombreCaja;
+        }
+
+        private async void tabcaja_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabcaja.SelectedTab != tabPage2)
+                return;
+
+            try
+            {
+                var sesiones = await _cajaService.ListarSesiones();
+
+
+                datasesiones.AutoGenerateColumns = true;
+                datasesiones.DataSource = null;
+                datasesiones.DataSource = sesiones;
+
+                datasesiones.Columns["id_sesion_caja"].Visible = false;
+                datasesiones.Columns["id_caja"].Visible = false;
+                datasesiones.Columns["id_usuario_apertura"].Visible = false;
+                datasesiones.Columns["id_usuario_cierre"].Visible = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Error al cargar sesiones",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
     }
 }

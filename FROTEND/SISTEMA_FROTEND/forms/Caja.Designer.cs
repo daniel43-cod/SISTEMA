@@ -49,13 +49,13 @@
             label2 = new Label();
             label1 = new Label();
             tabPage2 = new TabPage();
-            dataGridView1 = new DataGridView();
+            datasesiones = new DataGridView();
             tabcaja.SuspendLayout();
             tabPage1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox1.SuspendLayout();
             tabPage2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)datasesiones).BeginInit();
             SuspendLayout();
             // 
             // tabcaja
@@ -67,6 +67,7 @@
             tabcaja.SelectedIndex = 0;
             tabcaja.Size = new Size(997, 500);
             tabcaja.TabIndex = 0;
+            tabcaja.SelectedIndexChanged += tabcaja_SelectedIndexChanged;
             // 
             // tabPage1
             // 
@@ -265,7 +266,7 @@
             // 
             // tabPage2
             // 
-            tabPage2.Controls.Add(dataGridView1);
+            tabPage2.Controls.Add(datasesiones);
             tabPage2.Location = new Point(4, 29);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
@@ -275,14 +276,14 @@
             tabPage2.UseVisualStyleBackColor = true;
             tabPage2.Click += tabPage2_Click;
             // 
-            // dataGridView1
+            // datasesiones
             // 
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(34, 48);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.RowHeadersWidth = 51;
-            dataGridView1.Size = new Size(921, 379);
-            dataGridView1.TabIndex = 0;
+            datasesiones.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            datasesiones.Location = new Point(34, 48);
+            datasesiones.Name = "datasesiones";
+            datasesiones.RowHeadersWidth = 51;
+            datasesiones.Size = new Size(921, 379);
+            datasesiones.TabIndex = 0;
             // 
             // Caja
             // 
@@ -302,7 +303,7 @@
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             tabPage2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)datasesiones).EndInit();
             ResumeLayout(false);
         }
 
@@ -331,6 +332,6 @@
         private Label lblCaja;
         private Button button1;
         private Label lblUsuario;
-        private DataGridView dataGridView1;
+        private DataGridView datasesiones;
     }
 }

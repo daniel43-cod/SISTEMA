@@ -21,10 +21,7 @@ namespace SISTEMA_FROTEND.services
         //Apertura Caja
         public async Task<AperturaCajaDT0s?> AbrirCaja(AperturaCajaDT0s apertura)
         {
-            var response = await Cliente.PostAsJsonAsync(
-                "Caja/Abrir",
-                apertura
-            );
+            var response = await Cliente.PostAsJsonAsync("Caja/Abrir",apertura);
 
             if (response.IsSuccessStatusCode)
             {
@@ -41,8 +38,25 @@ namespace SISTEMA_FROTEND.services
             );
         }
 
-        public async Task<RespuetaCierreDTO> CerrarCaja(
-      CierreCajaDTOs cierreCaja)
+        public async Task<List<ListarSesionesCajaDTO>> ListarSesiones()
+        {
+            var response = await Cliente.GetAsync("Caja/ListarSesionesCaja");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content
+                    .ReadFromJsonAsync<List<ListarSesionesCajaDTO>>()
+                    ?? new List<ListarSesionesCajaDTO>();
+            }
+
+            throw new Exception(
+                $"Código: {(int)response.StatusCode}\n" +
+                $"Estado: {response.StatusCode}\n" +
+                $"Respuesta:\n{await response.Content.ReadAsStringAsync()}"
+            );
+        }
+
+        public async Task<RespuetaCierreDTO> CerrarCaja(CierreCajaDTOs cierreCaja)
         {
             var cliente = ApiClient.ObtenerClienteAutenticado();
 

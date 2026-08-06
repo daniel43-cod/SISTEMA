@@ -1,6 +1,10 @@
-﻿namespace API_SISTEMA.DTOs.Caja
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SISTEMA_FROTEND.DTOs.Caja
 {
-    public class ListarSesionesDTOs
+    public class ListarSesionesCajaDTO
     {
         public int id_sesion_caja { get; set; }
         public int id_caja { get; set; }
@@ -12,7 +16,7 @@
         public DateTime? fecha_cierre { get; set; }
         public decimal monto_inicial { get; set; }
         public decimal? monto_contado { get; set; }
-       
+     //   public decimal monto_final { get; set; }
         public decimal? diferencia { get; set; }
         public string observacion_apertura { get; set; }
         public string? observacion_cierre { get; set; }
