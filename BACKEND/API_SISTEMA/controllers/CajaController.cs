@@ -46,12 +46,7 @@ namespace API_SISTEMA.controllers
                 {
                     mensaje = "Caja abierta correctamente.",
                     monto_inicial = sesionCaja.monto_inicial
-                    /* id_sesion_caja = sesionCaja.id_sesion_caja,
-                     id_caja = sesionCaja.id_caja,
-                     id_usuario_apertura =
-                         sesionCaja.id_usuario_apertura,
-                     fecha_apertura = sesionCaja.fecha_apertura,
-                     monto_inicial = sesionCaja.monto_inicial*/
+                   
                 });
             }
             catch (Exception ex)
@@ -75,8 +70,7 @@ namespace API_SISTEMA.controllers
         {
             try
             {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
                 if (!int.TryParse(idUsuarioClaim, out int idUsuario))

@@ -2,6 +2,7 @@
 using API_SISTEMA.DTOs.Catalogo;
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
+using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.Contracts;
 using System.Reflection.Metadata.Ecma335;
@@ -18,10 +19,36 @@ namespace API_SISTEMA.services
             _context = context;
             
         }
-    
-        public async Task<List<ListarVentasDTOs>> ListarVentes()
+
+        public async Task<List<ListarVentasDTOs>> ListarVentas(
+     int idUsuario)
         {
+            var usuario = await _context.usuarios
+                .FirstOrDefaultAsync(u => u.id_usuario == idUsuario);
+
+            if (usuario == null)
+            {
+                throw new Exception("Usuario no encontrado.");
+            }
+
+            var sesionCaja = await _context.sesioncaja
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s =>
+                    s.id_usuario_apertura == idUsuario &&
+                    s.fecha_cierre == null
+                );
+
+            if (sesionCaja == null)
+            {
+                return new List<ListarVentasDTOs>();
+            }
+
             return await _context.ventas
+                .AsNoTracking()
+                .Where(v =>
+                    v.id_sesion_caja == sesionCaja.id_sesion_caja
+                )
+                .OrderByDescending(v => v.fecha_venta)
                 .Select(v => new ListarVentasDTOs
                 {
                     id_ventas = v.id_ventas,
@@ -30,29 +57,23 @@ namespace API_SISTEMA.services
                     impuesto = v.impuesto,
                     total = v.total,
                     fecha_venta = v.fecha_venta,
-
                     id_cliente = v.id_cliente,
                     cliente = v.cliente.nombre,
-
                     id_usuario = v.id_usuario,
                     usuario = v.usuario.nombre,
-
                     estado = v.EstadoVenta.descripcion,
                     origen = v.origen,
                     ganancia_total = v.ganancia_total,
-
                     monto_pagado = v.monto_pagado,
                     saldo_pendiente = v.saldo_pendiente,
                     observacion = v.observacion
-
                 })
                 .ToListAsync();
         }
 
         public async Task<Ventas> CrearVenta(VentasDTOs ventaDto, int idUsuario)
         {
-            Console.WriteLine($"Usuario del token: {idUsuario}");
-
+           
             var sesionCaja = await _context.sesioncaja
                 .FirstOrDefaultAsync(s =>
                     s.id_usuario_apertura == idUsuario &&
@@ -104,8 +125,7 @@ namespace API_SISTEMA.services
                         nit = ventaDto.clienteNuevo.nit,
                         dpi = ventaDto.clienteNuevo.dpi,
                         telefono = ventaDto.clienteNuevo.telefono,
-                        correo_electronico =
-                            ventaDto.clienteNuevo.correo_electronico,
+                        correo_electronico = ventaDto.clienteNuevo.correo_electronico,
                         direccion = ventaDto.clienteNuevo.direccion,
                         estado = true
                     };
@@ -194,7 +214,7 @@ namespace API_SISTEMA.services
                     decimal totalDetalle =
                         subtotalDetalle - descuentoDetalle;
 
-                    decimal costoDetalle =detalle.cantidad *presentacion.unidades_equivalentes *producto.costo_unitario;
+                    decimal costoDetalle =detalle.cantidad *presentacion.unidades_equivalentes *producto.costo_unitario??0;
 
                     decimal gananciaDetalle = totalDetalle - costoDetalle;
                     producto.stock -= unidadesADescontar;

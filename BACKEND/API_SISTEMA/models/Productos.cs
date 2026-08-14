@@ -14,7 +14,7 @@ namespace API_SISTEMA.models
         public int stock { get; set; }
         public int stock_minimo { get; set; }
         public string? imagen { get; set; }
-        public decimal costo_unitario { get; set; }
+        public decimal? costo_unitario { get; set; }
         public decimal? impuesto { get; set; } 
         public DateTime fecha_creacion {  get; set; }
         public List<Detalle_venta> DetalleVentas { get; set; } = new();

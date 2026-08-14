@@ -104,5 +104,10 @@ namespace SISTEMA_FROTEND
         {
             AbrirFormulario(new Catalog());
         }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            AbrirFormulario(new Reportes    ());
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace SISTEMA_FROTEND.services
         private HttpClient Cliente =>
         ApiClient.ObtenerClienteAutenticado();
 
-        public async Task<List<ListarVentasDTOs>> ListarVentas()
+        public async Task<List<ListarVentasDTOs>> ListarVentasCajaActiva()
         {
             return await Cliente
                 .GetFromJsonAsync<List<ListarVentasDTOs>>(
@@ -22,7 +22,6 @@ namespace SISTEMA_FROTEND.services
                 )
                 ?? new List<ListarVentasDTOs>();
         }
-
         public async Task<VentaDTOs?> CrearVenta(VentaDTOs ventaDto)
         {
             var response = await Cliente.PostAsJsonAsync(

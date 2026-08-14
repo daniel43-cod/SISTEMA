@@ -28,11 +28,11 @@ namespace API_SISTEMA.services
                 id_estado_compra = c.id_estado_compra,
                 descripcion_estado_compra = c.estado_compra.descripcion,
                 fecha_ingreso = c.fecha_ingreso,
-                total_compra = c.total_compra
+                total_compra = c.total_compra??0
             }).ToListAsync();
         }
 
-        public async Task<RegistroCompras> CrearCompra(RegistroComprasDTO compraDto)
+        public async Task<RegistroCompras> CrearCompra(RegistroComprasDTO compraDto, int idUsuario)
         {
             if (compraDto == null)
                 throw new Exception("La información de la compra es obligatoria.");
@@ -43,23 +43,13 @@ namespace API_SISTEMA.services
                 throw new Exception("Debes enviar al menos un detalle de compra.");
             }
 
-            bool usuarioExiste = await _context.usuarios
-                .AnyAsync(u => u.id_usuario == compraDto.id_usuario);
 
-            if (!usuarioExiste)
-                throw new Exception("El usuario indicado no existe.");
 
             bool empresaExiste = await _context.empresa
                 .AnyAsync(e => e.id_empresa == compraDto.id_empresa);
 
             if (!empresaExiste)
                 throw new Exception("La empresa indicada no existe.");
-
-            bool estadoExiste = await _context.estado_compras
-                .AnyAsync(e => e.id_estado_compra == compraDto.id_estado_compra);
-
-            if (!estadoExiste)
-                throw new Exception("El estado de compra indicado no existe.");
 
             decimal totalCompra = 0;
 
@@ -85,19 +75,52 @@ namespace API_SISTEMA.services
 
             using var transaccion = await _context.Database.BeginTransactionAsync();
 
+            int IdEstadoCompra;
+            if (compraDto.monto_pagado<totalCompra)
+            {
+                IdEstadoCompra = 2;
+            }
+            else
+            {
+                IdEstadoCompra = 1;
+            }
             try
             {
                 var compra = new RegistroCompras
                 {
-                    id_usuario = compraDto.id_usuario,
+                    id_usuario = idUsuario,
                     id_empresa = compraDto.id_empresa,
-                    id_estado_compra = compraDto.id_estado_compra,
+                    id_estado_compra = IdEstadoCompra,
                     fecha_ingreso = DateTime.Now,
-                    total_compra = totalCompra
+                    total_compra = totalCompra,
+
+                    saldo_pendiente = totalCompra - compraDto.monto_pagado
                 };
+;
 
                 _context.registroCompras.Add(compra);
                 await _context.SaveChangesAsync();
+
+                if(compraDto.monto_pagado>0)
+                {
+                    var sesionCaja = await _context.sesioncaja.FirstOrDefaultAsync(s => s.id_usuario_apertura == idUsuario && s.fecha_cierre == null );
+                    if (sesionCaja  == null)
+                    {
+                        throw new Exception("Debes tener una sesión de caja abierta para registrar un pago.");
+                    }
+                    var pagocompra = new PagosCompra
+                    {
+                        id_compra = compra.id_compra,
+                        id_usuario =idUsuario,
+                        id_sesion_caja = sesionCaja.id_sesion_caja,
+                        observacion = compraDto.observacion,
+                        monto = compraDto.monto_pagado,
+                        fecha_pago = DateTime.Now
+                    };
+                  
+                    _context.pagosCompras.Add(pagocompra);
+                    await _context.SaveChangesAsync();
+                }
 
                 foreach (var detalleDto in compraDto.detalle_compra)
                 {

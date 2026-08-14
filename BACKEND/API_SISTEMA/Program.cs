@@ -2,6 +2,7 @@ using API_SISTEMA.controllers;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.services.PagoCompra;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -79,6 +80,7 @@ builder.Services.AddScoped<EmpresaService>();
 builder.Services.AddScoped<CompraService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<CajaService>();
+builder.Services.AddScoped<Pago>();
 
 
 var app = builder.Build();

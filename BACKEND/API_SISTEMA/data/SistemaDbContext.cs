@@ -246,11 +246,6 @@ modelBuilder.Entity<Producto_precio>()
                 .WithMany()
                 .HasForeignKey(v => v.id_sesion_caja);
 
-            modelBuilder.Entity<RegistroCompras>()
-                .HasOne(v => v.sesioncaja)
-                .WithMany()
-                .HasForeignKey(v => v.id_sesion_caja);
-
             modelBuilder.Entity<Gastos>()
                 .HasOne(v => v.usuario)
                 .WithMany()
@@ -265,6 +260,11 @@ modelBuilder.Entity<Producto_precio>()
              .HasOne(v => v.rol)
              .WithMany()
              .HasForeignKey(v => v.id_rol);
+
+            modelBuilder.Entity<PagosCompra>()
+                .HasOne(v => v.sesioncaja)
+                .WithMany()
+                .HasForeignKey(v => v.id_sesion_caja);
 
 
 

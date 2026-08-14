@@ -125,9 +125,9 @@ namespace API_SISTEMA.services
                         id_usuario_cierre = s.id_usuario_cierre,
                         fecha_apertura = s.fecha_apertura,
                         fecha_cierre = s.fecha_cierre,
-                        monto_inicial = s.monto_inicial,
-                        monto_contado = s.monto_contado,
-                        diferencia = s.diferencia,
+                        monto_inicial = s.monto_inicial??0,
+                        monto_contado = s.monto_contado??0,
+                        diferencia = s.diferencia??0,
                         observacion_apertura = s.observacion_apertura,
                         observacion_cierre = s.observacion_cierre
                     })
@@ -150,9 +150,9 @@ namespace API_SISTEMA.services
                     usuario_cierre = s.usuariocierre.nombre,
                     fecha_apertura = s.fecha_apertura,
                     fecha_cierre = s.fecha_cierre,
-                    monto_inicial = s.monto_inicial,
-                    monto_contado = s.monto_contado,
-                    diferencia = s.diferencia,
+                    monto_inicial = s.monto_inicial??0,
+                    monto_contado = s.monto_contado??0,
+                    diferencia = s.diferencia??0,
                     observacion_apertura = s.observacion_apertura,
                     observacion_cierre = s.observacion_cierre
                 })

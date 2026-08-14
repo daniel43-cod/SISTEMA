@@ -32,7 +32,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MenuPrincipal));
             panelContenido = new Panel();
             panelMenu = new Panel();
-            imageList1 = new ImageList(components);
             label6 = new Label();
             label5 = new Label();
             label4 = new Label();
@@ -40,11 +39,14 @@
             label2 = new Label();
             label1 = new Label();
             btnnuevoproducto = new Button();
+            imageList1 = new ImageList(components);
             btnregistrocompras = new Button();
             btnregistroventas = new Button();
             btncompras = new Button();
             btnusuarios = new Button();
             btnregistrar = new Button();
+            label7 = new Label();
+            button1 = new Button();
             panelMenu.SuspendLayout();
             SuspendLayout();
             // 
@@ -64,6 +66,8 @@
             // panelMenu
             // 
             panelMenu.BackColor = Color.FromArgb(64, 64, 64);
+            panelMenu.Controls.Add(label7);
+            panelMenu.Controls.Add(button1);
             panelMenu.Controls.Add(label6);
             panelMenu.Controls.Add(label5);
             panelMenu.Controls.Add(label4);
@@ -82,20 +86,6 @@
             panelMenu.Size = new Size(377, 677);
             panelMenu.TabIndex = 4;
             panelMenu.Paint += panelMenu_Paint;
-            // 
-            // imageList1
-            // 
-            imageList1.ColorDepth = ColorDepth.Depth32Bit;
-            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
-            imageList1.TransparentColor = Color.Transparent;
-            imageList1.Images.SetKeyName(0, "Venta.png");
-            imageList1.Images.SetKeyName(1, "Registro.png");
-            imageList1.Images.SetKeyName(2, "Compras.png");
-            imageList1.Images.SetKeyName(3, "Pedidos.png");
-            imageList1.Images.SetKeyName(4, "Crear.png");
-            imageList1.Images.SetKeyName(5, "Configuracion.png");
-            imageList1.Images.SetKeyName(6, "Catalogo.png");
-            imageList1.Images.SetKeyName(7, "Cancelar.png");
             // 
             // label6
             // 
@@ -179,6 +169,20 @@
             btnnuevoproducto.UseVisualStyleBackColor = false;
             btnnuevoproducto.Click += btningreso_Click;
             // 
+            // imageList1
+            // 
+            imageList1.ColorDepth = ColorDepth.Depth32Bit;
+            imageList1.ImageStream = (ImageListStreamer)resources.GetObject("imageList1.ImageStream");
+            imageList1.TransparentColor = Color.Transparent;
+            imageList1.Images.SetKeyName(0, "Venta.png");
+            imageList1.Images.SetKeyName(1, "Registro.png");
+            imageList1.Images.SetKeyName(2, "Compras.png");
+            imageList1.Images.SetKeyName(3, "Pedidos.png");
+            imageList1.Images.SetKeyName(4, "Crear.png");
+            imageList1.Images.SetKeyName(5, "Configuracion.png");
+            imageList1.Images.SetKeyName(6, "Catalogo.png");
+            imageList1.Images.SetKeyName(7, "Cancelar.png");
+            // 
             // btnregistrocompras
             // 
             btnregistrocompras.BackColor = Color.Gainsboro;
@@ -241,6 +245,29 @@
             btnregistrar.UseVisualStyleBackColor = false;
             btnregistrar.Click += btnregistrar_Click;
             // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label7.ForeColor = Color.White;
+            label7.Location = new Point(24, 618);
+            label7.Margin = new Padding(0);
+            label7.Name = "label7";
+            label7.Size = new Size(102, 25);
+            label7.TabIndex = 12;
+            label7.Text = "REPORTES";
+            // 
+            // button1
+            // 
+            button1.BackColor = Color.Gainsboro;
+            button1.ImageList = imageList1;
+            button1.Location = new Point(262, 600);
+            button1.Name = "button1";
+            button1.Size = new Size(75, 65);
+            button1.TabIndex = 11;
+            button1.UseVisualStyleBackColor = false;
+            button1.Click += button1_Click_1;
+            // 
             // MenuPrincipal
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -278,5 +305,7 @@
         private Button btncompras;
         private Button btnregistrocompras;
         private Button btnnuevoproducto;
+        private Label label7;
+        private Button button1;
     }
 }

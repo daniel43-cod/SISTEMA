@@ -28,10 +28,43 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("listar")]
-        public async Task<IActionResult> ListarVentas()
+        public async Task<IActionResult> ListarVentas([FromQuery] FiltrarVentasDTOs filtro)
         {
-            var listar = await _context.ListarVentes();
-            return Ok(listar);
+            try
+            {
+                var idUsuarioClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                {
+                    return Unauthorized(new
+                    {
+                        mensaje = "No se pudo identificar al usuario autenticado."
+                    });
+                }
+
+                var rol =
+                    User.FindFirstValue(ClaimTypes.Role);
+
+                if (string.IsNullOrWhiteSpace(rol))
+                {
+                    return Unauthorized(new
+                    {
+                        mensaje = "No se pudo identificar el rol del usuario."
+                    });
+                }
+
+                var listar = await _context.ListarVentas(idUsuario);
+
+                return Ok(listar);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "Ocurrió un error al listar las ventas.",
+                    detalle = ex.Message
+                });
+            }
         }
 
         //catalogo

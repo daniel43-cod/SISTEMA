@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.forms;
+﻿using SISTEMA_FROTEND.DTOs.Ventas;
+using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
 using System;
@@ -21,7 +22,7 @@ namespace SISTEMA_FROTEND.presentacion
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
-            var ventas = await _service.ListarVentas();
+            var ventas = await _service.ListarVentasCajaActiva();
             dataregistrodiario.DataSource = ventas;
 
             if (dataregistrodiario.Columns["id_ventas"] != null)
@@ -59,7 +60,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async Task CargarProductos()
         {
-            var ventas = await _service.ListarVentas();
+            var ventas = await _service.ListarVentasCajaActiva();
             dataregistrodiario.DataSource = ventas;
         }
 
