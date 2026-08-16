@@ -50,6 +50,7 @@
             label1 = new Label();
             tabPage2 = new TabPage();
             datasesiones = new DataGridView();
+            tabPage3 = new TabPage();
             tabcaja.SuspendLayout();
             tabPage1.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -61,6 +62,7 @@
             // tabcaja
             // 
             tabcaja.Controls.Add(tabPage1);
+            tabcaja.Controls.Add(tabPage3);
             tabcaja.Controls.Add(tabPage2);
             tabcaja.Location = new Point(12, 12);
             tabcaja.Name = "tabcaja";
@@ -285,6 +287,16 @@
             datasesiones.Size = new Size(921, 379);
             datasesiones.TabIndex = 0;
             // 
+            // tabPage3
+            // 
+            tabPage3.Location = new Point(4, 29);
+            tabPage3.Name = "tabPage3";
+            tabPage3.Padding = new Padding(3);
+            tabPage3.Size = new Size(989, 467);
+            tabPage3.TabIndex = 2;
+            tabPage3.Text = "MOVIMIENTO EN CAJA";
+            tabPage3.UseVisualStyleBackColor = true;
+            // 
             // Caja
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -333,5 +345,6 @@
         private Button button1;
         private Label lblUsuario;
         private DataGridView datasesiones;
+        private TabPage tabPage3;
     }
 }

@@ -41,6 +41,7 @@ namespace API_SISTEMA.data
         public DbSet<SesionCaja> sesioncaja { get; set; }
         public DbSet<TipoMovimientoCaja> tipomovimientocaja {  get; set; }
         public DbSet<MovimientoCaja> movimientocaja { get; set; }
+        public DbSet<Gastos> gastos { get; set; } 
 
 
 
@@ -113,6 +114,9 @@ namespace API_SISTEMA.data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<TipoMovimientoCaja>().ToTable("tipo_movimiento_caja");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Gastos>().ToTable("gastos"); 
             base.OnModelCreating(modelBuilder);
 
 

@@ -6,7 +6,7 @@ namespace API_SISTEMA.models
     public class Gastos
     {
         [Key]
-        public int id__gasto { get; set; }
+        public int id_gastos { get; set; }
         public int id_sesion_caja { get; set; }
         public int id_usuario { get; set; }
         public string descripcion { get; set; }
