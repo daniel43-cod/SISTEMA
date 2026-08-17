@@ -2,6 +2,7 @@
 using API_SISTEMA.DTOs.Compras;
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services
@@ -152,6 +153,8 @@ namespace API_SISTEMA.services
                 throw;
             }
         }
+
+      
 
 
         //LISTAR DETALLE DE COMPRA

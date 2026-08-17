@@ -32,6 +32,8 @@ namespace API_SISTEMA.services.Gastos
             {
                 throw new Exception("La descripción del gasto no puede estar vacía.");
             }
+
+           
             var gasto = new models.Gastos
             {
                 id_sesion_caja = sesionCaja.id_sesion_caja,

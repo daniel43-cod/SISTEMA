@@ -2,6 +2,7 @@
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,10 +21,13 @@ namespace API_SISTEMA.controllers
     {
 
         private readonly VentaService _context;
+        private readonly AbonarSaldoVentaServices _pagoService;
 
-        public VentaController(VentaService service)
+        public VentaController(VentaService service, AbonarSaldoVentaServices pago)
         {
             _context = service;
+            _pagoService = pago;
+
         }
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
@@ -91,6 +95,46 @@ namespace API_SISTEMA.controllers
         }
 
 
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+        [HttpPost("AbonarVenta")]
+        public async Task<IActionResult> AbonarVenta( [FromBody] AbonarSaldoVentaDTO dto)
+        {
+            try
+            {
+                var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                {
+                    return Unauthorized(new
+                    {
+                        mensaje = "No se pudo identificar al usuario autenticado."
+                    });
+                }
+
+                var pago = await _pagoService.AbonarVenta(dto,idUsuario);
+
+                return Ok(new
+                {
+                    mensaje = "Abono registrado correctamente.",
+                    id_pago = pago.id_pago,
+                    id_venta = pago.id_venta,
+                    monto = pago.monto,
+                    fecha_pago = pago.fecha_pago,
+                    id_sesion_caja = pago.id_sesion_caja
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message,
+                    detalle = ex.ToString()
+                });
+            }
+        }
+
 
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
@@ -99,17 +143,14 @@ namespace API_SISTEMA.controllers
         {
             try
             {
-               var idUsuarioClaim =
-    User.FindFirstValue(ClaimTypes.NameIdentifier)
-    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-    ?? User.FindFirstValue("sub");
+               var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)?? User.FindFirstValue("sub");
 
-if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+             if (!int.TryParse(idUsuarioClaim, out int idUsuario))
 {
-    return Unauthorized(new
+                 return Unauthorized(new
     {
         mensaje = "No se pudo identificar al usuario autenticado."
-    });
+    }); 
 }
 
                 var venta = await _context.CrearVenta(ventaDto, idUsuario);

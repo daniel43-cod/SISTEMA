@@ -71,7 +71,7 @@ namespace API_SISTEMA.services
                 .ToListAsync();
         }
 
-        public async Task<Ventas> CrearVenta(VentasDTOs ventaDto, int idUsuario)
+        public async Task<API_SISTEMA.models.Ventas> CrearVenta(VentasDTOs ventaDto, int idUsuario)
         {
            
             var sesionCaja = await _context.sesioncaja
@@ -104,7 +104,7 @@ namespace API_SISTEMA.services
                 if (ventaDto.id_cliente > 0)
                 {
                     cliente = await _context.cliente
-                        .FirstOrDefaultAsync(c =>c.id_cliente == ventaDto.id_cliente);
+                        .FirstOrDefaultAsync(c => c.id_cliente == ventaDto.id_cliente);
 
                     if (cliente == null)
                         throw new Exception(
@@ -134,7 +134,7 @@ namespace API_SISTEMA.services
                     await _context.SaveChangesAsync();
                 }
 
-                var venta = new Ventas
+                var venta = new API_SISTEMA.models.Ventas
                 {
                     id_cliente = cliente.id_cliente,
 

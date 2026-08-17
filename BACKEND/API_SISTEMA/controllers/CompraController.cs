@@ -91,7 +91,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("pago-compra")]
-        public async Task<IActionResult> RegistrarPagoCompra(PagosCompraDTOs dto)
+        public async Task<IActionResult> RegistrarPagoCompra(AbonarSaldoCompraDTO  dto)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace API_SISTEMA.controllers
                     });
                 }
 
-                var pago = await _pagoCompraService.RegistrarPagoCompra(dto, idUsuario);
+                var pago = await _pagoCompraService.AbonarCompra(dto, idUsuario);
 
                 return Ok(new
                 {
@@ -120,7 +120,8 @@ namespace API_SISTEMA.controllers
             {
                 return BadRequest(new
                 {
-                    mensaje = ex.Message
+                    mensaje = ex.Message,
+                    detalle = ex.ToString()
                 });
             }
         }

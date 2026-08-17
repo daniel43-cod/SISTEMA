@@ -4,6 +4,7 @@ using API_SISTEMA.models;
 using API_SISTEMA.services;
 using API_SISTEMA.services.Gastos;
 using API_SISTEMA.services.PagoCompra;
+using API_SISTEMA.services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -83,6 +84,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<CajaService>();
 builder.Services.AddScoped<Pago>();
 builder.Services.AddScoped<CrearGastosService>();
+builder.Services.AddScoped<AbonarSaldoVentaServices>();
 
 
 var app = builder.Build();

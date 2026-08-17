@@ -12,6 +12,9 @@ namespace API_SISTEMA.models
         public string metodo_pago { get; set; }
         public string? observacion { get; set; }
         public DateTime fecha_pago { get; set; } =DateTime.Now;
+        public int id_sesion_caja { get; set; }
+
+        public SesionCaja sesionCaja { get; set; }
 
     }
 }
