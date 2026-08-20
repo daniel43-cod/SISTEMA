@@ -42,6 +42,7 @@ namespace API_SISTEMA.data
         public DbSet<TipoMovimientoCaja> tipomovimientocaja {  get; set; }
         public DbSet<MovimientoCaja> movimientocaja { get; set; }
         public DbSet<Gastos> gastos { get; set; } 
+        public DbSet<usuario_permiso> usuario_permisos { get; set; }
 
 
 
@@ -117,6 +118,9 @@ namespace API_SISTEMA.data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Gastos>().ToTable("gastos"); 
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<usuario_permiso>().ToTable("usuario_permiso");
             base.OnModelCreating(modelBuilder);
 
 
@@ -275,7 +279,15 @@ modelBuilder.Entity<Producto_precio>()
                 .WithMany()
                 .HasForeignKey(v => v.id_sesion_caja);
 
-
+            modelBuilder.Entity<usuario_permiso>()
+                .HasOne(v => v.Usuario)
+                .WithMany()
+                .HasForeignKey(v => v.id_usuario);
+            
+            modelBuilder.Entity<usuario_permiso>()
+                .HasOne(v => v.tabla_permiso)
+                .WithMany()
+                .HasForeignKey(v => v.id_permiso);
 
 
 
