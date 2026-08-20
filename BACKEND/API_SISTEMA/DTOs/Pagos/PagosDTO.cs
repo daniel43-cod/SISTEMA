@@ -1,4 +1,4 @@
-﻿namespace API_SISTEMA.DTOs
+﻿namespace API_SISTEMA.DTOs.Pagos
 {
     public class PagosDTO
     {

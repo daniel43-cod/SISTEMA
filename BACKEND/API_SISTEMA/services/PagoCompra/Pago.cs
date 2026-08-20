@@ -1,17 +1,21 @@
 ﻿using API_SISTEMA.data;
-using API_SISTEMA.models;
-using Microsoft.EntityFrameworkCore;
-using API_SISTEMA.models;
 using API_SISTEMA.DTOs.Compras;
+using API_SISTEMA.models;
+using API_SISTEMA.models;
+using API_SISTEMA.services.MovimientoCaja;
+using API_SISTEMA.Utilidades;
+using Microsoft.EntityFrameworkCore;
 namespace API_SISTEMA.services.PagoCompra
 {
     public class Pago
     {
         private readonly SistemaDbContext _context;
+        private readonly MovimientoCajaService _movimientoCajaService;
 
-        public Pago(SistemaDbContext context)
+        public Pago(SistemaDbContext context, MovimientoCajaService movimientoCajaService)
         {
             _context = context;
+            _movimientoCajaService = movimientoCajaService;
         }
 
         public async Task<PagosCompra> AbonarCompra(AbonarSaldoCompraDTO dto, int idUsuario)
@@ -79,6 +83,17 @@ namespace API_SISTEMA.services.PagoCompra
             compra.saldo_pendiente =
                 saldoActual - dto.monto;
 
+            await _context.SaveChangesAsync();
+
+            await _movimientoCajaService.RegistrarMovimiento(
+                idSesionCaja: sesionCaja.id_sesion_caja,
+                idUsuario: idUsuario,
+                idTipoMovimiento: TiposMovimientoCaja.AbonoCompra,
+                monto: (decimal)pagoCompra.monto,
+                descripcion: $"Abono de compra #{pagoCompra.id_compra}",
+                idCompra: compra.id_compra,
+                idPagoCompra: pagoCompra.id_pagos_compra
+            );
             await _context.SaveChangesAsync();
 
             return pagoCompra;

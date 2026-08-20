@@ -1,18 +1,21 @@
-﻿using API_SISTEMA.Utilidades;
-using API_SISTEMA.data;
+﻿using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Gastos;
+using API_SISTEMA.models;
+using API_SISTEMA.services.MovimientoCaja;
+using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens.Experimental;
-using API_SISTEMA.models;
 
 namespace API_SISTEMA.services.Gastos
 {
     public class CrearGastosService
     {
         private readonly SistemaDbContext _context;
-        public CrearGastosService(SistemaDbContext context)
+        private readonly MovimientoCajaService _movimientoCajaService;
+        public CrearGastosService(SistemaDbContext context, MovimientoCajaService movimientoCajaService)
         {
             _context = context;
+            _movimientoCajaService = movimientoCajaService;
         }
 
         public async Task<int> CrearGasto(IngresarGastoDTOs gastoDto, int IdUsuario)
@@ -44,6 +47,17 @@ namespace API_SISTEMA.services.Gastos
                 fecha = DateTime.Now
             };
             _context.gastos.Add(gasto);
+            await _context.SaveChangesAsync();
+
+            await _movimientoCajaService.RegistrarMovimiento(
+              idSesionCaja: sesionCaja.id_sesion_caja,
+              idUsuario: IdUsuario,
+              idTipoMovimiento: TiposMovimientoCaja.Gasto,
+              monto: (decimal)gasto.monto,
+              descripcion: $"Gasto registrado: {gasto.descripcion}",
+              idCompra: null,
+              idPagoCompra: null
+          );
             await _context.SaveChangesAsync();
             return gasto.id_gastos;
         }

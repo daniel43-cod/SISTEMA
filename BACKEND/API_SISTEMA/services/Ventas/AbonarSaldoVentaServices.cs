@@ -1,7 +1,9 @@
 ﻿using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
+using API_SISTEMA.services.MovimientoCaja;
 using API_SISTEMA.services.PagoCompra;
+using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -10,8 +12,10 @@ namespace API_SISTEMA.services.Ventas
     public class AbonarSaldoVentaServices
     {
         private readonly SistemaDbContext _context;
-        public AbonarSaldoVentaServices(SistemaDbContext context)
+        private readonly MovimientoCajaService _movimientoCajaService;
+        public AbonarSaldoVentaServices(SistemaDbContext context, MovimientoCajaService movimientoCajaService)
         {
+            _movimientoCajaService = movimientoCajaService;
             _context = context;
         }
 
@@ -21,6 +25,7 @@ namespace API_SISTEMA.services.Ventas
             var venta = await _context.ventas.FirstOrDefaultAsync(v => v.id_ventas == dto.id_venta);
 
             var sesionCaja = await _context.sesioncaja.FirstOrDefaultAsync(s => s.id_usuario_apertura == idUsuario && s.fecha_cierre == null);
+
 
             if(sesionCaja == null)
             {
@@ -79,7 +84,21 @@ namespace API_SISTEMA.services.Ventas
             // 6. Actualizar saldo pendiente
             venta.saldo_pendiente = saldoActual - dto.monto;
             await _context.SaveChangesAsync();
+
+
+            await _movimientoCajaService.RegistrarMovimiento(
+                    idSesionCaja: sesionCaja.id_sesion_caja,
+                    idUsuario: idUsuario,
+                    idTipoMovimiento: TiposMovimientoCaja.AbonoVenta,
+                    monto: pagoventa.monto,
+                    descripcion: $"Abono de venta #{pagoventa.id_venta}",
+                    idVenta: venta.id_ventas,
+                    idPagoVenta: pagoventa.id_pago
+                );
+            await _context.SaveChangesAsync();
             return pagoventa;
+
+
         }
     }
 }

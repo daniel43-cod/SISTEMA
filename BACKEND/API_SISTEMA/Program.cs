@@ -3,6 +3,7 @@ using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
 using API_SISTEMA.services.Gastos;
+using API_SISTEMA.services.MovimientoCaja;
 using API_SISTEMA.services.PagoCompra;
 using API_SISTEMA.services.Ventas;
 using API_SISTEMA.Utilidades;
@@ -85,6 +86,9 @@ builder.Services.AddScoped<CajaService>();
 builder.Services.AddScoped<Pago>();
 builder.Services.AddScoped<CrearGastosService>();
 builder.Services.AddScoped<AbonarSaldoVentaServices>();
+builder.Services.AddScoped<MovimientoCajaService>();
+builder.Services.AddScoped<ListarMovimientoCajaService>();
+builder.Services.AddScoped<CrearVentaService>();
 
 
 var app = builder.Build();

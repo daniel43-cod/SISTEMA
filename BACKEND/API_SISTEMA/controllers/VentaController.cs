@@ -21,13 +21,14 @@ namespace API_SISTEMA.controllers
     {
 
         private readonly VentaService _context;
+        private readonly CrearVentaService _crearVentaService;
         private readonly AbonarSaldoVentaServices _pagoService;
 
-        public VentaController(VentaService service, AbonarSaldoVentaServices pago)
+        public VentaController(VentaService service, AbonarSaldoVentaServices pago, CrearVentaService crearVenta)
         {
             _context = service;
             _pagoService = pago;
-
+            _crearVentaService = crearVenta;
         }
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
@@ -136,34 +137,35 @@ namespace API_SISTEMA.controllers
         }
 
 
-
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear([FromBody] VentasDTOs ventaDto)
+        public async Task<IActionResult> Crear(
+    [FromBody] CrearVentaDTO ventaDto)
         {
             try
             {
-               var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)?? User.FindFirstValue("sub");
+                var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                    ?? User.FindFirstValue("sub");
 
-             if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-{
-                 return Unauthorized(new
-    {
-        mensaje = "No se pudo identificar al usuario autenticado."
-    }); 
-}
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                {
+                    return Unauthorized(new
+                    {
+                        mensaje = "No se pudo identificar al usuario autenticado."
+                    });
+                }
 
-                var venta = await _context.CrearVenta(ventaDto, idUsuario);
+                var venta = await _crearVentaService.CrearVenta(
+                    ventaDto,
+                    idUsuario
+                );
 
                 return Ok(new
                 {
-                    mensaje = "Venta registrada correctamente",
-                    id_venta = venta.id_ventas,
-                    total = venta.total,
-                    monto_pagado = venta.monto_pagado,
-                    saldo_pendiente = venta.saldo_pendiente,
-                    id_estado_venta = venta.id_estado_venta,
-                    id_sesion_caja = venta.id_sesion_caja
+                    mensaje = "Venta registrada correctamente.",
+                   
                 });
             }
             catch (Exception ex)
@@ -174,9 +176,6 @@ namespace API_SISTEMA.controllers
                     detalle = ex.ToString()
                 });
             }
-
-
-
         }
 
     }

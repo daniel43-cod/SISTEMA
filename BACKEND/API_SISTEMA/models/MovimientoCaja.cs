@@ -11,11 +11,11 @@ namespace API_SISTEMA.models
         public int id_usuario { get; set; }
         public DateTime fecha_movimiento { get; set; }
         public decimal monto { get; set; }
-        public string descripcion { get; set; }
-        public int id_venta { get; set; }
-        public int id_compra { get; set; }
-        public int id_pago_venta { get; set; }
-        public int id_pago_compra { get; set; }
+        public string? descripcion { get; set; }
+        public int? id_venta { get; set; }
+        public int? id_compra { get; set; }
+        public int? id_pago_venta { get; set; }
+        public int? id_pago_compra { get; set; }
 
         public SesionCaja sesionCaja { get; set; }
         public TipoMovimientoCaja tipoMovimientoCaja { get; set; }

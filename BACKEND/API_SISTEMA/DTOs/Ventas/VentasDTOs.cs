@@ -1,4 +1,5 @@
 ﻿using API_SISTEMA.DTOs.Cliente;
+using API_SISTEMA.DTOs.Pagos;
 using API_SISTEMA.models;
 using System.ComponentModel.DataAnnotations;
 

@@ -74,10 +74,7 @@ namespace API_SISTEMA.services
         public async Task<API_SISTEMA.models.Ventas> CrearVenta(VentasDTOs ventaDto, int idUsuario)
         {
            
-            var sesionCaja = await _context.sesioncaja
-                .FirstOrDefaultAsync(s =>
-                    s.id_usuario_apertura == idUsuario &&
-                    s.fecha_cierre == null);
+            var sesionCaja = await _context.sesioncaja.FirstOrDefaultAsync(s =>s.id_usuario_apertura == idUsuario && s.fecha_cierre == null);
 
             if (sesionCaja == null)
             {
@@ -114,8 +111,7 @@ namespace API_SISTEMA.services
                 {
                     if (ventaDto.clienteNuevo == null)
                     {
-                        throw new Exception(
-                            "Debe ingresar los datos del cliente nuevo.");
+                        throw new Exception("Debe ingresar los datos del cliente nuevo.");
                     }
 
                     cliente = new Cliente
@@ -132,6 +128,7 @@ namespace API_SISTEMA.services
 
                     _context.cliente.Add(cliente);
                     await _context.SaveChangesAsync();
+
                 }
 
                 var venta = new API_SISTEMA.models.Ventas
@@ -151,7 +148,7 @@ namespace API_SISTEMA.services
                     total = 0,
                     ganancia_total = 0,
 
-                    monto_pagado = ventaDto.pago.monto_pagado,
+                    //monto_pagado = ventaDto.pago.monto_pagado,
                     saldo_pendiente = 0,
 
                     id_estado_venta = 1
@@ -253,8 +250,7 @@ namespace API_SISTEMA.services
                 {
                     venta.saldo_pendiente =venta.total - venta.monto_pagado;
 
-                    venta.id_estado_venta =
-                        venta.saldo_pendiente == 0 ? 1 : 2;
+                    venta.id_estado_venta = venta.saldo_pendiente == 0 ? 1 : 2;
                 }
 
 
