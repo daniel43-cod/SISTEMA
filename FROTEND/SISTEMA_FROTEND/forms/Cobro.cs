@@ -16,30 +16,19 @@ namespace SISTEMA_FROTEND.forms
 
     public partial class formCobro : Form
     {
-        private VentaDTOs _venta;
+        private CrearVentaDTO _venta;
         private decimal _total;
 
-        public formCobro(
-    List<DetalleDTOs> detalles,
-    ListarClienteDTOs clienteSeleccionado,
-    string nombreCliente,
-    string nitCliente,
-    string telefonoCliente,
-    string correoCliente,
-    string direccionCliente,
-    string dpiCliente,
-    int idUsuario,
-    decimal subtotal,
-    decimal descuentoTotal,
-    decimal total)
+        public formCobro( List<CrearDetalleVentaDTO> detalles, ListarClienteDTOs clienteSeleccionado,string nombreCliente,string nitCliente, string telefonoCliente, string correoCliente,
+        string direccionCliente,string dpiCliente,int idUsuario,decimal subtotal,decimal descuentoTotal,decimal total)
         {
             InitializeComponent();
 
             _total = total;
 
-            _venta = new VentaDTOs
+            _venta = new CrearVentaDTO
             {
-                id_usuario = idUsuario,
+               // id_usuario = idUsuario,
                 origen = "WinForms",
                 detalles = detalles
             };
@@ -53,7 +42,7 @@ namespace SISTEMA_FROTEND.forms
             {
                 _venta.id_cliente = 0;
 
-                _venta.clienteNuevo = new ClienteNuevoDTOs
+                _venta.clienteNuevo = new CrearClienteVentaDTO
                 {
                     nombre = nombreCliente.Trim(),
                     nit = nitCliente.Trim(),
@@ -110,10 +99,11 @@ namespace SISTEMA_FROTEND.forms
                 saldoPendiente = total - efectivo;
             }
 
-            _venta.pago = new PagoVentaDTO
+            _venta.pago = new CrearPagoVentaDTO
             {
-                monto_pagado = montoPagado,
-                observacion_pago = texobservacion.Text
+                monto = montoPagado,
+                observacion = texobservacion.Text
+                
             };
 
             VentaService service = new VentaService();

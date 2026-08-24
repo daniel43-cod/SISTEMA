@@ -1,7 +1,10 @@
-﻿namespace API_SISTEMA.models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace API_SISTEMA.models
 {
     public class usuario_permiso
     {
+        [Key]
         public int id_usuario_permiso {  get; set; }
         public int id_usuario { get; set; }
         public int id_permiso { get; set; }

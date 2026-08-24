@@ -55,8 +55,10 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async void cotizacion_Load(object sender, EventArgs e)
         {
-            lblUsuario.Text = $"Usuario: {SesionUsuario.Nombre}";
-            texsubtotal.Enabled = false;
+            labusuario.ForeColor = Color.Black; // o el color que necesites
+            labusuario.Text = $"Usuario: {SesionUsuario.Nombre}";
+         
+            texsubtotal .Enabled = false;
             texdescuento.Enabled = false;
             textotal.Enabled = false;
             _clientes = await _clienteService.ListarClientes(); // ajustá el nombre real del método
@@ -75,7 +77,7 @@ namespace SISTEMA_FROTEND.presentacion
             }
 
             dataGridView1.Columns["id_producto_presentacion"].Visible = false;
-          //  dataGridView1.Columns["impuesto"].Visible = true;
+            //  dataGridView1.Columns["impuesto"].Visible = true;
 
             _productos = await _productoService.ListarProducto();
 
@@ -83,12 +85,12 @@ namespace SISTEMA_FROTEND.presentacion
 
             dataGridView1.DefaultCellStyle.ForeColor = Color.Black;
             dataGridView1.DefaultCellStyle.BackColor = Color.White;
-
+/*
             dataGridView1.DefaultCellStyle.SelectionForeColor = Color.White;
             dataGridView1.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
             dataGridView1.EnableHeadersVisualStyles = false;
             dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
+            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;*/
 
         }
 
@@ -248,7 +250,7 @@ namespace SISTEMA_FROTEND.presentacion
             decimal precio = Convert.ToDecimal(fila.Cells["precio"].Value ?? 0);
             decimal descuento = Convert.ToDecimal(fila.Cells["descuento"].Value ?? 0);
 
-            fila.Cells["subtotal"].Value = (cantidad * precio) - descuento;
+            fila.Cells["subtotal1"].Value = (cantidad * precio) - descuento;
 
             RecalcularTotales();
         }
@@ -331,7 +333,7 @@ namespace SISTEMA_FROTEND.presentacion
 
             dataGridView1.EndEdit();
 
-            var detalles = new List<DetalleDTOs>();
+            var detalles = new List<CrearDetalleVentaDTO>();
             decimal subtotal = 0;
             decimal descuentoTotal = 0;
 
@@ -345,7 +347,7 @@ namespace SISTEMA_FROTEND.presentacion
 
                 if (cantidad <= 0) continue;
 
-                detalles.Add(new DetalleDTOs
+                detalles.Add(new CrearDetalleVentaDTO
                 {
                     id_producto = producto.id_producto,
                     id_producto_presentacion = producto.id_producto_presentacion,
@@ -371,8 +373,8 @@ namespace SISTEMA_FROTEND.presentacion
 
             decimal total = subtotal - descuentoTotal;
 
-            using var formCobro = new formCobro(detalles, _clienteSeleccionado,texclientes.Text.Trim(), texnit.Text.Trim(),textelefono.Text.Trim(),texcorreo.Text.Trim(),texdireccion.Text.Trim(),
-                texdpi.Text.Trim(),Sesion.IdUsuario,subtotal, descuentoTotal,total
+            using var formCobro = new formCobro(detalles, _clienteSeleccionado, texclientes.Text.Trim(), texnit.Text.Trim(), textelefono.Text.Trim(), texcorreo.Text.Trim(), texdireccion.Text.Trim(),
+                texdpi.Text.Trim(), Sesion.IdUsuario, subtotal, descuentoTotal, total
             );
 
             if (formCobro.ShowDialog() == DialogResult.OK)
@@ -405,15 +407,15 @@ namespace SISTEMA_FROTEND.presentacion
             }
         }
 
-        private void AgregarProductoAlGrid(  ProductoSeleccionadoDTO producto)
+        private void AgregarProductoAlGrid(ProductoSeleccionadoDTO producto)
         {
             var productoGrid = new ProductoVentaBuscarDTO
             {
                 id_producto = producto.id_producto,
-                id_producto_presentacion =producto.id_producto_presentacion,
-                nombre_producto =producto.nombre_producto,
+                id_producto_presentacion = producto.id_producto_presentacion,
+                nombre_producto = producto.nombre_producto,
                 presentacion = producto.presentacion,
-              //  nombreMostrar =$"{producto.nombre_producto} - {producto.presentacion}",
+                //  nombreMostrar =$"{producto.nombre_producto} - {producto.presentacion}",
                 precio = producto.precio,
                 stock = producto.stock,
                 unidades_equivalentes = producto.unidades_equivalentes
@@ -423,12 +425,12 @@ namespace SISTEMA_FROTEND.presentacion
 
             foreach (DataGridViewRow fila in dataGridView1.Rows)
             {
-                if (fila.IsNewRow)continue;
+                if (fila.IsNewRow) continue;
 
                 int idProducto = Convert.ToInt32(fila.Cells["id_producto"].Value ?? 0);
                 int idPresentacion = Convert.ToInt32(fila.Cells["id_producto_presentacion"].Value ?? 0);
 
-                if (idProducto == producto.id_producto &&idPresentacion ==producto.id_producto_presentacion)
+                if (idProducto == producto.id_producto && idPresentacion == producto.id_producto_presentacion)
                 {
                     filaExistente = fila;
                     break;
@@ -437,11 +439,11 @@ namespace SISTEMA_FROTEND.presentacion
 
             if (filaExistente != null)
             {
-                int cantidadActual = Convert.ToInt32( filaExistente.Cells["cantidad"].Value ?? 0);
+                int cantidadActual = Convert.ToInt32(filaExistente.Cells["cantidad"].Value ?? 0);
 
                 int nuevaCantidad = cantidadActual + producto.cantidad;
 
-                filaExistente.Cells["cantidad"].Value =  nuevaCantidad;
+                filaExistente.Cells["cantidad"].Value = nuevaCantidad;
 
                 filaExistente.Tag = productoGrid;
 
@@ -455,10 +457,10 @@ namespace SISTEMA_FROTEND.presentacion
             DataGridViewRow nuevaFila =
                 dataGridView1.Rows[indice];
 
-            nuevaFila.Cells["id_producto"].Value =producto.id_producto;
-            nuevaFila.Cells["id_producto_presentacion"].Value =producto.id_producto_presentacion;
-            nuevaFila.Cells["producto"].Value =$"{producto.nombre_producto} - {producto.presentacion}";
-            nuevaFila.Cells["cantidad"].Value =producto.cantidad;
+            nuevaFila.Cells["id_producto"].Value = producto.id_producto;
+            nuevaFila.Cells["id_producto_presentacion"].Value = producto.id_producto_presentacion;
+            nuevaFila.Cells["producto"].Value = $"{producto.nombre_producto} - {producto.presentacion}";
+            nuevaFila.Cells["cantidad"].Value = producto.cantidad;
             nuevaFila.Cells["precio"].Value = producto.precio;
             nuevaFila.Cells["stock"].Value = producto.stock;
             nuevaFila.Cells["descuento"].Value = 0;
@@ -467,5 +469,9 @@ namespace SISTEMA_FROTEND.presentacion
             CalcularSubtotal(indice);
         }
 
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
     }
 }

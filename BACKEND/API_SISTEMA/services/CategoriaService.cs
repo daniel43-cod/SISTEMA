@@ -40,7 +40,7 @@ namespace API_SISTEMA.services
                     id_producto = p.id_producto,
                     nombre = p.nombre,
                     imagen = p.imagen,
-                    stock = p.stock,
+                    stock = p.stock??0,
 
                     presentaciones = p.ProductoPresentaciones
                         .Select(pp => new PresentacionCatalogoDTOs

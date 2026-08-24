@@ -1,5 +1,6 @@
 ﻿using API_SISTEMA.DTOs.Compras;
 using API_SISTEMA.services;
+using API_SISTEMA.services.CompraS;
 using API_SISTEMA.services.PagoCompra;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
@@ -14,13 +15,15 @@ namespace API_SISTEMA.controllers
     public class CompraController : ControllerBase
     {
         private readonly CompraService _context;
+        private readonly CrearCompraService _crearCompraService;
         private readonly Pago _pagoCompraService;
 
 
-        public CompraController(CompraService service, Pago pagoCompraService)
+        public CompraController(CompraService service, Pago pagoCompraService, CrearCompraService crearCompraService)
         {
             _context = service;
             _pagoCompraService = pagoCompraService;
+            _crearCompraService = crearCompraService;
         }
 
 
@@ -49,7 +52,7 @@ namespace API_SISTEMA.controllers
                     });
                 }
 
-                var compra = await _context.CrearCompra(compraDto, idUsuario);
+                var compra = await _crearCompraService.CrearCompra(compraDto, idUsuario);
 
                 return Ok(new
                 {

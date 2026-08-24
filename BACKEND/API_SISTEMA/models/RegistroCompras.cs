@@ -20,6 +20,7 @@ namespace API_SISTEMA.models
         [Required]
         public decimal? total_compra { get; set; }
         public decimal? saldo_pendiente { get; set; }
+        public string? observacion { get; set; } 
         public Usuario usuario { get; set; }
         public Empresa empresa { get; set; }
         public EstadoCompra estado_compra { get; set; }

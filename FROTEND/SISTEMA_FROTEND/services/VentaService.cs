@@ -22,7 +22,7 @@ namespace SISTEMA_FROTEND.services
                 )
                 ?? new List<ListarVentasDTOs>();
         }
-        public async Task<VentaDTOs?> CrearVenta(VentaDTOs ventaDto)
+        public async Task<CrearVentaDTO?> CrearVenta(CrearVentaDTO   ventaDto)
         {
             var response = await Cliente.PostAsJsonAsync(
                 "Venta/crear",
@@ -32,7 +32,7 @@ namespace SISTEMA_FROTEND.services
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content
-                    .ReadFromJsonAsync<VentaDTOs>();
+                    .ReadFromJsonAsync<CrearVentaDTO>();
             }
 
             var error = await response.Content.ReadAsStringAsync();

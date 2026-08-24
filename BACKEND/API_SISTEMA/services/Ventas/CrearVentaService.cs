@@ -5,6 +5,7 @@ using API_SISTEMA.services.MovimientoCaja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 using API_SISTEMA.DTOs;
+using API_SISTEMA.services.Permisos;
 
 namespace API_SISTEMA.services.Ventas
 {
@@ -12,15 +13,23 @@ namespace API_SISTEMA.services.Ventas
     {
         private readonly SistemaDbContext _context;
         private readonly MovimientoCajaService _movimientoCajaService;  
+        private readonly PermisoUsuarioService _permisoService;
 
-        public CrearVentaService(SistemaDbContext context, MovimientoCajaService movimientoCajaService)
+        public CrearVentaService(SistemaDbContext context, MovimientoCajaService movimientoCajaService, PermisoUsuarioService permisoService)
         {
             _context = context;
             _movimientoCajaService = movimientoCajaService;
+            _permisoService = permisoService    ;
         }
 
-        public async Task<API_SISTEMA.models.Ventas> CrearVenta( CrearVentaDTO ventaDto, int idUsuario)
+        public async Task<API_SISTEMA.models.Ventas> CrearVenta(CrearVentaDTO ventaDto, int idUsuario)
         {
+
+            bool puedeVender = await _permisoService.TienePermiso(idUsuario, permisos.Vender);
+            if( !puedeVender)
+                throw new Exception("No tienes permiso para realizar ventas.");
+
+
             if (ventaDto == null) throw new Exception("La información de la venta es obligatoria.");
 
             if (ventaDto.detalles == null || ventaDto.detalles.Count == 0) throw new Exception("La venta debe tener al menos un producto.");

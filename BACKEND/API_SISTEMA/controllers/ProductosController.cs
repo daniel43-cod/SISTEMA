@@ -1,12 +1,14 @@
 ﻿using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.services.ProductoS;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.ComponentModel.Design;
 
 namespace API_SISTEMA.controllers
 {
@@ -16,12 +18,16 @@ namespace API_SISTEMA.controllers
     {
 
         private readonly ProductoService _Service;
+        private readonly ProductoCrearService _crearService;
+        private readonly SubirImagenService _subirImagenService;
         //private readonly productocrear productocrear;
-       // private readonly ProductoPrecioService productoprecio;
+        // private readonly ProductoPrecioService productoprecio;
 
-        public ProductosController(ProductoService service)
+        public ProductosController(ProductoService service, ProductoCrearService crearService, SubirImagenService subirImagenService)
         {
             _Service = service;
+            _crearService = crearService;
+            _subirImagenService = subirImagenService;
         }
         [Authorize(Roles ="ADMINISTRADOR")]
         [HttpGet("listar")]
@@ -43,13 +49,26 @@ namespace API_SISTEMA.controllers
         [HttpPost("crear")]
         public async Task<IActionResult> CrearProductos([FromBody] productocrear dto)
         {
-            var producto = await _Service.CrearProducto(dto);
-
-            return Ok(new
+            try
             {
-                id_producto = producto.id_producto,
-                mensaje = "Producto creado correctamente"
-            });
+                var producto = await _crearService.CrearProducto(dto);
+
+                return Ok(new
+                {
+                    id_producto = producto.id_producto,
+                    mensaje = "Producto creado correctamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                {
+                    return BadRequest(new
+                    {
+                        mensaje = ex.Message,
+                        detalle = ex.ToString()
+                    });
+                }
+            }
         }
 
         [HttpPost("{id}/imagen")]
@@ -58,7 +77,7 @@ namespace API_SISTEMA.controllers
             if (imagen == null || imagen.Length == 0)
                 return BadRequest("Debe subir una imagen.");
 
-            var producto = await _Service.SubirImagen(id, imagen);
+            var producto = await _subirImagenService.SubirImagen(id, imagen);
 
             if (producto == null)
                 return NotFound("Producto no encontrado.");

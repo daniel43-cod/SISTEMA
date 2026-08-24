@@ -47,15 +47,15 @@ namespace SISTEMA_FROTEND.presentacion
                 dataregistrodiario.Columns.Add(btnDetalle);
             }
 
-            dataregistrodiario.DefaultCellStyle.ForeColor = Color.Black;
-            dataregistrodiario.DefaultCellStyle.BackColor = Color.White;
-            dataregistrodiario.DefaultCellStyle.SelectionForeColor = Color.White;
-            dataregistrodiario.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
+            /* dataregistrodiario.DefaultCellStyle.ForeColor = Color.Black;
+             dataregistrodiario.DefaultCellStyle.BackColor = Color.White;
+             dataregistrodiario.DefaultCellStyle.SelectionForeColor = Color.White;
+             dataregistrodiario.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
 
-            dataregistrodiario.EnableHeadersVisualStyles = false;
-            dataregistrodiario.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dataregistrodiario.ColumnHeadersDefaultCellStyle.BackColor =
-                Color.DarkSlateGray;
+             dataregistrodiario.EnableHeadersVisualStyles = false;
+             dataregistrodiario.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+             dataregistrodiario.ColumnHeadersDefaultCellStyle.BackColor =
+                 Color.DarkSlateGray;*/
         }
 
         private async Task CargarProductos()
@@ -86,6 +86,21 @@ namespace SISTEMA_FROTEND.presentacion
 
         private void label2_Click(object sender, EventArgs e)
         {
+        }
+
+        private void dataregistrodiario_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void guna2HtmlLabel1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void guna2Panel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

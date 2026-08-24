@@ -18,7 +18,7 @@ namespace SISTEMA_FROTEND.forms
     public partial class frmcompras : Form
     {
         private ProductoService _productoService = new ProductoService();
-        private List<ProductoVentaBuscarDTO> _productos;
+        private List<ProductoVentaBuscarDTO> _productos=new ();    
         private EmpresaService _empresaService = new EmpresaService();
         private List<EmpresaDTOs> _empresas;
         private EmpresaDTOs _empresaSeleccionada;
@@ -47,10 +47,8 @@ namespace SISTEMA_FROTEND.forms
 
             _empresas = await _empresaService.ListarEmpresas();
 
-            //_productos = await _productoService.ListarProducto();
-            // _empresas = await _empresaService.ListarEmpresa();
-
-
+            _productos = await _productoService.ListarProducto();
+            
             var fuenteEmpresas = new AutoCompleteStringCollection();
             fuenteEmpresas.AddRange(_empresas.Select(e => e.nombre_empresa).ToArray());
 
@@ -120,10 +118,12 @@ namespace SISTEMA_FROTEND.forms
 
         private void datacompras_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
+            MessageBox.Show("Entró al autocompletado");
+
             if (datacompras.CurrentCell.OwningColumn.Name == "producto")
             {
                 var textBox = e.Control as TextBox;
-
+                    
                 if (textBox != null)
                 {
                     textBox.AutoCompleteMode = AutoCompleteMode.Suggest;

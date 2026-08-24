@@ -1,6 +1,7 @@
 ﻿using API_SISTEMA.models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Abstractions;
+using System.Net.Security;
 
 namespace API_SISTEMA.data
 {
@@ -122,6 +123,19 @@ namespace API_SISTEMA.data
 
             modelBuilder.Entity<usuario_permiso>().ToTable("usuario_permiso");
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Rol_permisocs>().ToTable("rol_permiso");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Tabla_permiso>().ToTable("tabla_permisos"); 
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<usuario_permiso>().ToTable("usuario_permiso");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Rol_permisocs>().ToTable("rol_permiso");
+            base.OnModelCreating(modelBuilder);
+
 
 
 

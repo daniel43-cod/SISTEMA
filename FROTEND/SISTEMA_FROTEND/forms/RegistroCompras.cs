@@ -17,7 +17,7 @@ namespace SISTEMA_FROTEND.presentacion
         public RegistroCompras()
         {
             InitializeComponent();
-            dataGridView1.CellContentClick +=dataGridView1_CellContentClick;
+            dataGridView1.CellContentClick += dataGridView1_CellContentClick;
         }
 
         private async void creditos_Load(object sender, EventArgs e)
@@ -46,7 +46,7 @@ namespace SISTEMA_FROTEND.presentacion
             dataGridView1.Columns["id_usuario"].Visible = false;
             dataGridView1.Columns["id_empresa"].Visible = false;
             dataGridView1.Columns["id_estado_compra"].Visible = false;
-          
+
         }
         private async Task cargarDatos()
         {
@@ -103,6 +103,11 @@ namespace SISTEMA_FROTEND.presentacion
 
                 frm.ShowDialog();
             }
+        }
+
+        private void guna2DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
         }
     }
 }

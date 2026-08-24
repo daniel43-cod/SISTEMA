@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 
 namespace SISTEMA_FROTEND.services
 {
@@ -16,7 +17,7 @@ namespace SISTEMA_FROTEND.services
         public ProductoService()
         {
             _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/Productos/");
+            _httpClient.BaseAddress = new Uri("https://localhost:44308/api/");
         }
 
        public async Task<List<ProductoVentaBuscarDTO>> ListarProducto()
@@ -32,37 +33,95 @@ namespace SISTEMA_FROTEND.services
             return await _httpClient.GetFromJsonAsync<List<Productos>>($"Productos/buscar?texto={texto}");
         }
 
-        public async Task<ProductoCreadoRespuestaDTO?> CrearProducto(ProductoDTOs producto)
+
+        public async Task<ProductoCreadoRespuestaDTO> CrearProducto(
+       ProductoDTOs producto)
         {
-            var response = await _httpClient.PostAsJsonAsync("Productos", producto);
+            HttpClient cliente =
+                ApiClient.ObtenerClienteAutenticado();
+
+            var response = await cliente.PostAsJsonAsync(
+                "Productos/crear",
+                producto
+            );
+
+            string contenido =
+                await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                string error = await response.Content.ReadAsStringAsync();
-                throw new Exception(error);
+                throw new Exception(
+                    $"Código: {(int)response.StatusCode}\n" +
+                    $"Estado: {response.StatusCode}\n" +
+                    $"Respuesta API:\n{contenido}"
+                );
             }
 
-            return await response.Content.ReadFromJsonAsync<ProductoCreadoRespuestaDTO>();
+            var resultado =
+                JsonSerializer.Deserialize<ProductoCreadoRespuestaDTO>(
+                    contenido,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }
+                );
+
+            return resultado
+                ?? throw new Exception(
+                    "La API no devolvió una respuesta válida."
+                );
         }
 
-        public async Task SubirImagen(int idProducto, string rutaImagen)
+        public async Task SubirImagen(int id, string rutaImagen)
         {
-            var contenido = new MultipartFormDataContent();
-
-            var bytes = File.ReadAllBytes(rutaImagen);
-
-            var archivo = new ByteArrayContent(bytes);
-            contenido.Add(archivo, "imagen", Path.GetFileName(rutaImagen));
-
-            var response = await _httpClient.PostAsync($"Productos/{idProducto}/imagen", contenido);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                string error = await response.Content.ReadAsStringAsync();
-                throw new Exception(error);
+                if (string.IsNullOrWhiteSpace(rutaImagen))
+                    throw new Exception("La ruta de la imagen está vacía.");
+
+                if (!File.Exists(rutaImagen))
+                    throw new Exception(
+                        $"No se encontró la imagen en la ruta:\n{rutaImagen}"
+                    );
+
+                using var contenido = new MultipartFormDataContent();
+
+                var bytes = await File.ReadAllBytesAsync(rutaImagen);
+
+                using var archivo = new ByteArrayContent(bytes);
+
+                contenido.Add(archivo,"imagen",
+                    Path.GetFileName(rutaImagen)
+                );
+
+                var response = await _httpClient.PostAsync(
+                    $"Productos/{id}/imagen",
+                    contenido
+                );
+
+                string respuesta =
+                    await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception(
+                        $"Error al subir la imagen.\n\n" +
+                        $"Código HTTP: {(int)response.StatusCode}\n" +
+                        $"Estado: {response.StatusCode}\n" +
+                        $"Producto: {id}\n" +
+                        $"Respuesta de la API:\n{respuesta}"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    $"Ocurrió un error al subir la imagen del producto {id}.\n\n" +
+                    $"Mensaje: {ex.Message}",
+                    ex
+                );
             }
         }
-
 
     }
 }

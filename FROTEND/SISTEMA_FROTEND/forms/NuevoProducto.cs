@@ -24,9 +24,9 @@ namespace SISTEMA_FROTEND.presentacion
             texproducto.KeyDown += EnterComoTab;
             texdescripcion.KeyDown += EnterComoTab;
             texcodigobarras.KeyDown += EnterComoTab;
-            texcantidad.KeyDown += EnterComoTab;
+            //texcantidad.KeyDown += EnterComoTab;
             texminima.KeyDown += EnterComoTab;
-            texpreciocompra.KeyDown += EnterComoTab;
+            //texpreciocompra.KeyDown += EnterComoTab;
         }
         //metodo para moverse entre los campos de texto con el enter
         private void EnterComoTab(object sender, KeyEventArgs e)
@@ -60,49 +60,20 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async void button2_Click(object sender, EventArgs e)
         {
+
+  
             if (comcategoria.Text == "")
             {
                 MostrarError(labcategoria, "Debe ingresar la categoría del producto");
                 return;
             }
-            if (texcodigobarras.Text == "")
-            {
-                MostrarError(labcodigobarras, "Ingresa el código de barras");
-                return;
-            }
+          
             if (texproducto.Text == "")
             {
                 MostrarError(labproducto, "Ingresa el nombre del producto");
                 return;
             }
-            if (texpreciocompra.Text == "")
-            {
-                MostrarError(labpreciocompra, "Ingresa el precio");
-                return;
-            }
-            if (!decimal.TryParse(texpreciocompra.Text, out _))
-            {
-                MostrarError(labpreciocompra, "Ingresa un preci3 válido");
-                return;
-            }
-            /*  if (!string.IsNullOrWhiteSpace(texpreciomin.Text) &&
-                  !int.TryParse(texpreciomin.Text, out _))
-              {
-                  MostrarError(labpreciomenor, "Ingrese un número válido");
-                  return;
-              }
-              if (!string.IsNullOrWhiteSpace(texpreciomayor.Text) &&
-                  !int.TryParse(texpreciomayor.Text, out _))
-              {
-                  MostrarError(labpreciomayor, "Ingrese un número válido");
-                  return;
-              }
-              if (!string.IsNullOrWhiteSpace(texminima.Text) &&
-                  !int.TryParse(texminima.Text, out _))
-              {
-                  MostrarError(labexistenciamin, "Ingrese un número válido");
-                  return;
-              }*/
+           
 
             List<ProductoPresentacionDTO> presentaciones = new();
 
@@ -136,9 +107,7 @@ namespace SISTEMA_FROTEND.presentacion
             {
                 nombre = texproducto.Text,
                 descripcion = texdescripcion.Text,
-                stock = Convert.ToInt32(texcantidad.Text),
                 stock_minimo = Convert.ToInt32(texminima.Text),
-                precio_compra = Convert.ToDecimal(texpreciocompra.Text),
                 codigo_barra = texcodigobarras.Text,
                 id_categoria = Convert.ToInt32(comcategoria.SelectedValue),
                 presentaciones = presentaciones,
@@ -164,10 +133,6 @@ namespace SISTEMA_FROTEND.presentacion
                 MessageBox.Show("Producto registrado correctamente.");
                 limpiar();
             }
-            /*catch (Exception ex)
-            {
-                MessageBox.Show($"Error al registrar el producto: {ex.Message}");
-            }*/
             catch (Exception ex)
             {
                 MessageBox.Show(
@@ -189,13 +154,6 @@ namespace SISTEMA_FROTEND.presentacion
             labdescripcion.Text = "";
             labcantidad.Text = "";
             labexistenciamin.Text = "";
-            labpreciomayor.Text = "";
-            labpreciocompra.Text = "";
-            labcodigobarras.Text = "";
-            labpreciomayor.Text = "";
-      
-
-
         }
 
         private void MostrarError(Label lbl, string mensaje)
@@ -265,12 +223,12 @@ namespace SISTEMA_FROTEND.presentacion
             comcategoria.Text = string.Empty;
             texproducto.Text = string.Empty;
             texdescripcion.Text = string.Empty;
-            texcantidad.Text = string.Empty;
+            //texcantidad.Text = string.Empty;
             texcodigobarras.Text = string.Empty;
             texminima.Text = string.Empty;
-            texpreciocompra.Text = string.Empty;
+            //  texpreciocompra.Text = string.Empty;
             picimagen.Image = null;
-            texcantidad.Text = string.Empty;
+            //texcantidad.Text = string.Empty;
             dgvPresentaciones.Rows.Clear();
 
         }
@@ -330,6 +288,21 @@ namespace SISTEMA_FROTEND.presentacion
         }
 
         private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label6_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comcategoria_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void dgvPresentaciones_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
         }

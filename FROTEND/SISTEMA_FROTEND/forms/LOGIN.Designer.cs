@@ -50,8 +50,10 @@
             // 
             texcontraseña.Location = new Point(247, 114);
             texcontraseña.Name = "texcontraseña";
+            texcontraseña.PasswordChar = '*';
             texcontraseña.Size = new Size(156, 27);
             texcontraseña.TabIndex = 1;
+            texcontraseña.UseSystemPasswordChar = true;
             // 
             // labelContraseña
             // 

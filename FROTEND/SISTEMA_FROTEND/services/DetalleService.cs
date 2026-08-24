@@ -8,7 +8,7 @@ using System.Text;
 
 namespace SISTEMA_FROTEND.services
 {
-    public class DetalleService
+     public class DetalleService
     {
         private HttpClient Cliente =>
         ApiClient.ObtenerClienteAutenticado();

@@ -2,9 +2,12 @@ using API_SISTEMA.controllers;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.services.CompraS;
 using API_SISTEMA.services.Gastos;
 using API_SISTEMA.services.MovimientoCaja;
 using API_SISTEMA.services.PagoCompra;
+using API_SISTEMA.services.Permisos;
+using API_SISTEMA.services.ProductoS;
 using API_SISTEMA.services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -89,6 +92,13 @@ builder.Services.AddScoped<AbonarSaldoVentaServices>();
 builder.Services.AddScoped<MovimientoCajaService>();
 builder.Services.AddScoped<ListarMovimientoCajaService>();
 builder.Services.AddScoped<CrearVentaService>();
+builder.Services.AddScoped<PermisoService>();
+builder.Services.AddScoped<PermisoUsuarioService>();
+//productos
+builder.Services.AddScoped<ProductoCrearService>();
+builder.Services.AddScoped<SubirImagenService>();
+//compras
+builder.Services.AddScoped<CrearCompraService>();
 
 
 var app = builder.Build();

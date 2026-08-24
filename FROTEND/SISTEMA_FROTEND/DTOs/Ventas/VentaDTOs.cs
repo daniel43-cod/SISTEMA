@@ -7,7 +7,7 @@ namespace SISTEMA_FROTEND.DTOs.Ventas
 {
     public class VentaDTOs
     {
-        public int? id_cliente { get; set; }
+      /*  public int? id_cliente { get; set; }
         public string? nombre_cliente { get; set; }
         public ClienteNuevoDTOs? clienteNuevo { get; set; }
         public int? id_usuario { get; set; }
@@ -16,6 +16,6 @@ namespace SISTEMA_FROTEND.DTOs.Ventas
         public string origen { get; set; }
         public PagoVentaDTO pago { get; set; }
 
-        public List<DetalleDTOs> detalles { get; set; }
+        public List<DetalleDTOs> detalles { get; set; }*/
     }
 }
