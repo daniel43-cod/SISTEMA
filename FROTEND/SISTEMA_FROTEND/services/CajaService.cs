@@ -1,6 +1,7 @@
 ﻿using SISTEMA_FROTEND.Conexion;
 using SISTEMA_FROTEND.DTOs.Caja;
 using SISTEMA_FROTEND.DTOs.Compras;
+using SISTEMA_FROTEND.DTOs.MovimientoCaja;
 using SISTEMA_FROTEND.DTOs.Productos;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,22 @@ namespace SISTEMA_FROTEND.services
                 $"Respuesta:\n{error}"
             );
         }
+        //LISTAR MOVIMIENTO CAJA
+        public async Task<List<ListarMovimientoCajaDTO>> ListarMovimientoCaja()
+        {
+            var response = await Cliente.GetAsync("MovimientoCaja/listar");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<List<ListarMovimientoCajaDTO>>() ?? new List<ListarMovimientoCajaDTO>();
+            }
 
+            throw new Exception(
+                  $"Código: {(int)response.StatusCode}\n" +
+                $"Estado: {response.StatusCode}\n" +
+                $"Respuesta:\n{await response.Content.ReadAsStringAsync()}"
+
+                );
+        }
         public async Task<List<ListarSesionesCajaDTO>> ListarSesiones()
         {
             var response = await Cliente.GetAsync("Caja/ListarSesionesCaja");
@@ -55,6 +71,7 @@ namespace SISTEMA_FROTEND.services
                 $"Respuesta:\n{await response.Content.ReadAsStringAsync()}"
             );
         }
+
 
         public async Task<RespuetaCierreDTO> CerrarCaja(CierreCajaDTOs cierreCaja)
         {

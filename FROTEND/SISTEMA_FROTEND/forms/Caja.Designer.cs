@@ -30,46 +30,63 @@
         {
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges13 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges14 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges11 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges12 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges9 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges10 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges13 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges14 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges9 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges10 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges11 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges12 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges15 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges16 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges17 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges18 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             tabcaja = new TabControl();
             tabPage1 = new TabPage();
             guna2Panel2 = new Guna.UI2.WinForms.Guna2Panel();
+            texobservacionapertura = new Guna.UI2.WinForms.Guna2TextBox();
+            textmontoinicial = new Guna.UI2.WinForms.Guna2TextBox();
             butcrear = new Button();
             label2 = new Label();
             label3 = new Label();
             guna2Panel1 = new Guna.UI2.WinForms.Guna2Panel();
+            texobservacioncierre = new Guna.UI2.WinForms.Guna2TextBox();
+            texmontoesperado = new Guna.UI2.WinForms.Guna2TextBox();
+            texmontocontado = new Guna.UI2.WinForms.Guna2TextBox();
             button1 = new Button();
             label5 = new Label();
             label6 = new Label();
             label4 = new Label();
             button2 = new Button();
-            lblUsuario = new Label();
             lblCaja = new Label();
             label1 = new Label();
             tabPage3 = new TabPage();
+            guna2Panel3 = new Guna.UI2.WinForms.Guna2Panel();
+            dataMovimientos = new Guna.UI2.WinForms.Guna2DataGridView();
+            guna2HtmlLabel1 = new Guna.UI2.WinForms.Guna2HtmlLabel();
             tabPage2 = new TabPage();
-            datasesiones = new DataGridView();
-            texmontocontado = new Guna.UI2.WinForms.Guna2TextBox();
-            texmontoesperado = new Guna.UI2.WinForms.Guna2TextBox();
-            texobservacioncierre = new Guna.UI2.WinForms.Guna2TextBox();
-            textmontoinicial = new Guna.UI2.WinForms.Guna2TextBox();
-            texobservacionapertura = new Guna.UI2.WinForms.Guna2TextBox();
+            guna2Panel4 = new Guna.UI2.WinForms.Guna2Panel();
+            datasesiones = new Guna.UI2.WinForms.Guna2DataGridView();
             tabcaja.SuspendLayout();
             tabPage1.SuspendLayout();
             guna2Panel2.SuspendLayout();
             guna2Panel1.SuspendLayout();
+            tabPage3.SuspendLayout();
+            guna2Panel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataMovimientos).BeginInit();
             tabPage2.SuspendLayout();
+            guna2Panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)datasesiones).BeginInit();
             SuspendLayout();
             // 
@@ -89,7 +106,6 @@
             // 
             tabPage1.Controls.Add(guna2Panel2);
             tabPage1.Controls.Add(guna2Panel1);
-            tabPage1.Controls.Add(lblUsuario);
             tabPage1.Controls.Add(lblCaja);
             tabPage1.Controls.Add(label1);
             tabPage1.Location = new Point(4, 29);
@@ -117,6 +133,48 @@
             guna2Panel2.ShadowDecoration.CustomizableEdges = customizableEdges6;
             guna2Panel2.Size = new Size(520, 482);
             guna2Panel2.TabIndex = 17;
+            // 
+            // texobservacionapertura
+            // 
+            texobservacionapertura.BorderRadius = 10;
+            texobservacionapertura.CustomizableEdges = customizableEdges1;
+            texobservacionapertura.DefaultText = "";
+            texobservacionapertura.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
+            texobservacionapertura.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
+            texobservacionapertura.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
+            texobservacionapertura.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
+            texobservacionapertura.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            texobservacionapertura.Font = new Font("Segoe UI", 9F);
+            texobservacionapertura.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
+            texobservacionapertura.Location = new Point(215, 165);
+            texobservacionapertura.Margin = new Padding(3, 4, 3, 4);
+            texobservacionapertura.Name = "texobservacionapertura";
+            texobservacionapertura.PlaceholderText = "";
+            texobservacionapertura.SelectedText = "";
+            texobservacionapertura.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            texobservacionapertura.Size = new Size(286, 60);
+            texobservacionapertura.TabIndex = 13;
+            // 
+            // textmontoinicial
+            // 
+            textmontoinicial.BorderRadius = 10;
+            textmontoinicial.CustomizableEdges = customizableEdges3;
+            textmontoinicial.DefaultText = "";
+            textmontoinicial.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
+            textmontoinicial.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
+            textmontoinicial.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
+            textmontoinicial.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
+            textmontoinicial.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            textmontoinicial.Font = new Font("Segoe UI", 9F);
+            textmontoinicial.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
+            textmontoinicial.Location = new Point(215, 67);
+            textmontoinicial.Margin = new Padding(3, 4, 3, 4);
+            textmontoinicial.Name = "textmontoinicial";
+            textmontoinicial.PlaceholderText = "";
+            textmontoinicial.SelectedText = "";
+            textmontoinicial.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            textmontoinicial.Size = new Size(286, 60);
+            textmontoinicial.TabIndex = 12;
             // 
             // butcrear
             // 
@@ -161,11 +219,74 @@
             guna2Panel1.Controls.Add(label4);
             guna2Panel1.Controls.Add(button2);
             guna2Panel1.CustomizableEdges = customizableEdges13;
-            guna2Panel1.Location = new Point(574, 92);
+            guna2Panel1.Location = new Point(574, 82);
             guna2Panel1.Name = "guna2Panel1";
             guna2Panel1.ShadowDecoration.CustomizableEdges = customizableEdges14;
-            guna2Panel1.Size = new Size(465, 472);
+            guna2Panel1.Size = new Size(465, 482);
             guna2Panel1.TabIndex = 16;
+            // 
+            // texobservacioncierre
+            // 
+            texobservacioncierre.BorderRadius = 10;
+            texobservacioncierre.CustomizableEdges = customizableEdges7;
+            texobservacioncierre.DefaultText = "";
+            texobservacioncierre.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
+            texobservacioncierre.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
+            texobservacioncierre.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
+            texobservacioncierre.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
+            texobservacioncierre.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            texobservacioncierre.Font = new Font("Segoe UI", 9F);
+            texobservacioncierre.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
+            texobservacioncierre.Location = new Point(184, 227);
+            texobservacioncierre.Margin = new Padding(3, 4, 3, 4);
+            texobservacioncierre.Name = "texobservacioncierre";
+            texobservacioncierre.PlaceholderText = "";
+            texobservacioncierre.SelectedText = "";
+            texobservacioncierre.ShadowDecoration.CustomizableEdges = customizableEdges8;
+            texobservacioncierre.Size = new Size(254, 48);
+            texobservacioncierre.TabIndex = 18;
+            // 
+            // texmontoesperado
+            // 
+            texmontoesperado.BorderRadius = 10;
+            texmontoesperado.CustomizableEdges = customizableEdges9;
+            texmontoesperado.DefaultText = "";
+            texmontoesperado.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
+            texmontoesperado.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
+            texmontoesperado.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
+            texmontoesperado.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
+            texmontoesperado.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            texmontoesperado.Font = new Font("Segoe UI", 9F);
+            texmontoesperado.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
+            texmontoesperado.Location = new Point(184, 155);
+            texmontoesperado.Margin = new Padding(3, 4, 3, 4);
+            texmontoesperado.Name = "texmontoesperado";
+            texmontoesperado.PlaceholderText = "";
+            texmontoesperado.SelectedText = "";
+            texmontoesperado.ShadowDecoration.CustomizableEdges = customizableEdges10;
+            texmontoesperado.Size = new Size(248, 43);
+            texmontoesperado.TabIndex = 17;
+            // 
+            // texmontocontado
+            // 
+            texmontocontado.BorderRadius = 10;
+            texmontocontado.CustomizableEdges = customizableEdges11;
+            texmontocontado.DefaultText = "";
+            texmontocontado.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
+            texmontocontado.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
+            texmontocontado.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
+            texmontocontado.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
+            texmontocontado.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            texmontocontado.Font = new Font("Segoe UI", 9F);
+            texmontocontado.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
+            texmontocontado.Location = new Point(184, 80);
+            texmontocontado.Margin = new Padding(3, 4, 3, 4);
+            texmontocontado.Name = "texmontocontado";
+            texmontocontado.PlaceholderText = "";
+            texmontocontado.SelectedText = "";
+            texmontocontado.ShadowDecoration.CustomizableEdges = customizableEdges12;
+            texmontocontado.Size = new Size(248, 46);
+            texmontocontado.TabIndex = 16;
             // 
             // button1
             // 
@@ -219,35 +340,28 @@
             button2.UseVisualStyleBackColor = true;
             button2.Click += button2_Click;
             // 
-            // lblUsuario
-            // 
-            lblUsuario.AutoSize = true;
-            lblUsuario.Location = new Point(30, 19);
-            lblUsuario.Name = "lblUsuario";
-            lblUsuario.Size = new Size(50, 20);
-            lblUsuario.TabIndex = 15;
-            lblUsuario.Text = "label7";
-            // 
             // lblCaja
             // 
             lblCaja.AutoSize = true;
-            lblCaja.Location = new Point(530, 41);
+            lblCaja.Location = new Point(574, 59);
             lblCaja.Name = "lblCaja";
-            lblCaja.Size = new Size(96, 20);
+            lblCaja.Size = new Size(100, 20);
             lblCaja.TabIndex = 14;
-            lblCaja.Text = "Monto Inicial";
+            lblCaja.Text = "Cierre de caja";
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(202, 41);
+            label1.Location = new Point(30, 59);
             label1.Name = "label1";
-            label1.Size = new Size(171, 20);
+            label1.Size = new Size(119, 20);
             label1.TabIndex = 6;
-            label1.Text = "Apertura y cierre de caja";
+            label1.Text = "Apertura de caja";
             // 
             // tabPage3
             // 
+            tabPage3.Controls.Add(guna2Panel3);
+            tabPage3.Controls.Add(guna2HtmlLabel1);
             tabPage3.Location = new Point(4, 29);
             tabPage3.Name = "tabPage3";
             tabPage3.Padding = new Padding(3);
@@ -255,10 +369,68 @@
             tabPage3.TabIndex = 2;
             tabPage3.Text = "MOVIMIENTO EN CAJA";
             tabPage3.UseVisualStyleBackColor = true;
+            tabPage3.Click += tabPage3_Click;
+            // 
+            // guna2Panel3
+            // 
+            guna2Panel3.BorderColor = Color.FromArgb(213, 218, 223);
+            guna2Panel3.BorderRadius = 10;
+            guna2Panel3.BorderThickness = 1;
+            guna2Panel3.Controls.Add(dataMovimientos);
+            guna2Panel3.CustomizableEdges = customizableEdges15;
+            guna2Panel3.Location = new Point(31, 137);
+            guna2Panel3.Name = "guna2Panel3";
+            guna2Panel3.ShadowDecoration.CustomizableEdges = customizableEdges16;
+            guna2Panel3.Size = new Size(1067, 343);
+            guna2Panel3.TabIndex = 2;
+            // 
+            // dataMovimientos
+            // 
+            dataGridViewCellStyle1.BackColor = Color.White;
+            dataMovimientos.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(100, 88, 255);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            dataMovimientos.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataMovimientos.ColumnHeadersHeight = 22;
+            dataMovimientos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(71, 69, 94);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(231, 229, 255);
+            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(71, 69, 94);
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            dataMovimientos.DefaultCellStyle = dataGridViewCellStyle3;
+            dataMovimientos.GridColor = Color.FromArgb(231, 229, 255);
+            dataMovimientos.Location = new Point(32, 30);
+            dataMovimientos.Name = "dataMovimientos";
+            dataMovimientos.RowHeadersVisible = false;
+            dataMovimientos.RowHeadersWidth = 51;
+            dataMovimientos.Size = new Size(1003, 256);
+            dataMovimientos.TabIndex = 1;
+            dataMovimientos.ThemeStyle.AlternatingRowsStyle.BackColor = Color.White;
+            dataMovimientos.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9F);
+            dataMovimientos.ThemeStyle.HeaderStyle.Height = 22;
+            dataMovimientos.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9F);
+            dataMovimientos.ThemeStyle.RowsStyle.Height = 29;
+            // 
+            // guna2HtmlLabel1
+            // 
+            guna2HtmlLabel1.BackColor = Color.Transparent;
+            guna2HtmlLabel1.Location = new Point(443, 38);
+            guna2HtmlLabel1.Name = "guna2HtmlLabel1";
+            guna2HtmlLabel1.Size = new Size(83, 22);
+            guna2HtmlLabel1.TabIndex = 0;
+            guna2HtmlLabel1.Text = "Movimiento ";
             // 
             // tabPage2
             // 
-            tabPage2.Controls.Add(datasesiones);
+            tabPage2.Controls.Add(guna2Panel4);
             tabPage2.Location = new Point(4, 29);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
@@ -268,119 +440,52 @@
             tabPage2.UseVisualStyleBackColor = true;
             tabPage2.Click += tabPage2_Click;
             // 
+            // guna2Panel4
+            // 
+            guna2Panel4.BorderRadius = 10;
+            guna2Panel4.BorderThickness = 1;
+            guna2Panel4.Controls.Add(datasesiones);
+            guna2Panel4.CustomizableEdges = customizableEdges17;
+            guna2Panel4.Location = new Point(29, 33);
+            guna2Panel4.Name = "guna2Panel4";
+            guna2Panel4.ShadowDecoration.CustomizableEdges = customizableEdges18;
+            guna2Panel4.Size = new Size(1100, 519);
+            guna2Panel4.TabIndex = 1;
+            // 
             // datasesiones
             // 
-            datasesiones.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            datasesiones.Location = new Point(34, 48);
+            dataGridViewCellStyle4.BackColor = Color.White;
+            datasesiones.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.FromArgb(100, 88, 255);
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle5.ForeColor = Color.White;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            datasesiones.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            datasesiones.ColumnHeadersHeight = 22;
+            datasesiones.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.White;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(71, 69, 94);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(231, 229, 255);
+            dataGridViewCellStyle6.SelectionForeColor = Color.FromArgb(71, 69, 94);
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            datasesiones.DefaultCellStyle = dataGridViewCellStyle6;
+            datasesiones.GridColor = Color.FromArgb(231, 229, 255);
+            datasesiones.Location = new Point(23, 17);
             datasesiones.Name = "datasesiones";
+            datasesiones.RowHeadersVisible = false;
             datasesiones.RowHeadersWidth = 51;
-            datasesiones.Size = new Size(921, 379);
+            datasesiones.Size = new Size(1048, 481);
             datasesiones.TabIndex = 0;
-            // 
-            // texmontocontado
-            // 
-            texmontocontado.BorderRadius = 10;
-            texmontocontado.CustomizableEdges = customizableEdges11;
-            texmontocontado.DefaultText = "";
-            texmontocontado.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            texmontocontado.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            texmontocontado.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            texmontocontado.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            texmontocontado.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            texmontocontado.Font = new Font("Segoe UI", 9F);
-            texmontocontado.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            texmontocontado.Location = new Point(184, 80);
-            texmontocontado.Margin = new Padding(3, 4, 3, 4);
-            texmontocontado.Name = "texmontocontado";
-            texmontocontado.PlaceholderText = "";
-            texmontocontado.SelectedText = "";
-            texmontocontado.ShadowDecoration.CustomizableEdges = customizableEdges12;
-            texmontocontado.Size = new Size(248, 46);
-            texmontocontado.TabIndex = 16;
-            // 
-            // texmontoesperado
-            // 
-            texmontoesperado.BorderRadius = 10;
-            texmontoesperado.CustomizableEdges = customizableEdges9;
-            texmontoesperado.DefaultText = "";
-            texmontoesperado.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            texmontoesperado.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            texmontoesperado.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            texmontoesperado.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            texmontoesperado.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            texmontoesperado.Font = new Font("Segoe UI", 9F);
-            texmontoesperado.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            texmontoesperado.Location = new Point(184, 155);
-            texmontoesperado.Margin = new Padding(3, 4, 3, 4);
-            texmontoesperado.Name = "texmontoesperado";
-            texmontoesperado.PlaceholderText = "";
-            texmontoesperado.SelectedText = "";
-            texmontoesperado.ShadowDecoration.CustomizableEdges = customizableEdges10;
-            texmontoesperado.Size = new Size(248, 43);
-            texmontoesperado.TabIndex = 17;
-            // 
-            // texobservacioncierre
-            // 
-            texobservacioncierre.BorderRadius = 10;
-            texobservacioncierre.CustomizableEdges = customizableEdges7;
-            texobservacioncierre.DefaultText = "";
-            texobservacioncierre.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            texobservacioncierre.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            texobservacioncierre.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            texobservacioncierre.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            texobservacioncierre.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            texobservacioncierre.Font = new Font("Segoe UI", 9F);
-            texobservacioncierre.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            texobservacioncierre.Location = new Point(184, 227);
-            texobservacioncierre.Margin = new Padding(3, 4, 3, 4);
-            texobservacioncierre.Name = "texobservacioncierre";
-            texobservacioncierre.PlaceholderText = "";
-            texobservacioncierre.SelectedText = "";
-            texobservacioncierre.ShadowDecoration.CustomizableEdges = customizableEdges8;
-            texobservacioncierre.Size = new Size(254, 48);
-            texobservacioncierre.TabIndex = 18;
-            // 
-            // textmontoinicial
-            // 
-            textmontoinicial.BorderRadius = 10;
-            textmontoinicial.CustomizableEdges = customizableEdges3;
-            textmontoinicial.DefaultText = "";
-            textmontoinicial.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            textmontoinicial.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            textmontoinicial.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            textmontoinicial.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            textmontoinicial.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            textmontoinicial.Font = new Font("Segoe UI", 9F);
-            textmontoinicial.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            textmontoinicial.Location = new Point(215, 67);
-            textmontoinicial.Margin = new Padding(3, 4, 3, 4);
-            textmontoinicial.Name = "textmontoinicial";
-            textmontoinicial.PlaceholderText = "";
-            textmontoinicial.SelectedText = "";
-            textmontoinicial.ShadowDecoration.CustomizableEdges = customizableEdges4;
-            textmontoinicial.Size = new Size(286, 60);
-            textmontoinicial.TabIndex = 12;
-            // 
-            // texobservacionapertura
-            // 
-            texobservacionapertura.BorderRadius = 10;
-            texobservacionapertura.CustomizableEdges = customizableEdges1;
-            texobservacionapertura.DefaultText = "";
-            texobservacionapertura.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            texobservacionapertura.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            texobservacionapertura.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            texobservacionapertura.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            texobservacionapertura.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            texobservacionapertura.Font = new Font("Segoe UI", 9F);
-            texobservacionapertura.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            texobservacionapertura.Location = new Point(215, 165);
-            texobservacionapertura.Margin = new Padding(3, 4, 3, 4);
-            texobservacionapertura.Name = "texobservacionapertura";
-            texobservacionapertura.PlaceholderText = "";
-            texobservacionapertura.SelectedText = "";
-            texobservacionapertura.ShadowDecoration.CustomizableEdges = customizableEdges2;
-            texobservacionapertura.Size = new Size(286, 60);
-            texobservacionapertura.TabIndex = 13;
+            datasesiones.ThemeStyle.AlternatingRowsStyle.BackColor = Color.White;
+            datasesiones.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9F);
+            datasesiones.ThemeStyle.HeaderStyle.Height = 22;
+            datasesiones.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9F);
+            datasesiones.ThemeStyle.RowsStyle.Height = 29;
             // 
             // Caja
             // 
@@ -400,7 +505,12 @@
             guna2Panel2.PerformLayout();
             guna2Panel1.ResumeLayout(false);
             guna2Panel1.PerformLayout();
+            tabPage3.ResumeLayout(false);
+            tabPage3.PerformLayout();
+            guna2Panel3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataMovimientos).EndInit();
             tabPage2.ResumeLayout(false);
+            guna2Panel4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)datasesiones).EndInit();
             ResumeLayout(false);
         }
@@ -422,7 +532,6 @@
         private Label lblCaja;
         private Button button1;
         private Label lblUsuario;
-        private DataGridView datasesiones;
         private TabPage tabPage3;
         private Guna.UI2.WinForms.Guna2Panel guna2Panel1;
         private Guna.UI2.WinForms.Guna2Panel guna2Panel2;
@@ -432,5 +541,10 @@
         private Guna.UI2.WinForms.Guna2TextBox texmontocontado;
         private Guna.UI2.WinForms.Guna2TextBox texobservacionapertura;
         private Guna.UI2.WinForms.Guna2TextBox textmontoinicial;
+        private Guna.UI2.WinForms.Guna2DataGridView dataMovimientos;
+        private Guna.UI2.WinForms.Guna2HtmlLabel guna2HtmlLabel1;
+        private Guna.UI2.WinForms.Guna2Panel guna2Panel3;
+        private Guna.UI2.WinForms.Guna2Panel guna2Panel4;
+        private Guna.UI2.WinForms.Guna2DataGridView datasesiones;
     }
 }

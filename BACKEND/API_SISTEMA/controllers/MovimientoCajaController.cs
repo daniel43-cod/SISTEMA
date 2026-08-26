@@ -6,8 +6,11 @@ using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 namespace API_SISTEMA.controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class MovimientoCajaController : Controller
     {
+
 
         private readonly ListarMovimientoCajaService _service;
 

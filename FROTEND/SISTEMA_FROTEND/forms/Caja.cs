@@ -24,16 +24,22 @@ namespace SISTEMA_FROTEND
 
         private void usuarioscs_Load(object sender, EventArgs e)
         {
-            lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
 
-            datasesiones.DefaultCellStyle.ForeColor = Color.Black;
-            datasesiones.DefaultCellStyle.BackColor = Color.White;
+        
+        }
 
-            datasesiones.DefaultCellStyle.SelectionForeColor = Color.White;
-            datasesiones.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
-            datasesiones.EnableHeadersVisualStyles = false;
-            datasesiones.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            datasesiones.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;
+
+
+        private void ocultarcolumnas()
+        {
+           dataMovimientos.Columns["id_movimiento_caja"].Visible = false;
+           dataMovimientos.Columns["id_sesion_caja"].Visible = false;
+           dataMovimientos.Columns["id_tipo_movimiento"].Visible = false;
+           dataMovimientos.Columns["id_usuario"].Visible = false;
+           dataMovimientos.Columns["id_venta"].Visible = false;
+           dataMovimientos.Columns["id_compra"].Visible = false;
+           dataMovimientos.Columns["id_pago_venta"].Visible = false;
+            dataMovimientos.Columns["id_pago_compra"].Visible = false;
         }
 
         private async void button1_Click_1(object sender, EventArgs e)
@@ -163,8 +169,13 @@ namespace SISTEMA_FROTEND
 
         private async void tabcaja_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabcaja.SelectedTab != tabPage2)
-                return;
+
+
+            if (tabcaja.SelectedTab?.Name == "tabPage3")
+            {
+                await CargarMovimientosCaja();
+                ocultarcolumnas();
+            }
 
             try
             {
@@ -185,6 +196,41 @@ namespace SISTEMA_FROTEND
                 MessageBox.Show(
                     ex.Message,
                     "Error al cargar sesiones",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+
+           
+
+
+        }
+
+        private void tabPage3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        // cargar movimientos de caja
+        private async Task CargarMovimientosCaja()
+        {
+            try
+            {
+                var movimientos =
+                    await _cajaService.ListarMovimientoCaja();
+
+                dataMovimientos.AutoGenerateColumns = true;
+
+                dataMovimientos.DataSource = null;
+                dataMovimientos.DataSource = movimientos;
+
+                ocultarcolumnas();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Error al cargar movimientos",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
                 );

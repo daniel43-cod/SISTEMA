@@ -1,10 +1,13 @@
-﻿namespace API_SISTEMA.DTOs.MovimientoCaja
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SISTEMA_FROTEND.DTOs.MovimientoCaja
 {
     public class ListarMovimientoCajaDTO
     {
-        
         public int id_movimiento_caja { get; set; }
-  
+
         public int id_sesion_caja { get; set; }
 
         public int id_tipo_movimiento { get; set; }
