@@ -6,15 +6,7 @@ using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
 using SISTEMA_FROTEND.Utilidades;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
 using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
-using static System.Net.WebRequestMethods;
 
 
 namespace SISTEMA_FROTEND.presentacion
@@ -24,6 +16,9 @@ namespace SISTEMA_FROTEND.presentacion
         private ClienteService _clienteService = new ClienteService();
         private ListarClienteDTOs _clienteSeleccionado;
         private List<ListarClienteDTOs> _clientes;
+        private List<ProductoVentaBuscarDTO> _productosCodigoBarra = new();
+        private ProductoService ProductoService;
+        private readonly ListBox _selectorPresentaciones = new ListBox();
 
 
         //datos que se llena en los campos si el usuario confirma la eleccion de algun cliente existente
@@ -31,9 +26,29 @@ namespace SISTEMA_FROTEND.presentacion
         public Ventas()
         {
             InitializeComponent();
+
+            _productoService = new ProductoService();
+
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
-            dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
+            dataGridView1.EditingControlShowing +=dataGridView1_EditingControlShowing;
+
             texclientes.Leave += texclientes_Leave;
+
+            // Configuración del selector de presentaciones
+            _selectorPresentaciones.Visible = false;
+            _selectorPresentaciones.IntegralHeight = true;
+            _selectorPresentaciones.Height = 120;
+            _selectorPresentaciones.Width = 250;
+            _selectorPresentaciones.SelectionMode =SelectionMode.One;
+            _selectorPresentaciones.TabStop = true;
+            _selectorPresentaciones.KeyDown +=SelectorPresentaciones_KeyDown;
+            _selectorPresentaciones.DoubleClick +=SelectorPresentaciones_DoubleClick;
+            // Agregarlo al mismo contenedor del DataGridView
+            dataGridView1.Parent.Controls.Add(
+                _selectorPresentaciones
+            );
+
+            _selectorPresentaciones.BringToFront();
         }
 
         //instanciamos el servicio de productos para poder acceder a la lista de productos y sus detalles
@@ -47,6 +62,70 @@ namespace SISTEMA_FROTEND.presentacion
         //instanciamos el servicio de clientes para poder acceder a la lista de clientes y sus detalles
         private ClienteService clienteService = new ClienteService();
 
+        private void SelectorPresentaciones_KeyDown(object? sender,KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ConfirmarPresentacionSeleccionada();
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+
+            if (e.KeyCode == Keys.Escape)
+            {
+                _selectorPresentaciones.Visible = false;
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+        private void SelectorPresentaciones_DoubleClick(object? sender,EventArgs e)
+        {
+            ConfirmarPresentacionSeleccionada();
+        }
+
+        private void ConfirmarPresentacionSeleccionada()
+        {
+            if (_selectorPresentaciones.SelectedItem == null)
+                return;
+
+            if (_selectorPresentaciones.Tag is not int rowIndex)
+                return;
+
+            string seleccion =_selectorPresentaciones.SelectedItem.ToString() ?? "";
+
+            var producto = _productosCodigoBarra.FirstOrDefault(p =>p.nombreMostrar.Equals(seleccion,StringComparison.OrdinalIgnoreCase));
+
+            if (producto == null)
+                return;
+
+            var fila = dataGridView1.Rows[rowIndex];
+            fila.Cells["id_producto"].Value =producto.id_producto;
+            fila.Cells["id_producto_presentacion"].Value =producto.id_producto_presentacion;
+            fila.Cells["producto"].Value =producto.nombreMostrar;
+            fila.Cells["stock"].Value =producto.stock;
+            fila.Cells["precio"].Value =producto.precio;
+            if (fila.Cells["cantidad"].Value == null ||string.IsNullOrWhiteSpace(fila.Cells["cantidad"].Value?.ToString()))
+            {
+                fila.Cells["cantidad"].Value = 1;
+            }
+
+            if (fila.Cells["descuento"].Value == null ||string.IsNullOrWhiteSpace(fila.Cells["descuento"].Value?.ToString()))
+            {
+                fila.Cells["descuento"].Value = 0;
+            }
+
+            // MUY IMPORTANTE para crear la venta después
+            fila.Tag = producto;
+
+            CalcularSubtotal(rowIndex);
+            _selectorPresentaciones.Visible = false;
+            _productosCodigoBarra.Clear();
+            dataGridView1.CurrentCell =fila.Cells["cantidad"];
+
+            dataGridView1.BeginEdit(true);
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -57,8 +136,8 @@ namespace SISTEMA_FROTEND.presentacion
         {
             labusuario.ForeColor = Color.Black; // o el color que necesites
             labusuario.Text = $"Usuario: {SesionUsuario.Nombre}";
-         
-            texsubtotal .Enabled = false;
+
+            texsubtotal.Enabled = false;
             texdescuento.Enabled = false;
             textotal.Enabled = false;
             _clientes = await _clienteService.ListarClientes(); // ajustá el nombre real del método
@@ -77,7 +156,15 @@ namespace SISTEMA_FROTEND.presentacion
             }
 
             dataGridView1.Columns["id_producto_presentacion"].Visible = false;
-            //  dataGridView1.Columns["impuesto"].Visible = true;
+            dataGridView1.Columns["stock"].Visible = false;
+
+
+            dataGridView1.Columns["codigobarra"].Width = 130;
+            dataGridView1.Columns["producto"].Width = 280;
+            dataGridView1.Columns["cantidad"].Width = 90;
+            dataGridView1.Columns["precio"].Width = 100;
+            dataGridView1.Columns["descuento"].Width = 100;
+            dataGridView1.Columns["subtotal1"].Width = 120;
 
             _productos = await _productoService.ListarProducto();
 
@@ -85,12 +172,6 @@ namespace SISTEMA_FROTEND.presentacion
 
             dataGridView1.DefaultCellStyle.ForeColor = Color.Black;
             dataGridView1.DefaultCellStyle.BackColor = Color.White;
-/*
-            dataGridView1.DefaultCellStyle.SelectionForeColor = Color.White;
-            dataGridView1.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
-            dataGridView1.EnableHeadersVisualStyles = false;
-            dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.DarkSlateGray;*/
 
         }
 
@@ -181,13 +262,21 @@ namespace SISTEMA_FROTEND.presentacion
 
             if (columna == "producto")
             {
-                textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
-                textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                textBox.AutoCompleteMode =AutoCompleteMode.SuggestAppend;
+                textBox.AutoCompleteSource =AutoCompleteSource.CustomSource;
 
-                var fuente = new AutoCompleteStringCollection();
+                var fuente =new AutoCompleteStringCollection();
 
-                fuente.AddRange(
-                    _productos.Select(p => p.nombreMostrar).ToArray());
+                if (_productosCodigoBarra.Count > 0)
+                {
+                    fuente.AddRange(_productosCodigoBarra.Select(p => p.nombreMostrar).ToArray()
+                    );
+                }
+                else
+                {
+                    fuente.AddRange( _productos .Select(p => p.nombreMostrar).ToArray()
+                    );
+                }
 
                 textBox.AutoCompleteCustomSource = fuente;
             }
@@ -215,8 +304,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         private void SoloEnteros_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!char.IsDigit(e.KeyChar) &&
-                !char.IsControl(e.KeyChar))
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
             {
                 e.Handled = true;
             }
@@ -226,16 +314,11 @@ namespace SISTEMA_FROTEND.presentacion
         {
             TextBox textBox = (TextBox)sender;
 
-            char separador = Convert.ToChar(
-                System.Globalization.CultureInfo.CurrentCulture
-                .NumberFormat.NumberDecimalSeparator);
-
-            if (char.IsDigit(e.KeyChar) ||
-                char.IsControl(e.KeyChar))
+            char separador = Convert.ToChar(System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            if (char.IsDigit(e.KeyChar) || char.IsControl(e.KeyChar))
                 return;
 
-            if (e.KeyChar == separador &&
-                !textBox.Text.Contains(separador))
+            if (e.KeyChar == separador &&!textBox.Text.Contains(separador))
                 return;
 
             e.Handled = true;
@@ -255,15 +338,18 @@ namespace SISTEMA_FROTEND.presentacion
             RecalcularTotales();
         }
 
-
-        //evento que se dispara cuando se termina de editar una celda en el DataGridView
-        //traendo consigo el toda la informaciopn del producto seleccionado y calculando el subtotal
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private async void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
             //everigua el nombde del producto seleccionado o editado
 
             string columna = dataGridView1.Columns[e.ColumnIndex].Name;
+
+            if (columna == "codigobarra")
+            {
+                await BuscarProductoCodigoBarra(e.RowIndex);
+                return;
+            }
             //si la columna editada es la de producto, busca el producto en la lista de productos y llena los campos correspondientes
             if (columna == "producto")
             {
@@ -272,8 +358,8 @@ namespace SISTEMA_FROTEND.presentacion
                 string textoElegido = dataGridView1.Rows[e.RowIndex].Cells["producto"].Value?.ToString();
                 if (string.IsNullOrWhiteSpace(textoElegido)) return;
                 //busca que el producto conicida con algunos de los productos en la lista de productos o almacenados en memoria 
-                var producto = _productos.FirstOrDefault(p =>
-                    p.nombreMostrar.Trim().Equals(textoElegido.Trim(), StringComparison.OrdinalIgnoreCase));
+                var listaBusqueda = _productosCodigoBarra.Count > 0 ? _productosCodigoBarra : _productos;
+                var producto = listaBusqueda.FirstOrDefault(p => p.nombreMostrar.Trim().Equals(textoElegido.Trim(),StringComparison.OrdinalIgnoreCase));
 
                 if (producto == null) return;
                 // se llena automaticamente los campos de precio y descuento con los valores del producto encontrado
@@ -293,7 +379,7 @@ namespace SISTEMA_FROTEND.presentacion
                 }
 
                 dataGridView1.Rows[e.RowIndex].Tag = producto;
-
+                _productosCodigoBarra.Clear(); // Limpiar la lista de productos por código de barra después de seleccionar un producto
                 CalcularSubtotal(e.RowIndex);
             }
 
@@ -391,16 +477,12 @@ namespace SISTEMA_FROTEND.presentacion
         private void button4_Click(object sender, EventArgs e)
         {
             var catalogo = new Catalog();
-
             catalogo.ProductosSeleccionados += Catalogo_ProductosSeleccionados;
-
             catalogo.ShowDialog();
         }
 
-        private void Catalogo_ProductosSeleccionados(
-    object? sender,
-    List<ProductoSeleccionadoDTO> productos)
-        {
+        private void Catalogo_ProductosSeleccionados(object? sender,List<ProductoSeleccionadoDTO> productos)
+{
             foreach (var producto in productos)
             {
                 AgregarProductoAlGrid(producto);
@@ -440,13 +522,9 @@ namespace SISTEMA_FROTEND.presentacion
             if (filaExistente != null)
             {
                 int cantidadActual = Convert.ToInt32(filaExistente.Cells["cantidad"].Value ?? 0);
-
                 int nuevaCantidad = cantidadActual + producto.cantidad;
-
                 filaExistente.Cells["cantidad"].Value = nuevaCantidad;
-
                 filaExistente.Tag = productoGrid;
-
                 CalcularSubtotal(filaExistente.Index);
 
                 return;
@@ -454,8 +532,7 @@ namespace SISTEMA_FROTEND.presentacion
 
             int indice = dataGridView1.Rows.Add();
 
-            DataGridViewRow nuevaFila =
-                dataGridView1.Rows[indice];
+            DataGridViewRow nuevaFila =dataGridView1.Rows[indice];
 
             nuevaFila.Cells["id_producto"].Value = producto.id_producto;
             nuevaFila.Cells["id_producto_presentacion"].Value = producto.id_producto_presentacion;
@@ -473,5 +550,129 @@ namespace SISTEMA_FROTEND.presentacion
         {
 
         }
+
+        private async void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
+        {
+           
+        }
+
+        private async Task BuscarProductoCodigoBarra(int rowIndex)
+        {
+            var fila = dataGridView1.Rows[rowIndex];
+
+            string codigo = fila.Cells["codigobarra"]
+                .Value?
+                .ToString()?
+                .Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(codigo))
+                return;
+
+            try
+            {
+                var producto = await _productoService
+                    .BuscarPorCodigoBarra(codigo);
+
+                if (producto == null)
+                {
+                    MessageBox.Show(
+                        "No existe un producto con ese código de barras.",
+                        "Producto no encontrado",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    return;
+                }
+
+                // 1. Crear la lista de presentaciones
+                _productosCodigoBarra = producto.presentaciones
+                    .Select(p => new ProductoVentaBuscarDTO
+                    {
+                        id_producto = producto.id_producto,
+                        id_producto_presentacion =p.id_producto_presentacion,
+                        nombre_producto =producto.nombre_producto,
+                        presentacion =p.presentacion,
+                        unidades_equivalentes =p.unidades_equivalentes,
+                        precio =p.precio,
+                        stock =producto.stock
+                    })
+                    .ToList();
+
+                fila.Cells["producto"].Value =
+                    producto.nombre_producto;
+                MostrarSelectorPresentaciones(
+                    rowIndex,
+                    producto.nombre_producto
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Error al buscar producto",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+        private void MostrarSelectorPresentaciones(int rowIndex,string nombreProducto)
+        {
+            if (_productosCodigoBarra == null ||
+                _productosCodigoBarra.Count == 0)
+            {
+                return;
+            }
+            _selectorPresentaciones.Items.Clear();
+
+            foreach (var producto in _productosCodigoBarra)
+            {
+                _selectorPresentaciones.Items.Add(
+                    producto.nombreMostrar
+                );
+            }
+
+            _selectorPresentaciones.SelectedIndex = -1;
+
+            var celda = dataGridView1.Rows[rowIndex].Cells["producto"];
+
+  
+            Rectangle rectangulo =dataGridView1.GetCellDisplayRectangle(celda.ColumnIndex,celda.RowIndex,true
+                );
+
+            // 6. Convertir posición del DataGridView a pantalla
+            Point posicionPantalla =dataGridView1.PointToScreen(
+                    new Point(
+                        rectangulo.Left,
+                        rectangulo.Bottom
+                    )
+                );
+
+            // 7. Convertir posición de pantalla al contenedor
+            // donde agregamos el ListBox
+            Point posicionContenedor =dataGridView1.Parent.PointToClient(posicionPantalla
+                );
+
+            // 8. Posicionar el ListBox debajo de Producto
+            _selectorPresentaciones.Location =posicionContenedor;
+
+            // 9. Tamaño
+            _selectorPresentaciones.Width =Math.Max(rectangulo.Width, 250);
+
+            _selectorPresentaciones.Height =Math.Min(_productosCodigoBarra.Count * 25 + 5,150
+                );
+
+            // 10. Guardar la fila que estamos editando
+            _selectorPresentaciones.Tag = rowIndex;
+
+            // 11. Mostrar
+            _selectorPresentaciones.Visible = true;
+            _selectorPresentaciones.BringToFront();
+            _selectorPresentaciones.Focus();
+        }
+
+
     }
+
+
 }

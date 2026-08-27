@@ -93,13 +93,6 @@
             label13 = new Label();
             label12 = new Label();
             dataGridView1 = new Guna.UI2.WinForms.Guna2DataGridView();
-            cantidad = new DataGridViewTextBoxColumn();
-            producto = new DataGridViewTextBoxColumn();
-            stock = new DataGridViewTextBoxColumn();
-            subtotal1 = new DataGridViewTextBoxColumn();
-            descuento = new DataGridViewTextBoxColumn();
-            precio = new DataGridViewTextBoxColumn();
-            id_producto_presentacion = new DataGridViewTextBoxColumn();
             contextMenuStrip1 = new ContextMenuStrip(components);
             texsubtotal = new Guna.UI2.WinForms.Guna2TextBox();
             texdescuento = new Guna.UI2.WinForms.Guna2TextBox();
@@ -108,6 +101,14 @@
             guna2Panel2 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel3 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel4 = new Guna.UI2.WinForms.Guna2Panel();
+            id_producto_presentacion = new DataGridViewTextBoxColumn();
+            stock = new DataGridViewTextBoxColumn();
+            subtotal1 = new DataGridViewTextBoxColumn();
+            descuento = new DataGridViewTextBoxColumn();
+            precio = new DataGridViewTextBoxColumn();
+            cantidad = new DataGridViewTextBoxColumn();
+            producto = new DataGridViewTextBoxColumn();
+            codigobarra = new DataGridViewTextBoxColumn();
             guna2Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             guna2Panel2.SuspendLayout();
@@ -558,7 +559,7 @@
             dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             dataGridView1.ColumnHeadersHeight = 22;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
-            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { cantidad, producto, stock, subtotal1, descuento, precio, id_producto_presentacion });
+            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { codigobarra, producto, cantidad, precio, descuento, subtotal1, stock, id_producto_presentacion });
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = Color.White;
             dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
@@ -579,48 +580,7 @@
             dataGridView1.ThemeStyle.HeaderStyle.Height = 22;
             dataGridView1.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9F);
             dataGridView1.ThemeStyle.RowsStyle.Height = 29;
-            // 
-            // cantidad
-            // 
-            cantidad.HeaderText = "CANTIDAD";
-            cantidad.MinimumWidth = 6;
-            cantidad.Name = "cantidad";
-            // 
-            // producto
-            // 
-            producto.HeaderText = "PRODUCTO";
-            producto.MinimumWidth = 6;
-            producto.Name = "producto";
-            // 
-            // stock
-            // 
-            stock.HeaderText = "EXISTENCIA";
-            stock.MinimumWidth = 6;
-            stock.Name = "stock";
-            // 
-            // subtotal1
-            // 
-            subtotal1.HeaderText = "SUBTOTAL";
-            subtotal1.MinimumWidth = 6;
-            subtotal1.Name = "subtotal1";
-            // 
-            // descuento
-            // 
-            descuento.HeaderText = "DESCUENTO";
-            descuento.MinimumWidth = 6;
-            descuento.Name = "descuento";
-            // 
-            // precio
-            // 
-            precio.HeaderText = "PRECIO";
-            precio.MinimumWidth = 6;
-            precio.Name = "precio";
-            // 
-            // id_producto_presentacion
-            // 
-            id_producto_presentacion.HeaderText = "PRESENTACION";
-            id_producto_presentacion.MinimumWidth = 6;
-            id_producto_presentacion.Name = "id_producto_presentacion";
+            dataGridView1.CellContentClick += dataGridView1_CellContentClick_1;
             // 
             // contextMenuStrip1
             // 
@@ -744,6 +704,54 @@
             guna2Panel4.Size = new Size(228, 382);
             guna2Panel4.TabIndex = 49;
             // 
+            // id_producto_presentacion
+            // 
+            id_producto_presentacion.HeaderText = "PRESENTACION";
+            id_producto_presentacion.MinimumWidth = 6;
+            id_producto_presentacion.Name = "id_producto_presentacion";
+            // 
+            // stock
+            // 
+            stock.HeaderText = "EXISTENCIA";
+            stock.MinimumWidth = 6;
+            stock.Name = "stock";
+            // 
+            // subtotal1
+            // 
+            subtotal1.HeaderText = "SUBTOTAL";
+            subtotal1.MinimumWidth = 6;
+            subtotal1.Name = "subtotal1";
+            // 
+            // descuento
+            // 
+            descuento.HeaderText = "DESCUENTO";
+            descuento.MinimumWidth = 6;
+            descuento.Name = "descuento";
+            // 
+            // precio
+            // 
+            precio.HeaderText = "PRECIO";
+            precio.MinimumWidth = 6;
+            precio.Name = "precio";
+            // 
+            // cantidad
+            // 
+            cantidad.HeaderText = "CANTIDAD";
+            cantidad.MinimumWidth = 6;
+            cantidad.Name = "cantidad";
+            // 
+            // producto
+            // 
+            producto.HeaderText = "PRODUCTO";
+            producto.MinimumWidth = 6;
+            producto.Name = "producto";
+            // 
+            // codigobarra
+            // 
+            codigobarra.HeaderText = "CODIGO";
+            codigobarra.MinimumWidth = 6;
+            codigobarra.Name = "codigobarra";
+            // 
             // Ventas
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -814,13 +822,6 @@
         private Label label14;
         private Label label13;
         private Guna.UI2.WinForms.Guna2DataGridView dataGridView1;
-        private DataGridViewTextBoxColumn cantidad;
-        private DataGridViewTextBoxColumn producto;
-        private DataGridViewTextBoxColumn stock;
-        private DataGridViewTextBoxColumn subtotal1;
-        private DataGridViewTextBoxColumn descuento;
-        private DataGridViewTextBoxColumn precio;
-        private DataGridViewTextBoxColumn id_producto_presentacion;
         private ContextMenuStrip contextMenuStrip1;
         private Guna.UI2.WinForms.Guna2TextBox texsubtotal;
         private Guna.UI2.WinForms.Guna2TextBox texdescuento;
@@ -830,5 +831,13 @@
         private Label label18;
         private Guna.UI2.WinForms.Guna2Panel guna2Panel3;
         private Guna.UI2.WinForms.Guna2Panel guna2Panel4;
+        private DataGridViewTextBoxColumn codigobarra;
+        private DataGridViewTextBoxColumn producto;
+        private DataGridViewTextBoxColumn cantidad;
+        private DataGridViewTextBoxColumn precio;
+        private DataGridViewTextBoxColumn descuento;
+        private DataGridViewTextBoxColumn subtotal1;
+        private DataGridViewTextBoxColumn stock;
+        private DataGridViewTextBoxColumn id_producto_presentacion;
     }
 }

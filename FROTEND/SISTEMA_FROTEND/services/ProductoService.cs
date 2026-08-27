@@ -123,5 +123,46 @@ namespace SISTEMA_FROTEND.services
             }
         }
 
+
+        //Buscar producto por codigo de barra
+        public async Task<ProductoCodigoBarraDTO?> BuscarPorCodigoBarra(
+  string codigoBarra)
+        {
+            if (string.IsNullOrWhiteSpace(codigoBarra))
+            {
+                throw new Exception(
+                    "Debe ingresar un código de barras."
+                );
+            }
+
+            HttpClient cliente =
+                ApiClient.ObtenerClienteAutenticado();
+
+            var response = await cliente.GetAsync(
+                $"Productos/codigo/{codigoBarra}"
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content
+                    .ReadFromJsonAsync<ProductoCodigoBarraDTO>();
+            }
+
+            if (response.StatusCode ==
+                System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            string error =
+                await response.Content.ReadAsStringAsync();
+
+            throw new Exception(
+                $"Código: {(int)response.StatusCode}\n" +
+                $"Estado: {response.StatusCode}\n" +
+                $"Respuesta:\n{error}"
+            );
+        }
+
     }
 }

@@ -16,18 +16,19 @@ namespace API_SISTEMA.controllers
     [ApiController]
     public class ProductosController : ControllerBase
     {
-
+        private readonly BuscarCodigoBarraService _productoService;
         private readonly ProductoService _Service;
         private readonly ProductoCrearService _crearService;
         private readonly SubirImagenService _subirImagenService;
         //private readonly productocrear productocrear;
         // private readonly ProductoPrecioService productoprecio;
 
-        public ProductosController(ProductoService service, ProductoCrearService crearService, SubirImagenService subirImagenService)
+        public ProductosController(ProductoService service, ProductoCrearService crearService, SubirImagenService subirImagenService, BuscarCodigoBarraService productoService)
         {
             _Service = service;
             _crearService = crearService;
             _subirImagenService = subirImagenService;
+            _productoService = productoService;
         }
         [Authorize(Roles ="ADMINISTRADOR")]
         [HttpGet("listar")]
@@ -104,7 +105,36 @@ namespace API_SISTEMA.controllers
         }
 
 
+        [HttpGet("codigo/{codigoBarra}")]
+        public async Task<IActionResult> BuscarPorCodigoBarra(string codigoBarra)
+        {
+            try
+            {
+                var productos =
+                    await _productoService
+                        .BuscarPorCodigoBarra(codigoBarra);
 
-        
+                if (productos == null   )
+                {
+                    return NotFound(new
+                    {
+                        mensaje =
+                            "No existe un producto con ese código de barras."
+                    });
+                }
+
+                return Ok(productos);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message
+                });
+            }
+        }
+
+
+
     }
 }

@@ -20,8 +20,7 @@ namespace API_SISTEMA.services
             
         }
 
-        public async Task<List<ListarVentasDTOs>> ListarVentas(
-     int idUsuario)
+        public async Task<List<ListarVentasDTOs>> ListarVentas(int idUsuario)
         {
             var usuario = await _context.usuarios
                 .FirstOrDefaultAsync(u => u.id_usuario == idUsuario);

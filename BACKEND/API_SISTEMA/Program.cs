@@ -97,6 +97,7 @@ builder.Services.AddScoped<PermisoUsuarioService>();
 //productos
 builder.Services.AddScoped<ProductoCrearService>();
 builder.Services.AddScoped<SubirImagenService>();
+builder.Services.AddScoped<BuscarCodigoBarraService>();
 //compras
 builder.Services.AddScoped<CrearCompraService>();
 
