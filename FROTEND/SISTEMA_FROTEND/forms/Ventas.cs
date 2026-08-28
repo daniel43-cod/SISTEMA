@@ -18,6 +18,7 @@ namespace SISTEMA_FROTEND.presentacion
         private List<ListarClienteDTOs> _clientes;
         private List<ProductoVentaBuscarDTO> _productosCodigoBarra = new();
         private ProductoService ProductoService;
+        private readonly VentaService _ventaservice;
         private readonly ListBox _selectorPresentaciones = new ListBox();
 
 
@@ -28,9 +29,10 @@ namespace SISTEMA_FROTEND.presentacion
             InitializeComponent();
 
             _productoService = new ProductoService();
+            _ventaservice = new VentaService();
 
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
-            dataGridView1.EditingControlShowing +=dataGridView1_EditingControlShowing;
+            dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
 
             texclientes.Leave += texclientes_Leave;
 
@@ -39,10 +41,10 @@ namespace SISTEMA_FROTEND.presentacion
             _selectorPresentaciones.IntegralHeight = true;
             _selectorPresentaciones.Height = 120;
             _selectorPresentaciones.Width = 250;
-            _selectorPresentaciones.SelectionMode =SelectionMode.One;
+            _selectorPresentaciones.SelectionMode = SelectionMode.One;
             _selectorPresentaciones.TabStop = true;
-            _selectorPresentaciones.KeyDown +=SelectorPresentaciones_KeyDown;
-            _selectorPresentaciones.DoubleClick +=SelectorPresentaciones_DoubleClick;
+            _selectorPresentaciones.KeyDown += SelectorPresentaciones_KeyDown;
+            _selectorPresentaciones.DoubleClick += SelectorPresentaciones_DoubleClick;
             // Agregarlo al mismo contenedor del DataGridView
             dataGridView1.Parent.Controls.Add(
                 _selectorPresentaciones
@@ -62,7 +64,7 @@ namespace SISTEMA_FROTEND.presentacion
         //instanciamos el servicio de clientes para poder acceder a la lista de clientes y sus detalles
         private ClienteService clienteService = new ClienteService();
 
-        private void SelectorPresentaciones_KeyDown(object? sender,KeyEventArgs e)
+        private void SelectorPresentaciones_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -80,7 +82,7 @@ namespace SISTEMA_FROTEND.presentacion
                 e.SuppressKeyPress = true;
             }
         }
-        private void SelectorPresentaciones_DoubleClick(object? sender,EventArgs e)
+        private void SelectorPresentaciones_DoubleClick(object? sender, EventArgs e)
         {
             ConfirmarPresentacionSeleccionada();
         }
@@ -93,25 +95,25 @@ namespace SISTEMA_FROTEND.presentacion
             if (_selectorPresentaciones.Tag is not int rowIndex)
                 return;
 
-            string seleccion =_selectorPresentaciones.SelectedItem.ToString() ?? "";
+            string seleccion = _selectorPresentaciones.SelectedItem.ToString() ?? "";
 
-            var producto = _productosCodigoBarra.FirstOrDefault(p =>p.nombreMostrar.Equals(seleccion,StringComparison.OrdinalIgnoreCase));
+            var producto = _productosCodigoBarra.FirstOrDefault(p => p.nombreMostrar.Equals(seleccion, StringComparison.OrdinalIgnoreCase));
 
             if (producto == null)
                 return;
 
             var fila = dataGridView1.Rows[rowIndex];
-            fila.Cells["id_producto"].Value =producto.id_producto;
-            fila.Cells["id_producto_presentacion"].Value =producto.id_producto_presentacion;
-            fila.Cells["producto"].Value =producto.nombreMostrar;
-            fila.Cells["stock"].Value =producto.stock;
-            fila.Cells["precio"].Value =producto.precio;
-            if (fila.Cells["cantidad"].Value == null ||string.IsNullOrWhiteSpace(fila.Cells["cantidad"].Value?.ToString()))
+            fila.Cells["id_producto"].Value = producto.id_producto;
+            fila.Cells["id_producto_presentacion"].Value = producto.id_producto_presentacion;
+            fila.Cells["producto"].Value = producto.nombreMostrar;
+            fila.Cells["stock"].Value = producto.stock;
+            fila.Cells["precio"].Value = producto.precio;
+            if (fila.Cells["cantidad"].Value == null || string.IsNullOrWhiteSpace(fila.Cells["cantidad"].Value?.ToString()))
             {
                 fila.Cells["cantidad"].Value = 1;
             }
 
-            if (fila.Cells["descuento"].Value == null ||string.IsNullOrWhiteSpace(fila.Cells["descuento"].Value?.ToString()))
+            if (fila.Cells["descuento"].Value == null || string.IsNullOrWhiteSpace(fila.Cells["descuento"].Value?.ToString()))
             {
                 fila.Cells["descuento"].Value = 0;
             }
@@ -122,7 +124,7 @@ namespace SISTEMA_FROTEND.presentacion
             CalcularSubtotal(rowIndex);
             _selectorPresentaciones.Visible = false;
             _productosCodigoBarra.Clear();
-            dataGridView1.CurrentCell =fila.Cells["cantidad"];
+            dataGridView1.CurrentCell = fila.Cells["cantidad"];
 
             dataGridView1.BeginEdit(true);
         }
@@ -262,10 +264,10 @@ namespace SISTEMA_FROTEND.presentacion
 
             if (columna == "producto")
             {
-                textBox.AutoCompleteMode =AutoCompleteMode.SuggestAppend;
-                textBox.AutoCompleteSource =AutoCompleteSource.CustomSource;
+                textBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
 
-                var fuente =new AutoCompleteStringCollection();
+                var fuente = new AutoCompleteStringCollection();
 
                 if (_productosCodigoBarra.Count > 0)
                 {
@@ -274,7 +276,7 @@ namespace SISTEMA_FROTEND.presentacion
                 }
                 else
                 {
-                    fuente.AddRange( _productos .Select(p => p.nombreMostrar).ToArray()
+                    fuente.AddRange(_productos.Select(p => p.nombreMostrar).ToArray()
                     );
                 }
 
@@ -318,7 +320,7 @@ namespace SISTEMA_FROTEND.presentacion
             if (char.IsDigit(e.KeyChar) || char.IsControl(e.KeyChar))
                 return;
 
-            if (e.KeyChar == separador &&!textBox.Text.Contains(separador))
+            if (e.KeyChar == separador && !textBox.Text.Contains(separador))
                 return;
 
             e.Handled = true;
@@ -359,7 +361,7 @@ namespace SISTEMA_FROTEND.presentacion
                 if (string.IsNullOrWhiteSpace(textoElegido)) return;
                 //busca que el producto conicida con algunos de los productos en la lista de productos o almacenados en memoria 
                 var listaBusqueda = _productosCodigoBarra.Count > 0 ? _productosCodigoBarra : _productos;
-                var producto = listaBusqueda.FirstOrDefault(p => p.nombreMostrar.Trim().Equals(textoElegido.Trim(),StringComparison.OrdinalIgnoreCase));
+                var producto = listaBusqueda.FirstOrDefault(p => p.nombreMostrar.Trim().Equals(textoElegido.Trim(), StringComparison.OrdinalIgnoreCase));
 
                 if (producto == null) return;
                 // se llena automaticamente los campos de precio y descuento con los valores del producto encontrado
@@ -413,61 +415,7 @@ namespace SISTEMA_FROTEND.presentacion
             texdescuento.Text = descuentoGeneral.ToString("N2");
             textotal.Text = totalGeneral.ToString("N2");
         }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-
-            dataGridView1.EndEdit();
-
-            var detalles = new List<CrearDetalleVentaDTO>();
-            decimal subtotal = 0;
-            decimal descuentoTotal = 0;
-
-            foreach (DataGridViewRow fila in dataGridView1.Rows)
-            {
-                if (fila.IsNewRow) continue;
-                if (fila.Tag is not ProductoVentaBuscarDTO producto) continue;
-
-                int cantidad = Convert.ToInt32(fila.Cells["cantidad"].Value ?? 0);
-                decimal descuento = Convert.ToDecimal(fila.Cells["descuento"].Value ?? 0);
-
-                if (cantidad <= 0) continue;
-
-                detalles.Add(new CrearDetalleVentaDTO
-                {
-                    id_producto = producto.id_producto,
-                    id_producto_presentacion = producto.id_producto_presentacion,
-                    cantidad = cantidad,
-                    descuento = descuento
-                });
-
-                subtotal += cantidad * producto.precio;
-                descuentoTotal += descuento;
-            }
-
-            if (detalles.Count == 0)
-            {
-                MessageBox.Show("Agregá al menos un producto antes de cobrar.");
-                return;
-            }
-
-            if (_clienteSeleccionado == null && string.IsNullOrWhiteSpace(texclientes.Text.Trim()))
-            {
-                MessageBox.Show("Ingresá o seleccioná un cliente antes de cobrar.");
-                return;
-            }
-
-            decimal total = subtotal - descuentoTotal;
-
-            using var formCobro = new formCobro(detalles, _clienteSeleccionado, texclientes.Text.Trim(), texnit.Text.Trim(), textelefono.Text.Trim(), texcorreo.Text.Trim(), texdireccion.Text.Trim(),
-                texdpi.Text.Trim(), Sesion.IdUsuario, subtotal, descuentoTotal, total
-            );
-
-            if (formCobro.ShowDialog() == DialogResult.OK)
-            {
-                limpiar();
-            }
-        }
+   
 
         private void cliente_Click(object sender, EventArgs e)
         {
@@ -481,8 +429,8 @@ namespace SISTEMA_FROTEND.presentacion
             catalogo.ShowDialog();
         }
 
-        private void Catalogo_ProductosSeleccionados(object? sender,List<ProductoSeleccionadoDTO> productos)
-{
+        private void Catalogo_ProductosSeleccionados(object? sender, List<ProductoSeleccionadoDTO> productos)
+        {
             foreach (var producto in productos)
             {
                 AgregarProductoAlGrid(producto);
@@ -532,7 +480,7 @@ namespace SISTEMA_FROTEND.presentacion
 
             int indice = dataGridView1.Rows.Add();
 
-            DataGridViewRow nuevaFila =dataGridView1.Rows[indice];
+            DataGridViewRow nuevaFila = dataGridView1.Rows[indice];
 
             nuevaFila.Cells["id_producto"].Value = producto.id_producto;
             nuevaFila.Cells["id_producto_presentacion"].Value = producto.id_producto_presentacion;
@@ -553,7 +501,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
         {
-           
+
         }
 
         private async Task BuscarProductoCodigoBarra(int rowIndex)
@@ -590,12 +538,12 @@ namespace SISTEMA_FROTEND.presentacion
                     .Select(p => new ProductoVentaBuscarDTO
                     {
                         id_producto = producto.id_producto,
-                        id_producto_presentacion =p.id_producto_presentacion,
-                        nombre_producto =producto.nombre_producto,
-                        presentacion =p.presentacion,
-                        unidades_equivalentes =p.unidades_equivalentes,
-                        precio =p.precio,
-                        stock =producto.stock
+                        id_producto_presentacion = p.id_producto_presentacion,
+                        nombre_producto = producto.nombre_producto,
+                        presentacion = p.presentacion,
+                        unidades_equivalentes = p.unidades_equivalentes,
+                        precio = p.precio,
+                        stock = producto.stock
                     })
                     .ToList();
 
@@ -616,7 +564,7 @@ namespace SISTEMA_FROTEND.presentacion
                 );
             }
         }
-        private void MostrarSelectorPresentaciones(int rowIndex,string nombreProducto)
+        private void MostrarSelectorPresentaciones(int rowIndex, string nombreProducto)
         {
             if (_productosCodigoBarra == null ||
                 _productosCodigoBarra.Count == 0)
@@ -636,12 +584,12 @@ namespace SISTEMA_FROTEND.presentacion
 
             var celda = dataGridView1.Rows[rowIndex].Cells["producto"];
 
-  
-            Rectangle rectangulo =dataGridView1.GetCellDisplayRectangle(celda.ColumnIndex,celda.RowIndex,true
+
+            Rectangle rectangulo = dataGridView1.GetCellDisplayRectangle(celda.ColumnIndex, celda.RowIndex, true
                 );
 
             // 6. Convertir posición del DataGridView a pantalla
-            Point posicionPantalla =dataGridView1.PointToScreen(
+            Point posicionPantalla = dataGridView1.PointToScreen(
                     new Point(
                         rectangulo.Left,
                         rectangulo.Bottom
@@ -650,16 +598,16 @@ namespace SISTEMA_FROTEND.presentacion
 
             // 7. Convertir posición de pantalla al contenedor
             // donde agregamos el ListBox
-            Point posicionContenedor =dataGridView1.Parent.PointToClient(posicionPantalla
+            Point posicionContenedor = dataGridView1.Parent.PointToClient(posicionPantalla
                 );
 
             // 8. Posicionar el ListBox debajo de Producto
-            _selectorPresentaciones.Location =posicionContenedor;
+            _selectorPresentaciones.Location = posicionContenedor;
 
             // 9. Tamaño
-            _selectorPresentaciones.Width =Math.Max(rectangulo.Width, 250);
+            _selectorPresentaciones.Width = Math.Max(rectangulo.Width, 250);
 
-            _selectorPresentaciones.Height =Math.Min(_productosCodigoBarra.Count * 25 + 5,150
+            _selectorPresentaciones.Height = Math.Min(_productosCodigoBarra.Count * 25 + 5, 150
                 );
 
             // 10. Guardar la fila que estamos editando
@@ -671,7 +619,186 @@ namespace SISTEMA_FROTEND.presentacion
             _selectorPresentaciones.Focus();
         }
 
+        private async void button3_Click(object sender, EventArgs e)
+        {
+            try
+            {
+              
 
+                dataGridView1.EndEdit();
+
+                var detalles = new List<CrearDetalleVentaDTO>();
+                decimal subtotal = 0;
+                decimal descuentoTotal = 0;
+
+                foreach (DataGridViewRow fila in dataGridView1.Rows)
+                {
+                    if (fila.IsNewRow ||
+                        fila.Tag is not ProductoVentaBuscarDTO producto)
+                        continue;
+
+                    int cantidad = Convert.ToInt32(
+                        fila.Cells["cantidad"].Value ?? 0);
+
+                    decimal descuento = Convert.ToDecimal(
+                        fila.Cells["descuento"].Value ?? 0);
+
+                    if (cantidad <= 0)
+                        continue;
+
+                    // Cantidad real que se descontará del stock
+                    int unidadesSolicitadas =
+                        cantidad * producto.unidades_equivalentes;
+
+                    if (unidadesSolicitadas > producto.stock)
+                    {
+                        MessageBox.Show(
+                            $"Existencia insuficiente para {producto.nombreMostrar}.\n\n" +
+                            $"Disponible: {producto.stock} unidades\n" +
+                            $"Solicitado: {unidadesSolicitadas} unidades",
+                            "Stock insuficiente",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        return;
+                    }
+
+                    detalles.Add(new CrearDetalleVentaDTO
+                    {
+                        id_producto = producto.id_producto,
+                        id_producto_presentacion =
+                            producto.id_producto_presentacion,
+                        cantidad = cantidad,
+                        descuento = descuento
+                    });
+
+                    subtotal += cantidad * producto.precio;
+                    descuentoTotal += descuento;
+                }
+
+                if (detalles.Count == 0)
+                {
+                    MessageBox.Show(
+                        "Agregá al menos un producto antes de cobrar."
+                    );
+                    return;
+                }
+
+                if (_clienteSeleccionado == null &&
+                    string.IsNullOrWhiteSpace(texclientes.Text))
+                {
+                    MessageBox.Show(
+                        "Ingresá o seleccioná un cliente."
+                    );
+                    return;
+                }
+
+                if (!decimal.TryParse(
+                        texefectivorecibido.Text,
+                        out decimal efectivoRecibido) ||
+                    efectivoRecibido < 0)
+                {
+                    MessageBox.Show(
+                        "Ingrese un monto válido."
+                    );
+                    return;
+                }
+
+                decimal total = subtotal - descuentoTotal;
+
+                // Dinero que realmente pertenece a la venta
+                decimal montoPagado =
+                    Math.Min(efectivoRecibido, total);
+
+                // Si entrega más que el total
+                decimal cambio =
+                    Math.Max(0, efectivoRecibido - total);
+
+                // Si entrega menos que el total
+                decimal saldoPendiente =
+                    Math.Max(0, total - montoPagado);
+
+                var venta = new CrearVentaDTO
+                {
+                    origen = "WinForms",
+                    detalles = detalles,
+
+                    pago = new CrearPagoVentaDTO
+                    {
+                        // IMPORTANTE:
+                        monto = montoPagado,
+                        metodo_pago = "EFECTIVO"
+                    }
+                };
+
+                // Cliente existente
+                if (_clienteSeleccionado != null)
+                {
+                    venta.id_cliente =
+                        _clienteSeleccionado.id_Cliente;
+                }
+                else
+                {
+                    // Cliente nuevo
+                    venta.id_cliente = 0;
+
+                    venta.clienteNuevo =
+                        new CrearClienteVentaDTO
+                        {
+                            nombre = texclientes.Text.Trim(),
+                            nit = texnit.Text.Trim(),
+                            dpi = texdpi.Text.Trim(),
+                            telefono = textelefono.Text.Trim(),
+                            correo_electronico =
+                                texcorreo.Text.Trim(),
+                            direccion =
+                                texdireccion.Text.Trim()
+                        };
+                }
+
+                // Registrar en la API
+                await _ventaservice.CrearVenta(venta);
+
+                string mensaje;
+
+                if (saldoPendiente > 0)
+                {
+                    mensaje =
+                        $"Venta registrada correctamente.\n\n" +
+                        $"Total: Q{total:N2}\n" +
+                        $"Pagado: Q{montoPagado:N2}\n" +
+                        $"Saldo pendiente: Q{saldoPendiente:N2}";
+                }
+                else
+                {
+                    mensaje =
+                        $"Venta registrada correctamente.\n\n" +
+                        $"Total: Q{total:N2}\n" +
+                        $"Recibido: Q{efectivoRecibido:N2}\n" +
+                        $"Cambio: Q{cambio:N2}";
+                }
+
+                MessageBox.Show(
+                    mensaje,
+                    "Venta registrada",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                limpiar();
+                texefectivorecibido.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Error al registrar venta",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
     }
 
 

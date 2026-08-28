@@ -30,35 +30,39 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Ventas));
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges9 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges10 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges11 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges12 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges13 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges14 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges15 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges16 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges17 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges18 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges19 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges20 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges21 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges22 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges23 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges24 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges25 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges26 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges31 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges32 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges33 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges34 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges35 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges36 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges37 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges38 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges39 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges40 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges41 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges42 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges43 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges44 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges45 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges46 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges47 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges48 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges49 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges50 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges51 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges52 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges53 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges54 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges55 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges56 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges57 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges58 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges59 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges60 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             button1 = new Button();
             imageList1 = new ImageList(components);
             cliente = new Label();
@@ -71,7 +75,7 @@
             label2 = new Label();
             label7 = new Label();
             label8 = new Label();
-            button3 = new Button();
+            btnCobrar = new Button();
             label9 = new Label();
             label10 = new Label();
             label11 = new Label();
@@ -93,6 +97,14 @@
             label13 = new Label();
             label12 = new Label();
             dataGridView1 = new Guna.UI2.WinForms.Guna2DataGridView();
+            codigobarra = new DataGridViewTextBoxColumn();
+            producto = new DataGridViewTextBoxColumn();
+            cantidad = new DataGridViewTextBoxColumn();
+            precio = new DataGridViewTextBoxColumn();
+            descuento = new DataGridViewTextBoxColumn();
+            subtotal1 = new DataGridViewTextBoxColumn();
+            stock = new DataGridViewTextBoxColumn();
+            id_producto_presentacion = new DataGridViewTextBoxColumn();
             contextMenuStrip1 = new ContextMenuStrip(components);
             texsubtotal = new Guna.UI2.WinForms.Guna2TextBox();
             texdescuento = new Guna.UI2.WinForms.Guna2TextBox();
@@ -101,19 +113,15 @@
             guna2Panel2 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel3 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel4 = new Guna.UI2.WinForms.Guna2Panel();
-            id_producto_presentacion = new DataGridViewTextBoxColumn();
-            stock = new DataGridViewTextBoxColumn();
-            subtotal1 = new DataGridViewTextBoxColumn();
-            descuento = new DataGridViewTextBoxColumn();
-            precio = new DataGridViewTextBoxColumn();
-            cantidad = new DataGridViewTextBoxColumn();
-            producto = new DataGridViewTextBoxColumn();
-            codigobarra = new DataGridViewTextBoxColumn();
+            texefectivorecibido = new Guna.UI2.WinForms.Guna2TextBox();
+            label19 = new Label();
+            guna2Panel5 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             guna2Panel2.SuspendLayout();
             guna2Panel3.SuspendLayout();
             guna2Panel4.SuspendLayout();
+            guna2Panel5.SuspendLayout();
             SuspendLayout();
             // 
             // button1
@@ -249,17 +257,17 @@
             label8.TabIndex = 20;
             label8.Text = "TOTAL";
             // 
-            // button3
+            // btnCobrar
             // 
-            button3.BackColor = Color.White;
-            button3.ImageIndex = 2;
-            button3.ImageList = imageList1;
-            button3.Location = new Point(145, 178);
-            button3.Name = "button3";
-            button3.Size = new Size(75, 65);
-            button3.TabIndex = 21;
-            button3.UseVisualStyleBackColor = false;
-            button3.Click += button3_Click;
+            btnCobrar.BackColor = Color.White;
+            btnCobrar.ImageIndex = 2;
+            btnCobrar.ImageList = imageList1;
+            btnCobrar.Location = new Point(517, 14);
+            btnCobrar.Name = "btnCobrar";
+            btnCobrar.Size = new Size(75, 65);
+            btnCobrar.TabIndex = 21;
+            btnCobrar.UseVisualStyleBackColor = false;
+            btnCobrar.Click += button3_Click;
             // 
             // label9
             // 
@@ -288,7 +296,7 @@
             label11.AutoSize = true;
             label11.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label11.ForeColor = Color.Black;
-            label11.Location = new Point(13, 218);
+            label11.Location = new Point(414, 34);
             label11.Name = "label11";
             label11.Size = new Size(79, 23);
             label11.TabIndex = 24;
@@ -327,7 +335,7 @@
             // texclientes
             // 
             texclientes.BorderRadius = 10;
-            texclientes.CustomizableEdges = customizableEdges1;
+            texclientes.CustomizableEdges = customizableEdges31;
             texclientes.DefaultText = "";
             texclientes.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texclientes.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -341,14 +349,14 @@
             texclientes.Name = "texclientes";
             texclientes.PlaceholderText = "";
             texclientes.SelectedText = "";
-            texclientes.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            texclientes.ShadowDecoration.CustomizableEdges = customizableEdges32;
             texclientes.Size = new Size(286, 29);
             texclientes.TabIndex = 34;
             // 
             // texdireccion
             // 
             texdireccion.BorderRadius = 10;
-            texdireccion.CustomizableEdges = customizableEdges3;
+            texdireccion.CustomizableEdges = customizableEdges33;
             texdireccion.DefaultText = "";
             texdireccion.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texdireccion.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -362,14 +370,14 @@
             texdireccion.Name = "texdireccion";
             texdireccion.PlaceholderText = "";
             texdireccion.SelectedText = "";
-            texdireccion.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            texdireccion.ShadowDecoration.CustomizableEdges = customizableEdges34;
             texdireccion.Size = new Size(286, 29);
             texdireccion.TabIndex = 35;
             // 
             // texdpi
             // 
             texdpi.BorderRadius = 10;
-            texdpi.CustomizableEdges = customizableEdges5;
+            texdpi.CustomizableEdges = customizableEdges35;
             texdpi.DefaultText = "";
             texdpi.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texdpi.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -383,14 +391,14 @@
             texdpi.Name = "texdpi";
             texdpi.PlaceholderText = "";
             texdpi.SelectedText = "";
-            texdpi.ShadowDecoration.CustomizableEdges = customizableEdges6;
+            texdpi.ShadowDecoration.CustomizableEdges = customizableEdges36;
             texdpi.Size = new Size(286, 29);
             texdpi.TabIndex = 36;
             // 
             // texnit
             // 
             texnit.BorderRadius = 10;
-            texnit.CustomizableEdges = customizableEdges7;
+            texnit.CustomizableEdges = customizableEdges37;
             texnit.DefaultText = "";
             texnit.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texnit.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -404,14 +412,14 @@
             texnit.Name = "texnit";
             texnit.PlaceholderText = "";
             texnit.SelectedText = "";
-            texnit.ShadowDecoration.CustomizableEdges = customizableEdges8;
+            texnit.ShadowDecoration.CustomizableEdges = customizableEdges38;
             texnit.Size = new Size(286, 29);
             texnit.TabIndex = 37;
             // 
             // textelefono
             // 
             textelefono.BorderRadius = 10;
-            textelefono.CustomizableEdges = customizableEdges9;
+            textelefono.CustomizableEdges = customizableEdges39;
             textelefono.DefaultText = "";
             textelefono.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             textelefono.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -425,14 +433,14 @@
             textelefono.Name = "textelefono";
             textelefono.PlaceholderText = "";
             textelefono.SelectedText = "";
-            textelefono.ShadowDecoration.CustomizableEdges = customizableEdges10;
+            textelefono.ShadowDecoration.CustomizableEdges = customizableEdges40;
             textelefono.Size = new Size(286, 29);
             textelefono.TabIndex = 38;
             // 
             // texcorreo
             // 
             texcorreo.BorderRadius = 10;
-            texcorreo.CustomizableEdges = customizableEdges11;
+            texcorreo.CustomizableEdges = customizableEdges41;
             texcorreo.DefaultText = "";
             texcorreo.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texcorreo.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -446,7 +454,7 @@
             texcorreo.Name = "texcorreo";
             texcorreo.PlaceholderText = "";
             texcorreo.SelectedText = "";
-            texcorreo.ShadowDecoration.CustomizableEdges = customizableEdges12;
+            texcorreo.ShadowDecoration.CustomizableEdges = customizableEdges42;
             texcorreo.Size = new Size(286, 29);
             texcorreo.TabIndex = 39;
             // 
@@ -469,10 +477,10 @@
             guna2Panel1.Controls.Add(textelefono);
             guna2Panel1.Controls.Add(texdpi);
             guna2Panel1.Controls.Add(texnit);
-            guna2Panel1.CustomizableEdges = customizableEdges13;
+            guna2Panel1.CustomizableEdges = customizableEdges43;
             guna2Panel1.Location = new Point(48, 126);
             guna2Panel1.Name = "guna2Panel1";
-            guna2Panel1.ShadowDecoration.CustomizableEdges = customizableEdges14;
+            guna2Panel1.ShadowDecoration.CustomizableEdges = customizableEdges44;
             guna2Panel1.Size = new Size(1351, 244);
             guna2Panel1.TabIndex = 40;
             // 
@@ -547,27 +555,27 @@
             // 
             // dataGridView1
             // 
-            dataGridViewCellStyle1.BackColor = Color.White;
-            dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = Color.FromArgb(100, 88, 255);
-            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle2.ForeColor = Color.White;
-            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
-            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.BackColor = Color.White;
+            dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = Color.FromArgb(100, 88, 255);
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle5.ForeColor = Color.White;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             dataGridView1.ColumnHeadersHeight = 22;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { codigobarra, producto, cantidad, precio, descuento, subtotal1, stock, id_producto_presentacion });
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.White;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(71, 69, 94);
-            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(231, 229, 255);
-            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(71, 69, 94);
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
-            dataGridView1.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.White;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle6.ForeColor = Color.FromArgb(71, 69, 94);
+            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(231, 229, 255);
+            dataGridViewCellStyle6.SelectionForeColor = Color.FromArgb(71, 69, 94);
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            dataGridView1.DefaultCellStyle = dataGridViewCellStyle6;
             dataGridView1.GridColor = Color.FromArgb(231, 229, 255);
             dataGridView1.Location = new Point(22, 17);
             dataGridView1.Name = "dataGridView1";
@@ -582,6 +590,54 @@
             dataGridView1.ThemeStyle.RowsStyle.Height = 29;
             dataGridView1.CellContentClick += dataGridView1_CellContentClick_1;
             // 
+            // codigobarra
+            // 
+            codigobarra.HeaderText = "CODIGO";
+            codigobarra.MinimumWidth = 6;
+            codigobarra.Name = "codigobarra";
+            // 
+            // producto
+            // 
+            producto.HeaderText = "PRODUCTO";
+            producto.MinimumWidth = 6;
+            producto.Name = "producto";
+            // 
+            // cantidad
+            // 
+            cantidad.HeaderText = "CANTIDAD";
+            cantidad.MinimumWidth = 6;
+            cantidad.Name = "cantidad";
+            // 
+            // precio
+            // 
+            precio.HeaderText = "PRECIO";
+            precio.MinimumWidth = 6;
+            precio.Name = "precio";
+            // 
+            // descuento
+            // 
+            descuento.HeaderText = "DESCUENTO";
+            descuento.MinimumWidth = 6;
+            descuento.Name = "descuento";
+            // 
+            // subtotal1
+            // 
+            subtotal1.HeaderText = "SUBTOTAL";
+            subtotal1.MinimumWidth = 6;
+            subtotal1.Name = "subtotal1";
+            // 
+            // stock
+            // 
+            stock.HeaderText = "EXISTENCIA";
+            stock.MinimumWidth = 6;
+            stock.Name = "stock";
+            // 
+            // id_producto_presentacion
+            // 
+            id_producto_presentacion.HeaderText = "PRESENTACION";
+            id_producto_presentacion.MinimumWidth = 6;
+            id_producto_presentacion.Name = "id_producto_presentacion";
+            // 
             // contextMenuStrip1
             // 
             contextMenuStrip1.ImageScalingSize = new Size(20, 20);
@@ -591,7 +647,7 @@
             // texsubtotal
             // 
             texsubtotal.BorderRadius = 10;
-            texsubtotal.CustomizableEdges = customizableEdges15;
+            texsubtotal.CustomizableEdges = customizableEdges45;
             texsubtotal.DefaultText = "";
             texsubtotal.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texsubtotal.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -605,14 +661,14 @@
             texsubtotal.Name = "texsubtotal";
             texsubtotal.PlaceholderText = "";
             texsubtotal.SelectedText = "";
-            texsubtotal.ShadowDecoration.CustomizableEdges = customizableEdges16;
+            texsubtotal.ShadowDecoration.CustomizableEdges = customizableEdges46;
             texsubtotal.Size = new Size(210, 29);
             texsubtotal.TabIndex = 43;
             // 
             // texdescuento
             // 
             texdescuento.BorderRadius = 10;
-            texdescuento.CustomizableEdges = customizableEdges17;
+            texdescuento.CustomizableEdges = customizableEdges47;
             texdescuento.DefaultText = "";
             texdescuento.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             texdescuento.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -626,14 +682,14 @@
             texdescuento.Name = "texdescuento";
             texdescuento.PlaceholderText = "";
             texdescuento.SelectedText = "";
-            texdescuento.ShadowDecoration.CustomizableEdges = customizableEdges18;
+            texdescuento.ShadowDecoration.CustomizableEdges = customizableEdges48;
             texdescuento.Size = new Size(190, 29);
             texdescuento.TabIndex = 44;
             // 
             // textotal
             // 
             textotal.BorderRadius = 10;
-            textotal.CustomizableEdges = customizableEdges19;
+            textotal.CustomizableEdges = customizableEdges49;
             textotal.DefaultText = "";
             textotal.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             textotal.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -647,8 +703,8 @@
             textotal.Name = "textotal";
             textotal.PlaceholderText = "";
             textotal.SelectedText = "";
-            textotal.ShadowDecoration.CustomizableEdges = customizableEdges20;
-            textotal.Size = new Size(155, 29);
+            textotal.ShadowDecoration.CustomizableEdges = customizableEdges50;
+            textotal.Size = new Size(193, 29);
             textotal.TabIndex = 45;
             // 
             // labusuario
@@ -666,10 +722,10 @@
             guna2Panel2.BorderRadius = 10;
             guna2Panel2.BorderThickness = 1;
             guna2Panel2.Controls.Add(labusuario);
-            guna2Panel2.CustomizableEdges = customizableEdges21;
+            guna2Panel2.CustomizableEdges = customizableEdges51;
             guna2Panel2.Location = new Point(62, 28);
             guna2Panel2.Name = "guna2Panel2";
-            guna2Panel2.ShadowDecoration.CustomizableEdges = customizableEdges22;
+            guna2Panel2.ShadowDecoration.CustomizableEdges = customizableEdges52;
             guna2Panel2.Size = new Size(1342, 56);
             guna2Panel2.TabIndex = 47;
             // 
@@ -679,10 +735,10 @@
             guna2Panel3.BorderRadius = 10;
             guna2Panel3.BorderThickness = 1;
             guna2Panel3.Controls.Add(dataGridView1);
-            guna2Panel3.CustomizableEdges = customizableEdges23;
+            guna2Panel3.CustomizableEdges = customizableEdges53;
             guna2Panel3.Location = new Point(62, 388);
             guna2Panel3.Name = "guna2Panel3";
-            guna2Panel3.ShadowDecoration.CustomizableEdges = customizableEdges24;
+            guna2Panel3.ShadowDecoration.CustomizableEdges = customizableEdges54;
             guna2Panel3.Size = new Size(1098, 382);
             guna2Panel3.TabIndex = 48;
             // 
@@ -693,71 +749,69 @@
             guna2Panel4.BorderThickness = 1;
             guna2Panel4.Controls.Add(button1);
             guna2Panel4.Controls.Add(label10);
-            guna2Panel4.Controls.Add(button3);
             guna2Panel4.Controls.Add(button2);
             guna2Panel4.Controls.Add(label9);
-            guna2Panel4.Controls.Add(label11);
-            guna2Panel4.CustomizableEdges = customizableEdges25;
+            guna2Panel4.CustomizableEdges = customizableEdges55;
             guna2Panel4.Location = new Point(1176, 388);
             guna2Panel4.Name = "guna2Panel4";
-            guna2Panel4.ShadowDecoration.CustomizableEdges = customizableEdges26;
-            guna2Panel4.Size = new Size(228, 382);
+            guna2Panel4.ShadowDecoration.CustomizableEdges = customizableEdges56;
+            guna2Panel4.Size = new Size(228, 194);
             guna2Panel4.TabIndex = 49;
             // 
-            // id_producto_presentacion
+            // texefectivorecibido
             // 
-            id_producto_presentacion.HeaderText = "PRESENTACION";
-            id_producto_presentacion.MinimumWidth = 6;
-            id_producto_presentacion.Name = "id_producto_presentacion";
+            texefectivorecibido.BorderRadius = 10;
+            texefectivorecibido.CustomizableEdges = customizableEdges57;
+            texefectivorecibido.DefaultText = "";
+            texefectivorecibido.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
+            texefectivorecibido.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
+            texefectivorecibido.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
+            texefectivorecibido.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
+            texefectivorecibido.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            texefectivorecibido.Font = new Font("Segoe UI", 9F);
+            texefectivorecibido.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
+            texefectivorecibido.Location = new Point(197, 27);
+            texefectivorecibido.Margin = new Padding(3, 4, 3, 4);
+            texefectivorecibido.Name = "texefectivorecibido";
+            texefectivorecibido.PlaceholderText = "";
+            texefectivorecibido.SelectedText = "";
+            texefectivorecibido.ShadowDecoration.CustomizableEdges = customizableEdges58;
+            texefectivorecibido.Size = new Size(193, 29);
+            texefectivorecibido.TabIndex = 50;
             // 
-            // stock
+            // label19
             // 
-            stock.HeaderText = "EXISTENCIA";
-            stock.MinimumWidth = 6;
-            stock.Name = "stock";
+            label19.AutoSize = true;
+            label19.ForeColor = Color.Black;
+            label19.Location = new Point(19, 36);
+            label19.Name = "label19";
+            label19.Size = new Size(142, 20);
+            label19.TabIndex = 51;
+            label19.Text = "EFECTIVO RECIBIDO";
             // 
-            // subtotal1
+            // guna2Panel5
             // 
-            subtotal1.HeaderText = "SUBTOTAL";
-            subtotal1.MinimumWidth = 6;
-            subtotal1.Name = "subtotal1";
-            // 
-            // descuento
-            // 
-            descuento.HeaderText = "DESCUENTO";
-            descuento.MinimumWidth = 6;
-            descuento.Name = "descuento";
-            // 
-            // precio
-            // 
-            precio.HeaderText = "PRECIO";
-            precio.MinimumWidth = 6;
-            precio.Name = "precio";
-            // 
-            // cantidad
-            // 
-            cantidad.HeaderText = "CANTIDAD";
-            cantidad.MinimumWidth = 6;
-            cantidad.Name = "cantidad";
-            // 
-            // producto
-            // 
-            producto.HeaderText = "PRODUCTO";
-            producto.MinimumWidth = 6;
-            producto.Name = "producto";
-            // 
-            // codigobarra
-            // 
-            codigobarra.HeaderText = "CODIGO";
-            codigobarra.MinimumWidth = 6;
-            codigobarra.Name = "codigobarra";
+            guna2Panel5.BorderColor = Color.FromArgb(213, 218, 223);
+            guna2Panel5.BorderRadius = 10;
+            guna2Panel5.BorderThickness = 1;
+            guna2Panel5.Controls.Add(texefectivorecibido);
+            guna2Panel5.Controls.Add(btnCobrar);
+            guna2Panel5.Controls.Add(label19);
+            guna2Panel5.Controls.Add(label11);
+            guna2Panel5.CustomizableEdges = customizableEdges59;
+            guna2Panel5.Location = new Point(740, 824);
+            guna2Panel5.Name = "guna2Panel5";
+            guna2Panel5.ShadowDecoration.CustomizableEdges = customizableEdges60;
+            guna2Panel5.Size = new Size(622, 108);
+            guna2Panel5.TabIndex = 52;
             // 
             // Ventas
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
-            ClientSize = new Size(1438, 837);
+            ClientSize = new Size(1446, 944);
+            Controls.Add(guna2Panel5);
             Controls.Add(guna2Panel4);
             Controls.Add(guna2Panel3);
             Controls.Add(guna2Panel2);
@@ -780,6 +834,8 @@
             guna2Panel3.ResumeLayout(false);
             guna2Panel4.ResumeLayout(false);
             guna2Panel4.PerformLayout();
+            guna2Panel5.ResumeLayout(false);
+            guna2Panel5.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -797,7 +853,7 @@
         private Label label2;
         private Label label7;
         private Label label8;
-        private Button button3;
+        private Button btnCobrar;
         private Label cliente;
         private DataGridViewTextBoxColumn subtotal;
         private ImageList imageList1;
@@ -839,5 +895,8 @@
         private DataGridViewTextBoxColumn subtotal1;
         private DataGridViewTextBoxColumn stock;
         private DataGridViewTextBoxColumn id_producto_presentacion;
+        private Guna.UI2.WinForms.Guna2TextBox texefectivorecibido;
+        private Label label19;
+        private Guna.UI2.WinForms.Guna2Panel guna2Panel5;
     }
 }
