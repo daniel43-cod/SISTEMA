@@ -7,6 +7,7 @@ using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
 using SISTEMA_FROTEND.Utilidades;
 using System.Data;
+using static System.Net.WebRequestMethods;
 
 
 namespace SISTEMA_FROTEND.presentacion
@@ -17,13 +18,10 @@ namespace SISTEMA_FROTEND.presentacion
         private ListarClienteDTOs _clienteSeleccionado;
         private List<ListarClienteDTOs> _clientes;
         private List<ProductoVentaBuscarDTO> _productosCodigoBarra = new();
-        private ProductoService ProductoService;
         private readonly VentaService _ventaservice;
         private readonly ListBox _selectorPresentaciones = new ListBox();
 
 
-        //datos que se llena en los campos si el usuario confirma la eleccion de algun cliente existente
-        private ClienteBuscarDTOs clienteSeleccionadoActual = null;
         public Ventas()
         {
             InitializeComponent();
@@ -33,8 +31,9 @@ namespace SISTEMA_FROTEND.presentacion
 
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
             dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
-
-            texclientes.Leave += texclientes_Leave;
+            dataGridView1.CellValidating += dataGridView1_CellValidating;            //dataGridView1.KeyDown += dataGridView1_KeyDown;
+            // dataGridView1.CellValidating += dataGridView1_CellValidating;
+            texclientes.Leave += texclientes_Leave; 
 
             // Configuración del selector de presentaciones
             _selectorPresentaciones.Visible = false;
@@ -53,16 +52,55 @@ namespace SISTEMA_FROTEND.presentacion
             _selectorPresentaciones.BringToFront();
         }
 
+        protected override bool ProcessCmdKey( ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Enter &&
+                dataGridView1.ContainsFocus &&
+                dataGridView1.CurrentCell != null &&
+                dataGridView1.CurrentCell.OwningColumn.Name == "cantidad")
+            {
+                string texto = "";
+
+                // Si actualmente está editando la celda,
+                // tomar directamente lo escrito en el TextBox interno
+                if (dataGridView1.EditingControl is TextBox textBox)
+                {
+                    texto = textBox.Text.Trim();
+                }
+                else
+                {
+                    texto = dataGridView1.CurrentCell.Value?
+                        .ToString()?
+                        .Trim() ?? "";
+                }
+
+                if (!int.TryParse(texto, out int cantidad) ||
+                    cantidad <= 0)
+                {
+                    MessageBox.Show(
+                        "Debe ingresar una cantidad mayor a 0.",
+                        "Cantidad requerida",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    dataGridView1.BeginEdit(true);
+
+                    // MUY IMPORTANTE:
+                    // consumimos Enter y no dejamos que
+                    // el DataGridView pase a otra celda/fila
+                    return true;
+                }
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         //instanciamos el servicio de productos para poder acceder a la lista de productos y sus detalles
         private ProductoService _productoService = new ProductoService();
         //guardamos la lista de productos en memoria para poder acceder a ellos sin tener que hacer otra consulta a la api
         private List<ProductoVentaBuscarDTO> _productos;
-        //evita que el metodo autocomplete se ejecute varias veces al mismo tiempo, lo que podria causar errores o resultados inesperados
-        private bool cargandoClientes = false;
-        //duda
-        private List<ClienteBuscarDTOs> clientesEncontrados = new();
-        //instanciamos el servicio de clientes para poder acceder a la lista de clientes y sus detalles
-        private ClienteService clienteService = new ClienteService();
+        
 
         private void SelectorPresentaciones_KeyDown(object? sender, KeyEventArgs e)
         {
@@ -108,10 +146,6 @@ namespace SISTEMA_FROTEND.presentacion
             fila.Cells["producto"].Value = producto.nombreMostrar;
             fila.Cells["stock"].Value = producto.stock;
             fila.Cells["precio"].Value = producto.precio;
-            if (fila.Cells["cantidad"].Value == null || string.IsNullOrWhiteSpace(fila.Cells["cantidad"].Value?.ToString()))
-            {
-                fila.Cells["cantidad"].Value = 1;
-            }
 
             if (fila.Cells["descuento"].Value == null || string.IsNullOrWhiteSpace(fila.Cells["descuento"].Value?.ToString()))
             {
@@ -150,6 +184,7 @@ namespace SISTEMA_FROTEND.presentacion
             texclientes.AutoCompleteMode = AutoCompleteMode.Suggest;
             texclientes.AutoCompleteSource = AutoCompleteSource.CustomSource;
             texclientes.AutoCompleteCustomSource = fuenteClientes;
+           // EliminarColumna();
 
             if (!dataGridView1.Columns.Contains("id_producto"))
             {
@@ -176,7 +211,7 @@ namespace SISTEMA_FROTEND.presentacion
             dataGridView1.DefaultCellStyle.BackColor = Color.White;
 
         }
-
+   
         //EVENTO PARA SELECCIONAR EL CLIENTE DE LA LISTA DE AUTOCOMPLETADO
         private void texclientes_Leave(object sender, EventArgs e)
         {
@@ -255,8 +290,6 @@ namespace SISTEMA_FROTEND.presentacion
             if (e.Control is not TextBox textBox)
                 return;
 
-            // Es importante quitar primero el evento para evitar
-            // que se conecte varias veces.
             textBox.KeyPress -= SoloEnteros_KeyPress;
             textBox.KeyPress -= SoloDecimales_KeyPress;
 
@@ -303,6 +336,7 @@ namespace SISTEMA_FROTEND.presentacion
 
 
         }
+
 
         private void SoloEnteros_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -368,11 +402,7 @@ namespace SISTEMA_FROTEND.presentacion
                 dataGridView1.Rows[e.RowIndex].Cells["id_producto"].Value = producto.id_producto;
                 dataGridView1.Rows[e.RowIndex].Cells["stock"].Value = producto.stock;
                 dataGridView1.Rows[e.RowIndex].Cells["precio"].Value = producto.precio;
-                // Solo poner 1 por defecto si la celda de cantidad está vacía
-                if (fila.Cells["cantidad"].Value == null || string.IsNullOrWhiteSpace(fila.Cells["cantidad"].Value.ToString()))
-                {
-                    fila.Cells["cantidad"].Value = 1;
-                }
+        
 
                 // Mismo criterio para descuento
                 if (fila.Cells["descuento"].Value == null || string.IsNullOrWhiteSpace(fila.Cells["descuento"].Value.ToString()))
@@ -383,6 +413,19 @@ namespace SISTEMA_FROTEND.presentacion
                 dataGridView1.Rows[e.RowIndex].Tag = producto;
                 _productosCodigoBarra.Clear(); // Limpiar la lista de productos por código de barra después de seleccionar un producto
                 CalcularSubtotal(e.RowIndex);
+
+                int filaActual = e.RowIndex;
+
+                BeginInvoke(new Action(() =>
+                {
+                    if (filaActual < dataGridView1.Rows.Count)
+                    {
+                        dataGridView1.CurrentCell =
+                            dataGridView1.Rows[filaActual].Cells["cantidad"];
+
+                        dataGridView1.BeginEdit(true);
+                    }
+                }));
             }
 
             if (columna == "cantidad" || columna == "descuento")
@@ -415,7 +458,7 @@ namespace SISTEMA_FROTEND.presentacion
             texdescuento.Text = descuentoGeneral.ToString("N2");
             textotal.Text = totalGeneral.ToString("N2");
         }
-   
+
 
         private void cliente_Click(object sender, EventArgs e)
         {
@@ -481,7 +524,6 @@ namespace SISTEMA_FROTEND.presentacion
             int indice = dataGridView1.Rows.Add();
 
             DataGridViewRow nuevaFila = dataGridView1.Rows[indice];
-
             nuevaFila.Cells["id_producto"].Value = producto.id_producto;
             nuevaFila.Cells["id_producto_presentacion"].Value = producto.id_producto_presentacion;
             nuevaFila.Cells["producto"].Value = $"{producto.nombre_producto} - {producto.presentacion}";
@@ -494,14 +536,24 @@ namespace SISTEMA_FROTEND.presentacion
             CalcularSubtotal(indice);
         }
 
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
+       
 
         private async void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
 
+            var fila = dataGridView1.Rows[e.RowIndex];
+
+            if (fila.IsNewRow)
+                return;
+
+            if (dataGridView1.Columns[e.ColumnIndex].Name != "eliminar")
+                return;
+
+            dataGridView1.Rows.RemoveAt(e.RowIndex);
+
+            RecalcularTotales();
         }
 
         private async Task BuscarProductoCodigoBarra(int rowIndex)
@@ -528,7 +580,9 @@ namespace SISTEMA_FROTEND.presentacion
                         "Producto no encontrado",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning
+                        
                     );
+                   
 
                     return;
                 }
@@ -623,7 +677,7 @@ namespace SISTEMA_FROTEND.presentacion
         {
             try
             {
-              
+
 
                 dataGridView1.EndEdit();
 
@@ -667,8 +721,7 @@ namespace SISTEMA_FROTEND.presentacion
                     detalles.Add(new CrearDetalleVentaDTO
                     {
                         id_producto = producto.id_producto,
-                        id_producto_presentacion =
-                            producto.id_producto_presentacion,
+                        id_producto_presentacion = producto.id_producto_presentacion,
                         cantidad = cantidad,
                         descuento = descuento
                     });
@@ -797,6 +850,134 @@ namespace SISTEMA_FROTEND.presentacion
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
                 );
+            }
+        }
+
+        private void guna2Button1_Click(object sender, EventArgs e)
+        {
+            texefectivorecibido.Text = textotal.Text;
+        }
+
+
+
+        private void dataGridView1_CellValidating(object sender,DataGridViewCellValidatingEventArgs e)
+        {
+
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            var fila = dataGridView1.Rows[e.RowIndex];
+
+            string columna =
+                dataGridView1.Columns[e.ColumnIndex].Name;
+
+          
+            if (columna == "producto")
+            {
+                string texto =
+                    e.FormattedValue?.ToString()?.Trim() ?? "";
+
+                if (string.IsNullOrWhiteSpace(texto))
+                    return;
+
+                var listaBusqueda =
+                    _productosCodigoBarra.Count > 0
+                        ? _productosCodigoBarra
+                        : _productos;
+
+                var producto = listaBusqueda.FirstOrDefault(p =>
+                    p.nombreMostrar.Trim().Equals(
+                        texto,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                );
+
+                if (producto == null)
+                {
+                    MessageBox.Show(
+                        "Debe seleccionar un producto válido de la lista.",
+                        "Producto no válido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+       
+            if (columna == "cantidad" ||
+                columna == "descuento")
+            {
+                // Tag solo existe cuando ya seleccionamos
+                // correctamente un producto
+                if (fila.Tag == null)
+                {
+                    string valor =
+                        e.FormattedValue?.ToString()?.Trim() ?? "";
+
+                    // Solo mostrar mensaje si realmente escribió algo
+                    if (!string.IsNullOrWhiteSpace(valor))
+                    {
+                        MessageBox.Show(
+                            "Primero debe seleccionar un producto.",
+                            "Producto requerido",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        // Borrar lo que escribió
+                        fila.Cells[columna].Value = null;
+
+                        e.Cancel = true;
+                    }
+
+                    return;
+                }
+            }
+
+            if (columna == "cantidad")
+            {
+                string texto =
+                    e.FormattedValue?.ToString()?.Trim() ?? "";
+
+                if (!int.TryParse(texto, out int cantidad) ||
+                    cantidad <= 0)
+                {
+                    MessageBox.Show(
+                        "Debe ingresar una cantidad mayor a 0.",
+                        "Cantidad requerida",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            if (columna == "descuento")
+            {
+                string texto =
+                    e.FormattedValue?.ToString()?.Trim() ?? "";
+
+                // Si está vacío, puedes asumir descuento = 0
+                if (string.IsNullOrWhiteSpace(texto))
+                    return;
+
+                if (!decimal.TryParse(texto, out decimal descuento) ||
+                    descuento < 0)
+                {
+                    MessageBox.Show(
+                        "Ingrese un descuento válido.",
+                        "Descuento no válido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    e.Cancel = true;
+                }
             }
         }
     }
