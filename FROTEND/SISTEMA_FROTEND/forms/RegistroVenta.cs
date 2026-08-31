@@ -1,4 +1,5 @@
-﻿using SISTEMA_FROTEND.DTOs.Ventas;
+﻿using SISTEMA_FROTEND.DTOs.Cliente;
+using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
@@ -12,15 +13,19 @@ namespace SISTEMA_FROTEND.presentacion
     public partial class RegistroVenta : Form
     {
         private readonly VentaService _service = new VentaService();
+        private List<ListarClienteDTOs> _clientes = new();
 
         public RegistroVenta()
         {
             InitializeComponent();
+            ComClientes.DropDownStyle = ComboBoxStyle.DropDown;
+            ComClientes.TextUpdate += ComClientes_TextUpdate;
         }
 
         private async void RegistroVenta_load(object sender, EventArgs e)
         {
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
+            await CargarClientes();
 
             var ventas = await _service.ListarVentasCajaActiva();
             dataregistrodiario.DataSource = ventas;
@@ -47,21 +52,28 @@ namespace SISTEMA_FROTEND.presentacion
                 dataregistrodiario.Columns.Add(btnDetalle);
             }
 
-            /* dataregistrodiario.DefaultCellStyle.ForeColor = Color.Black;
-             dataregistrodiario.DefaultCellStyle.BackColor = Color.White;
-             dataregistrodiario.DefaultCellStyle.SelectionForeColor = Color.White;
-             dataregistrodiario.DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
-
-             dataregistrodiario.EnableHeadersVisualStyles = false;
-             dataregistrodiario.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-             dataregistrodiario.ColumnHeadersDefaultCellStyle.BackColor =
-                 Color.DarkSlateGray;*/
+           
         }
 
-        private async Task CargarProductos()
+        private async Task CargarClientes()
         {
-            var ventas = await _service.ListarVentasCajaActiva();
-            dataregistrodiario.DataSource = ventas;
+            try
+            {
+                _clientes = await new ClienteService().ListarClientes();
+                ComClientes.DataSource = _clientes;
+                ComClientes.DisplayMember = "nombre_completo";
+                ComClientes.ValueMember = "id_cliente";
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error al cargar clientes: {ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
 
         private void dataregistrodiario_CellContentClick(
@@ -101,6 +113,46 @@ namespace SISTEMA_FROTEND.presentacion
         private void guna2Panel1_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void ComClientes_TextUpdate(object sender,EventArgs e)
+        {
+            string texto = ComClientes.Text.Trim();
+
+            int posicionCursor =
+                ComClientes.SelectionStart;
+
+            var filtrados = _clientes
+                .Where(c =>
+                    $"{c.nombre} {c.apellido}"
+                        .Contains(
+                            texto,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    ||
+                    (c.nit != null &&
+                     c.nit.Contains(
+                         texto,
+                         StringComparison.OrdinalIgnoreCase
+                     ))
+                )
+                .ToList();
+
+            ComClientes.DataSource = null;
+
+            ComClientes.DisplayMember = "nombre_completo";
+            ComClientes.ValueMember = "id_Cliente";
+
+            ComClientes.DataSource = filtrados;
+
+            ComClientes.Text = texto;
+
+            ComClientes.SelectionStart =
+                posicionCursor;
+
+            ComClientes.SelectionLength = 0;
+
+            ComClientes.DroppedDown = true;
         }
     }
 }

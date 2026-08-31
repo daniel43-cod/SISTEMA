@@ -15,5 +15,20 @@ namespace SISTEMA_FROTEND.DTOs.Cliente
         public string? telefono { get; set; }
         public string? correo_electronico { get; set; }
         public string? direccion { get; set; }
+
+        public string nombre_completo
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(apellido))
+                {
+                    return $"{nombre} {apellido}";
+                }
+                else
+                {
+                    return nombre;
+                }
+            }
+        }
     }
 }
