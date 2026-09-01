@@ -52,48 +52,178 @@ namespace SISTEMA_FROTEND.presentacion
             _selectorPresentaciones.BringToFront();
         }
 
-        protected override bool ProcessCmdKey( ref Message msg, Keys keyData)
+        protected override bool ProcessCmdKey(
+     ref Message msg,
+     Keys keyData)
         {
-            if (keyData == Keys.Enter &&
-                dataGridView1.ContainsFocus &&
-                dataGridView1.CurrentCell != null &&
-                dataGridView1.CurrentCell.OwningColumn.Name == "cantidad")
+            Keys tecla = keyData & Keys.KeyCode;
+
+            // Si no es Enter, dejar que WinForms procese la tecla normal
+            if (tecla != Keys.Enter)
             {
-                string texto = "";
+                return base.ProcessCmdKey(ref msg, keyData);
+            }
 
-                // Si actualmente está editando la celda,
-                // tomar directamente lo escrito en el TextBox interno
-                if (dataGridView1.EditingControl is TextBox textBox)
-                {
-                    texto = textBox.Text.Trim();
-                }
-                else
-                {
-                    texto = dataGridView1.CurrentCell.Value?
-                        .ToString()?
-                        .Trim() ?? "";
-                }
+            // =========================================
+            // TEXTBOX DEL FORMULARIO
+            // =========================================
 
-                if (!int.TryParse(texto, out int cantidad) ||
-                    cantidad <= 0)
+            if (texclientes.Focused)
+            {
+                texdireccion.Focus();
+                return true;
+            }
+
+            if (texdireccion.Focused)
+            {
+                texcorreo.Focus();
+                return true;
+            }
+
+            if (texcorreo.Focused)
+            {
+                textelefono.Focus();
+                return true;
+            }
+
+            if (textelefono.Focused)
+            {
+                texnit.Focus();
+                return true;
+            }
+
+            if (texnit.Focused)
+            {
+                texdpi.Focus();
+                return true;
+            }
+
+            // DPI -> primera fila / codigo de barras
+            if (texdpi.Focused)
+            {
+                if (dataGridView1.Rows.Count > 0)
                 {
-                    MessageBox.Show(
-                        "Debe ingresar una cantidad mayor a 0.",
-                        "Cantidad requerida",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
+                    dataGridView1.Focus();
+
+                    dataGridView1.CurrentCell =
+                        dataGridView1.Rows[0]
+                            .Cells["codigobarra"];
 
                     dataGridView1.BeginEdit(true);
+                }
 
-                    // MUY IMPORTANTE:
-                    // consumimos Enter y no dejamos que
-                    // el DataGridView pase a otra celda/fila
+                return true;
+            }
+
+            // =========================================
+            // DATAGRIDVIEW
+            // =========================================
+
+            if (dataGridView1.ContainsFocus &&
+                dataGridView1.CurrentCell != null)
+            {
+                int filaActual =
+                    dataGridView1.CurrentCell.RowIndex;
+
+                string columna =
+                    dataGridView1.CurrentCell
+                        .OwningColumn.Name;
+
+                var fila =
+                    dataGridView1.Rows[filaActual];
+
+                // CANTIDAD -> DESCUENTO
+                if (columna == "cantidad")
+                {
+                    string texto = "";
+
+                    if (dataGridView1.EditingControl is TextBox textBox)
+                    {
+                        texto = textBox.Text.Trim();
+                    }
+                    else
+                    {
+                        texto =
+                            dataGridView1.CurrentCell.Value?
+                                .ToString()?
+                                .Trim() ?? "";
+                    }
+
+                    if (!int.TryParse(
+                            texto,
+                            out int cantidad) ||
+                        cantidad <= 0)
+                    {
+                        MessageBox.Show(
+                            "Debe ingresar una cantidad mayor a 0.",
+                            "Cantidad requerida",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        dataGridView1.BeginEdit(true);
+
+                        return true;
+                    }
+
+                    dataGridView1.EndEdit();
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        dataGridView1.CurrentCell =
+                            fila.Cells["descuento"];
+
+                        dataGridView1.BeginEdit(true);
+                    }));
+
+                    return true;
+                }
+
+                // DESCUENTO -> CODIGO BARRA SIGUIENTE FILA
+                if (columna == "descuento")
+                {
+                    dataGridView1.EndEdit();
+
+                    int siguienteFila =
+                        filaActual + 1;
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (siguienteFila <
+                            dataGridView1.Rows.Count)
+                        {
+                            dataGridView1.CurrentCell =
+                                dataGridView1
+                                    .Rows[siguienteFila]
+                                    .Cells["codigobarra"];
+
+                            dataGridView1.BeginEdit(true);
+                        }
+                    }));
+
+                    return true;
+                }
+
+                // CODIGO BARRA -> PRODUCTO
+                if (columna == "codigobarra")
+                {
+                    dataGridView1.EndEdit();
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        dataGridView1.CurrentCell =
+                            fila.Cells["producto"];
+
+                        dataGridView1.BeginEdit(true);
+                    }));
+
                     return true;
                 }
             }
 
-            return base.ProcessCmdKey(ref msg, keyData);
+            return base.ProcessCmdKey(
+                ref msg,
+                keyData);
         }
 
         //instanciamos el servicio de productos para poder acceder a la lista de productos y sus detalles
@@ -293,6 +423,8 @@ namespace SISTEMA_FROTEND.presentacion
             textBox.KeyPress -= SoloEnteros_KeyPress;
             textBox.KeyPress -= SoloDecimales_KeyPress;
 
+           
+
             string columna = dataGridView1.CurrentCell.OwningColumn.Name;
 
             if (columna == "producto")
@@ -336,6 +468,8 @@ namespace SISTEMA_FROTEND.presentacion
 
 
         }
+            
+      
 
 
         private void SoloEnteros_KeyPress(object sender, KeyPressEventArgs e)
