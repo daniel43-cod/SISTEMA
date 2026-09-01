@@ -3,10 +3,8 @@ using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
-using System;
-using System.Drawing;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Diagnostics;
+
 
 namespace SISTEMA_FROTEND.presentacion
 {
@@ -14,21 +12,29 @@ namespace SISTEMA_FROTEND.presentacion
     {
         private readonly VentaService _service = new VentaService();
         private List<ListarClienteDTOs> _clientes = new();
+        private List<ListarVentasDTOs> _ventas = new();
 
         public RegistroVenta()
         {
             InitializeComponent();
             ComClientes.DropDownStyle = ComboBoxStyle.DropDown;
             ComClientes.TextUpdate += ComClientes_TextUpdate;
+            dataregistrodiario.CellContentClick += dataregistrodiario_CellContentClick;
         }
 
         private async void RegistroVenta_load(object sender, EventArgs e)
         {
+           
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
             await CargarClientes();
 
-            var ventas = await _service.ListarVentasCajaActiva();
-            dataregistrodiario.DataSource = ventas;
+            /* var ventas = await _service.ListarVentasCajaActiva();
+             dataregistrodiario.DataSource = ventas;*/
+            _ventas = await _service.ListarVentasCajaActiva();
+
+            dataregistrodiario.DataSource = _ventas;
+
+            OcultarColumnas();
 
             if (dataregistrodiario.Columns["id_ventas"] != null)
                 dataregistrodiario.Columns["id_ventas"].Visible = false;
@@ -52,7 +58,16 @@ namespace SISTEMA_FROTEND.presentacion
                 dataregistrodiario.Columns.Add(btnDetalle);
             }
 
-           
+
+        }
+
+        private void OcultarColumnas()
+        {
+            dataregistrodiario.Columns["id_ventas"].Visible = false;
+            dataregistrodiario.Columns["id_cliente"].Visible = false;
+            dataregistrodiario.Columns["impuesto"].Visible = false;
+            dataregistrodiario.Columns["id_usuario"].Visible = false;
+            dataregistrodiario.Columns["origen"].Visible = false;
         }
 
         private async Task CargarClientes()
@@ -100,6 +115,23 @@ namespace SISTEMA_FROTEND.presentacion
         {
         }
 
+      /*  private async Task CargarVentasCliente(int idCliente)
+        {
+            try
+            {
+                var ventas = _service.BuscarVentasClienteCajaActiva(idCliente);
+                dataregistrodiario.DataSource = ventas;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                 ex.Message, "Error",
+                 MessageBoxButtons.OK, MessageBoxIcon.Error
+                 );
+            }
+        }*/
+
+
         private void dataregistrodiario_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
         {
 
@@ -115,7 +147,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         }
 
-        private void ComClientes_TextUpdate(object sender,EventArgs e)
+        private void ComClientes_TextUpdate(object sender, EventArgs e)
         {
             string texto = ComClientes.Text.Trim();
 
@@ -153,6 +185,25 @@ namespace SISTEMA_FROTEND.presentacion
             ComClientes.SelectionLength = 0;
 
             ComClientes.DroppedDown = true;
+        }
+
+        private async void ComClientes_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            /* if(ComClientes.SelectedItem is not ListarClienteDTOs cliente)
+                 return;
+
+             await CargarVentasCliente(cliente.id_Cliente);*/
+            if (ComClientes.SelectedItem is not ListarClienteDTOs cliente)
+                return;
+
+            var ventasFiltradas = _ventas
+                .Where(v => v.id_cliente == cliente.id_Cliente)
+                .ToList();
+
+            dataregistrodiario.DataSource = null;
+            dataregistrodiario.DataSource = ventasFiltradas;
+
+            OcultarColumnas();
         }
     }
 }

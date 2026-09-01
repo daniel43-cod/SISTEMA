@@ -67,5 +67,19 @@ namespace SISTEMA_FROTEND.services
                 $"Respuesta: {error}"
             );
         }
+
+        //buscar venta
+        public async Task<List<VentaBuscarDTO>> BuscarVentasClienteCajaActiva(int idCliente)
+        {
+            HttpClient cliente =
+                ApiClient.ObtenerClienteAutenticado();
+
+            var ventas =
+                await cliente.GetFromJsonAsync<List<VentaBuscarDTO>>(
+                    $"Venta/caja-activa/cliente/{idCliente}"
+                );
+
+            return ventas ?? new List<VentaBuscarDTO>();
+        }
     }
 }

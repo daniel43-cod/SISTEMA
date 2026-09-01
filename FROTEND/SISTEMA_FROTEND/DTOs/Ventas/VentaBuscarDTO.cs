@@ -1,4 +1,8 @@
-﻿namespace API_SISTEMA.DTOs.Ventas
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SISTEMA_FROTEND.DTOs.Ventas
 {
     public class VentaBuscarDTO
     {

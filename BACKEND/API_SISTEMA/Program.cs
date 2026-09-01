@@ -100,6 +100,8 @@ builder.Services.AddScoped<SubirImagenService>();
 builder.Services.AddScoped<BuscarCodigoBarraService>();
 //compras
 builder.Services.AddScoped<CrearCompraService>();
+//ventas
+builder.Services.AddScoped<BuscarVentaServices>();
 
 
 var app = builder.Build();

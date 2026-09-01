@@ -23,12 +23,13 @@ namespace API_SISTEMA.controllers
         private readonly VentaService _context;
         private readonly CrearVentaService _crearVentaService;
         private readonly AbonarSaldoVentaServices _pagoService;
-
-        public VentaController(VentaService service, AbonarSaldoVentaServices pago, CrearVentaService crearVenta)
+        private readonly BuscarVentaServices _buscarService;
+        public VentaController(VentaService service, AbonarSaldoVentaServices pago, CrearVentaService crearVenta, BuscarVentaServices buscarService)
         {
             _context = service;
             _pagoService = pago;
             _crearVentaService = crearVenta;
+            _buscarService = buscarService;
         }
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
@@ -139,8 +140,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear(
-    [FromBody] CrearVentaDTO ventaDto)
+        public async Task<IActionResult> Crear( [FromBody] CrearVentaDTO ventaDto)
         {
             try
             {
@@ -177,6 +177,45 @@ namespace API_SISTEMA.controllers
                 });
             }
         }
+
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+        [HttpGet("caja-activa/cliente/{idCliente}")]
+        public async Task<IActionResult> BuscarVentasClienteCajaActiva(int idCliente)
+        {
+            try
+            {
+                var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                    ?? User.FindFirstValue("sub");
+
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                {
+                    return Unauthorized(new
+                    {
+                        mensaje = "No se pudo identificar al usuario autenticado."
+                    });
+                }
+
+                var ventas = await _buscarService
+                    .BuscarVentasClienteCajaActiva(
+                        idUsuario,
+                        idCliente
+                    );
+
+                return Ok(ventas);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message
+                });
+            }
+        }
+
+
+
 
     }
 

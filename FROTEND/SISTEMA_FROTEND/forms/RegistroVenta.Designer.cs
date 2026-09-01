@@ -60,12 +60,12 @@
             guna2DateTimePicker1 = new Guna.UI2.WinForms.Guna2DateTimePicker();
             label3 = new Label();
             guna2Panel3 = new Guna.UI2.WinForms.Guna2Panel();
+            ComClientes = new ComboBox();
             guna2Panel4 = new Guna.UI2.WinForms.Guna2Panel();
             guna2TextBox3 = new Guna.UI2.WinForms.Guna2TextBox();
             label4 = new Label();
             guna2TextBox2 = new Guna.UI2.WinForms.Guna2TextBox();
             label5 = new Label();
-            ComClientes = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)dataregistrodiario).BeginInit();
             guna2Panel1.SuspendLayout();
             guna2Panel2.SuspendLayout();
@@ -238,6 +238,15 @@
             guna2Panel3.Size = new Size(1445, 62);
             guna2Panel3.TabIndex = 26;
             // 
+            // ComClientes
+            // 
+            ComClientes.FormattingEnabled = true;
+            ComClientes.Location = new Point(106, 15);
+            ComClientes.Name = "ComClientes";
+            ComClientes.Size = new Size(403, 28);
+            ComClientes.TabIndex = 27;
+            ComClientes.SelectionChangeCommitted += ComClientes_SelectionChangeCommitted;
+            // 
             // guna2Panel4
             // 
             guna2Panel4.BorderColor = Color.FromArgb(213, 218, 223);
@@ -315,14 +324,6 @@
             label5.Size = new Size(118, 20);
             label5.TabIndex = 1;
             label5.Text = "TOTAL VENDIDA";
-            // 
-            // ComClientes
-            // 
-            ComClientes.FormattingEnabled = true;
-            ComClientes.Location = new Point(106, 15);
-            ComClientes.Name = "ComClientes";
-            ComClientes.Size = new Size(403, 28);
-            ComClientes.TabIndex = 27;
             // 
             // RegistroVenta
             // 
