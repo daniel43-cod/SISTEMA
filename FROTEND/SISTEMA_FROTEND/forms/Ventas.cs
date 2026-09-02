@@ -52,9 +52,7 @@ namespace SISTEMA_FROTEND.presentacion
             _selectorPresentaciones.BringToFront();
         }
 
-        protected override bool ProcessCmdKey(
-     ref Message msg,
-     Keys keyData)
+        protected override bool ProcessCmdKey(  ref Message msg,  Keys keyData)
         {
             Keys tecla = keyData & Keys.KeyCode;
 
@@ -98,7 +96,7 @@ namespace SISTEMA_FROTEND.presentacion
                 return true;
             }
 
-            // DPI -> primera fila / codigo de barras
+   
             if (texdpi.Focused)
             {
                 if (dataGridView1.Rows.Count > 0)
@@ -115,9 +113,6 @@ namespace SISTEMA_FROTEND.presentacion
                 return true;
             }
 
-            // =========================================
-            // DATAGRIDVIEW
-            // =========================================
 
             if (dataGridView1.ContainsFocus &&
                 dataGridView1.CurrentCell != null)
@@ -179,7 +174,7 @@ namespace SISTEMA_FROTEND.presentacion
                     return true;
                 }
 
-                // DESCUENTO -> CODIGO BARRA SIGUIENTE FILA
+          
                 if (columna == "descuento")
                 {
                     dataGridView1.EndEdit();
@@ -204,7 +199,6 @@ namespace SISTEMA_FROTEND.presentacion
                     return true;
                 }
 
-                // CODIGO BARRA -> PRODUCTO
                 if (columna == "codigobarra")
                 {
                     dataGridView1.EndEdit();

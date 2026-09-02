@@ -60,23 +60,6 @@ namespace SISTEMA_FROTEND.forms
 
         private void posicion_columnas()
         {
-            /*
-                        // Configuración de columnas
-                        datadetalle.Columns["cantidad"].DisplayIndex = 0;
-                        datadetalle.Columns["nombre_producto"].DisplayIndex = 1;
-                        datadetalle.Columns["precio"].DisplayIndex = 2;
-                        datadetalle.Columns["descuento"].DisplayIndex = 3;
-                        datadetalle.Columns["subtotal"].DisplayIndex = 4;
-
-                        datadetalle.Columns["id_detalle_venta"].Visible = false;
-                        datadetalle.Columns["id_venta"].Visible = false;
-                        datadetalle.Columns["id_producto"].Visible = false;
-
-                        datadetalle.Columns["cantidad"].HeaderText = "Cantidad";
-                        datadetalle.Columns["nombre_producto"].HeaderText = "Producto";
-                        datadetalle.Columns["precio"].HeaderText = "Precio";
-                        datadetalle.Columns["descuento"].HeaderText = "Descuento";
-                        datadetalle.Columns["subtotal"].HeaderText = "Subtotal";*/
         }
 
         private void lblUsuario_Click(object sender, EventArgs e)

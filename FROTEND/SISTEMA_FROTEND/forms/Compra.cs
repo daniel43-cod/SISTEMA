@@ -12,13 +12,14 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SISTEMA_FROTEND.forms
 {
     public partial class frmcompras : Form
     {
         private ProductoService _productoService = new ProductoService();
-        private List<ProductoVentaBuscarDTO> _productos=new ();    
+        private List<ProductoVentaBuscarDTO> _productos = new();
         private EmpresaService _empresaService = new EmpresaService();
         private List<EmpresaDTOs> _empresas;
         private EmpresaDTOs _empresaSeleccionada;
@@ -48,7 +49,7 @@ namespace SISTEMA_FROTEND.forms
             _empresas = await _empresaService.ListarEmpresas();
 
             _productos = await _productoService.ListarProducto();
-            
+
             var fuenteEmpresas = new AutoCompleteStringCollection();
             fuenteEmpresas.AddRange(_empresas.Select(e => e.nombre_empresa).ToArray());
 
@@ -118,12 +119,11 @@ namespace SISTEMA_FROTEND.forms
 
         private void datacompras_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
-            MessageBox.Show("Entró al autocompletado");
 
             if (datacompras.CurrentCell.OwningColumn.Name == "producto")
             {
                 var textBox = e.Control as TextBox;
-                    
+
                 if (textBox != null)
                 {
                     textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
@@ -134,6 +134,153 @@ namespace SISTEMA_FROTEND.forms
                     textBox.AutoCompleteCustomSource = fuente;
                 }
             }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            Keys tecla = keyData & Keys.KeyCode;
+
+            if (tecla != Keys.Enter)
+                return base.ProcessCmdKey(ref msg, keyData);
+
+            // EMPRESA -> NIT
+            if (texEmpresa.Focused)
+            {
+                texnit.Focus();
+                return true;
+            }
+
+
+            if (texnit.Focused)
+            {
+                if (datacompras.Rows.Count > 0)
+                {
+                    datacompras.Focus();
+
+                    datacompras.CurrentCell =
+                        datacompras.Rows[0]
+                            .Cells["producto"];
+
+                    datacompras.BeginEdit(true);
+                }
+
+                return true;
+            }
+
+            if (datacompras.ContainsFocus &&
+                datacompras.CurrentCell != null)
+            {
+                int filaActual = datacompras.CurrentCell.RowIndex;
+
+                string columna =
+                    datacompras.CurrentCell.OwningColumn.Name;
+
+                var fila = datacompras.Rows[filaActual];
+
+                // PRODUCTO -> CANTIDAD
+                if (columna == "producto")
+                {
+                    datacompras.EndEdit();
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        datacompras.CurrentCell =
+                            fila.Cells["cantidad"];
+
+                        datacompras.BeginEdit(true);
+                    }));
+
+                    return true;
+                }
+
+                // CANTIDAD -> PRECIO
+                if (columna == "cantidad")
+                {
+                    string texto;
+
+                    if (datacompras.EditingControl is TextBox textBox)
+                        texto = textBox.Text.Trim();
+                    else
+                        texto = fila.Cells["cantidad"].Value?
+                            .ToString()?.Trim() ?? "";
+
+                    // Solo entero y mayor a 0
+                    if (!int.TryParse(texto, out int cantidad) ||
+                        cantidad <= 0)
+                    {
+                        MessageBox.Show(
+                            "La cantidad debe ser un número entero mayor a 0.",
+                            "Cantidad no válida",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        datacompras.BeginEdit(true);
+
+                        return true;
+                    }
+
+                    datacompras.EndEdit();
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        datacompras.CurrentCell =
+                            fila.Cells["precio"];
+
+                        datacompras.BeginEdit(true);
+                    }));
+
+                    return true;
+                }
+
+                // PRECIO -> PRODUCTO DE LA SIGUIENTE FILA
+                if (columna == "precio")
+                {
+                    string texto;
+
+                    if (datacompras.EditingControl is TextBox textBox)
+                        texto = textBox.Text.Trim();
+                    else
+                        texto = fila.Cells["precio"].Value?
+                            .ToString()?.Trim() ?? "";
+
+                    // Permite decimal pero debe ser mayor a 0
+                    if (!decimal.TryParse(texto, out decimal precio) ||
+                        precio <= 0)
+                    {
+                        MessageBox.Show(
+                            "El precio debe ser un número mayor a 0.",
+                            "Precio no válido",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        datacompras.BeginEdit(true);
+
+                        return true;
+                    }
+
+                    datacompras.EndEdit();
+
+                    int siguienteFila = filaActual + 1;
+
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (siguienteFila < datacompras.Rows.Count)
+                        {
+                            datacompras.CurrentCell =
+                                datacompras.Rows[siguienteFila]
+                                    .Cells["producto"];
+
+                            datacompras.BeginEdit(true);
+                        }
+                    }));
+
+                    return true;
+                }
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         private void datacompras_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -190,12 +337,18 @@ namespace SISTEMA_FROTEND.forms
 
         private async void butguardar_Click(object sender, EventArgs e)
         {
-
             datacompras.EndEdit();
 
             if (_empresaSeleccionada == null)
             {
-                MessageBox.Show("Seleccioná una empresa válida antes de guardar.");
+                MessageBox.Show(
+                    "Debe seleccionar una empresa válida.",
+                    "Empresa requerida",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
+                texEmpresa.Focus();
                 return;
             }
 
@@ -203,53 +356,245 @@ namespace SISTEMA_FROTEND.forms
 
             foreach (DataGridViewRow fila in datacompras.Rows)
             {
-                if (fila.IsNewRow) continue;
-                if (fila.Tag is not ProductoVentaBuscarDTO producto) continue;
+                if (fila.IsNewRow)
+                    continue;
 
-                decimal cantidad = Convert.ToDecimal(fila.Cells["cantidad"].Value ?? 0);
-                decimal precio = Convert.ToDecimal(fila.Cells["precio"].Value ?? 0);
+                bool filaVacia = string.IsNullOrWhiteSpace(
+                    fila.Cells["producto"].Value?.ToString()
+                );
 
-                if (cantidad <= 0) continue;
+                if (filaVacia)
+                    continue;
+
+                if (fila.Tag is not ProductoVentaBuscarDTO producto)
+                {
+                    MessageBox.Show(
+                        "Hay una fila con un producto no válido.",
+                        "Producto requerido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    datacompras.CurrentCell = fila.Cells["producto"];
+                    datacompras.BeginEdit(true);
+                    return;
+                }
+
+                string textoCantidad =
+                    fila.Cells["cantidad"].Value?.ToString()?.Trim() ?? "";
+
+                if (!int.TryParse(textoCantidad, out int cantidad) ||
+                    cantidad <= 0)
+                {
+                    MessageBox.Show(
+                        $"La cantidad de '{producto.nombre_producto}' " +
+                        "debe ser un número entero mayor a 0.",
+                        "Cantidad no válida",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    datacompras.CurrentCell = fila.Cells["cantidad"];
+                    datacompras.BeginEdit(true);
+                    return;
+                }
+
+                string textoPrecio =
+                    fila.Cells["precio"].Value?.ToString()?.Trim() ?? "";
+
+                if (!decimal.TryParse(textoPrecio, out decimal precio) ||
+                    precio <= 0)
+                {
+                    MessageBox.Show(
+                        $"El precio de '{producto.nombre_producto}' " +
+                        "debe ser mayor a 0.",
+                        "Precio no válido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    datacompras.CurrentCell = fila.Cells["precio"];
+                    datacompras.BeginEdit(true);
+                    return;
+                }
 
                 detalle.Add(new DetalleCompraDTOs
                 {
                     id_producto = producto.id_producto,
-                    cantidad = (int)cantidad,
+                    cantidad = cantidad,
                     precio = precio
                 });
             }
 
             if (detalle.Count == 0)
             {
-                MessageBox.Show("Agregá al menos un producto antes de guardar.");
+                MessageBox.Show(
+                    "Debe agregar al menos un producto a la compra.",
+                    "Compra vacía",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
                 return;
             }
 
-            var compraDto = new ComprasDTOs
+            decimal totalCompra = 0;
+
+            foreach (DataGridViewRow fila in datacompras.Rows)
             {
-                id_usuario = Sesion.IdUsuario,
+                if (fila.IsNewRow)
+                    continue;
+
+                if (fila.Cells["precio"].Value == null)
+                    continue;
+
+                if (decimal.TryParse(
+                    fila.Cells["precio"].Value.ToString(),
+                    out decimal totalFila))
+                {
+                    totalCompra += totalFila;
+                }
+            }
+
+            if (totalCompra <= 0)
+            {
+                MessageBox.Show(
+                    "El total de la compra debe ser mayor a 0.",
+                    "Total no válido",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
+                return;
+            }
+
+            string textoEfectivo = texabonar.Text.Trim();
+
+            decimal efectivoRecibido = 0;
+
+            if (!string.IsNullOrWhiteSpace(textoEfectivo))
+            {
+                if (!decimal.TryParse(
+                    textoEfectivo,
+                    out efectivoRecibido))
+                {
+                    MessageBox.Show(
+                        "Ingrese un monto válido.",
+                        "Monto no válido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    texabonar.Focus();
+                    texabonar.SelectAll();
+                    return;
+                }
+            }
+
+            if (efectivoRecibido < 0)
+            {
+                MessageBox.Show(
+                    "El monto ingresado no puede ser negativo.",
+                    "Monto no válido",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
+                texabonar.Focus();
+                texabonar.SelectAll();
+                return;
+            }
+
+            decimal montoPagado =
+                Math.Min(efectivoRecibido, totalCompra);
+
+            decimal cambioEsperado =
+                Math.Max(0, efectivoRecibido - totalCompra);
+
+            decimal saldoPendiente =
+                Math.Max(0, totalCompra - montoPagado);
+
+            var compraDto = new RegistroComprasDTO
+            {
                 id_empresa = _empresaSeleccionada.id_empresa,
-                id_estado_compra = 1, // ajustar según tus estados reales
+                monto_pagado = montoPagado,
+                observacion = texobservacion.Text.Trim(),
                 detalle_compra = detalle
             };
+
+            string mensaje =
+                $"Total compra: Q {totalCompra:N2}\n" +
+                $"Efectivo recibido: Q {efectivoRecibido:N2}\n" +
+                $"Monto pagado: Q {montoPagado:N2}\n";
+
+            if (cambioEsperado > 0)
+            {
+                mensaje +=
+                    $"Cambio esperado: Q {cambioEsperado:N2}";
+            }
+            else
+            {
+                mensaje +=
+                    $"Saldo pendiente: Q {saldoPendiente:N2}";
+            }
+
+            DialogResult resultado = MessageBox.Show(
+                mensaje + "\n\n¿Desea registrar la compra?",
+                "Confirmar compra",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (resultado != DialogResult.Yes)
+                return;
 
             butguardar.Enabled = false;
 
             try
             {
-                var compra = await _compraService.CrearCompra(compraDto);
-                MessageBox.Show("Compra guardada correctamente.");
-                // acá podés limpiar el formulario
+                await _compraService.CrearCompra(compraDto);
+
+                string mensajeExito =
+                    $"Compra registrada correctamente.\n\n" +
+                    $"Total: Q {totalCompra:N2}\n" +
+                    $"Pagado: Q {montoPagado:N2}\n";
+
+                if (cambioEsperado > 0)
+                {
+                    mensajeExito +=
+                        $"Cambio: Q {cambioEsperado:N2}";
+                }
+                else
+                {
+                    mensajeExito +=
+                        $"Saldo pendiente: Q {saldoPendiente:N2}";
+                }
+
+                MessageBox.Show(
+                    mensajeExito,
+                    "Compra registrada",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                limpiar();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al guardar la compra: {ex.Message}");
+                MessageBox.Show(
+                    $"Error al registrar la compra:\n\n{ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
             finally
             {
                 butguardar.Enabled = true;
             }
         }
+
+ 
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -260,6 +605,11 @@ namespace SISTEMA_FROTEND.forms
         {
             texEmpresa.Text = "";
             datacompras.Rows.Clear();
+        }
+
+        private void buttodo_Click(object sender, EventArgs e)
+        {
+            texabonar.Text=textotalcompras.Text;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace SISTEMA_FROTEND.services
         private HttpClient Cliente =>
             ApiClient.ObtenerClienteAutenticado();
 
-        public async Task<ComprasDTOs?> CrearCompra(ComprasDTOs compra)
+        public async Task<RegistroComprasDTO?> CrearCompra(RegistroComprasDTO compra)
         {
             var response = await Cliente.PostAsJsonAsync(
                 "Compra/crear",
@@ -24,7 +24,7 @@ namespace SISTEMA_FROTEND.services
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content
-                    .ReadFromJsonAsync<ComprasDTOs>();
+                    .ReadFromJsonAsync<RegistroComprasDTO>();
             }
 
             string error = await response.Content.ReadAsStringAsync();

@@ -3,7 +3,7 @@ using SISTEMA_FROTEND.DTOs.Ventas;
 using SISTEMA_FROTEND.forms;
 using SISTEMA_FROTEND.helpers;
 using SISTEMA_FROTEND.services;
-using System.Diagnostics;
+using System.Globalization;
 
 
 namespace SISTEMA_FROTEND.presentacion
@@ -24,7 +24,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async void RegistroVenta_load(object sender, EventArgs e)
         {
-           
+
             lblUsuario.Text = $"Usuario: {Sesion.Nombre}";
             await CargarClientes();
 
@@ -58,7 +58,12 @@ namespace SISTEMA_FROTEND.presentacion
                 dataregistrodiario.Columns.Add(btnDetalle);
             }
 
+            textotalvendido.Text = "Q. 0.00";
+            textotalvendido.Enabled = false;
+            textotalventas.Enabled = false;
 
+            CalcularTotalVentas();
+            TotalVentas();
         }
 
         private void OcultarColumnas()
@@ -115,21 +120,6 @@ namespace SISTEMA_FROTEND.presentacion
         {
         }
 
-      /*  private async Task CargarVentasCliente(int idCliente)
-        {
-            try
-            {
-                var ventas = _service.BuscarVentasClienteCajaActiva(idCliente);
-                dataregistrodiario.DataSource = ventas;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                 ex.Message, "Error",
-                 MessageBoxButtons.OK, MessageBoxIcon.Error
-                 );
-            }
-        }*/
 
 
         private void dataregistrodiario_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
@@ -189,10 +179,7 @@ namespace SISTEMA_FROTEND.presentacion
 
         private async void ComClientes_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            /* if(ComClientes.SelectedItem is not ListarClienteDTOs cliente)
-                 return;
-
-             await CargarVentasCliente(cliente.id_Cliente);*/
+           
             if (ComClientes.SelectedItem is not ListarClienteDTOs cliente)
                 return;
 
@@ -204,6 +191,42 @@ namespace SISTEMA_FROTEND.presentacion
             dataregistrodiario.DataSource = ventasFiltradas;
 
             OcultarColumnas();
+        }
+
+
+        private void CalcularTotalVentas()
+        {
+            decimal totalVentas = 0;
+            foreach (DataGridViewRow row in dataregistrodiario.Rows)
+            {
+                if (row.Cells["total"].Value != null)
+                {
+                    if (decimal.TryParse(row.Cells["total"].Value.ToString(), out decimal total))
+                    {
+                        totalVentas += total;
+                    }
+                }
+            }
+            textotalvendido.Text = totalVentas.ToString( "C2", new CultureInfo("es-GT"));
+        }
+
+        private void TotalVentas()
+        {
+            int totalVentas = 0;
+            foreach (DataGridViewRow row in dataregistrodiario.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    totalVentas++;
+                }
+            }
+
+            textotalventas.Text=totalVentas.ToString();
+        }
+
+        private void guna2TextBox3_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
