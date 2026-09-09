@@ -56,7 +56,7 @@
             guna2Panel1 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel2 = new Guna.UI2.WinForms.Guna2Panel();
             guna2Panel3 = new Guna.UI2.WinForms.Guna2Panel();
-            guna2TextBox1 = new Guna.UI2.WinForms.Guna2TextBox();
+            comproveedor = new Guna.UI2.WinForms.Guna2ComboBox();
             guna2DateTimePicker1 = new Guna.UI2.WinForms.Guna2DateTimePicker();
             guna2HtmlLabel2 = new Guna.UI2.WinForms.Guna2HtmlLabel();
             label3 = new Label();
@@ -128,7 +128,7 @@
             guna2Panel3.BorderColor = Color.FromArgb(213, 218, 223);
             guna2Panel3.BorderRadius = 10;
             guna2Panel3.BorderThickness = 1;
-            guna2Panel3.Controls.Add(guna2TextBox1);
+            guna2Panel3.Controls.Add(comproveedor);
             guna2Panel3.Controls.Add(guna2DateTimePicker1);
             guna2Panel3.Controls.Add(guna2HtmlLabel2);
             guna2Panel3.Controls.Add(label3);
@@ -141,26 +141,25 @@
             guna2Panel3.Size = new Size(1445, 62);
             guna2Panel3.TabIndex = 27;
             // 
-            // guna2TextBox1
+            // comproveedor
             // 
-            guna2TextBox1.BorderRadius = 10;
-            guna2TextBox1.CustomizableEdges = customizableEdges5;
-            guna2TextBox1.DefaultText = "";
-            guna2TextBox1.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            guna2TextBox1.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            guna2TextBox1.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            guna2TextBox1.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            guna2TextBox1.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            guna2TextBox1.Font = new Font("Segoe UI", 9F);
-            guna2TextBox1.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            guna2TextBox1.Location = new Point(93, 13);
-            guna2TextBox1.Margin = new Padding(3, 4, 3, 4);
-            guna2TextBox1.Name = "guna2TextBox1";
-            guna2TextBox1.PlaceholderText = "";
-            guna2TextBox1.SelectedText = "";
-            guna2TextBox1.ShadowDecoration.CustomizableEdges = customizableEdges6;
-            guna2TextBox1.Size = new Size(280, 36);
-            guna2TextBox1.TabIndex = 24;
+            comproveedor.BackColor = Color.Transparent;
+            comproveedor.CustomizableEdges = customizableEdges5;
+            comproveedor.DrawMode = DrawMode.OwnerDrawFixed;
+            comproveedor.DropDownStyle = ComboBoxStyle.DropDownList;
+            comproveedor.FocusedColor = Color.FromArgb(94, 148, 255);
+            comproveedor.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
+            comproveedor.Font = new Font("Segoe UI", 10F);
+            comproveedor.ForeColor = Color.FromArgb(68, 88, 112);
+            comproveedor.ItemHeight = 30;
+            comproveedor.Location = new Point(93, 15);
+            comproveedor.Name = "comproveedor";
+            comproveedor.ShadowDecoration.CustomizableEdges = customizableEdges6;
+            comproveedor.Size = new Size(336, 36);
+            comproveedor.TabIndex = 26;
+           // comproveedor.SelectedIndexChanged += comproveedor_SelectedIndexChanged;
+            comproveedor.SelectionChangeCommitted += comproveedor_SelectionChangeCommitted;
+            comproveedor.TextUpdate += comproveedor_TextUpdate;
             // 
             // guna2DateTimePicker1
             // 
@@ -275,7 +274,7 @@
             dataGridView1.ThemeStyle.HeaderStyle.Height = 22;
             dataGridView1.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9F);
             dataGridView1.ThemeStyle.RowsStyle.Height = 29;
-            dataGridView1.CellContentClick += guna2DataGridView1_CellContentClick;
+          //  dataGridView1.CellContentClick += guna2DataGridView1_CellContentClick;
             // 
             // guna2Panel4
             // 
@@ -388,7 +387,6 @@
         private Guna.UI2.WinForms.Guna2Panel guna2Panel1;
         private Guna.UI2.WinForms.Guna2Panel guna2Panel2;
         private Guna.UI2.WinForms.Guna2Panel guna2Panel3;
-        private Guna.UI2.WinForms.Guna2TextBox guna2TextBox1;
         private Guna.UI2.WinForms.Guna2DateTimePicker guna2DateTimePicker1;
         private Guna.UI2.WinForms.Guna2HtmlLabel guna2HtmlLabel2;
         private Label label3;
@@ -401,5 +399,6 @@
         private Label label4;
         private Guna.UI2.WinForms.Guna2TextBox guna2TextBox2;
         private Label label5;
+        private Guna.UI2.WinForms.Guna2ComboBox comproveedor;
     }
 }

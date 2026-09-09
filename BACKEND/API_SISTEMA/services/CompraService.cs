@@ -33,7 +33,8 @@ namespace API_SISTEMA.services
                 id_estado_compra = c.id_estado_compra,
                 descripcion_estado_compra = c.estado_compra.descripcion,
                 fecha_ingreso = c.fecha_ingreso,
-                total_compra = c.total_compra??0
+                total_compra = c.total_compra??0,
+                saldo_pendiente = c.saldo_pendiente ??0
             }).ToListAsync();
         }
 

@@ -49,6 +49,8 @@
             btncompras = new Button();
             btnusuarios = new Button();
             btnregistrar = new Button();
+            label10 = new Label();
+            button2 = new Button();
             panelMenu.SuspendLayout();
             SuspendLayout();
             // 
@@ -61,13 +63,15 @@
             panelContenido.Location = new Point(0, 0);
             panelContenido.Name = "panelContenido";
             panelContenido.Padding = new Padding(20);
-            panelContenido.Size = new Size(1418, 781);
+            panelContenido.Size = new Size(1418, 948);
             panelContenido.TabIndex = 3;
             panelContenido.Paint += panelContenido_Paint;
             // 
             // panelMenu
             // 
             panelMenu.BackColor = Color.DarkSlateBlue;
+            panelMenu.Controls.Add(label10);
+            panelMenu.Controls.Add(button2);
             panelMenu.Controls.Add(label9);
             panelMenu.Controls.Add(label8);
             panelMenu.Controls.Add(label7);
@@ -87,7 +91,7 @@
             panelMenu.Dock = DockStyle.Left;
             panelMenu.Location = new Point(0, 0);
             panelMenu.Name = "panelMenu";
-            panelMenu.Size = new Size(377, 781);
+            panelMenu.Size = new Size(377, 948);
             panelMenu.TabIndex = 4;
             panelMenu.Paint += panelMenu_Paint;
             // 
@@ -117,7 +121,7 @@
             label7.AutoSize = true;
             label7.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label7.ForeColor = Color.White;
-            label7.Location = new Point(24, 710);
+            label7.Location = new Point(24, 698);
             label7.Margin = new Padding(0);
             label7.Name = "label7";
             label7.Size = new Size(102, 25);
@@ -128,7 +132,7 @@
             // 
             button1.BackColor = Color.Gainsboro;
             button1.ImageList = imageList1;
-            button1.Location = new Point(262, 692);
+            button1.Location = new Point(262, 680);
             button1.Name = "button1";
             button1.Size = new Size(75, 65);
             button1.TabIndex = 11;
@@ -293,12 +297,34 @@
             btnregistrar.UseVisualStyleBackColor = false;
             btnregistrar.Click += btnregistrar_Click;
             // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label10.ForeColor = Color.White;
+            label10.Location = new Point(24, 793);
+            label10.Margin = new Padding(0);
+            label10.Name = "label10";
+            label10.Size = new Size(123, 25);
+            label10.TabIndex = 16;
+            label10.Text = "INVENTARIO";
+            // 
+            // button2
+            // 
+            button2.BackColor = Color.Gainsboro;
+            button2.ImageList = imageList1;
+            button2.Location = new Point(262, 775);
+            button2.Name = "button2";
+            button2.Size = new Size(75, 65);
+            button2.TabIndex = 15;
+            button2.UseVisualStyleBackColor = false;
+            // 
             // MenuPrincipal
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Black;
-            ClientSize = new Size(1418, 781);
+            ClientSize = new Size(1418, 948);
             Controls.Add(panelMenu);
             Controls.Add(panelContenido);
             Name = "MenuPrincipal";
@@ -334,5 +360,7 @@
         private Button button1;
         private Label label9;
         private Label label8;
+        private Label label10;
+        private Button button2;
     }
 }

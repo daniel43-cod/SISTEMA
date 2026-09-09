@@ -11,7 +11,7 @@
         public string descripcion_estado_compra { get; set; }
         public DateTime fecha_ingreso { get; set; }
         public decimal total_compra { get; set; }
-
+        public decimal saldo_pendiente { get; set; }
 
     }
 }
