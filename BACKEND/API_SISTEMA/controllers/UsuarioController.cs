@@ -1,5 +1,7 @@
 ﻿using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +12,7 @@ namespace API_SISTEMA.controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
+       
         private readonly UsuarioService _service;
 
         public UsuarioController(UsuarioService service)
@@ -17,13 +20,16 @@ namespace API_SISTEMA.controllers
             _service = service;
         }
 
+        //Autorizacion agregada  = verificar despues
+        [Authorize(Roles =Roles.Administrador)]
         [HttpGet]
         public async Task<IActionResult> ListarUsuario()
         {
             var listar = await _service.ListarUsuario();
             return Ok(listar);
         }
-
+        //Autorizacion agregada, verificar despues
+        [Authorize(Roles =Roles.Administrador)]
         [HttpPost]
         public async Task<IActionResult> Crear(Usuario usuario)
         {

@@ -1,6 +1,4 @@
-﻿using API_SISTEMA.models;
-using API_SISTEMA.services;
-using Microsoft.AspNetCore.Http;
+﻿using API_SISTEMA.services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.controllers

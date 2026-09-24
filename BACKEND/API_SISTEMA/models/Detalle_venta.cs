@@ -18,13 +18,13 @@ namespace API_SISTEMA.models
         public int unidades_descontadas { get; set; }
         public decimal ganancia { get; set; }
 
-        public Producto_Presentacion producto_presentacion { get; set; }
+        public Producto_Presentacion producto_presentacion { get; set; } = null!;
 
         [ForeignKey("id_producto")]
-        public Productos Producto { get; set; }
+        public Productos Producto { get; set; } = null!;
 
         [ForeignKey("id_venta")]
-        public Ventas Venta { get; set; }
+        public Ventas Venta { get; set; } = null!;
 
 
     }

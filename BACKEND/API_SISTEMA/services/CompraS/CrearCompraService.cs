@@ -17,17 +17,14 @@ namespace API_SISTEMA.services.CompraS
             _movimientoCajaService = movimientoCajaService;
         }
 
-
         public async Task<RegistroCompras> CrearCompra(
     RegistroComprasDTO compraDto,
     int idUsuario)
         {
             if (compraDto == null)
-            {
                 throw new Exception(
                     "La información de la compra es obligatoria."
                 );
-            }
 
             if (compraDto.detalle_compra == null ||
                 compraDto.detalle_compra.Count == 0)
@@ -43,11 +40,9 @@ namespace API_SISTEMA.services.CompraS
                 );
 
             if (!empresaExiste)
-            {
                 throw new Exception(
                     "La empresa indicada no existe."
                 );
-            }
 
             var sesionCaja = await _context.sesioncaja
                 .FirstOrDefaultAsync(s =>
@@ -62,6 +57,20 @@ namespace API_SISTEMA.services.CompraS
                     "para registrar una compra."
                 );
             }
+
+            var idsProductos = compraDto.detalle_compra
+                .Select(d => d.id_producto)
+                .Distinct()
+                .ToList();
+
+            var productos = await _context.productos
+                .Where(p =>
+                    idsProductos.Contains(p.id_producto)
+                )
+                .ToListAsync();
+
+            var productosPorId = productos
+                .ToDictionary(p => p.id_producto);
 
             decimal totalCompra = 0;
 
@@ -81,12 +90,8 @@ namespace API_SISTEMA.services.CompraS
                     );
                 }
 
-                bool productoExiste = await _context.productos
-                    .AnyAsync(p =>
-                        p.id_producto == detalleDto.id_producto
-                    );
-
-                if (!productoExiste)
+                if (!productosPorId.ContainsKey(
+                        detalleDto.id_producto))
                 {
                     throw new Exception(
                         $"El producto con ID " +
@@ -145,18 +150,17 @@ namespace API_SISTEMA.services.CompraS
                         id_usuario = idUsuario,
                         id_sesion_caja =
                             sesionCaja.id_sesion_caja,
-
                         observacion =
                             compraDto.observacion,
-
                         monto =
                             compraDto.monto_pagado,
-
                         fecha_pago =
                             DateTime.Now
                     };
 
-                    _context.pagosCompras.Add(pagoCompra);
+                    _context.pagosCompras.Add(
+                        pagoCompra
+                    );
 
                     await _context.SaveChangesAsync();
 
@@ -164,22 +168,16 @@ namespace API_SISTEMA.services.CompraS
                         .RegistrarMovimiento(
                             idSesionCaja:
                                 sesionCaja.id_sesion_caja,
-
                             idUsuario:
                                 idUsuario,
-
                             idTipoMovimiento:
                                 TiposMovimientoCaja.PagoCompra,
-
                             monto:
                                 compraDto.monto_pagado,
-
                             descripcion:
                                 $"Pago de compra #{compra.id_compra}",
-
                             idCompra:
                                 compra.id_compra,
-
                             idPagoCompra:
                                 pagoCompra.id_pagos_compra
                         );
@@ -187,30 +185,29 @@ namespace API_SISTEMA.services.CompraS
 
                 foreach (var detalleDto in compraDto.detalle_compra)
                 {
+                    var producto =
+                        productosPorId[
+                            detalleDto.id_producto
+                        ];
+
                     var detalle = new DetalleCompra
                     {
                         id_registro_compra =
                             compra.id_compra,
-
                         id_producto =
                             detalleDto.id_producto,
-
                         cantidad =
                             detalleDto.cantidad,
-
                         precio =
                             detalleDto.precio
                     };
 
-                    _context.detalle_compras.Add(detalle);
+                    _context.detalle_compras.Add(
+                        detalle
+                    );
 
-                    var producto = await _context.productos
-                        .FirstAsync(p =>
-                            p.id_producto ==
-                            detalleDto.id_producto
-                        );
-
-                    producto.stock +=
+                    producto.stock =
+                        (producto.stock ?? 0) +
                         detalleDto.cantidad;
                 }
 
@@ -226,7 +223,5 @@ namespace API_SISTEMA.services.CompraS
                 throw;
             }
         }
-
-
     }
 }

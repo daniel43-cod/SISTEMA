@@ -102,6 +102,7 @@ builder.Services.AddScoped<BuscarCodigoBarraService>();
 builder.Services.AddScoped<CrearCompraService>();
 //ventas
 builder.Services.AddScoped<BuscarVentaServices>();
+builder.Services.AddScoped<ActualizarVentaService>();
 
 
 var app = builder.Build();

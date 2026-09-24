@@ -2,26 +2,26 @@
 using API_SISTEMA.models;
 using API_SISTEMA.services;
 using API_SISTEMA.services.ProductoS;
-using API_SISTEMA.Utilidades;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
-using System.ComponentModel.Design;
+using System.IdentityModel.Tokens.Jwt;
+using API_SISTEMA.Utilidades;
+
 
 namespace API_SISTEMA.controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductosController : ControllerBase
     {
+        ILogger<ProductosController> _logger;
         private readonly BuscarCodigoBarraService _productoService;
         private readonly ProductoService _Service;
         private readonly ProductoCrearService _crearService;
         private readonly SubirImagenService _subirImagenService;
-        //private readonly productocrear productocrear;
-        // private readonly ProductoPrecioService productoprecio;
+
 
         public ProductosController(ProductoService service, ProductoCrearService crearService, SubirImagenService subirImagenService, BuscarCodigoBarraService productoService)
         {
@@ -30,28 +30,61 @@ namespace API_SISTEMA.controllers
             _subirImagenService = subirImagenService;
             _productoService = productoService;
         }
-        [Authorize(Roles ="ADMINISTRADOR")]
+
+
+        [Authorize(Roles =Roles.Administrador)]
         [HttpGet("listar")]
         public async Task<IActionResult> ListarProductos()
         {
+            try
+            {
+                  var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
             var listar = await _Service.ObtenerTodosProductosVenta();
             return Ok(listar);
+            }
+           catch (Exception ex){
+         _logger.LogError(ex, "Error al listar productos");
+
+         return StatusCode(500, new{
+        mensaje = "Ocurrió un error interno. Intentá más tarde." });}
     
         }
         //para presentacion de productos
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("{id}/presentaciones")]
         public async Task<IActionResult> ListarPresentaciones(int id)
         {
+            try
+            {
+                 var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
             var presentaciones = await _Service.ListarPresentaciones(id);
             return Ok(presentaciones);
+            }
+            catch
+            {
+                return BadRequest(new
+                {
+                    mensaje = "A ocurrido un error al buscar la presentacion, Intentalo mas tarde o comunicate con el administrador"
+                });
+            }
         }
 
-        [Authorize(Roles ="ADMINISTRADOR")]
+        [Authorize(Roles =Roles.Administrador)]
         [HttpPost("crear")]
         public async Task<IActionResult> CrearProductos([FromBody] productocrear dto)
         {
             try
             {
+                  var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
                 var producto = await _crearService.CrearProducto(dto);
 
                 return Ok(new
@@ -65,16 +98,22 @@ namespace API_SISTEMA.controllers
                 {
                     return BadRequest(new
                     {
-                        mensaje = ex.Message,
-                        detalle = ex.ToString()
+                        mensaje = "A ocurrido un error al ingresar un nuevo producto, intentalo mas tarde o comunicate con el administrador"
+                       // mensaje = ex.Message,
+                       // detalle = ex.ToString()
                     });
                 }
             }
         }
-
+        [Authorize(Roles =Roles.Administrador)]
         [HttpPost("{id}/imagen")]
         public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
         {
+            try
+            {
+                 var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
             if (imagen == null || imagen.Length == 0)
                 return BadRequest("Debe subir una imagen.");
 
@@ -88,11 +127,25 @@ namespace API_SISTEMA.controllers
                 mensaje = "Imagen subida correctamente",
                 imagen = producto.imagen
             });
+            }
+            catch
+            {
+                return BadRequest(new
+                {
+                    mensaje ="A ocurrido un error, Intentalo mas tarde o comunicate con el adminstrador"
+                });
+            }
         }
 
+    
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("buscar")]
         public async Task<IActionResult> Buscar([FromQuery] string texto)
         {
+              var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
             try
             {
                 var productos = await _Service.BuscarProductosVenta(texto);
@@ -100,11 +153,18 @@ namespace API_SISTEMA.controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { mensaje = ex.Message });
+                //return BadRequest(new { mensaje = ex.Message });
+                return BadRequest(new
+                {
+                    mensaje = "A ocurrido un error al buscar el producto, Intentalo mas tarde o comunicate con el administrador"
+                });
+                    
+                
             }
         }
 
-
+      
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("codigo/{codigoBarra}")]
         public async Task<IActionResult> BuscarPorCodigoBarra(string codigoBarra)
         {
@@ -129,7 +189,7 @@ namespace API_SISTEMA.controllers
             {
                 return BadRequest(new
                 {
-                    mensaje = ex.Message
+                  mensaje ="A ocurrido un error al buscar el producto, Intentalo mas tade o comunicate con el adminstrador"
                 });
             }
         }

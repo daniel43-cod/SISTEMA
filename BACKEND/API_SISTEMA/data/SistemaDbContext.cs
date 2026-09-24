@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Abstractions;
 using System.Net.Security;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace API_SISTEMA.data
 {
@@ -18,6 +19,9 @@ namespace API_SISTEMA.data
 
         //funcion del dbset?
         public DbSet<Categoria> categorias { get; set; }
+        public DbSet<CuentaCliente> CuentaClientes {get;set;}
+        public DbSet<Conversacion> Conversaciones {get;set;}
+        public DbSet<Mensaje> Mensajes {get;set;}
         public DbSet<Cliente> cliente { get; set; }
         public DbSet<Detalle_venta> detalle_Ventas { get; set; }
         public DbSet<Inventario_movimiento> inventario_Movimientos { get; set; }
@@ -136,6 +140,14 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<Rol_permisocs>().ToTable("rol_permiso");
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<CuentaCliente>().ToTable("cuenta_cliente");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Conversacion>().ToTable("conversacion");
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Mensaje>().ToTable("mensaje");
+            base.OnModelCreating(modelBuilder);
 
 
 
@@ -151,25 +163,20 @@ namespace API_SISTEMA.data
                 .HasForeignKey(rp => rp.id_permiso);
 
             modelBuilder.Entity<Producto_precio>()
-    .HasOne(p => p.Producto)
-    .WithMany(x => x.ProductoPrecios)
-    .HasForeignKey(p => p.id_producto);
+                .HasOne(p => p.Producto)
+                .WithMany(x => x.ProductoPrecios)
+                .HasForeignKey(p => p.id_producto);
 
-modelBuilder.Entity<Producto_precio>()
-    .HasOne(p => p.TipoCliente)
-    .WithMany(x => x.ProductoPrecios)
-    .HasForeignKey(p => p.id_tipo_cliente);
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Producto_precio>()
+                .HasOne(p => p.TipoCliente)
+                .WithMany(x => x.ProductoPrecios)
+                .HasForeignKey(p => p.id_tipo_cliente);
+                base.OnModelCreating(modelBuilder);
 
-
-     
             modelBuilder.Entity<Producto_Presentacion>()
-    .HasOne(pp => pp.Producto)
-    .WithMany(p => p.ProductoPresentaciones)
-    .HasForeignKey(pp => pp.id_producto);
-
-
-
+               .HasOne(pp => pp.Producto)
+               .WithMany(p => p.ProductoPresentaciones)
+               .HasForeignKey(pp => pp.id_producto);
 
             modelBuilder.Entity<Ventas>()
                 .HasOne(v => v.cliente)
@@ -303,16 +310,21 @@ modelBuilder.Entity<Producto_precio>()
                 .WithMany()
                 .HasForeignKey(v => v.id_permiso);
 
+            modelBuilder.Entity<Conversacion>()
+                .HasOne(v => v.CuentaCliente)
+                .WithMany()
+                .HasForeignKey(v => v.IdCliente);
 
-
-
-
-
+            modelBuilder.Entity<Conversacion>()
+                .HasOne(v => v.Usuario)
+                .WithMany()
+                .HasForeignKey(v => v.IdUsuario)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            modelBuilder.Entity<Mensaje>()
+                .HasOne(v => v.Conversacion)
+                .WithMany()
+                .HasForeignKey(v => v.IdConversacion);
         }
-
-
-
-
-
     }
 }

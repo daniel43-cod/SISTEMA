@@ -17,10 +17,10 @@ namespace API_SISTEMA.models
         public int? id_pago_venta { get; set; }
         public int? id_pago_compra { get; set; }
 
-        public SesionCaja sesionCaja { get; set; }
-        public TipoMovimientoCaja tipoMovimientoCaja { get; set; }
-        public Usuario usuario { get; set; }
-        public Ventas venta { get; set; }
+        public SesionCaja sesionCaja { get; set; } = null!;
+        public TipoMovimientoCaja tipoMovimientoCaja { get; set; } = null!;
+        public Usuario usuario { get; set; } = null!;
+        public   Ventas venta { get; set; }
         public RegistroCompras RegistroCompras { get; set; }
         public Pagos pagos { get; set; }
         public PagosCompra pagosCompra { get; set; }

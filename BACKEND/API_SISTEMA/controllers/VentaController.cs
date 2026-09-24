@@ -24,12 +24,14 @@ namespace API_SISTEMA.controllers
         private readonly CrearVentaService _crearVentaService;
         private readonly AbonarSaldoVentaServices _pagoService;
         private readonly BuscarVentaServices _buscarService;
-        public VentaController(VentaService service, AbonarSaldoVentaServices pago, CrearVentaService crearVenta, BuscarVentaServices buscarService)
+        private readonly ActualizarVentaService _modificarVentaService;
+        public VentaController(VentaService service, AbonarSaldoVentaServices pago, CrearVentaService crearVenta, BuscarVentaServices buscarService, ActualizarVentaService modificarVentaService)
         {
             _context = service;
             _pagoService = pago;
             _crearVentaService = crearVenta;
             _buscarService = buscarService;
+            _modificarVentaService = modificarVentaService;
         }
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
@@ -215,7 +217,45 @@ namespace API_SISTEMA.controllers
         }
 
 
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+        [HttpPut("modificar/{idVenta}")]
+        public async Task<IActionResult> ModificarVenta(int idVenta, [FromBody] ModificarVentaDTO dto)
+        {
+            try
+            {
+                var idUsuarioClaim =
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                    ?? User.FindFirstValue("sub");
 
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                {
+                    return Unauthorized(new
+                    {
+                        mensaje = "No se pudo identificar al usuario autenticado."
+                    });
+                }
+
+                await _modificarVentaService.ModificarVenta(
+                    idVenta,
+                    dto,
+                    idUsuario
+                );
+
+                return Ok(new
+                {
+                    mensaje = "Venta modificada correctamente."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message,
+                    detalle = ex.ToString()
+                });
+            }
+        }
 
     }
 

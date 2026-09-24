@@ -2,7 +2,6 @@
 using API_SISTEMA.services;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.controllers
