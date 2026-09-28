@@ -9,9 +9,11 @@ gradle/gradle-daemon-jvm.properties
 .vs/
 **/.vs/
 
+
 # Archivos compilados y temporales
 bin/
 obj/
+**/FROTEND/
 **/bin/
 **/obj/
 *.user
