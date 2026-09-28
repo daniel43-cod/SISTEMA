@@ -313,7 +313,7 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<Conversacion>()
                 .HasOne(v => v.CuentaCliente)
                 .WithMany()
-                .HasForeignKey(v => v.IdCliente);
+                .HasForeignKey(v => v.IdCuentaCliente);
 
             modelBuilder.Entity<Conversacion>()
                 .HasOne(v => v.Usuario)

@@ -23,11 +23,22 @@ namespace API_SISTEMA.services
 
             public string GenerarToken(Usuario usuario)
             {
+                return GenerarToken(usuario.id_usuario, usuario.nombre, usuario.rol.nombre, "usuario");
+            }
+
+            public string GenerarToken(API_SISTEMA.models.CuentaCliente cuenta)
+            {
+                return GenerarToken(cuenta.IdCuentaCliente, cuenta.CorreoElectronico, "CLIENTE", "cuenta_cliente");
+            }
+
+            private string GenerarToken(int id, string nombre, string rol, string tipoCuenta)
+            {
                 var claims = new[]
                 {
-                  new Claim(JwtRegisteredClaimNames.Sub, usuario.id_usuario.ToString()),
-                  new Claim(JwtRegisteredClaimNames.UniqueName, usuario.nombre),
-                  new Claim(ClaimTypes.Role, usuario.rol.nombre)
+                  new Claim(JwtRegisteredClaimNames.Sub, id.ToString()),
+                  new Claim(JwtRegisteredClaimNames.UniqueName, nombre),
+                  new Claim(ClaimTypes.Role, rol),
+                  new Claim("tipo_cuenta", tipoCuenta)
             };
 
             var key = new SymmetricSecurityKey(

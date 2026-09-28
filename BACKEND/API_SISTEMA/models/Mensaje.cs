@@ -10,9 +10,9 @@ namespace API_SISTEMA.models
       public int IdMensaje {get; set;}
       [Column("id_conversacion")]
       public int IdConversacion {get; set;}
-      [Column("mensaje")]
+      [Column("mensaje", TypeName = "nvarchar(max)")]
       public required string MensajeRecibido {get; set;}
-      [Column("respuesta")]
+      [Column("respuesta", TypeName = "nvarchar(max)")]
       public  string? Respuesta {get; set;}
 
       public Conversacion Conversacion {get;set;} = null!;

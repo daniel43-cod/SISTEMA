@@ -18,7 +18,7 @@
 # Archivos de compilación
 **/bin/
 **/obj/
-
+**/FROTEND/
 # Logs
 *.log
 *.secrets.jso
