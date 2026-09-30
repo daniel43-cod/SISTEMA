@@ -10,7 +10,11 @@ namespace API_SISTEMA.controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-public class PresentacionesController(CrearPresentacionServices crearService,ListarPresentacionServices listarService,ILogger<PresentacionesController> logger) : ControllerBase
+public class PresentacionesController(
+    CrearPresentacionServices crearService,
+    ListarPresentacionServices listarService,
+    ActualizarPresentacionService actualizarService,
+    ILogger<PresentacionesController> logger) : ControllerBase
 {
     [HttpPost]
     [Authorize(Roles = Roles.Administrador)]
@@ -41,6 +45,35 @@ public class PresentacionesController(CrearPresentacionServices crearService,Lis
         try
         {
             return Ok(await listarService.ListarActivas(cancellationToken));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return ErrorInterno(ex);
+        }
+    }
+
+    [HttpPut("{idPresentacion:int}")]
+    [Authorize(Roles = Roles.Administrador)]
+    public async Task<IActionResult> Actualizar(
+        int idPresentacion, [FromBody] ActualizarPresentacionDTO dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var presentacion = await actualizarService.ActualizarPresentacion(
+                idPresentacion, dto, cancellationToken);
+
+            if (presentacion is null)
+                return NotFound(new { mensaje = "La presentación indicada no existe." });
+
+            return Ok(presentacion);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
+        catch (PresentacionDuplicadaException ex)
+        {
+            return Conflict(new { mensaje = ex.Message });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

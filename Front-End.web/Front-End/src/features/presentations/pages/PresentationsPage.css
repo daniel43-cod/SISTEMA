@@ -20,3 +20,8 @@
 .presentation-list-items li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; }
 .presentation-list-items strong { font-size: .9rem; overflow-wrap: anywhere; min-width: 0; }
 .presentation-active { color: var(--color-success); background: #f0fdf4; border-radius: 6px; padding: 4px 8px; font-size: .75rem; }
+.presentation-row-actions, .presentation-edit-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.presentation-row-actions { flex-shrink: 0; }
+.presentation-edit-button { min-height: 44px; padding: 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-primary); font-size: .8rem; }
+.presentation-edit-button:hover:not(:disabled) { background: #eff6ff; }
+.presentation-edit-button:disabled { color: var(--color-muted); }

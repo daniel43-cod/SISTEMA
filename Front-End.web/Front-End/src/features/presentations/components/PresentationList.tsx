@@ -5,8 +5,10 @@ type Props = {
   loading: boolean
   error: string
   onReload: () => void
+  onEdit?: (item: PresentationResponse) => void
+  editing: boolean
 }
-export function PresentationList({ items, loading, error, onReload }: Props) {
+export function PresentationList({ items, loading, error, onReload, onEdit, editing }: Props) {
   return <section className="presentation-card presentation-list" aria-labelledby="presentation-list-title" aria-busy={loading}>
     <div className="presentation-list-heading">
       <h2 id="presentation-list-title">Presentaciones activas</h2>
@@ -19,7 +21,12 @@ export function PresentationList({ items, loading, error, onReload }: Props) {
         <p className="presentation-hint" role="status">{items.length} presentaciones activas</p>
         <ul className="presentation-list-items">
           {items.map(item => <li key={item.idPresentacion}>
-            <strong>{item.descripcion}</strong><span className="presentation-active">Activa</span>
+                        <strong>{item.descripcion}</strong>
+            <div className="presentation-row-actions">
+              <span className="presentation-active">Activa</span>
+              {onEdit && <button type="button" className="presentation-edit-button" disabled={editing}
+                aria-label={'Editar ' + item.descripcion} onClick={() => onEdit(item)}>Editar</button>}
+            </div>
           </li>)}
         </ul>
       </>}
