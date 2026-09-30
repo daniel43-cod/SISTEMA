@@ -22,7 +22,7 @@
 # Logs
 *.log
 *.secrets.jso
-
+*.docs
 
 # Archivos temporales
 *.tmp
@@ -31,4 +31,14 @@
 # Configuración local
 appsettings.Development.json
 
+/FROTEND/
+/app/
+/build/
+/gradle/
+/build.gradle.kts
+/gradle.properties
+/gradlew
+/gradlew.bat
+/local.properties
+/settings.gradle.kts
 

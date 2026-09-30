@@ -1,9 +1,12 @@
-﻿namespace API_SISTEMA.DTOs.Login
-{
-    public class LoginDTOs
-    {
+using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.Utilidades;
 
-        public string usuario { get; set; }
-        public string password { get; set; }
-    }
+namespace API_SISTEMA.DTOs.Login;
+
+public class LoginDTOs
+{
+    [Required, StringLength(50)]
+    public string usuario { get; set; } = "";
+    [Required, BCryptPassword]
+    public string password { get; set; } = "";
 }

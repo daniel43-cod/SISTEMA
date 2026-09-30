@@ -1,0 +1,6 @@
+.staff-layout { max-width: 1100px; margin: auto; padding: 24px; }
+.staff-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.staff-header .button { width: auto; }
+.staff-welcome { margin-top: 48px; padding: clamp(24px, 5vw, 56px); background: var(--color-surface); border: 1px solid #e2e8f0; border-radius: 20px; }
+.staff-welcome h1 { margin: 16px 0; font-size: clamp(1.6rem, 4vw, 2.4rem); overflow-wrap: anywhere; }
+.staff-welcome p { color: var(--color-muted); line-height: 1.6; }

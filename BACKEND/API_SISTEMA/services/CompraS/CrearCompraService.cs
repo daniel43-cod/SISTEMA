@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.data;
+using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Compras;
 using API_SISTEMA.models;
 using API_SISTEMA.services.MovimientoCaja;
@@ -22,14 +22,14 @@ namespace API_SISTEMA.services.CompraS
     int idUsuario)
         {
             if (compraDto == null)
-                throw new Exception(
+                throw new CompraValidationException(
                     "La información de la compra es obligatoria."
                 );
 
             if (compraDto.detalle_compra == null ||
                 compraDto.detalle_compra.Count == 0)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "Debes enviar al menos un detalle de compra."
                 );
             }
@@ -40,7 +40,7 @@ namespace API_SISTEMA.services.CompraS
                 );
 
             if (!empresaExiste)
-                throw new Exception(
+                throw new CompraValidationException(
                     "La empresa indicada no existe."
                 );
 
@@ -52,7 +52,7 @@ namespace API_SISTEMA.services.CompraS
 
             if (sesionCaja == null)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "Debes tener una sesión de caja abierta " +
                     "para registrar una compra."
                 );
@@ -78,14 +78,14 @@ namespace API_SISTEMA.services.CompraS
             {
                 if (detalleDto.cantidad <= 0)
                 {
-                    throw new Exception(
+                    throw new CompraValidationException(
                         "La cantidad debe ser mayor a cero."
                     );
                 }
 
                 if (detalleDto.precio <= 0)
                 {
-                    throw new Exception(
+                    throw new CompraValidationException(
                         "El total del producto debe ser mayor a cero."
                     );
                 }
@@ -93,7 +93,7 @@ namespace API_SISTEMA.services.CompraS
                 if (!productosPorId.ContainsKey(
                         detalleDto.id_producto))
                 {
-                    throw new Exception(
+                    throw new CompraValidationException(
                         $"El producto con ID " +
                         $"{detalleDto.id_producto} no existe."
                     );
@@ -104,14 +104,14 @@ namespace API_SISTEMA.services.CompraS
 
             if (compraDto.monto_pagado < 0)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "El monto pagado no puede ser negativo."
                 );
             }
 
             if (compraDto.monto_pagado > totalCompra)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "El monto pagado no puede superar " +
                     "el total de la compra."
                 );

@@ -1,0 +1,17 @@
+.button {
+  min-height: 48px; padding: 12px 20px; border: 1px solid transparent;
+  border-radius: 10px; background: var(--color-primary); color: white;
+  font-weight: 650; width: 100%;
+}
+.button:hover:not(:disabled) { background: var(--color-primary-hover); }
+.button:disabled { background: #e2e8f0; color: #475569; }
+.field { display: grid; gap: 9px; }
+.field label { font-size: .9rem; font-weight: 600; }
+.input {
+  width: 100%; min-height: 48px; padding: 12px 14px;
+  color: var(--color-text); background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: 10px;
+}
+.input::placeholder { color: #64748b; }
+.input[aria-invalid="true"] { border-color: var(--color-error); }
+.field-error { color: var(--color-error); font-size: .875rem; }

@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.DTOs.Compras;
+using API_SISTEMA.DTOs.Compras;
 using API_SISTEMA.services;
 using API_SISTEMA.services.CompraS;
 using API_SISTEMA.services.PagoCompra;
@@ -12,6 +12,7 @@ namespace API_SISTEMA.controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [TypeFilter(typeof(CompraExceptionFilter))]
     public class CompraController : ControllerBase
     {
         private readonly CompraService _context;
@@ -40,8 +41,6 @@ namespace API_SISTEMA.controllers
         [HttpPost("crear")]
         public async Task<IActionResult> Crear([FromBody] RegistroComprasDTO compraDto)
         {
-            try
-            {
                 var idUsuarioClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
                 if (!int.TryParse(idUsuarioClaim, out int idUsuario))
@@ -59,15 +58,7 @@ namespace API_SISTEMA.controllers
                     mensaje = "Compra registrada correctamente",
                    
                 });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
+
         }
 
         [Authorize(Roles = Roles.Administrador)]
@@ -75,29 +66,17 @@ namespace API_SISTEMA.controllers
         [HttpGet("detalle/{id_compra}")] 
         public async Task<IActionResult> ListarDetalleCompra(int id_compra)
         {
-            try
-            {
                 var detalleCompra = await _context.ListarDetalleCompra(id_compra);
                 return Ok(detalleCompra);
 
                
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
+
         }
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("pago-compra")]
         public async Task<IActionResult> RegistrarPagoCompra(AbonarSaldoCompraDTO  dto)
         {
-            try
-            {
                 var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
                 if (!int.TryParse(idUsuarioClaim, out int idUsuario))
@@ -118,15 +97,7 @@ namespace API_SISTEMA.controllers
                     monto_pagado = pago.monto,
                     fecha_pago = pago.fecha_pago
                 });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
+
         }
 
     }

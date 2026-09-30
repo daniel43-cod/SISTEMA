@@ -1,73 +1,35 @@
-﻿using API_SISTEMA.data;
+using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Login;
-using API_SISTEMA.models;
+using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
+namespace API_SISTEMA.services;
 
-namespace API_SISTEMA.services
+public class LoginService(SistemaDbContext context, JwtService jwtService)
 {
-    public class LoginService
+    // Evita omitir BCrypt cuando no existe la cuenta.
+    private static readonly string DummyHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+
+    public async Task<LoginRespuestaDTOs?> Login(LoginDTOs dto)
     {
-        
-            private readonly SistemaDbContext _context;
-        private readonly JwtService _jwtService;
+        if (!Validator.TryValidateObject(dto, new ValidationContext(dto), [], true))
+            return null;
 
-        public LoginService(SistemaDbContext context, JwtService jwtService)
-            {
-                _context = context;
-                _jwtService = jwtService;
-            }
+        var username = dto.usuario.Trim();
+        // No elegir una cuenta arbitrariamente ante duplicados preexistentes.
+        var users = await context.usuarios.AsNoTracking().Include(u => u.rol)
+            .Where(u => u.usuario == username).Take(2).ToListAsync();
+        var user = users.Count == 1 ? users[0] : null;
+        var valid = BCrypt.Net.BCrypt.Verify(dto.password, user?.password ?? DummyHash);
+        if (!valid || user is null || !user.estado || user.rol is null || !user.rol.estado ||
+            (user.rol.nombre != Roles.Administrador && user.rol.nombre != Roles.Vendedor))
+            return null;
 
-
-        //hashear las contraseñas mas adelante
-        public async Task<LoginRespuestaDTOs?> Login(LoginDTOs dto)
+        return new LoginRespuestaDTOs
         {
-            var usuario = await _context.usuarios
-                .Include(u => u.rol)
-                .FirstOrDefaultAsync(u => u.usuario == dto.usuario);
-
-            if (usuario == null)
-                return null;
-
-            if (!BCrypt.Net.BCrypt.Verify(dto.password, usuario.password))
-                return null;
-
-            if (!usuario.estado)
-                return null;
-
-            var token = _jwtService.GenerarToken(usuario);
-
-            return new LoginRespuestaDTOs
-            {
-                id_usuario = usuario.id_usuario,
-                nombre = usuario.nombre,
-                rol = usuario.rol.nombre,
-                token = token
-            };
-        }
-
-        public async Task CrearUsuario(CrearCuentaDTOs dto)
-        {
-            var usuario = new Usuario
-            {
-                nombre = dto.nombre,
-                apellido = dto.apellido,
-                usuario = dto.usuario,
-                correo = dto.corre_electronico,
-                telefono = dto.telefono,
-                fecha_Creacion = DateTime.Now,
-                estado=true,
-
-                // Aquí se hashea la contraseña
-                password = BCrypt.Net.BCrypt.HashPassword(dto.password),
-
-                id_rol = dto.id_rol,
-            };
-
-            _context.usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
-        }
-
+            id_usuario = user.id_usuario, nombre = user.nombre,
+            rol = user.rol.nombre, token = jwtService.GenerarToken(user)
+        };
     }
-    
 }

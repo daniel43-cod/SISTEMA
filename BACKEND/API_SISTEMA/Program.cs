@@ -23,7 +23,16 @@ var builder = WebApplication.CreateBuilder(args);
 //agregue la coneciom del appsetings
 builder.Services.AddDbContext<SistemaDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSQL")));
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+builder.Services.AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection("Jwt"))
+    .Validate(settings => Encoding.UTF8.GetByteCount(settings.Key) >= 32,
+        "Configura Jwt:Key con una clave aleatoria de al menos 32 bytes fuera del repositorio.")
+    .Validate(settings => !string.IsNullOrWhiteSpace(settings.Issuer) &&
+        !string.IsNullOrWhiteSpace(settings.Audience) && settings.DurationInMinutes > 0,
+        "La configuración JWT es incompleta.")
+    .ValidateOnStart();
+builder.Services.AddScoped<UsuarioTokenValidator>();
+builder.Services.AddRateLimiter(options => options.AddPolicy<string, LoginRateLimitPolicy>("login-interno"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -58,6 +67,8 @@ builder.Services
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
 
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
@@ -67,6 +78,11 @@ builder.Services
                     builder.Configuration["Jwt:Key"]
                     ?? throw new InvalidOperationException(
                         "No se encontró Jwt:Key.")))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context => context.HttpContext.RequestServices
+                .GetRequiredService<UsuarioTokenValidator>().ValidateAsync(context)
         };
     });
 builder.Services.AddAuthorization();
@@ -120,6 +136,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles();

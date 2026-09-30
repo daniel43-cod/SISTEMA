@@ -1,0 +1,26 @@
+:root {
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light;
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-muted: #475569;
+  --color-border: #94a3b8;
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-error: #b91c1c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 4px; }
+h1, h2, p { margin: 0; }

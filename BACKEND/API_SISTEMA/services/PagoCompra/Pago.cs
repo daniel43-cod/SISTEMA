@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.data;
+using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Compras;
 using API_SISTEMA.models;
 using API_SISTEMA.models;
@@ -25,7 +25,7 @@ namespace API_SISTEMA.services.PagoCompra
 
             if (compra == null)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "La compra indicada no existe."
                 );
             }
@@ -35,7 +35,7 @@ namespace API_SISTEMA.services.PagoCompra
 
             if (saldoActual <= 0)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "La compra ya ha sido pagada en su totalidad."
                 );
             }
@@ -43,14 +43,14 @@ namespace API_SISTEMA.services.PagoCompra
             // 3. Validar monto del abono
             if (dto.monto <= 0)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "El monto del abono debe ser mayor que cero."
                 );
             }
 
             if (dto.monto > saldoActual)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     $"El abono supera el saldo pendiente. " +
                     $"Saldo actual: Q{saldoActual:N2}"
                 );
@@ -61,7 +61,7 @@ namespace API_SISTEMA.services.PagoCompra
 
             if (sesionCaja == null)
             {
-                throw new Exception(
+                throw new CompraValidationException(
                     "Debes tener una sesión de caja abierta para registrar el abono."
                 );
             }

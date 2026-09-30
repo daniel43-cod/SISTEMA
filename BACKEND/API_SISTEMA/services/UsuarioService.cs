@@ -1,52 +1,61 @@
-﻿using API_SISTEMA.data;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Linq.Expressions;
+using API_SISTEMA.data;
+using API_SISTEMA.DTOs.Login;
 using API_SISTEMA.models;
+using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
-using BCrypt;
-using Microsoft.IdentityModel.Abstractions;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.services;
+
+public class UsuarioService(SistemaDbContext context)
 {
-    public class UsuarioService
+    private static readonly Expression<Func<Usuario, UsuarioRespuestaDTO>> Respuesta = u => new()
     {
+        id_usuario = u.id_usuario, id_rol = u.id_rol, nombre = u.nombre,
+        apellido = u.apellido, usuario = u.usuario, correo = u.correo,
+        telefono = u.telefono, estado = u.estado, fecha_Creacion = u.fecha_Creacion
+    };
 
-        private readonly SistemaDbContext _context;
+    public Task<List<UsuarioRespuestaDTO>> ListarUsuario() =>
+        context.usuarios.AsNoTracking().Select(Respuesta).ToListAsync();
 
-        public UsuarioService(SistemaDbContext context)
+    public async Task<UsuarioRespuestaDTO> CrearUsuario(CrearCuentaDTOs dto)
+    {
+        var errors = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(dto, new ValidationContext(dto), errors, true))
+            throw new UsuarioValidationException(errors[0].ErrorMessage!);
+
+        var username = dto.usuario.Trim();
+        var phone = dto.telefono.Trim();
+        var email = string.IsNullOrWhiteSpace(dto.corre_electronico) ? null : dto.corre_electronico.Trim();
+        // Calcular el hash antes de tomar bloqueos en SQL Server.
+        var hash = BCrypt.Net.BCrypt.HashPassword(dto.password);
+
+        // Protege comprobación y alta entre ambas rutas y múltiples instancias.
+        await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var role = await context.rols.AsNoTracking().FirstOrDefaultAsync(r => r.id_rol == dto.id_rol);
+        if (role is null || !role.estado ||
+            (role.nombre != Roles.Administrador && role.nombre != Roles.Vendedor))
+            throw new UsuarioValidationException("Selecciona un rol interno activo y válido.");
+
+        if (await context.usuarios.AnyAsync(u => u.usuario == username))
+            throw new UsuarioValidationException("Ya existe un usuario con ese nombre de usuario.");
+        if (email is not null && await context.usuarios.AnyAsync(u => u.correo == email))
+            throw new UsuarioValidationException("Ya existe un usuario con ese correo electrónico.");
+        if (await context.usuarios.AnyAsync(u => u.telefono == phone))
+            throw new UsuarioValidationException("Ya existe un usuario con ese teléfono.");
+
+        var user = new Usuario
         {
-            _context = context;
-
-        }
-
-        public async Task<List<Usuario>> ListarUsuario()
-        {
-            return await _context.usuarios.ToListAsync();
-        }
-
-        public async Task<Usuario> CrearUsuario(Usuario usuario)
-        {
-            //consulta a la base de datos :V
-            var UsuarioExistente = await _context.usuarios.FirstOrDefaultAsync(u => u.usuario == usuario.usuario ||  u.telefono==usuario.telefono);
-
-            if (UsuarioExistente != null)
-            {
-                if (UsuarioExistente.usuario == usuario.usuario)
-                    throw new InvalidOperationException("ya existe un usuario registrado con este nombre de usuario, por favor ingresa otro");
-
-                if (UsuarioExistente.usuario == usuario.correo)
-                    throw new InvalidOperationException("ya existe un usuario registrado con este correo por favor intenta con otro Correo Electronico");
-
-                throw new InvalidOperationException("ya existe un usuario registrado con el mismo numero de telefono, por favor ingresa otro numero");
-            }
-
-
-            usuario.password= BCrypt.Net.BCrypt.HashPassword(usuario.password);
-
-            _context.usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
-            return usuario;
-        }
-
+            nombre = dto.nombre.Trim(), apellido = dto.apellido.Trim(), usuario = username,
+            correo = email, telefono = phone, password = hash, id_rol = role.id_rol,
+            estado = true, fecha_Creacion = DateTime.Now
+        };
+        context.usuarios.Add(user);
+        await context.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return Respuesta.Compile()(user);
     }
-
-
 }

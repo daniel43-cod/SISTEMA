@@ -12,7 +12,8 @@ namespace API_SISTEMA.models
         public required string usuario { get; set; }
         public string? correo { get; set; }
         public required string telefono { get; set; }
-        public required string password { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string password { get; set; } = "";
         public bool estado { get; set; }
         public  DateTime fecha_Creacion {  get; set; }
         public  Rol rol { get; set; }
