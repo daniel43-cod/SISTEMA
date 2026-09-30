@@ -1,3 +1,4 @@
+//contenido de la pagina que aparece cuando el cliente ya se autentico
 import { useAuth } from '../../features/auth'
 import { Button } from '../../shared/ui/Button'
 import './StaffLayout.css'
@@ -8,7 +9,7 @@ export function StaffLayout() {
   return (
     <main className="staff-layout">
       <header className="staff-header">
-        <strong>Sistema · Punto de venta</strong>
+        <strong>Distribuidora san antonio</strong>
         <Button onClick={() => logout()}>Cerrar sesión</Button>
       </header>
       <section className="staff-welcome">

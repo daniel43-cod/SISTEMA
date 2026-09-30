@@ -2,6 +2,7 @@ import type { LoginCredentials, StaffSession } from '../types/auth.ts'
 
 export type LoginErrors = Partial<Record<keyof LoginCredentials, string>>
 
+//validar que las credenciales tengan los formatos correctos para mandrlos al back
 export function validateLogin(credentials: LoginCredentials): LoginErrors {
   const errors: LoginErrors = {}
   if (!credentials.usuario.trim()) errors.usuario = 'Ingresa tu usuario.'

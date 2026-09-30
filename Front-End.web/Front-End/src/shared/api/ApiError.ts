@@ -1,3 +1,4 @@
+//clase para representa errores en las peticiones de la api
 export class ApiError extends Error {
   readonly status: number
   readonly retryAfterSeconds: number | null

@@ -1,6 +1,7 @@
 import { LoginForm } from '../components/LoginForm'
 import './StaffLoginPage.css'
 
+//pagina principal
 export function StaffLoginPage() {
   return (
     <main className="login-page">

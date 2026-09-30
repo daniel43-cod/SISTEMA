@@ -6,6 +6,8 @@ import type { LoginCredentials } from '../types/auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { useAuth } from './useAuth'
 
+
+//coordina el proceso de inicio se sesion
 export function useLogin() {
   const { startSession } = useAuth()
   const [errors, setErrors] = useState<LoginErrors>({})

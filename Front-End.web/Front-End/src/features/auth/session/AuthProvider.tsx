@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AuthContext } from './AuthContext'
 import type { StaffSession } from '../types/auth'
 
+//mantienen la sesion para compartur con los componentes
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<StaffSession | null>(null)
   const [notice, setNotice] = useState('')
