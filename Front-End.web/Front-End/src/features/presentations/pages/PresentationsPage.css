@@ -1,0 +1,22 @@
+.presentation-card { width: 100%; max-width: 560px; padding: clamp(20px, 4vw, 32px); background: var(--color-surface); border: 1px solid #e2e8f0; border-radius: 16px; }
+.presentation-label { color: var(--color-primary); font-size: .75rem; font-weight: 650; }
+.presentation-card h2 { margin: 10px 0; font-size: 1.4rem; }
+.presentation-description, .presentation-hint { color: var(--color-muted); font-size: .85rem; line-height: 1.7; }
+.presentation-form { display: grid; gap: 16px; margin-top: 24px; }
+.presentation-hint { margin-top: -6px; font-size: .78rem; }
+.presentation-error, .presentation-success { padding: 12px; border-radius: 8px; font-size: .875rem; line-height: 1.6; overflow-wrap: anywhere; }
+.presentation-error { background: #fef2f2; color: var(--color-error); }
+.presentation-success { background: #f0fdf4; color: var(--color-success); }
+.presentation-success:empty { display: none; }
+.presentation-form .button { width: auto; justify-self: start; }
+@media (max-width: 480px) { .presentation-form .button { width: 100%; } }
+.presentations-page { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 24px; }
+.presentations-page > .presentation-card { flex: 1 1 320px; min-width: 0; }
+.presentation-list-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.presentation-list-heading h2 { margin: 0; font-size: 1.2rem; }
+.presentation-refresh { min-height: 44px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: var(--color-primary); }
+.presentation-refresh:disabled { color: var(--color-muted); }
+.presentation-list-items { list-style: none; padding: 0; margin: 16px 0 0; }
+.presentation-list-items li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; }
+.presentation-list-items strong { font-size: .9rem; overflow-wrap: anywhere; min-width: 0; }
+.presentation-active { color: var(--color-success); background: #f0fdf4; border-radius: 6px; padding: 4px 8px; font-size: .75rem; }

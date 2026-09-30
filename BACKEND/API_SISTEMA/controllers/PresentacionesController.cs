@@ -10,10 +10,7 @@ namespace API_SISTEMA.controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-public class PresentacionesController(
-    CrearPresentacionServices crearService,
-    ListarPresentacionServices listarService,
-    ILogger<PresentacionesController> logger) : ControllerBase
+public class PresentacionesController(CrearPresentacionServices crearService,ListarPresentacionServices listarService,ILogger<PresentacionesController> logger) : ControllerBase
 {
     [HttpPost]
     [Authorize(Roles = Roles.Administrador)]

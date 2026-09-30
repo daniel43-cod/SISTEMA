@@ -26,7 +26,9 @@ public class CrearPresentacionServices(SistemaDbContext context)
         if (existe)
             throw new PresentacionDuplicadaException();
 
-        var presentacion = new Presentacion { Descripcion = descripcion, Estado = true };
+        var presentacion = new Presentacion { 
+            Descripcion = descripcion, 
+            Estado = true };
         context.presentaciones.Add(presentacion);
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);

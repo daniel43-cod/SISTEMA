@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
+import { PresentationsPage } from '../../features/presentations'
 import { StaffNavigation } from '../navigation/StaffNavigation'
 import { getStaffNavigation } from '../navigation/navigationItems'
 import type { StaffSection } from '../navigation/navigationItems'
@@ -131,7 +132,7 @@ export function StaffLayout() {
                   <span className="staff-shortcut-action">Abrir sección <span aria-hidden="true">→</span></span>
                 </button>)}
             </div>
-          </section> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+          </section> : current.id === 'productos' ? <PresentationsPage /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>
