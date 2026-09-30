@@ -26,7 +26,7 @@ namespace API_SISTEMA.services
                     nombre_producto = dv.Producto.nombre,
                     descuento = dv.descuento??0,
                     id_producto_presentacion = dv.id_producto_presentacion,
-                    descripcion_resentacion = dv.producto_presentacion.descripcion,
+                    descripcion_resentacion = dv.producto_presentacion.Presentacion.Descripcion,
                     cantidad = dv.cantidad,
                     precio = dv.producto_presentacion.precio
                 })

@@ -41,7 +41,7 @@ namespace API_SISTEMA.services.ProductoS
                                 pr.id_producto_presentacion,
 
                             presentacion =
-                                pr.descripcion,
+                                pr.Presentacion.Descripcion,
 
                             unidades_equivalentes =
                                 pr.unidades_equivalentes,

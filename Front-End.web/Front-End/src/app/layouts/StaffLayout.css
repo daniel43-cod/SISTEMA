@@ -45,7 +45,6 @@
 .staff-logout:hover { background: #f8fafc; color: var(--color-text); }
 .staff-content { padding: clamp(24px, 4vw, 48px); max-width: 1440px; margin: auto; }
 .staff-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 44px; }
-.staff-page-heading .button { width: auto; display: flex; gap: 22px; align-items: center; }
 .staff-eyebrow { font-size: .7rem; color: var(--color-primary); text-transform: uppercase; font-weight: 700; letter-spacing: .12em; }
 .staff-page-heading h1 { font-size: clamp(1.55rem, 2.6vw, 2.15rem); letter-spacing: -.04em; margin: 12px 0; overflow-wrap: anywhere; }
 .staff-page-heading p { color: var(--color-muted); font-size: .9rem; line-height: 1.7; }
@@ -65,7 +64,7 @@
 .staff-header-brand { display: none; }
 .staff-skip { position: fixed; top: 8px; left: 8px; z-index: 20; transform: translateY(-160%); background: white; color: var(--color-primary); padding: 12px; border-radius: 8px; }
 .staff-skip:focus { transform: translateY(0); }
-@media (min-width: 1500px) { .staff-shortcuts { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1500px) { .staff-shortcuts { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) {
   .staff-shell { grid-template-columns: minmax(0, 1fr); }
   .staff-sidebar { position: fixed; top: 80px; left: 0; height: auto; max-height: calc(100dvh - 80px); width: min(280px, 85vw); z-index: 20; border: 0; box-shadow: 8px 12px 24px #0f172a14; }

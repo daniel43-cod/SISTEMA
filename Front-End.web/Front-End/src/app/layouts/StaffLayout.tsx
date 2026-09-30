@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
-import { Button } from '../../shared/ui/Button'
 import { StaffNavigation } from '../navigation/StaffNavigation'
 import { getStaffNavigation } from '../navigation/navigationItems'
 import type { StaffSection } from '../navigation/navigationItems'
@@ -117,16 +116,15 @@ export function StaffLayout() {
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
           <div className="staff-page-heading">
-            <div><span className="staff-eyebrow">{current.group}</span>
+            <div>{current.id !== 'inicio' && <span className="staff-eyebrow">{current.group}</span>}
               <h1>{current.id === 'inicio' ? `Bienvenido, ${session.user.name}` : current.label}</h1>
-              <p>{current.id === 'inicio' ? 'Selecciona una sección para continuar con tu jornada.' : current.description}</p>
+              {current.id !== 'inicio' && <p>{current.description}</p>}
             </div>
-            {current.id === 'inicio' && <Button onClick={() => selectSection('ventas')}>Ir a ventas <span aria-hidden="true">→</span></Button>}
           </div>
           {current.id === 'inicio' ? <section aria-labelledby="staff-shortcuts-title">
             <h2 id="staff-shortcuts-title" className="staff-section-title">Accesos rápidos</h2>
             <div className="staff-shortcuts">
-              {items.filter(item => ['ventas', 'caja', 'pedidos', 'productos'].includes(item.id)).map(item =>
+              {items.filter(item => ['ventas', 'caja', 'reportes'].includes(item.id)).map(item =>
                 <button type="button" className="staff-shortcut" key={item.id} onClick={() => selectSection(item.id)}>
                   <span className="staff-shortcut-icon"><NavigationIcon section={item.id} /></span>
                   <strong>{item.label}</strong><span>{item.description}</span>

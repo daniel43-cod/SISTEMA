@@ -25,7 +25,7 @@ namespace API_SISTEMA.services
                     id_producto = p.id_producto,
                     id_producto_presentacion = p.id_producto_presentacion,
                     nombre_producto = p.Producto.nombre,
-                    presentacion = p.descripcion,
+                    presentacion = p.Presentacion.Descripcion,
                     unidades_equivalentes = p.unidades_equivalentes,
                     precio = p.precio,
                     stock = p.Producto.stock??0
@@ -35,10 +35,20 @@ namespace API_SISTEMA.services
             return productos;
         }
 
-        public async Task<List<Producto_Presentacion>> ListarPresentaciones(int idProducto)
+        public async Task<List<ListarPresentacionProductoDTO>> ListarPresentaciones(int idProducto)
         {
             return await _context.producto_presentaciones
                 .Where(p => p.id_producto == idProducto)
+                .Select(p => new ListarPresentacionProductoDTO
+                {
+                    id_producto_presentacion = p.id_producto_presentacion,
+                    id_producto = p.id_producto,
+                    id_presentacion = p.IdPresentacion,
+                    descripcion = p.Presentacion.Descripcion,
+                    unidades_equivalentes = p.unidades_equivalentes,
+                    precio = p.precio,
+                    estado = p.estado
+                })
                 .ToListAsync();
         }
 
@@ -55,7 +65,7 @@ namespace API_SISTEMA.services
                 .Include(p => p.Producto)
                 .Where(p =>
                     p.Producto.nombre.Contains(texto) ||
-                    p.descripcion.Contains(texto) ||
+                    (p.Presentacion.Descripcion != null && p.Presentacion.Descripcion.Contains(texto)) ||
                     p.Producto.codigo_barra.Contains(texto))
                 .Select(p => new ProductoVentaBuscarDTO
                 {
@@ -63,7 +73,7 @@ namespace API_SISTEMA.services
                     id_producto_presentacion = p.id_producto_presentacion,
                     
                     nombre_producto = p.Producto.nombre,
-                    presentacion = p.descripcion,
+                    presentacion = p.Presentacion.Descripcion,
                     
                     unidades_equivalentes = p.unidades_equivalentes,
                     precio = p.precio,

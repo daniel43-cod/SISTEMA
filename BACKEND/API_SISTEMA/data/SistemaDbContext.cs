@@ -37,6 +37,7 @@ namespace API_SISTEMA.data
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
         public DbSet<Producto_Presentacion> producto_presentaciones { get; set; }
+        public DbSet<Presentacion> presentaciones { get; set; }
         public DbSet<DetalleCompra> detalle_compras { get; set; }
         public DbSet<RegistroCompras> registroCompras { get; set; }
         public DbSet<EstadoCompra> estado_compras { get; set; }
@@ -66,6 +67,9 @@ namespace API_SISTEMA.data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Productos>().ToTable("productos");
+            base.OnModelCreating(modelBuilder);
+            
+            modelBuilder.Entity<Presentacion>().ToTable("presentaciones");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Detalle_venta>().ToTable("detalle_venta");
@@ -325,6 +329,12 @@ namespace API_SISTEMA.data
                 .HasOne(v => v.Conversacion)
                 .WithMany()
                 .HasForeignKey(v => v.IdConversacion);
+
+            modelBuilder.Entity<Producto_Presentacion>()
+                .HasOne(p => p.Presentacion)
+                .WithMany()
+                .HasForeignKey(p => p.IdPresentacion)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

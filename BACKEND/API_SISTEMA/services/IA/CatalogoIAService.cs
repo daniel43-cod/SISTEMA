@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using API_SISTEMA.data;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +15,7 @@ public sealed class CatalogoIAService(SistemaDbContext context)
             // p representa una presentación. Exige que esté activa y que el texto
             // aparezca en el nombre del producto o en la descripción de la presentación.
             // && significa «y»; || significa «o». EF traduce este filtro a SQL.
-            .Where(p => p.estado && (p.Producto.nombre.Contains(texto) || p.descripcion.Contains(texto)))
+            .Where(p => p.estado && (p.Producto.nombre.Contains(texto) || (p.Presentacion.Descripcion != null && p.Presentacion.Descripcion.Contains(texto))))
             // Ordena por nombre; si hay nombres iguales, ordena por ID de presentación.
             .OrderBy(p => p.Producto.nombre).ThenBy(p => p.id_producto_presentacion)
             // Limita a diez resultados en SQL: no carga todo el catálogo en memoria.
@@ -25,7 +25,7 @@ public sealed class CatalogoIAService(SistemaDbContext context)
             {
                 // nombre: nombre del producto; presentacion: descripción de su formato;
                 // precio: precio registrado para esa presentación, no el costo de compra.
-                nombre = p.Producto.nombre, presentacion = p.descripcion, precio = p.precio,
+                nombre = p.Producto.nombre, presentacion = p.Presentacion.Descripcion, precio = p.precio,
                 // Comprueba que la presentación tenga una equivalencia positiva y haya stock.
                 // ?? 0 trata el stock nulo como cero y evita dividir entre cero más abajo.
                 presentacionesDisponibles = p.unidades_equivalentes > 0 && (p.Producto.stock ?? 0) > 0

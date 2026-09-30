@@ -11,6 +11,7 @@ using API_SISTEMA.services.MovimientoCaja;
 using API_SISTEMA.services.PagoCompra;
 using API_SISTEMA.services.Permisos;
 using API_SISTEMA.services.ProductoS;
+using API_SISTEMA.services.Prestacion;
 using API_SISTEMA.services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -90,6 +91,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddSingleton<conexion>();
 //agregue el services del usuario
 builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<CrearPresentacionServices>();
+builder.Services.AddScoped<ListarPresentacionServices>();
 builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<RegistroCuentaClienteService>();
 builder.Services.AddScoped<InicioSesionService>();

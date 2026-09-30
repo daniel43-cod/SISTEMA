@@ -46,7 +46,7 @@ namespace API_SISTEMA.services
                         .Select(pp => new PresentacionCatalogoDTOs
                         {
                             id_producto_presentacion = pp.id_producto_presentacion,
-                            presentacion = pp.descripcion,
+                            presentacion = pp.Presentacion.Descripcion,
                             unidades_equivalentes = pp.unidades_equivalentes,
                             precio = pp.precio
                         })

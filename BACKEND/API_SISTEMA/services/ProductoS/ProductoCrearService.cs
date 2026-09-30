@@ -24,6 +24,12 @@ namespace API_SISTEMA.services
             if (existeCodigo)
                 throw new Exception("Ya existe un producto con ese código de barras.");
 
+            var idsPresentaciones = productoDto.presentaciones.Select(p => p.id_presentacion).Distinct().ToList();
+            var presentacionesValidas = await _context.presentaciones
+                .CountAsync(p => idsPresentaciones.Contains(p.IdPresentacion) && p.Estado == true);
+            if (idsPresentaciones.Any(id => id <= 0) || presentacionesValidas != idsPresentaciones.Count)
+                throw new Exception("Las presentaciones seleccionadas deben existir y estar activas.");
+
             var producto = new Productos
             {
                 codigo_barra = productoDto.codigo_barra,
@@ -42,23 +48,20 @@ namespace API_SISTEMA.services
 
             producto.costo_unitario = (productoDto.precio_compra / productoDto.stock);*/
 
-            _context.productos.Add(producto);
-            await _context.SaveChangesAsync();
-
             foreach (var item in productoDto.presentaciones)
             {
                 var presentacion = new Producto_Presentacion
                 {
-                    id_producto = producto.id_producto,
-                    descripcion = item.descripcion,
+                    IdPresentacion = item.id_presentacion,
                     unidades_equivalentes = item.unidades_equivalentes,
                     precio = item.precio,
                     estado = true
                 };
 
-                _context.producto_presentaciones.Add(presentacion);
+                producto.ProductoPresentaciones.Add(presentacion);
             }
 
+            _context.productos.Add(producto);
             await _context.SaveChangesAsync();
 
             return producto;
