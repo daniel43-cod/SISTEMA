@@ -1,3 +1,5 @@
+//permite que un componente accesa a la sesion y sus funciones
+
 import { useContext } from 'react'
 import { AuthContext } from '../session/AuthContext'
 export function useAuth() {

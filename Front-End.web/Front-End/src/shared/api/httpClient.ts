@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config/api.ts'
 import { ApiError } from './ApiError.ts'
 
+//realiza las peticiones
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
