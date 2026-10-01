@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using API_SISTEMA.services.Categoria;
 
 var builder = WebApplication.CreateBuilder(args);
 //agregue la coneciom del appsetings
@@ -137,6 +138,9 @@ builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaImagenService
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
+
+//marcas
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaListarService>();
 
 // Marcas: servicio de creación con una instancia por petición.
 builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaCrearService>();

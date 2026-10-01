@@ -1,0 +1,5 @@
+.brand-card { width: 100%; max-width: 560px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: var(--color-surface); }
+.brand-card h2 { margin-top: 0; padding-right: 40px; font-size: 1.4rem; }
+.brand-form { display: grid; gap: 16px; margin-top: 24px; }
+.brand-form .button { justify-self: start; width: auto; min-height: 44px; padding: 8px 12px; font-size: .85rem; }
+.brand-error { color: var(--color-error); }

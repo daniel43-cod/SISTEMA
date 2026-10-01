@@ -40,11 +40,11 @@ export function PresentationsPage() {
   }
   return <div className="presentations-page catalog-page">
     <p className="catalog-notice" role="status">{notice}</p>
-    {canEdit && formOpen && <section id="catalog-editor" className="presentation-card" aria-labelledby="presentation-form-title" ref={editorRef} tabIndex={-1}>
+    {canEdit && formOpen && <section id="catalog-editor" className="presentation-card catalog-editor" aria-labelledby="presentation-form-title" ref={editorRef} tabIndex={-1}>
       <span className="presentation-label">Presentaciones</span>
       <h2 id="presentation-form-title">{editing ? 'Editar presentación' : 'Crear presentación'}</h2>
       
-      <button type="button" className="catalog-close" onClick={closeForm}>Cerrar formulario</button>
+      <button type="button" className="catalog-close" aria-label="Cerrar formulario" title="Cerrar formulario" onClick={closeForm}><span aria-hidden="true">×</span></button>
       {editing ? <EditPresentationForm key={editing.idPresentacion} presentation={editing}
         onCancel={closeForm}
         onSaved={() => { setNotice('Presentación actualizada correctamente.'); reload(); closeForm() }} />
@@ -60,4 +60,5 @@ export function PresentationsPage() {
     </button>}
   </div>
 }
+
 

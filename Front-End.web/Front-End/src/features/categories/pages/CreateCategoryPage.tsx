@@ -32,9 +32,9 @@ export function CreateCategoryPage() {
   }
   return <div className="categories-page catalog-page">
     <p className="catalog-notice" role="status">{notice}</p>
-    {canEdit && formOpen && <section id="catalog-editor" ref={editor} tabIndex={-1} className="category-card" aria-labelledby="create-category-title">
+    {canEdit && formOpen && <section id="catalog-editor" ref={editor} tabIndex={-1} className="category-card catalog-editor" aria-labelledby="create-category-title">
       <h2 id="create-category-title">{editing ? 'Editar categoría' : 'Crear categoría'}</h2>
-      <button type="button" className="catalog-close" onClick={closeEditor}>Cerrar formulario</button>
+      <button type="button" className="catalog-close" aria-label="Cerrar formulario" title="Cerrar formulario" onClick={closeEditor}><span aria-hidden="true">×</span></button>
       <CategoryForm key={editing?.idCategoria ?? 'new'} category={editing}
         onCancel={editing ? closeEditor : undefined}
         onSaved={() => {
@@ -57,5 +57,6 @@ export function CreateCategoryPage() {
     </button>}
   </div>
 }
+
 
 
