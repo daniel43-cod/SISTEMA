@@ -1,0 +1,4 @@
+.products-sections { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.products-sections button { min-height: 44px; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: var(--color-surface); color: var(--color-muted); cursor: pointer; font: inherit; }
+.products-sections button[aria-current="page"] { color: var(--color-primary); border-color: var(--color-primary); background: #eff6ff; }
+.products-sections button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }

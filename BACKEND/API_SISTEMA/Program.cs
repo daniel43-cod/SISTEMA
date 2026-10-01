@@ -1,4 +1,4 @@
-using API_SISTEMA.controllers;
+﻿using API_SISTEMA.controllers;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
@@ -132,6 +132,10 @@ builder.Services.AddScoped<CrearCompraService>();
 builder.Services.AddScoped<BuscarVentaServices>();
 builder.Services.AddScoped<ActualizarVentaService>();
 
+//categoria
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaImagenService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>();
+
 
 var app = builder.Build();
 
@@ -153,3 +157,4 @@ app.UseStaticFiles();
 app.MapControllers();
 app.Run();
 app.UseStaticFiles();
+

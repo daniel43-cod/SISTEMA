@@ -1,16 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace API_SISTEMA.models
 {
     public class Categoria
     {
         [Key]
-        public int id_categoria { get; set; }
-       
-        public required string nombre_categoria { get; set; }
-        public string? descripcion { get; set; }
-        public bool estado {  get; set; }
-        public DateTime fecha_Creacion { get; set; }
+        [Column("id_categoria")]
+        public int IdCategoria { get; set; }
+        [Required]
+        [Column("nombre_categoria")]
+        public  string nombreCategoria { get; set; } = string.Empty;
+        [Column("estado")]
+        public bool Estado {  get; set; }
+        [Column("fecha_creacion")]
+        public DateTime FechaCreacion { get; set; }
+        [Column("url_imagen")]
+        public string? UrlImagen { get; set; }
 
     }
 }

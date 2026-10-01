@@ -18,19 +18,7 @@ namespace API_SISTEMA.services
             _context = context;
         }
 
-        //metodo para obtener la categoria
-        public async Task<List<CategoriaDto>> ListarCategoria()
-        {
-            //consulta a la base de datos
-            return await _context.categorias
-             .Select(c => new CategoriaDto
-             {
-                 Id = c.id_categoria,
-                 Nombre = c.nombre_categoria
-             })
-             .ToListAsync();
-        }
-
+     
         public async Task<List<ProductoCatalogoDTOs>> ListarCatalogoPorCategoria(int idCategoria)
         {
             var productos = await _context.productos

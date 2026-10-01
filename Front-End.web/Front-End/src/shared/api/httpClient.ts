@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config/api.ts'
+﻿import { API_BASE_URL } from '../config/api.ts'
 import { ApiError } from './ApiError.ts'
 
 //realiza las peticiones
@@ -19,7 +19,8 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('..') || path.includes('\\'))
     throw new Error('Ruta API inválida.')
   const headers: Record<string, string> = { Accept: 'application/json' }
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  const isForm = options.body instanceof FormData
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (options.token) headers.Authorization = `Bearer ${options.token}`
   const signal = options.signal
     ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)])
@@ -27,7 +28,7 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
   try {
     const response = await fetch(API_BASE_URL + path, {
       method: options.method ?? 'GET',
-      headers, body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      headers, body: isForm ? options.body as FormData : options.body === undefined ? undefined : JSON.stringify(options.body),
       signal, cache: 'no-store', credentials: 'omit', redirect: 'error',
     })
     if (!response.ok) {

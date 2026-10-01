@@ -1,4 +1,4 @@
-import react from '@vitejs/plugin-react'
+﻿import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig(({ mode }) => ({
   server: {
     proxy: {
+      '/uploads/categorias': { target: loadEnv(mode, process.cwd(), '').API_PROXY_TARGET || 'http://localhost:5272', changeOrigin: true },
       '/api': { target: loadEnv(mode, process.cwd(), '').API_PROXY_TARGET || 'http://localhost:5272', changeOrigin: true },
     },
   },
@@ -36,7 +37,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
         cleanupOutdatedCaches: true,
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api(?:\/|$)/i],
+        navigateFallbackDenylist: [/^\/api(?:\/|$)/i, /^\/uploads(?:\/|$)/i],
         // Solo recursos del frontend; las respuestas del backend no se guardan.
         runtimeCaching: [],
       },
