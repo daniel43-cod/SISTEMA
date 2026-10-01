@@ -7,8 +7,8 @@ namespace API_SISTEMA.models
         [Key]
         public int id_empresa { get; set; }
         [Required]
-        public  string nombre_empresa { get; set; }
-        public string nit { get; set; }
+        public  string nombre_empresa { get; set; } = string.Empty;
+        public string? nit { get; set; }
 
     }
 }

@@ -68,3 +68,41 @@ test('URL externa viaja como JSON; rechaza enlace inseguro, archivo excesivo y a
   await assert.rejects(createCategory({ nombre: 'Bebidas', urlImagen: 'https://example.com/a.jpg', imagen: new File(['x'], 'a.jpg') }, 'token'))
   assert.equal(mock.mock.callCount(), 1)
 })
+
+test('Listar categorías usa GET autenticado y admite una lista vacía', async t => {
+  const { listCategories } = await import('../src/features/categories/api/categoriesApi.ts')
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Categoria')
+    assert.equal(options.method, 'GET')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    return Response.json([])
+  })
+  assert.deepEqual(await listCategories('token'), [])
+})
+
+test('Actualizar conserva imagen por defecto y permite quitarla explícitamente', async t => {
+  const { updateCategory } = await import('../src/features/categories/api/categoriesApi.ts')
+  let quitar = false
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Categoria/7')
+    assert.equal(options.method, 'PUT')
+    assert.deepEqual(JSON.parse(options.body as string), { nombre: 'Bebidas', quitarImagen: quitar })
+    return Response.json({ idCategoria: 7, nombre: 'Bebidas', estado: true })
+  })
+  await updateCategory(7, { nombre: 'Bebidas' }, 'token')
+  quitar = true
+  await updateCategory(7, { nombre: 'Bebidas', quitarImagen: true }, 'token')
+})
+
+test('Actualizar imagen usa multipart y rechaza ID de respuesta diferente', async t => {
+  const { updateCategory } = await import('../src/features/categories/api/categoriesApi.ts')
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Categoria/7/con-imagen')
+    assert.equal(options.method, 'PUT')
+    assert.ok(options.body instanceof FormData)
+    assert.equal(options.body.get('Nombre'), 'Bebidas')
+    assert.ok(options.body.get('Imagen') instanceof File)
+    return Response.json({ idCategoria: 8, nombre: 'Bebidas', estado: true })
+  })
+  await assert.rejects(updateCategory(7, { nombre: 'Bebidas', imagen: new File(['x'], 'a.png', { type: 'image/png' }) }, 'token'))
+})

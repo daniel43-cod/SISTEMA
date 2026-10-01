@@ -34,7 +34,6 @@ namespace API_SISTEMA.services
             {
                 codigo_barra = productoDto.codigo_barra,
                 nombre = productoDto.nombre,
-                descripcion = productoDto.descripcion,
                 id_categoria = productoDto.id_categoria,
                 stock = 0,
               //  precio_compra = productoDto.precio_compra,

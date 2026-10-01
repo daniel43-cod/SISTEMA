@@ -18,14 +18,39 @@ namespace API_SISTEMA.controllers
 
         private readonly CategoriaService _Service;
         private readonly CategoriaCrearService _crearService;
+        private readonly CategoriaActualizarService _actualizarService;
+        private readonly CategoriaListarService _listarService;
         private readonly ILogger<CategoriaController> _logger;
 
         public CategoriaController(CategoriaService service, CategoriaCrearService crearService,
-            ILogger<CategoriaController> logger)
+            ILogger<CategoriaController> logger, CategoriaActualizarService actualizarService,
+            CategoriaListarService listarService)
         {
             _Service = service;
             _crearService = crearService;
+            _actualizarService = actualizarService;
+            _listarService = listarService;
             _logger = logger;
+        }
+
+        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+        [HttpGet]
+        public async Task<ActionResult<List<RespuestaCategoriaDTO>>> Listar(CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Si no hay categorías activas, devuelve 200 con una lista vacía.
+                return Ok(await _listarService.ListarActivas(cancellationToken));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al listar categorías. Referencia: {TraceId}", traceId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    mensaje = "No se pudieron listar las categorías.", traceId
+                });
+            }
         }
 
         // El permiso se comprueba en el servidor, no solo en el menú del frontend.
@@ -42,6 +67,53 @@ namespace API_SISTEMA.controllers
         [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
         public Task<IActionResult> CrearConImagen([FromForm] CrearCategoriaConImagenDTO dto, CancellationToken cancellationToken)
             => CrearInterno(dto, dto.Imagen, cancellationToken);
+
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpPut("{idCategoria:int}")]
+        [Consumes("application/json")]
+        public Task<IActionResult> Actualizar(int idCategoria, [FromBody] ActualizarCategoriaDTO dto,
+            CancellationToken cancellationToken)
+            => ActualizarInterno(idCategoria, dto, null, cancellationToken);
+
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpPut("{idCategoria:int}/con-imagen")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
+        public Task<IActionResult> ActualizarConImagen(int idCategoria,
+            [FromForm] ActualizarCategoriaConImagenDTO dto, CancellationToken cancellationToken)
+            => ActualizarInterno(idCategoria, dto, dto.Imagen, cancellationToken);
+
+        // Ambos formatos comparten el servicio y las mismas respuestas de error.
+        private async Task<IActionResult> ActualizarInterno(int idCategoria, ActualizarCategoriaDTO dto,
+            IFormFile? imagen, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var categoria = await _actualizarService.ActualizarCategoria(
+                    idCategoria, dto, cancellationToken, imagen);
+                if (categoria is null)
+                    return NotFound(new { mensaje = "La categoría no existe." });
+                return Ok(categoria);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (CategoriaDuplicadaException ex)
+            {
+                return Conflict(new { mensaje = ex.Message });
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al actualizar categoría. Referencia: {TraceId}", traceId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    mensaje = "No se pudo actualizar la categoría.", traceId
+                });
+            }
+        }
 
         private async Task<IActionResult> CrearInterno(CrearCategoriaDTO dto, IFormFile? imagen, CancellationToken cancellationToken)
         {

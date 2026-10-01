@@ -7,8 +7,7 @@ namespace API_SISTEMA.models
         [Key]
         public int id_producto { get; set; }
         public string? codigo_barra { get; set; }
-        public string nombre { get; set; }
-        public string? descripcion { get; set; }
+        public string nombre { get; set; } =string.Empty;
         public int id_categoria { get; set; }
         public decimal? precio_compra { get; set; }
         public int? stock { get; set; }

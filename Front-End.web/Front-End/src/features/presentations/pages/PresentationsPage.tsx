@@ -27,9 +27,7 @@ export function PresentationsPage() {
     {canEdit && <section className="presentation-card" aria-labelledby="presentation-form-title" ref={editorRef} tabIndex={-1}>
       <span className="presentation-label">Presentaciones</span>
       <h2 id="presentation-form-title">{editing ? 'Editar presentación' : 'Crear presentación'}</h2>
-      <p className="presentation-description">{editing
-        ? 'El cambio de nombre se reflejará en los productos asociados.'
-        : 'Registra los formatos que utilizarás al crear tus productos.'}</p>
+      
       <p className="presentation-success" role="status">{notice}</p>
       {editing ? <EditPresentationForm key={editing.idPresentacion} presentation={editing}
         onCancel={() => { setEditing(null); editTrigger.current?.focus() }}

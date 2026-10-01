@@ -2,7 +2,7 @@
 .presentation-label { color: var(--color-primary); font-size: .75rem; font-weight: 650; }
 .presentation-card h2 { margin: 10px 0; font-size: 1.4rem; }
 .presentation-description, .presentation-hint { color: var(--color-muted); font-size: .85rem; line-height: 1.7; }
-.presentation-form { display: grid; gap: 16px; margin-top: 24px; }
+.presentation-form { display:grid; gap: 16px; margin-top: 24px;}
 .presentation-hint { margin-top: -6px; font-size: .78rem; }
 .presentation-error, .presentation-success { padding: 12px; border-radius: 8px; font-size: .875rem; line-height: 1.6; overflow-wrap: anywhere; }
 .presentation-error { background: #fef2f2; color: var(--color-error); }

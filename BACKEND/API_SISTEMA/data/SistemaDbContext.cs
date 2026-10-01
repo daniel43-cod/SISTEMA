@@ -19,6 +19,7 @@ namespace API_SISTEMA.data
 
         //funcion del dbset?
         public DbSet<Categoria> categorias { get; set; }
+        public DbSet<Marca> Marcas { get; set; }
         public DbSet<CuentaCliente> CuentaClientes {get;set;}
         public DbSet<Conversacion> Conversaciones {get;set;}
         public DbSet<Mensaje> Mensajes {get;set;}
@@ -58,6 +59,7 @@ namespace API_SISTEMA.data
         {
 
             modelBuilder.Entity<Categoria>().ToTable("categoria");
+            modelBuilder.Entity<Marca>().ToTable("marca");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Cliente>().ToTable("cliente");

@@ -135,6 +135,8 @@ builder.Services.AddScoped<ActualizarVentaService>();
 //categoria
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaImagenService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
 
 
 var app = builder.Build();
