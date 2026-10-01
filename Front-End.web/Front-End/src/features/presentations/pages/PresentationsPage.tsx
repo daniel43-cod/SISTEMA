@@ -50,8 +50,9 @@ export function PresentationsPage() {
         onSaved={() => { setNotice('Presentación actualizada correctamente.'); reload(); closeForm() }} />
         : <PresentationForm onCreated={() => { reload(); setNotice('Presentación creada correctamente.'); closeForm() }} />}
     </section>}
-    <PresentationList items={items} loading={loading} error={error} onReload={reload}
-      onEdit={canEdit ? startEdit : undefined} editing={formOpen} />
+    {/* Oculta el listado al crear o editar; vuelve a mostrarlo al cerrar el formulario. */}
+    {!formOpen && <PresentationList items={items} loading={loading} error={error} onReload={reload}
+      onEdit={canEdit ? startEdit : undefined} editing={formOpen} />}
     {canEdit && !formOpen && <button ref={addButton} type="button" className="catalog-add-button"
       aria-label="Crear presentación" title="Crear presentación" aria-expanded={formOpen}
       onClick={() => { setNotice(''); setFormOpen(true) }}>
@@ -59,3 +60,4 @@ export function PresentationsPage() {
     </button>}
   </div>
 }
+

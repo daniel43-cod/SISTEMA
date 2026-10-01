@@ -138,6 +138,9 @@ builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
 
+// Marcas: servicio de creación con una instancia por petición.
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaCrearService>();
+
 
 var app = builder.Build();
 

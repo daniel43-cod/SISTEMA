@@ -17,5 +17,12 @@ namespace API_SISTEMA.models
 
         [Column("estado")]
         public bool Estado { get; set; }
+
+        // Cada marca pertenece a una categoría obligatoria.
+        [Column("id_categoria")]
+        public int IdCategoria { get; set; }
+
+        // Navegación para consultar la categoría asociada mediante Entity Framework.
+        public Categoria Categoria { get; set; } = null!;
     }
 }

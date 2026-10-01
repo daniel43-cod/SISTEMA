@@ -42,13 +42,14 @@ export function CreateCategoryPage() {
           setNotice(editing ? 'Categoría actualizada correctamente.' : 'Categoría creada correctamente.'); closeEditor()
         }} />
     </section>}
-    <CategoryList items={items} loading={loading} error={error} reload={reload} editing={formOpen}
+    {/* Oculta el listado al crear o editar; vuelve a mostrarlo al cerrar el formulario. */}
+    {!formOpen && <CategoryList items={items} loading={loading} error={error} reload={reload} editing={formOpen}
       onEdit={canEdit ? item => {
         trigger.current = document.activeElement as HTMLElement
         setNotice(''); setEditing(item); setFormOpen(true)
         editor.current?.focus()
         editor.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      } : undefined} />
+      } : undefined} />}
     {canEdit && !formOpen && <button ref={addButton} type="button" className="catalog-add-button"
       aria-label="Crear categoría" title="Crear categoría" aria-expanded={formOpen}
       onClick={() => { setNotice(''); setFormOpen(true) }}>
@@ -56,4 +57,5 @@ export function CreateCategoryPage() {
     </button>}
   </div>
 }
+
 

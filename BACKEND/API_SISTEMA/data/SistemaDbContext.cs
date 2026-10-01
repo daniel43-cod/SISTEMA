@@ -337,6 +337,15 @@ namespace API_SISTEMA.data
                 .WithMany()
                 .HasForeignKey(p => p.IdPresentacion)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Una categoría puede tener muchas marcas; cada marca tiene una sola categoría.
+            // Impide borrar una categoría con marcas asociadas y evita borrarlas en cascada.
+            modelBuilder.Entity<Marca>()
+                .HasOne(m => m.Categoria)
+                .WithMany()
+                .HasForeignKey(m => m.IdCategoria)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
