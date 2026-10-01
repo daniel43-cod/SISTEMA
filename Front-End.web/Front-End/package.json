@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "tsc -p tsconfig.test.json && node --experimental-strip-types --test tests/auth.test.ts tests/presentations.test.ts tests/categories.test.ts"
+    "test": "tsc -p tsconfig.test.json && node --experimental-strip-types --test tests/auth.test.ts tests/presentations.test.ts tests/categories.test.ts tests/brands.test.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -26,3 +26,4 @@
     "vite-plugin-pwa": "^1.3.0"
   }
 }
+

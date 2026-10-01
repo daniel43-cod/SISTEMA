@@ -23,6 +23,8 @@ public class MarcaListarService
             {
                 IdMarca =c.IdMarca,
                 IdCategoria = c.IdCategoria,
+                // Obtiene el nombre de la categoría relacionada, no el de la marca.
+                NombreCategoria = c.Categoria.nombreCategoria,
                 Nombre = c.Nombre,
                 Estado = c.Estado
             })

@@ -3,3 +3,16 @@
 .brand-form { display: grid; gap: 16px; margin-top: 24px; }
 .brand-form .button { justify-self: start; width: auto; min-height: 44px; padding: 8px 12px; font-size: .85rem; }
 .brand-error { color: var(--color-error); }
+
+/* Listado adaptable: el nombre puede ocupar varias líneas sin desbordar en móvil. */
+.brand-list-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.brand-list-heading h2 { margin: 0; padding: 0; }
+.brand-refresh { min-height: 44px; padding: 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-primary); cursor: pointer; font-size: .8rem; }
+.brand-refresh:disabled { color: var(--color-muted); cursor: default; }
+.brand-refresh:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.brand-list { list-style: none; padding: 0; margin: 16px 0 0; }
+.brand-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid #e2e8f0; }
+.brand-list li > div { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.brand-list strong { font-size: .9rem; }
+.brand-list div span { font-size: .8rem; color: var(--color-muted); }
+.brand-active { font-size: .75rem; color: var(--color-success); background: #f0fdf4; border-radius: 6px; padding: 4px 8px; }

@@ -5,5 +5,6 @@ public sealed class RespuestaMarcaDTO
     public int IdMarca { get; init; }
     public string Nombre { get; init; } = string.Empty;
     public int IdCategoria { get; init; }
+    public string? NombreCategoria { get; init; }
     public bool Estado { get; init; }
 }
