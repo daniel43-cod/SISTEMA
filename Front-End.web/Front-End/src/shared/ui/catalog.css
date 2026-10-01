@@ -1,0 +1,8 @@
+﻿.catalog-page { padding-bottom: 88px; }
+.catalog-notice { flex-basis: 100%; margin: 0; color: var(--color-success); }
+.catalog-notice:empty { display: none; }
+.catalog-add-button { position: fixed; right: max(24px, env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 20; width: 56px; height: 56px; display: grid; place-items: center; border: none; border-radius: 50%; background: var(--color-primary); color: white; box-shadow: 0 4px 14px #0f172a33; cursor: pointer; }
+.catalog-add-button span { font-size: 32px; line-height: 1; }
+.catalog-add-button:hover { background: var(--color-primary-hover, #1e40af); }
+.catalog-add-button:focus-visible, .catalog-close:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 4px; }
+.catalog-close { min-height: 44px; padding: 8px 0; border: none; background: transparent; color: var(--color-muted); cursor: pointer; font: inherit; font-size: .85rem; }
