@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using API_SISTEMA.DTOs.Marcas;
 using API_SISTEMA.services.Marca;
 using API_SISTEMA.Utilidades;
@@ -12,14 +12,16 @@ namespace API_SISTEMA.controllers;
 [Authorize]
 public class MarcasController : ControllerBase
 {
+    private readonly MarcaActualizarService _actualizarService;
     private readonly MarcaCrearService _crearService;
     private readonly MarcaListarService _listarService;
     private readonly ILogger<MarcasController> _logger;
 
     public MarcasController(MarcaCrearService crearService, ILogger<MarcasController> logger,
-        MarcaListarService listarService)
+        MarcaListarService listarService, MarcaActualizarService actualizarService)
     {
         _crearService = crearService;
+        _actualizarService = actualizarService;
         _listarService = listarService;
         _logger = logger;
     }
@@ -44,6 +46,27 @@ public class MarcasController : ControllerBase
         }
     }
 
+    // La edición valida permisos en la API, aunque el frontend oculte el botón.
+    [Authorize(Roles = Roles.Administrador)]
+    [HttpPut("{idMarca:int}")]
+    public async Task<ActionResult<RespuestaMarcaDTO>> Actualizar(int idMarca,
+        [FromBody] ActualizarMarcaDTO dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var marca = await _actualizarService.ActualizarMarca(idMarca, dto, cancellationToken);
+            if (marca is null) return NotFound(new { mensaje = "La marca no existe." });
+            return Ok(marca);
+        }
+        catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+        catch (MarcaDuplicadaException ex) { return Conflict(new { mensaje = ex.Message }); }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var traceId = HttpContext.TraceIdentifier;
+            _logger.LogError(ex, "Error al actualizar marca. Referencia: {TraceId}", traceId);
+            return StatusCode(500, new { mensaje = "No se pudo actualizar la marca.", traceId });
+        }
+    }
     // La creación sigue siendo exclusiva de administradores.
     [Authorize(Roles = Roles.Administrador)]
     [HttpPost]
@@ -75,3 +98,4 @@ public class MarcasController : ControllerBase
         }
     }
 }
+
