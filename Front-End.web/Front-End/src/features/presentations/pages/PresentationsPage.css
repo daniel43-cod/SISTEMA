@@ -14,7 +14,7 @@
 .presentations-page > .presentation-card { flex: 1 1 320px; min-width: 0; }
 .presentation-list-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .presentation-list-heading h2 { margin: 0; font-size: 1.2rem; }
-.presentation-refresh { min-height: 44px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: var(--color-primary); }
+.presentation-refresh { min-height: 44px; padding: 8px 12px; border:0; border-radius: 8px; background: white; color: var(--color-primary); }
 .presentation-refresh:disabled { color: var(--color-muted); }
 .presentation-list-items { list-style: none; padding: 0; margin: 16px 0 0; }
 .presentation-list-items li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; }

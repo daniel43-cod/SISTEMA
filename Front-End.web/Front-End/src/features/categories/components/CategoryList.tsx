@@ -15,7 +15,21 @@ export function CategoryList({ items, loading, error, reload, onEdit, editing }:
   return <section className="category-card" aria-labelledby="category-list-title" aria-busy={loading}>
     <div className="category-list-heading">
       <h2 id="category-list-title">Categorías</h2>
-      <button type="button" className="category-list-action" onClick={reload} disabled={loading}>Actualizar lista</button>
+      <button type="button" className="category-list-action" onClick={reload} disabled={loading}aria-label='Actualizar lista de categorias' title='Actualizar lista'>
+        <svg
+        width="25"
+        height="25"
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true">
+      <path d="M20 7v5h-5" />
+    <path d="M20 12a8 8 0 1 0-2.3 5.7" />
+    </svg>
+      </button>
     </div>
     {loading && <p role="status">Cargando categorías…</p>}
     {error && <p className="category-error" role="alert">{error}</p>}
