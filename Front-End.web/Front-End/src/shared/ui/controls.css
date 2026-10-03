@@ -15,3 +15,19 @@
 .input::placeholder { color: #64748b; }
 .input[aria-invalid="true"] { border-color: var(--color-error); }
 .field-error { color: var(--color-error); font-size: .875rem; }
+/* Encabezado compartido: el título puede ocupar varias líneas sin desplazar el botón. */
+.catalog-list-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 16px;
+}
+.catalog-list-heading > h2 { margin: 0; padding: 0; min-width: 0; overflow-wrap: anywhere; font-size: 1.2rem; }
+
+/* Mismo aspecto en los tres listados, con un área táctil de 44 x 44 px. */
+.refresh-button {
+  display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px;
+  padding: 0; border: 0; border-radius: 50%; background: transparent;
+  color: var(--color-primary); cursor: pointer;
+}
+.refresh-button:hover:not(:disabled) { background: #eff6ff; }
+.refresh-button:disabled { color: var(--color-muted); cursor: default; opacity: .6; }
+.refresh-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }

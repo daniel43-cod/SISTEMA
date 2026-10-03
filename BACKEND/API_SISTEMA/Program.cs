@@ -125,6 +125,7 @@ builder.Services.AddScoped<PermisoService>();
 builder.Services.AddScoped<PermisoUsuarioService>();
 //productos
 builder.Services.AddScoped<ProductoCrearService>();
+builder.Services.AddScoped<ProductoImagenService>();
 builder.Services.AddScoped<SubirImagenService>();
 builder.Services.AddScoped<BuscarCodigoBarraService>();
 //compras
@@ -167,5 +168,6 @@ app.UseStaticFiles();
 app.MapControllers();
 app.Run();
 app.UseStaticFiles();
+
 
 

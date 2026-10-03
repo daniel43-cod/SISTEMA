@@ -346,6 +346,15 @@ namespace API_SISTEMA.data
                 .HasForeignKey(m => m.IdCategoria)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Una marca tiene muchos productos; cada producto requiere una marca.
+            // Impide borrar una marca con productos asociados.
+            modelBuilder.Entity<Productos>()
+                .HasOne(p => p.Marca)
+                .WithMany()
+                .HasForeignKey(p => p.IdMarca)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

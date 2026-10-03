@@ -1,3 +1,4 @@
+﻿import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { PresentationResponse } from '../types/presentation'
 
 type Props = {
@@ -10,25 +11,9 @@ type Props = {
 }
 export function PresentationList({ items, loading, error, onReload, onEdit, editing }: Props) {
   return <section className="presentation-card presentation-list" aria-labelledby="presentation-list-title" aria-busy={loading}>
-    <div className="presentation-list-heading">
+    <div className="catalog-list-heading">
       <h2 id="presentation-list-title">Presentaciones activas</h2>
-      <button type="button" className="presentation-refresh" disabled={loading} onClick={onReload} aria-label='Actualizar la lista de presentaciones' title='Actualizar presentaciones'
-      >
-        <svg
-    width="25"
-    height="25"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M20 7v5h-5" />
-    <path d="M20 12a8 8 0 1 0-2.3 5.7" />
-  </svg>
-      </button>
+      <RefreshButton onClick={onReload} loading={loading} label="Actualizar presentaciones" />
     </div>
     {loading ? <p role="status">Cargando presentaciones…</p> :
       error ? <p className="presentation-error" role="alert">{error}</p> :

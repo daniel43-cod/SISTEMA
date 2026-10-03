@@ -1,4 +1,5 @@
-﻿using API_SISTEMA.DTOs.Productos;
+﻿using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
 using API_SISTEMA.services.ProductoS;
@@ -16,15 +17,16 @@ namespace API_SISTEMA.controllers
     [ApiController]
     public class ProductosController : ControllerBase
     {
-        ILogger<ProductosController> _logger;
+        private readonly ILogger<ProductosController> _logger;
         private readonly BuscarCodigoBarraService _productoService;
         private readonly ProductoService _Service;
         private readonly ProductoCrearService _crearService;
         private readonly SubirImagenService _subirImagenService;
 
 
-        public ProductosController(ProductoService service, ProductoCrearService crearService, SubirImagenService subirImagenService, BuscarCodigoBarraService productoService)
+        public ProductosController(ProductoService service, ProductoCrearService crearService, SubirImagenService subirImagenService, BuscarCodigoBarraService productoService, ILogger<ProductosController> logger)
         {
+            _logger = logger;
             _Service = service;
             _crearService = crearService;
             _subirImagenService = subirImagenService;
@@ -75,38 +77,54 @@ namespace API_SISTEMA.controllers
             }
         }
 
-        [Authorize(Roles =Roles.Administrador)]
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
-        public async Task<IActionResult> CrearProductos([FromBody] productocrear dto)
+        [Consumes("application/json")]
+        public Task<IActionResult> CrearProductos([FromBody] productocrear dto, CancellationToken cancellationToken)
+            => CrearInterno(dto, null, cancellationToken);
+
+        // Archivo o foto: el navegador envía multipart con presentaciones[0].id_presentacion, etc.
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpPost("crear/con-imagen")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
+        public Task<IActionResult> CrearConImagen([FromForm] CrearProductoConImagenDTO dto,
+            CancellationToken cancellationToken)
+            => CrearInterno(dto, dto.Imagen, cancellationToken);
+
+        private async Task<IActionResult> CrearInterno(productocrear dto, IFormFile? imagen,
+            CancellationToken cancellationToken)
         {
             try
             {
-                  var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-                var producto = await _crearService.CrearProducto(dto);
-
-                return Ok(new
+                var producto = await _crearService.CrearProducto(dto, cancellationToken, imagen);
+                // No serializar navegaciones de EF ni devolver ciclos de entidades.
+                return StatusCode(StatusCodes.Status201Created, new
                 {
-                    id_producto = producto.id_producto,
+                    id_producto = producto.id_producto, producto.codigo_barra, producto.nombre,
+                    producto.IdMarca, producto.stock_minimo, producto.imagen, producto.fecha_creacion,
+                    presentaciones = producto.ProductoPresentaciones.Select(p => new
+                    {
+                        p.id_producto_presentacion, id_presentacion = p.IdPresentacion,
+                        p.unidades_equivalentes, p.precio
+                    }),
                     mensaje = "Producto creado correctamente"
                 });
             }
-            catch (Exception ex)
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (ProductoDuplicadoException ex) { return Conflict(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                {
-                    return BadRequest(new
-                    {
-                        mensaje = "A ocurrido un error al ingresar un nuevo producto, intentalo mas tarde o comunicate con el administrador"
-                       // mensaje = ex.Message,
-                       // detalle = ex.ToString()
-                    });
-                }
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al crear producto. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudo crear el producto.", traceId });
             }
         }
         [Authorize(Roles =Roles.Administrador)]
         [HttpPost("{id}/imagen")]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
         public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
         {
             try
@@ -198,3 +216,5 @@ namespace API_SISTEMA.controllers
 
     }
 }
+
+

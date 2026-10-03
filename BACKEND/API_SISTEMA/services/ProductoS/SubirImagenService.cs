@@ -1,41 +1,26 @@
 ﻿using API_SISTEMA.data;
 using API_SISTEMA.models;
 
-namespace API_SISTEMA.services.ProductoS
+namespace API_SISTEMA.services.ProductoS;
+
+// Reutiliza la misma validación de imágenes también al reemplazar una imagen existente.
+public class SubirImagenService
 {
-    public class SubirImagenService
+    private readonly SistemaDbContext _context;
+    private readonly ProductoImagenService _imagenes;
+    public SubirImagenService(SistemaDbContext context, ProductoImagenService imagenes)
     {
-        private readonly ProductoCrearService _crearService;
-        private readonly SistemaDbContext _context;
-        public SubirImagenService(SistemaDbContext context, ProductoCrearService crearService)
-        {
-            _context = context;
-            _crearService = crearService;
-        }
-
-        public async Task<Productos?> SubirImagen(int id, IFormFile imagen)
-        {
-            var producto = await _context.productos.FindAsync(id);
-
-            if (producto == null)
-                return null;
-
-            string nombreArchivo = $"{Guid.NewGuid()}_{imagen.FileName}";
-            string rutaCarpeta = Path.Combine("wwwroot", "imagenes", "productos");
-            string rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
-
-            Directory.CreateDirectory(rutaCarpeta);
-
-            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
-            {
-                await imagen.CopyToAsync(stream);
-            }
-
-            producto.imagen = nombreArchivo;
-
-            await _context.SaveChangesAsync();
-
-            return producto;
-        }
+        _context = context;
+        _imagenes = imagenes;
+    }
+    public async Task<Productos?> SubirImagen(int id, IFormFile imagen)
+    {
+        var producto = await _context.productos.FindAsync(id);
+        if (producto is null) return null;
+        var ruta = await _imagenes.GuardarAsync(imagen, default);
+        producto.imagen = ruta;
+        // Ante un resultado incierto de SQL conservar el archivo evita referencias rotas.
+        await _context.SaveChangesAsync();
+        return producto;
     }
 }

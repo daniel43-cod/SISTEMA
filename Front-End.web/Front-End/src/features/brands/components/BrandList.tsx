@@ -1,28 +1,14 @@
-﻿import type { BrandResponse } from '../types/brand'
+﻿import { RefreshButton } from '../../../shared/ui/RefreshButton'
+import type { BrandResponse } from '../types/brand'
 
 // Recibe los datos del hook: muestra el listado y los estados de carga, error y vacío.
 export function BrandList({ items, loading, error, reload, onEdit }: {
   items: BrandResponse[]; loading: boolean; error: string; reload: () => void; onEdit?: (brand: BrandResponse) => void
 }) {
   return <section className="brand-card" aria-labelledby="brand-list-title" aria-busy={loading}>
-    <div className="brand-list-heading">
+    <div className="catalog-list-heading">
       <h2 id="brand-list-title">Marcas</h2>
-      <button type="button" className="brand-refresh" disabled={loading} onClick={reload} aria-label='Actualizar la lista de marcas' title='Actualizar lista'>
-           <svg  
-    width="25"
-    height="25"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true">
-       <path d="M20 7v5h-5" />
-    <path d="M20 12a8 8 0 1 0-2.3 5.7" />
-  </svg>
-
-      </button>
+      <RefreshButton onClick={reload} loading={loading} label="Actualizar marcas" />
     </div>
  
     {loading && <p role="status">Cargando marcas…</p>}
@@ -39,5 +25,6 @@ export function BrandList({ items, loading, error, reload, onEdit }: {
     </ul>
   </section>
 }
+
 
 

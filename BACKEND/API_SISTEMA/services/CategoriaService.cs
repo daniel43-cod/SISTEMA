@@ -22,7 +22,8 @@ namespace API_SISTEMA.services
         public async Task<List<ProductoCatalogoDTOs>> ListarCatalogoPorCategoria(int idCategoria)
         {
             var productos = await _context.productos
-                .Where(p => p.id_categoria == idCategoria)
+                // El producto obtiene su categoría a través de la marca.
+                .Where(p => p.Marca.IdCategoria == idCategoria)
                 .Select(p => new ProductoCatalogoDTOs
                 {
                     id_producto = p.id_producto,
