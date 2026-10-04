@@ -120,8 +120,8 @@ export function ProductListPage() {
           <div><dt>Marca</dt><dd>{detail.marca}{!detail.marcaActiva && ' (inactiva)'}</dd></div>
           <div><dt>Categoría</dt><dd>{detail.categoria}{!detail.categoriaActiva && ' (inactiva)'}</dd></div>
           <div><dt>Código de barras</dt><dd>{detail.codigoBarra || 'Sin código'}</dd></div>
-          <div><dt>Stock en unidades</dt><dd>{detail.stockUnidades}</dd></div>
-          <div><dt>Stock mínimo</dt><dd>{detail.stockMinimo}</dd></div>
+          <div><dt>Existencia en unidades</dt><dd>{detail.stockUnidades}</dd></div>
+          <div><dt>Existencia minima</dt><dd>{detail.stockMinimo}</dd></div>
         </dl>
         <h3>Presentaciones</h3>
         {!detail.presentaciones.length && <p>Este producto no tiene presentaciones.</p>}

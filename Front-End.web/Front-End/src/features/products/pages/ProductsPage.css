@@ -27,3 +27,7 @@
 .product-detail-fields dt { color: var(--color-muted); }
 .product-detail-fields dd { margin: 4px 0 0; overflow-wrap: anywhere; }
 .product-detail-presentations > li { border-top: 1px solid #e2e8f0; padding: 12px 0; }
+
+/* Ubica el botón + arriba a la derecha dentro de la pantalla de Productos. */
+.product-toolbar { display: flex; justify-content: flex-end; max-width: 800px; margin-bottom: 16px; }
+.product-toolbar .catalog-add-button { position: static; }
