@@ -34,6 +34,7 @@ namespace API_SISTEMA.data
         public DbSet<Rol_permisocs> rol_Permisocs { get; set; }
         public DbSet<Tabla_permiso> tabla_Permisos { get; set; }
         public DbSet<Usuario> usuarios { get; set; }
+        public DbSet<SesionUsuario> SesionesUsuario { get; set; }
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
@@ -355,6 +356,20 @@ namespace API_SISTEMA.data
                 .HasForeignKey(p => p.IdMarca)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Un usuario puede tener varias sesiones; cada sesión pertenece a un usuario.
+            modelBuilder.Entity<SesionUsuario>()
+                .HasOne(s => s.Usuario)
+                .WithMany()
+                .HasForeignKey(s => s.IdUsuario)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Evita hashes repetidos y facilita localizar y limpiar sesiones vencidas.
+            modelBuilder.Entity<SesionUsuario>()
+                .HasIndex(s => s.TokenHash).IsUnique();
+            modelBuilder.Entity<SesionUsuario>()
+                .HasIndex(s => s.FechaVencimiento);
         }
     }
 }
