@@ -1,7 +1,8 @@
-﻿using API_SISTEMA.data;
+using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.services
 {
@@ -14,27 +15,69 @@ namespace API_SISTEMA.services
             _context = context;
         }
 
-    
-
-        public async Task<List<ProductoVentaBuscarDTO>> ObtenerTodosProductosVenta()
+        public async Task<ProductoPaginaDTO> ListarAdministracion(ProductoConsultaDTO filtro,
+            CancellationToken cancellationToken)
         {
-            var productos = await _context.producto_presentaciones
-                .Include(p => p.Producto)
-                .Select(p => new ProductoVentaBuscarDTO
-                {
-                    id_producto = p.id_producto,
-                    id_producto_presentacion = p.id_producto_presentacion,
-                    nombre_producto = p.Producto.nombre,
-                    presentacion = p.Presentacion.Descripcion,
-                    unidades_equivalentes = p.unidades_equivalentes,
-                    precio = p.precio,
-                    stock = p.Producto.stock??0
-                })
-                .ToListAsync();
+            Validator.ValidateObject(filtro, new ValidationContext(filtro), validateAllProperties: true);
+            var consulta = _context.productos.AsNoTracking().AsQueryable();
+            var texto = filtro.Texto?.Trim();
+            if (!string.IsNullOrEmpty(texto))
+                consulta = consulta.Where(p => p.nombre.Contains(texto) ||
+                    (p.codigo_barra != null && p.codigo_barra.Contains(texto)));
+            if (filtro.IdMarca.HasValue)
+                consulta = consulta.Where(p => p.IdMarca == filtro.IdMarca.Value);
+            if (filtro.IdCategoria.HasValue)
+                consulta = consulta.Where(p => p.Marca.IdCategoria == filtro.IdCategoria.Value);
 
-            return productos;
+            var total = await consulta.CountAsync(cancellationToken);
+            var items = await consulta.OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
+                .Skip((filtro.Pagina - 1) * filtro.TamanoPagina).Take(filtro.TamanoPagina)
+                .Select(p => new ProductoResumenDTO
+                {
+                    IdProducto = p.id_producto, CodigoBarra = p.codigo_barra, Nombre = p.nombre,
+                    Imagen = p.imagen, StockUnidades = p.stock ?? 0, StockMinimo = p.stock_minimo ?? 0,
+                    IdMarca = p.IdMarca, Marca = p.Marca.Nombre, MarcaActiva = p.Marca.Estado,
+                    IdCategoria = p.Marca.IdCategoria, Categoria = p.Marca.Categoria.nombreCategoria,
+                    CategoriaActiva = p.Marca.Categoria.Estado
+                }).ToListAsync(cancellationToken);
+            return new ProductoPaginaDTO
+            {
+                Pagina = filtro.Pagina, TamanoPagina = filtro.TamanoPagina, Total = total, Items = items
+            };
         }
 
+        public async Task<ProductoDetalleDTO?> ObtenerDetalleAdministracion(int id,
+            CancellationToken cancellationToken)
+        {
+            if (id <= 0) throw new ValidationException("El ID del producto debe ser mayor que cero.");
+            var detalle = await _context.productos.AsNoTracking().Where(p => p.id_producto == id)
+                .Select(p => new ProductoDetalleDTO
+                {
+                    IdProducto = p.id_producto, CodigoBarra = p.codigo_barra, Nombre = p.nombre,
+                    Imagen = p.imagen, StockUnidades = p.stock ?? 0, StockMinimo = p.stock_minimo ?? 0,
+                    IdMarca = p.IdMarca, Marca = p.Marca.Nombre, MarcaActiva = p.Marca.Estado,
+                    IdCategoria = p.Marca.IdCategoria, Categoria = p.Marca.Categoria.nombreCategoria,
+                    CategoriaActiva = p.Marca.Categoria.Estado, FechaCreacion = p.fecha_creacion
+                }).SingleOrDefaultAsync(cancellationToken);
+            if (detalle is null) return null;
+
+            detalle.Presentaciones = await _context.producto_presentaciones.AsNoTracking()
+                .Where(pp => pp.id_producto == id)
+                .OrderBy(pp => pp.Presentacion.Descripcion).ThenBy(pp => pp.id_producto_presentacion)
+                .Select(pp => new ProductoPresentacionDetalleDTO
+                {
+                    IdProductoPresentacion = pp.id_producto_presentacion,
+                    IdPresentacion = pp.IdPresentacion, Descripcion = pp.Presentacion.Descripcion,
+                    UnidadesEquivalentes = pp.unidades_equivalentes, Precio = pp.precio,
+                    Activa = pp.estado, PresentacionActiva = pp.Presentacion.Estado == true
+                }).ToListAsync(cancellationToken);
+            foreach (var presentacion in detalle.Presentaciones)
+                presentacion.PresentacionesDisponibles = presentacion.Activa && presentacion.PresentacionActiva &&
+                    detalle.MarcaActiva && detalle.CategoriaActiva &&
+                    presentacion.UnidadesEquivalentes > 0 && detalle.StockUnidades > 0
+                        ? detalle.StockUnidades / presentacion.UnidadesEquivalentes : 0;
+            return detalle;
+        }
         public async Task<List<ListarPresentacionProductoDTO>> ListarPresentaciones(int idProducto)
         {
             return await _context.producto_presentaciones

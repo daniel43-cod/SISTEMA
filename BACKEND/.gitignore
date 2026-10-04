@@ -42,3 +42,6 @@ appsettings.Development.json
 /local.properties
 /settings.gradle.kts
 
+
+# Certificados locales de desarrollo (incluyen claves privadas).
+.certs/

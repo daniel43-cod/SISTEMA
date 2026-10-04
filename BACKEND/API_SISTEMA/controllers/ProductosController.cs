@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 namespace API_SISTEMA.controllers
@@ -34,25 +35,46 @@ namespace API_SISTEMA.controllers
         }
 
 
-        [Authorize(Roles =Roles.Administrador)]
+        [Authorize(Roles = Roles.Administrador)]
         [HttpGet("listar")]
-        public async Task<IActionResult> ListarProductos()
+        [EnableRateLimiting("consulta-productos")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<ProductoPaginaDTO>> ListarProductos(
+            [FromQuery] ProductoConsultaDTO filtro, CancellationToken cancellationToken)
         {
             try
             {
-                  var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-            var listar = await _Service.ObtenerTodosProductosVenta();
-            return Ok(listar);
+                return Ok(await _Service.ListarAdministracion(filtro, cancellationToken));
             }
-           catch (Exception ex){
-         _logger.LogError(ex, "Error al listar productos");
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al listar productos. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudieron listar los productos.", traceId });
+            }
+        }
 
-         return StatusCode(500, new{
-        mensaje = "Ocurrió un error interno. Intentá más tarde." });}
-    
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("{id:int}")]
+        [EnableRateLimiting("consulta-productos")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<ProductoDetalleDTO>> DetalleProducto(
+            [Range(1, int.MaxValue)] int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var producto = await _Service.ObtenerDetalleAdministracion(id, cancellationToken);
+                if (producto is null) return NotFound(new { mensaje = "El producto no existe." });
+                return Ok(producto);
+            }
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al consultar producto. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudo consultar el producto.", traceId });
+            }
         }
         //para presentacion de productos
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]

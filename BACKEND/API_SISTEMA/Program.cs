@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.controllers;
+using API_SISTEMA.controllers;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
@@ -34,7 +34,11 @@ builder.Services.AddOptions<JwtSettings>()
         "La configuración JWT es incompleta.")
     .ValidateOnStart();
 builder.Services.AddScoped<UsuarioTokenValidator>();
-builder.Services.AddRateLimiter(options => options.AddPolicy<string, LoginRateLimitPolicy>("login-interno"));
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy<string, LoginRateLimitPolicy>("login-interno");
+    options.AddPolicy<string, ProductoConsultaRateLimitPolicy>("consulta-productos");
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -161,13 +165,9 @@ else
     app.UseHttpsRedirection();
 }
 app.UseRouting();
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseStaticFiles();
 app.MapControllers();
 app.Run();
-app.UseStaticFiles();
-
-
-

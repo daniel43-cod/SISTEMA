@@ -1,14 +1,14 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../../features/auth'
 import { PresentationsPage } from '../../features/presentations'
 import { CreateCategoryPage } from '../../features/categories'
 import { BrandsPage } from '../../features/brands'
-import { CreateProductPage } from '../../features/products'
+import { CreateProductPage, ProductListPage } from '../../features/products'
 import './ProductsPage.css'
 
 export function ProductsPage() {
   const { session } = useAuth()
-  const [section, setSection] = useState<'presentations' | 'categories' | 'brands' | 'products'>('presentations')
+  const [section, setSection] = useState<'presentations' | 'categories' | 'brands' | 'products' | 'list'>('presentations')
   if (!session) return null
   const canCreate = session.user.role === 'ADMINISTRADOR'
   const showCategories = canCreate && section === 'categories'
@@ -23,8 +23,10 @@ export function ProductsPage() {
         onClick={() => setSection("brands")}>Marcas</button>
       <button type="button" aria-current={section === "products" ? "page" : undefined}
         onClick={() => setSection("products")}>Crear productos</button>
+      <button type="button" aria-current={section === 'list' ? 'page' : undefined}
+        onClick={() => setSection('list')}>Listar productos</button>
     </nav>}
-    {canCreate && section === "products" ? <CreateProductPage /> : canCreate && section === "brands" ? <BrandsPage /> : showCategories ? <CreateCategoryPage /> : <PresentationsPage />}
+    {canCreate && section === "list" ? <ProductListPage /> : canCreate && section === "products" ? <CreateProductPage /> : canCreate && section === "brands" ? <BrandsPage /> : showCategories ? <CreateCategoryPage /> : <PresentationsPage />}
   </div>
 }
 

@@ -49,3 +49,37 @@ test('Duplicados, permisos y fallos de red no reintentan la creación', async t 
   await assert.rejects(createProduct(valid(), 'token'))
   assert.equal(mock.mock.callCount(), 1)
 })
+
+ test('Listado y detalle de productos usan GET autenticado y paginación', async t => {
+  const { listProducts, getProductDetail } = await import('../src/features/products/api/productQueries.ts')
+  const item = { idProducto: 1, nombre: 'Agua', marca: 'Marca A', categoria: 'Bebidas', marcaActiva: true,
+    categoriaActiva: true, codigoBarra: null, stockUnidades: 25, stockMinimo: 0 }
+  const mock = t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(options.method, 'GET')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    assert.equal(options.cache, 'no-store')
+    if (url.includes('listar')) {
+      assert.equal(url, '/api/Productos/listar?pagina=2&tamanoPagina=20')
+      return Response.json({ pagina: 2, tamanoPagina: 20, total: 21, items: [item] })
+    }
+    assert.equal(url, '/api/Productos/1')
+    return Response.json({ ...item, fechaCreacion: '2026-10-04', presentaciones: [] })
+  })
+  assert.equal((await listProducts(2, 'token')).items[0].marca, 'Marca A')
+  assert.deepEqual((await getProductDetail(1, 'token')).presentaciones, [])
+  assert.equal(mock.mock.callCount(), 2)
+  await assert.rejects(listProducts(0, 'token'))
+  await assert.rejects(getProductDetail(-1, 'token'))
+  assert.equal(mock.mock.callCount(), 2)
+})
+test('Consultas rechazan contratos inválidos y conservan 401, 403, 404 y Retry-After', async t => {
+  const { listProducts, getProductDetail } = await import('../src/features/products/api/productQueries.ts')
+  t.mock.method(globalThis, 'fetch', async () => Response.json([]))
+  await assert.rejects(listProducts(1, 'token'))
+  await assert.rejects(getProductDetail(1, 'token'))
+  for (const status of [401, 403, 404, 429]) {
+    t.mock.method(globalThis, 'fetch', async () => new Response('secret', { status, headers: { 'Retry-After': '12' } }))
+    await assert.rejects(getProductDetail(1, 'token'), error => error instanceof ApiError &&
+      error.status === status && !error.message.includes('secret') && (status !== 429 || error.retryAfterSeconds === 12))
+  }
+})
