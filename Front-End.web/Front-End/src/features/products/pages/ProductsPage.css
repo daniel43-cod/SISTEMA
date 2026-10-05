@@ -41,3 +41,21 @@
 .product-detail-image { display: grid; place-items: center; width: 100%; max-width: 360px; height: 240px; margin: 16px 0; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 12px; background: var(--color-surface); color: var(--color-muted); }
 .product-detail-image img { width: 100%; height: 100%; object-fit: contain; }
 .product-browser button.Product-update-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; border: none; background: transparent; padding: 8px; }
+
+.product-catalog-browser { max-width: 900px; min-width: 0; }
+.product-catalog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px; list-style: none; padding: 0; margin: 20px 0; }
+.product-catalog-grid li { min-width: 0; }
+.product-category-card, .product-brand-card { display: grid; gap: 12px; width: 100%; height: 100%; min-height: 100px; padding: 16px; text-align: left; border: 1px solid #e2e8f0; border-radius: 16px; background: var(--color-surface); color: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.product-category-card:hover, .product-brand-card:hover { border-color: var(--color-primary); }
+.product-category-image { display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; background: #f1f5f9; border-radius: 10px; overflow: hidden; color: #64748b; }
+.product-category-image img { width: 100%; height: 100%; object-fit: contain; }
+.product-brand-card > span { color: var(--color-muted); font-size: .9rem; }
+.product-catalog-path { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; overflow-wrap: anywhere; }
+.product-catalog-path button, .product-catalog-back { min-height: 44px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: var(--color-surface); color: inherit; cursor: pointer; }
+.product-catalog-browser button:focus-visible, .product-catalog-browser h2:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+@media (max-width: 480px) {
+  .product-catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .product-category-card, .product-brand-card { padding: 10px; }
+  .product-list > li { gap: 8px; flex-wrap: wrap; }
+  .product-list > li > div:first-child { flex: 1 1 100%; }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ProductForm } from '../components/ProductForm'
-import { ProductListPage } from './ProductListPage'
+import { ProductCatalogBrowser } from './ProductCatalogBrowser'
 import '../../../shared/ui/catalog.css'
 import './ProductsPage.css'
 
@@ -28,7 +28,7 @@ export function CreateProductPage() {
         <button ref={add} type="button" className="catalog-add-button" aria-label="Crear producto" title="Crear producto"
           onClick={() => { setNotice(''); setOpen(true) }}><span aria-hidden="true">+</span></button>
       </div>
-      <ProductListPage key={revision} />
+      <ProductCatalogBrowser key={revision} />
     </>}
   </div>
 }

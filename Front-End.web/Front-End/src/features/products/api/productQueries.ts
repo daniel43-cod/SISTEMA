@@ -14,9 +14,14 @@ function summary(value: unknown): value is ProductSummary & Record<string, unkno
 }
 function invalid(): never { throw new ApiError('El servidor devolvió datos de productos inválidos.') }
 
-export async function listProducts(page: number, token: string, signal?: AbortSignal): Promise<ProductPage> {
+export async function listProducts(page: number, token: string, signal?: AbortSignal, filters: { idMarca?: number; idCategoria?: number } = {}): Promise<ProductPage> {
   if (!Number.isInteger(page) || page < 1 || page > 100000) throw new ApiError('Página inválida.', 400)
-  const result = await requestJson(`/Productos/listar?pagina=${page}&tamanoPagina=20`, { token, signal })
+  for (const id of [filters.idMarca, filters.idCategoria])
+    if (id !== undefined && (!Number.isSafeInteger(id) || id <= 0)) throw new ApiError('Filtro inválido.', 400)
+  const params = new URLSearchParams({ pagina: String(page), tamanoPagina: '20' })
+  if (filters.idMarca !== undefined) params.set('idMarca', String(filters.idMarca))
+  if (filters.idCategoria !== undefined) params.set('idCategoria', String(filters.idCategoria))
+  const result = await requestJson(`/Productos/listar?${params}`, { token, signal })
   if (!record(result) || result.pagina !== page || result.tamanoPagina !== 20 ||
     !Number.isSafeInteger(result.total) || Number(result.total) < 0 || !Array.isArray(result.items) ||
     result.items.length > 20 || result.items.length > Number(result.total) || !result.items.every(summary) ||

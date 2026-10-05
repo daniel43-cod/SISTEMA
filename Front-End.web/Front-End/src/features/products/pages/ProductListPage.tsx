@@ -10,7 +10,7 @@ import './ProductsPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 
-export function ProductListPage() {
+export function ProductListPage({ idMarca, idCategoria }: { idMarca?: number; idCategoria?: number } = {}) {
   const { session, logout } = useAuth()
   const [editing, setEditing] = useState(false)
   const [focusPresentations, setFocusPresentations] = useState(false)
@@ -53,7 +53,7 @@ export function ProductListPage() {
     void Promise.resolve().then(() => {
       if (controller.signal.aborted) return null
       setLoading(true); setError(''); setData(null)
-      return listProducts(page, token, controller.signal)
+      return listProducts(page, token, controller.signal, { idMarca, idCategoria })
     }).then(result => {
       if (result && !controller.signal.aborted) {
         const lastPage = Math.max(1, Math.ceil(result.total / result.tamanoPagina))
@@ -63,7 +63,7 @@ export function ProductListPage() {
     }).catch(failure => { if (!controller.signal.aborted) report(failure, setError) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [token, report, page, revision])
+  }, [token, report, page, revision, idMarca, idCategoria])
   useEffect(() => {
     if (!token || selected === null) return
     const controller = new AbortController()
