@@ -82,3 +82,19 @@ test('Actualizar rechaza IDs inválidos antes de enviar y respuestas con otro ID
   assert.equal(mocked.mock.callCount(), 0)
   await assert.rejects(updatePresentation(5, { descripcion: 'Caja' }, 'token'))
 })
+test('Administración consulta inactivas y cambia estado con PATCH autenticado', async t => {
+  const { listPresentations, changePresentationState } = await import('../src/features/presentations/api/presentationsApi.ts')
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    if (options.method === 'PATCH') {
+      assert.equal(url, '/api/Presentaciones/1/estado')
+      assert.deepEqual(JSON.parse(options.body as string), { estado: false })
+      return Response.json({ idPresentacion: 1, descripcion: 'Caja', estado: false })
+    }
+    assert.equal(url, '/api/Presentaciones/administracion')
+    return Response.json([{ idPresentacion: 1, descripcion: 'Caja', estado: false }])
+  })
+  assert.equal((await listPresentations('token', undefined, true))[0].estado, false)
+  assert.equal((await changePresentationState(1, false, 'token')).estado, false)
+  await assert.rejects(changePresentationState(0, false, 'token'))
+})

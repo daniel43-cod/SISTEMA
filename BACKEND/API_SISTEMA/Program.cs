@@ -99,6 +99,7 @@ builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<CrearPresentacionServices>();
 builder.Services.AddScoped<ListarPresentacionServices>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
+builder.Services.AddScoped<EstadoPresentacionService>();
 builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<RegistroCuentaClienteService>();
 builder.Services.AddScoped<InicioSesionService>();

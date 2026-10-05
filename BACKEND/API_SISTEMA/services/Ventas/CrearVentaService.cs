@@ -129,7 +129,7 @@ namespace API_SISTEMA.services.Ventas
 
                     var presentacion =await _context.producto_presentaciones.FirstOrDefaultAsync(p =>
                                 p.id_producto_presentacion ==detalleDto.id_producto_presentacion &&
-                                p.id_producto ==detalleDto.id_producto);
+                                p.id_producto ==detalleDto.id_producto && p.estado && p.Presentacion.Estado == true);
 
                     if (presentacion == null)
                     {

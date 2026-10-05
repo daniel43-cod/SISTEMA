@@ -18,11 +18,11 @@ export async function createPresentation(data: CreatePresentationRequest, token:
     throw error
   }
 }
-export async function listPresentations(token: string, signal?: AbortSignal) {
-  const data = await requestJson('/Presentaciones', { token, signal })
+export async function listPresentations(token: string, signal?: AbortSignal, administration = false) {
+  const data = await requestJson(administration ? '/Presentaciones/administracion' : '/Presentaciones', { token, signal })
   try {
     if (!Array.isArray(data)) throw new Error()
-    const items = data.map(parsePresentation)
+    const items = data.map(item => parsePresentation(item, administration))
     if (new Set(items.map(item => item.idPresentacion)).size !== items.length) throw new Error()
     return items
   } catch { throw new ApiError('El servidor devolvió un listado de presentaciones inválido.') }
@@ -49,4 +49,13 @@ export async function updatePresentation(id: number, data: UpdatePresentationReq
       throw new ApiError('No se pudo confirmar la actualización. Actualiza el listado antes de reintentar.')
     throw error
   }
+}
+export async function changePresentationState(id: number, state: boolean, token: string, signal?: AbortSignal) {
+  if (!Number.isSafeInteger(id) || id <= 0 || typeof state !== 'boolean') throw new ApiError('Estado o presentación inválidos.', 400)
+  const response = await requestJson(`/Presentaciones/${id}/estado`, { method: 'PATCH', body: { estado: state }, token, signal })
+  try {
+    const updated = parsePresentation(response, true)
+    if (updated.idPresentacion !== id || updated.estado !== state) throw new Error()
+    return updated
+  } catch { throw new ApiError('No se pudo confirmar el estado. Actualiza el listado antes de reintentar.') }
 }

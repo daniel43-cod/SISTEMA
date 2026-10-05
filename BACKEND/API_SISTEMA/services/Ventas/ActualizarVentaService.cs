@@ -93,7 +93,7 @@ namespace API_SISTEMA.services.Ventas
                     .Where(p =>
                         idsPresentaciones.Contains(
                             p.id_producto_presentacion
-                        )
+                        ) && p.estado && p.Presentacion.Estado == true
                     )
                     .ToListAsync();
 

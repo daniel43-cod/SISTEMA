@@ -10,6 +10,7 @@ using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
 using API_SISTEMA.services.ProductoS;
+using API_SISTEMA.services.Prestacion;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -33,6 +34,10 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new CatalogoDbContext(options));
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<ProductoActualizarService>();
+builder.Services.AddScoped<CrearPresentacionServices>();
+builder.Services.AddScoped<ListarPresentacionServices>();
+builder.Services.AddScoped<ActualizarPresentacionService>();
+builder.Services.AddScoped<EstadoPresentacionService>();
 builder.Services.AddControllers().AddApplicationPart(typeof(ProductosController).Assembly).AddControllersAsServices();
 builder.Services.AddTransient<ProductosController>(sp => new ProductosController(
     sp.GetRequiredService<ProductoService>(), null!, null!, null!,
@@ -170,6 +175,22 @@ try
     updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
     Check(updated.Presentaciones.Count == 4 && updated.Presentaciones.Single(p => p.IdPresentacion == 3).PresentacionesDisponibles == 4,
         "Nueva asociación con ID y disponibilidad");
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).StatusCode == HttpStatusCode.Unauthorized, "Estado anónimo bloqueado");
+    Login("VENDEDOR");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).StatusCode == HttpStatusCode.Forbidden, "Estado vendedor bloqueado");
+    Check((await client.GetAsync("/api/Presentaciones/administracion")).StatusCode == HttpStatusCode.Forbidden, "Listado administrativo vendedor bloqueado");
+    Login("ADMINISTRADOR");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { })).StatusCode == HttpStatusCode.BadRequest, "Estado obligatorio");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/0/estado", new { estado = false })).StatusCode == HttpStatusCode.BadRequest, "ID de estado inválido");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/999/estado", new { estado = false })).StatusCode == HttpStatusCode.NotFound, "Estado inexistente");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false, descripcion = "Cambio" })).StatusCode == HttpStatusCode.BadRequest, "Estado rechaza campos ajenos");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación por administrador");
+    var activeCatalog = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>>("/api/Presentaciones");
+    var adminCatalog = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>>("/api/Presentaciones/administracion");
+    Check(activeCatalog!.All(p => p.IdPresentacion != 1) && adminCatalog!.Any(p => p.IdPresentacion == 1 && !p.Estado), "Inactivas visibles solo en catálogo administrativo");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación repetida idempotente");
+    Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = true })).IsSuccessStatusCode, "Reactivación por administrador");
     HttpResponseMessage? limited = null;
     for (var i = 0; i < 61; i++)
     {

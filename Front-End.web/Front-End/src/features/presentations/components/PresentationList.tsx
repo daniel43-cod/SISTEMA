@@ -7,26 +7,31 @@ type Props = {
   error: string
   onReload: () => void
   onEdit?: (item: PresentationResponse) => void
+  onStateChange?: (item: PresentationResponse) => void
+  pending?: boolean
   editing: boolean
 }
-export function PresentationList({ items, loading, error, onReload, onEdit, editing }: Props) {
+export function PresentationList({ items, loading, error, onReload, onEdit, onStateChange, pending = false, editing }: Props) {
   return <section className="presentation-card presentation-list" aria-labelledby="presentation-list-title" aria-busy={loading}>
     <div className="catalog-list-heading">
-      <h2 id="presentation-list-title">Presentaciones activas</h2>
-      <RefreshButton onClick={onReload} loading={loading} label="Actualizar presentaciones" />
+      <h2 id="presentation-list-title">{onStateChange ? 'Presentaciones' : 'Presentaciones activas'}</h2>
+      <RefreshButton onClick={onReload} loading={loading || pending} label="Actualizar presentaciones" />
     </div>
     {loading ? <p role="status">Cargando presentaciones…</p> :
       error ? <p className="presentation-error" role="alert">{error}</p> :
-      items.length === 0 ? <p className="presentation-description" role="status">No hay presentaciones activas.</p> :
+      items.length === 0 ? <p className="presentation-description" role="status">No hay presentaciones para mostrar.</p> :
       <>
-        <p className="presentation-hint" role="status">{items.length} presentaciones activas</p>
+        <p className="presentation-hint" role="status">{items.length} presentaciones</p>
         <ul className="presentation-list-items">
           {items.map(item => <li key={item.idPresentacion}>
                         <strong>{item.descripcion}</strong>
             <div className="presentation-row-actions">
-              <span className="presentation-active">Activa</span>
-              {onEdit && <button type="button" className="presentation-edit-button" disabled={editing}
+              <span className="presentation-active">{item.estado ? "Activa" : "Inactiva"}</span>
+              {onEdit && <button type="button" className="presentation-edit-button" disabled={editing || pending}
                 aria-label={'Editar ' + item.descripcion} onClick={() => onEdit(item)}>Editar</button>}
+              {onStateChange && <button type="button" className="presentation-edit-button" disabled={editing || pending || loading}
+                aria-label={`${item.estado ? 'Desactivar' : 'Activar'} ${item.descripcion}`}
+                onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar' : 'Activar'}</button>}
             </div>
           </li>)}
         </ul>

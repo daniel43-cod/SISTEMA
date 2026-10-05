@@ -16,6 +16,32 @@ public class PresentacionesController(
     ActualizarPresentacionService actualizarService,
     ILogger<PresentacionesController> logger) : ControllerBase
 {
+    [HttpPatch("{idPresentacion:int}/estado")]
+    [Authorize(Roles = Roles.Administrador)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> CambiarEstado([Range(1, int.MaxValue)] int idPresentacion,
+        [FromBody] CambiarEstadoPresentacionDTO dto, [FromServices] EstadoPresentacionService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var resultado = await service.CambiarEstado(idPresentacion, dto, cancellationToken);
+            if (resultado is null) return NotFound(new { mensaje = "La presentación no existe." });
+            return Ok(resultado);
+        }
+        catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+        catch (Exception ex) when (ex is not OperationCanceledException) { return ErrorInterno(ex); }
+    }
+
+    [HttpGet("administracion")]
+    [Authorize(Roles = Roles.Administrador)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> ListarAdministracion(CancellationToken cancellationToken)
+    {
+        try { return Ok(await listarService.ListarAdministracion(cancellationToken)); }
+        catch (Exception ex) when (ex is not OperationCanceledException) { return ErrorInterno(ex); }
+    }
+
     [HttpPost]
     [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Crear(CrearPresentacionDTO dto, CancellationToken cancellationToken)
