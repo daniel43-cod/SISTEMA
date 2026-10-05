@@ -19,6 +19,20 @@ public sealed class ProductoActualizarService(SistemaDbContext context)
             throw new ValidationException("El código de barras no admite espacios internos ni caracteres de control.");
         if (dto.nombre.Any(char.IsControl))
             throw new ValidationException("El nombre no admite caracteres de control.");
+        if (dto.presentaciones is not null)
+        {
+            foreach (var item in dto.presentaciones)
+            {
+                if (item is null) throw new ValidationException("Hay una presentación vacía.");
+                Validator.ValidateObject(item, new ValidationContext(item), validateAllProperties: true);
+                if (decimal.Round(item.precio, 2) != item.precio)
+                    throw new ValidationException("El precio admite hasta dos decimales.");
+            }
+            if (dto.presentaciones.Select(p => p.id_presentacion).Distinct().Count() != dto.presentaciones.Count ||
+                dto.presentaciones.Where(p => p.id_producto_presentacion.HasValue)
+                    .GroupBy(p => p.id_producto_presentacion).Any(g => g.Count() > 1))
+                throw new ValidationException("No puedes repetir una presentación ni su ID.");
+        }
 
         var codigo = dto.codigo_barra.Trim();
         var nombre = dto.nombre.Trim();
@@ -44,6 +58,45 @@ public sealed class ProductoActualizarService(SistemaDbContext context)
                 m.IdMarca, m.Nombre, m.IdCategoria, Categoria = m.Categoria.nombreCategoria
             }).SingleOrDefaultAsync(cancellationToken);
         if (marca is null) throw new ValidationException("La marca y su categoría deben existir y estar activas.");
+
+        if (dto.presentaciones is not null)
+        {
+            var existentes = await context.producto_presentaciones.Where(p => p.id_producto == id)
+                .ToListAsync(cancellationToken);
+            var ids = dto.presentaciones.Select(p => p.id_presentacion).ToList();
+            var catalogo = await context.presentaciones.AsNoTracking().Where(p => ids.Contains(p.IdPresentacion))
+                .ToDictionaryAsync(p => p.IdPresentacion, cancellationToken);
+            // Validar toda la colección antes de modificar entidades rastreadas.
+            foreach (var item in dto.presentaciones)
+            {
+                if (!catalogo.TryGetValue(item.id_presentacion, out var definicion) ||
+                    (item.estado == true && definicion.Estado != true))
+                    throw new ValidationException("La presentación debe existir y estar activa para habilitarla.");
+                if (item.id_producto_presentacion.HasValue)
+                {
+                    var existente = existentes.SingleOrDefault(p => p.id_producto_presentacion == item.id_producto_presentacion.Value);
+                    if (existente is null)
+                        throw new ValidationException("La presentación indicada no pertenece a este producto.");
+                    if (existente.IdPresentacion != item.id_presentacion)
+                        throw new ValidationException("No se puede cambiar el tipo de una presentación existente. Desactívala y agrega otra.");
+                }
+                else if (existentes.Any(p => p.IdPresentacion == item.id_presentacion))
+                    throw new ValidationException("Esta presentación ya está asociada al producto. Usa su ID para editarla o reactivarla.");
+            }
+            foreach (var existente in existentes)
+                if (!dto.presentaciones.Any(p => p.id_producto_presentacion == existente.id_producto_presentacion))
+                    existente.estado = false;
+            foreach (var item in dto.presentaciones)
+            {
+                var asociacion = item.id_producto_presentacion.HasValue
+                    ? existentes.Single(p => p.id_producto_presentacion == item.id_producto_presentacion.Value)
+                    : new API_SISTEMA.models.Producto_Presentacion { id_producto = id, IdPresentacion = item.id_presentacion };
+                asociacion.precio = item.precio;
+                asociacion.unidades_equivalentes = item.unidades_equivalentes;
+                asociacion.estado = item.estado!.Value;
+                if (!item.id_producto_presentacion.HasValue) context.producto_presentaciones.Add(asociacion);
+            }
+        }
 
         producto.codigo_barra = codigo;
         producto.nombre = nombre;

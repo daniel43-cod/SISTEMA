@@ -100,3 +100,17 @@ test('Editar producto envía solo campos editables y maneja duplicados', async t
   t.mock.method(globalThis, 'fetch', async () => new Response('secret', { status: 409 }))
   await assert.rejects(updateProduct(1, data, 'token'), error => error instanceof ApiError && error.status === 409 && error.message.includes('nombre o código'))
 })
+
+test('Editar conserva IDs de presentaciones y valida duplicados antes de enviar', async t => {
+  const { updateProduct } = await import('../src/features/products/api/updateProduct.ts')
+  const row = { id_producto_presentacion: 9, id_presentacion: 2, unidades_equivalentes: 12, precio: 25.5, estado: false }
+  const data = { nombre: 'Agua', codigo_barra: '001', idMarca: 1, stock_minimo: 2, presentaciones: [row] }
+  const mock = t.mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+    assert.deepEqual(JSON.parse(options.body as string).presentaciones, [row])
+    return Response.json({ idProducto: 1 })
+  })
+  await updateProduct(1, data, 'token')
+  await assert.rejects(updateProduct(1, { ...data, presentaciones: [row, row] }, 'token'))
+  await assert.rejects(updateProduct(1, { ...data, presentaciones: [{ ...row, precio: 1.001 }] }, 'token'))
+  assert.equal(mock.mock.callCount(), 1)
+})

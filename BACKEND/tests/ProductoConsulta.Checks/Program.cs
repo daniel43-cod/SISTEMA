@@ -137,6 +137,39 @@ try
     var updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
     Check(updated.Nombre == "Agua renovada" && updated.CodigoBarra == "ABC01" && updated.StockMinimo == 3 &&
         updated.StockUnidades == 25 && updated.Presentaciones.Count == 3, "Guarda edición y conserva stock y presentaciones");
+    edit.codigo_barra = "ABC01"; edit.nombre = "Agua renovada";
+    edit.presentaciones = [new() { id_producto_presentacion = 1, id_presentacion = 1, unidades_equivalentes = 2, precio = 8.50m, estado = true }];
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Edita equivalencia y precio y desactiva omitidas");
+    updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
+    Check(updated.Presentaciones.Count == 3 && updated.Presentaciones.Single(p => p.IdProductoPresentacion == 1).Precio == 8.50m &&
+        updated.Presentaciones.Single(p => p.IdProductoPresentacion == 1).UnidadesEquivalentes == 2 &&
+        !updated.Presentaciones.Single(p => p.IdProductoPresentacion == 2).Activa, "Conserva IDs y registros desactivados");
+    edit.presentaciones[0].id_producto_presentacion = 999;
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest, "ID ajeno o inexistente rechazado");
+    edit.presentaciones[0].id_producto_presentacion = 1;
+    edit.presentaciones[0].id_presentacion = 2;
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest, "No cambia identidad histórica de presentación");
+    edit.presentaciones[0].id_presentacion = 1; edit.presentaciones[0].precio = 8.501m;
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest, "Precio con más de dos decimales rechazado");
+    edit.presentaciones[0].precio = 8.5m;
+    edit.presentaciones.Add(edit.presentaciones[0]);
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest, "Presentaciones repetidas rechazadas");
+    edit.presentaciones.RemoveAt(1);
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        db.presentaciones.Add(new Presentacion { IdPresentacion = 3, Descripcion = "Paquete", Estado = true });
+        db.producto_presentaciones.Add(new Producto_Presentacion { id_producto = 2, IdPresentacion = 3, estado = true, unidades_equivalentes = 1, precio = 5 });
+        await db.SaveChangesAsync();
+        edit.presentaciones[0].id_producto_presentacion = await db.producto_presentaciones.Where(p => p.id_producto == 2).Select(p => p.id_producto_presentacion).SingleAsync();
+    }
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest, "No edita presentación de otro producto");
+    edit.presentaciones[0].id_producto_presentacion = 1;
+    edit.presentaciones.Add(new() { id_presentacion = 3, unidades_equivalentes = 6, precio = 25, estado = true });
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Agrega presentación nueva");
+    updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
+    Check(updated.Presentaciones.Count == 4 && updated.Presentaciones.Single(p => p.IdPresentacion == 3).PresentacionesDisponibles == 4,
+        "Nueva asociación con ID y disponibilidad");
     HttpResponseMessage? limited = null;
     for (var i = 0; i < 61; i++)
     {
