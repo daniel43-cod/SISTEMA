@@ -8,7 +8,8 @@ import './ProductsPage.css'
 
 export function ProductsPage() {
   const { session } = useAuth()
-  const [section, setSection] = useState<'presentations' | 'categories' | 'brands' | 'products'>('presentations')
+  //formulario inicial
+  const [section, setSection] = useState<'presentations' | 'categories' | 'brands' | 'products'>('products')
   if (!session) return null
   const canCreate = session.user.role === 'ADMINISTRADOR'
   const showCategories = canCreate && section === 'categories'

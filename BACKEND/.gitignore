@@ -45,3 +45,4 @@ appsettings.Development.json
 
 # Certificados locales de desarrollo (incluyen claves privadas).
 .certs/
+.artifacts/

@@ -13,6 +13,7 @@ const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ
 export function ProductListPage() {
   const { session, logout } = useAuth()
   const [editing, setEditing] = useState(false)
+  const [focusPresentations, setFocusPresentations] = useState(false)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState('')
   const [page, setPage] = useState(1)
@@ -108,7 +109,7 @@ export function ProductListPage() {
                 setNotice('')
                 if (selected !== product.idProducto) setDetail(null)
                 setSelected(product.idProducto)
-                setEditing(true)
+                setFocusPresentations(false); setEditing(true)
               }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
@@ -148,13 +149,13 @@ export function ProductListPage() {
       {detailError && <p role="alert" className="product-error">{detailError}</p>}
       {detailError && <button type="button" disabled={waiting > 0} onClick={() => setRevision(value => value + 1)}>Reintentar</button>}
       {notice && <p role="status">{notice}</p>}
-      {detail && editing && <EditProductForm key={detail.idProducto} product={detail} onPending={setSaving}
+      {detail && editing && <EditProductForm key={detail.idProducto} focusPresentations={focusPresentations} product={detail} onPending={setSaving}
         onCancel={() => { setEditing(false); detailPanel.current?.focus() }}
         onSaved={() => { setEditing(false); setSaving(false); setNotice('Producto actualizado correctamente.'); setRevision(value => value + 1) }} />}
       {detail && !editing && <>
                    <button className="Product-update-button" type="button" disabled={detailLoading || waiting > 0 || saving}
           aria-label={`Editar ${detail.nombre}`} title="Editar producto"
-          onClick={() => { setNotice(''); setEditing(true) }}>
+          onClick={() => { setNotice(''); setFocusPresentations(false); setEditing(true) }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
                   strokeLinejoin="round" aria-hidden="true">
@@ -171,7 +172,11 @@ export function ProductListPage() {
           <div><dt>Existencia en unidades</dt><dd>{detail.stockUnidades}</dd></div>
           <div><dt>Existencia minima</dt><dd>{detail.stockMinimo}</dd></div>
         </dl>
-        <h3>Presentaciones</h3>
+                <div className="product-list-heading">
+          <h3>Presentaciones</h3>
+          <button type="button" disabled={detailLoading || saving || waiting > 0}
+            onClick={() => { setNotice(''); setFocusPresentations(true); setEditing(true) }}>Editar presentaciones</button>
+        </div>
         {!detail.presentaciones.length && <p>Este producto no tiene presentaciones.</p>}
         <ul className="product-detail-presentations">
           {detail.presentaciones.map(item => <li key={item.idProductoPresentacion}>

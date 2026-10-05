@@ -7,10 +7,17 @@ import { updateProduct } from '../api/updateProduct'
 import { usePresentations } from '../../presentations/hooks/usePresentations'
 import type { ProductDetail } from '../types/product'
 
-export function EditProductForm({ product, onSaved, onCancel, onPending }: {
-  product: ProductDetail; onSaved: () => void; onCancel: () => void; onPending: (value: boolean) => void
+export function EditProductForm({ product, onSaved, onCancel, onPending, focusPresentations = false }: {
+  focusPresentations?: boolean; product: ProductDetail; onSaved: () => void; onCancel: () => void; onPending: (value: boolean) => void
 }) {
   const { session, logout } = useAuth()
+  const presentationsPanel = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (focusPresentations) {
+      presentationsPanel.current?.focus()
+      presentationsPanel.current?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [focusPresentations])
   const brands = useBrands()
   const catalog = usePresentations()
   const [rows, setRows] = useState(() => product.presentaciones.map(item => ({
@@ -55,15 +62,16 @@ export function EditProductForm({ product, onSaved, onCancel, onPending }: {
   return <form className="product-form" onSubmit={save} aria-busy={pending}>
     <h3>Editar producto</h3>
     <fieldset className="product-fields" disabled={pending}>
-      <label className="field">Nombre<input autoFocus required maxLength={200} value={name} onChange={event => setName(event.target.value)} /></label>
+      <label className="field">Nombre<input autoFocus={!focusPresentations} required maxLength={200} value={name} onChange={event => setName(event.target.value)} /></label>
       <label className="field">Código de barras<input required maxLength={100} value={code} onChange={event => setCode(event.target.value)} /></label>
       <label className="field">Marca<select required value={brand} disabled={brands.loading || Boolean(brands.error)} onChange={event => setBrand(event.target.value)}>
         {!brands.items.some(item => item.idMarca === product.idMarca) && <option value={product.idMarca} disabled>{product.marca} (no disponible)</option>}
         {brands.items.map(item => <option key={item.idMarca} value={item.idMarca}>{item.nombre}</option>)}
       </select></label>
       <label className="field">Existencia mínima<input required type="number" min="0" max="2147483647" step="1" value={minimum} onChange={event => setMinimum(event.target.value)} /></label>
-      <section className="product-presentations" aria-labelledby="edit-presentations-title">
-        <h3 id="edit-presentations-title">Presentaciones</h3>
+      <section ref={presentationsPanel} tabIndex={-1} className="product-presentations" aria-labelledby="edit-presentations-title">
+        <h3 id="edit-presentations-title">Editar presentaciones</h3>
+        {!rows.length && <p>Este producto no tiene presentaciones. Puedes agregar una.</p>}
         {rows.map(row => <div className="product-row" key={row.key}>
           <label className="field">Presentación
             {row.id ? <input readOnly value={row.label} /> : <select required value={row.presentation} onChange={event => changeRow(row.key, { presentation: event.target.value })}>
