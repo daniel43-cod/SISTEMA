@@ -83,3 +83,20 @@ test('Consultas rechazan contratos inválidos y conservan 401, 403, 404 y Retry-
       error.status === status && !error.message.includes('secret') && (status !== 429 || error.retryAfterSeconds === 12))
   }
 })
+
+test('Editar producto envía solo campos editables y maneja duplicados', async t => {
+  const { updateProduct } = await import('../src/features/products/api/updateProduct.ts')
+  const data = { nombre: ' Agua ', codigo_barra: ' 001 ', idMarca: 1, stock_minimo: 2 }
+  const mock = t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Productos/1')
+    assert.equal(options.method, 'PUT')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    assert.deepEqual(JSON.parse(options.body as string), { nombre: 'Agua', codigo_barra: '001', idMarca: 1, stock_minimo: 2 })
+    return Response.json({ idProducto: 1 })
+  })
+  await updateProduct(1, data, 'token')
+  await assert.rejects(updateProduct(1, { ...data, nombre: '' }, 'token'))
+  assert.equal(mock.mock.callCount(), 1)
+  t.mock.method(globalThis, 'fetch', async () => new Response('secret', { status: 409 }))
+  await assert.rejects(updateProduct(1, data, 'token'), error => error instanceof ApiError && error.status === 409 && error.message.includes('nombre o código'))
+})

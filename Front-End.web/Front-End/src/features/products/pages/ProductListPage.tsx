@@ -4,12 +4,17 @@ import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { getProductDetail, listProducts } from '../api/productQueries'
 import type { ProductPage, ProductDetail } from '../types/product'
+import { ProductDetailImage } from '../components/ProductDetailImage'
+import { EditProductForm } from '../components/EditProductForm'
 import './ProductsPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 
 export function ProductListPage() {
   const { session, logout } = useAuth()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [notice, setNotice] = useState('')
   const [page, setPage] = useState(1)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<ProductPage | null>(null)
@@ -74,9 +79,10 @@ export function ProductListPage() {
   useEffect(() => { if (selected !== null) detailPanel.current?.focus() }, [selected])
   if (!token) return null
   const pages = data ? Math.max(1, Math.ceil(data.total / data.tamanoPagina)) : 1
-  const busy = loading || waiting > 0
+  const busy = loading || waiting > 0 || editing || saving
   function closeDetail() {
-    setSelected(null); setDetail(null); setDetailError('')
+    if (saving) return
+    setEditing(false); setSelected(null); setDetail(null); setDetailError('')
     requestAnimationFrame(() => trigger.current?.focus())
   }
 
@@ -94,9 +100,36 @@ export function ProductListPage() {
         <ul className="product-list">
           {data.items.map(product => <li key={product.idProducto}>
             <div><strong>{product.nombre}</strong><span>Marca: {product.marca}</span></div>
-            <button type="button" disabled={busy} aria-label={`Ver detalles de ${product.nombre}`}
-              aria-expanded={selected === product.idProducto} aria-controls="product-detail"
-              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>Detalles</button>
+                        <button className="Product-update-button" type="button" disabled={busy}
+              aria-label={`Editar ${product.nombre}`} title="Editar producto"
+              aria-controls="product-detail"
+              onClick={event => {
+                trigger.current = event.currentTarget
+                setNotice('')
+                if (selected !== product.idProducto) setDetail(null)
+                setSelected(product.idProducto)
+                setEditing(true)
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+                  strokeLinejoin="round" aria-hidden="true">
+                  <path d="m16 3 5 5" />
+                  <path d="M4 16 16.5 3.5a3.54 3.54 0 0 1 5 5L9 21l-6 1 1-6Z" />
+                </svg>
+            </button>
+            <button className="product-detail-button" type="button" disabled={busy} aria-label={`Ver detalles de ${product.nombre}`}
+              aria-expanded={selected === product.idProducto} aria-controls="product-detail" title='Ver detalles'
+              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>
+               <svg
+               width="20"
+               height="20" viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="1.8"strokeLinecap="round"
+               strokeLinejoin="round"aria-hidden="true"
+               >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+               </svg>
+              </button>
+             
           </li>)}
         </ul>
         <nav className="product-pagination" aria-label="Páginas de productos">
@@ -110,12 +143,27 @@ export function ProductListPage() {
       aria-labelledby="product-detail-title" aria-busy={detailLoading}
       onKeyDown={event => { if (event.key === 'Escape') closeDetail() }}>
       <div className="product-list-heading"><h2 id="product-detail-title">Detalles del producto</h2>
-        <button type="button" onClick={closeDetail}>Cerrar detalles</button></div>
+        <button type="button" disabled={saving} onClick={closeDetail}>Cerrar detalles</button></div>
       {detailLoading && <p role="status">Cargando detalles…</p>}
       {detailError && <p role="alert" className="product-error">{detailError}</p>}
       {detailError && <button type="button" disabled={waiting > 0} onClick={() => setRevision(value => value + 1)}>Reintentar</button>}
-      {detail && <>
+      {notice && <p role="status">{notice}</p>}
+      {detail && editing && <EditProductForm key={detail.idProducto} product={detail} onPending={setSaving}
+        onCancel={() => { setEditing(false); detailPanel.current?.focus() }}
+        onSaved={() => { setEditing(false); setSaving(false); setNotice('Producto actualizado correctamente.'); setRevision(value => value + 1) }} />}
+      {detail && !editing && <>
+                   <button className="Product-update-button" type="button" disabled={detailLoading || waiting > 0 || saving}
+          aria-label={`Editar ${detail.nombre}`} title="Editar producto"
+          onClick={() => { setNotice(''); setEditing(true) }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+                  strokeLinejoin="round" aria-hidden="true">
+                  <path d="m16 3 5 5" />
+                  <path d="M4 16 16.5 3.5a3.54 3.54 0 0 1 5 5L9 21l-6 1 1-6Z" />
+                </svg>
+        </button>
         <h3>{detail.nombre}</h3>
+        <ProductDetailImage key={`${detail.idProducto}:${detail.imagen ?? ""}`} image={detail.imagen} name={detail.nombre} />
         <dl className="product-detail-fields">
           <div><dt>Marca</dt><dd>{detail.marca}{!detail.marcaActiva && ' (inactiva)'}</dd></div>
           <div><dt>Categoría</dt><dd>{detail.categoria}{!detail.categoriaActiva && ' (inactiva)'}</dd></div>

@@ -76,6 +76,30 @@ namespace API_SISTEMA.controllers
                 return StatusCode(500, new { mensaje = "No se pudo consultar el producto.", traceId });
             }
         }
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpPut("{id:int}")]
+        [Consumes("application/json")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<ProductoResumenDTO>> ActualizarProducto(
+            [Range(1, int.MaxValue)] int id, [FromBody] ActualizarProductoDTO dto,
+            [FromServices] ProductoActualizarService actualizarService, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var producto = await actualizarService.ActualizarProducto(id, dto, cancellationToken);
+                if (producto is null) return NotFound(new { mensaje = "El producto no existe." });
+                return Ok(producto);
+            }
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (ProductoDuplicadoException ex) { return Conflict(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al actualizar producto. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudo actualizar el producto.", traceId });
+            }
+        }
+
         //para presentacion de productos
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("{id}/presentaciones")]

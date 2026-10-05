@@ -9,6 +9,7 @@ using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Productos;
 using API_SISTEMA.models;
 using API_SISTEMA.services;
+using API_SISTEMA.services.ProductoS;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -31,6 +32,7 @@ builder.Logging.ClearProviders();
 builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new CatalogoDbContext(options));
 builder.Services.AddScoped<ProductoService>();
+builder.Services.AddScoped<ProductoActualizarService>();
 builder.Services.AddControllers().AddApplicationPart(typeof(ProductosController).Assembly).AddControllersAsServices();
 builder.Services.AddTransient<ProductosController>(sp => new ProductosController(
     sp.GetRequiredService<ProductoService>(), null!, null!, null!,
@@ -59,7 +61,7 @@ using (var scope = app.Services.CreateScope())
     var caja = new Presentacion { IdPresentacion = 2, Descripcion = "Caja", Estado = true };
     var producto = new Productos { id_producto = 1, nombre = "Agua", codigo_barra = "001", Marca = marca, stock = 25, costo_unitario = 777m };
     db.AddRange(categoria, marca, unidad, caja, producto,
-        new Productos { id_producto = 2, nombre = "Agua", Marca = marca, stock = null },
+        new Productos { id_producto = 2, nombre = "Agua 2", codigo_barra = "002", Marca = marca, stock = null },
         new Producto_Presentacion { id_producto_presentacion = 1, Producto = producto, Presentacion = unidad, estado = true, unidades_equivalentes = 1, precio = 5 },
         new Producto_Presentacion { id_producto_presentacion = 2, Producto = producto, Presentacion = caja, estado = true, unidades_equivalentes = 12, precio = 50 },
         new Producto_Presentacion { id_producto_presentacion = 3, Producto = producto, Presentacion = caja, estado = false, unidades_equivalentes = 0, precio = 50 });
@@ -112,6 +114,29 @@ try
     Check(!detailBody.Contains("costo", StringComparison.OrdinalIgnoreCase) && !detailBody.Contains("777"), "Sin costos internos");
     Check((await client.GetAsync("/api/Productos/0")).StatusCode == HttpStatusCode.BadRequest, "ID inválido");
     Check((await client.GetAsync("/api/Productos/999")).StatusCode == HttpStatusCode.NotFound, "Producto inexistente");
+    var edit = new ActualizarProductoDTO { codigo_barra = "001", nombre = "Agua", IdMarca = 1, stock_minimo = 3 };
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Unauthorized, "Edición anónima bloqueada");
+    Login("VENDEDOR");
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Forbidden, "Edición de vendedor bloqueada");
+    Login("ADMINISTRADOR");
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Conserva nombre y código propios");
+    edit.codigo_barra = " 002 ";
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Conflict, "Código duplicado rechazado");
+    edit.codigo_barra = "001"; edit.nombre = " agua 2 ";
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Conflict, "Nombre duplicado rechazado sin distinguir mayúsculas y bordes");
+    edit.nombre = "Agua"; edit.IdMarca = 999;
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest, "Marca inexistente bloqueada");
+    edit.IdMarca = 1;
+    Check((await client.PutAsJsonAsync("/api/Productos/999", edit)).StatusCode == HttpStatusCode.NotFound, "Edición inexistente");
+    Check((await client.PutAsJsonAsync("/api/Productos/1", new { codigo_barra = "001", nombre = "Agua", idMarca = 1, stock_minimo = 3, stock = 999 })).StatusCode == HttpStatusCode.BadRequest, "No acepta modificar stock por edición");
+    edit.nombre = "Agua renovada"; edit.codigo_barra = "ABC01";
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Actualización válida");
+    edit.codigo_barra = " aBc01 "; edit.nombre = "Otro";
+    Check((await client.PutAsJsonAsync("/api/Productos/2", edit)).StatusCode == HttpStatusCode.Conflict, "Código duplicado alfanumérico sin distinguir mayúsculas");
+    var updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
+    Check(updated.Nombre == "Agua renovada" && updated.CodigoBarra == "ABC01" && updated.StockMinimo == 3 &&
+        updated.StockUnidades == 25 && updated.Presentaciones.Count == 3, "Guarda edición y conserva stock y presentaciones");
     HttpResponseMessage? limited = null;
     for (var i = 0; i < 61; i++)
     {

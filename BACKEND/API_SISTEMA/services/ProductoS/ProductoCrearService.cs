@@ -63,6 +63,10 @@ public class ProductoCrearService
             if (await _context.productos.AnyAsync(p => p.codigo_barra != null &&
                 p.codigo_barra.Trim().ToUpper() == normalizado, cancellationToken))
                 throw new ProductoDuplicadoException();
+            var nombreNormalizado = dto.nombre.Trim().ToUpperInvariant();
+            if (await _context.productos.AnyAsync(p => p.nombre.Trim().ToUpper() == nombreNormalizado,
+                cancellationToken))
+                throw new ProductoDuplicadoException("Ya existe un producto con ese nombre.");
             var ids = dto.presentaciones.Select(p => p.id_presentacion).ToList();
             if (await _context.presentaciones.CountAsync(p => ids.Contains(p.IdPresentacion) &&
                 p.Estado == true, cancellationToken) != ids.Count)
