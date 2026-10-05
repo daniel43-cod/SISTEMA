@@ -10,7 +10,7 @@ import './ProductsPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 
-export function ProductListPage({ idMarca, idCategoria }: { idMarca?: number; idCategoria?: number } = {}) {
+export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?: number; idCategoria?: number; productId?: number } = {}) {
   const { session, logout } = useAuth()
   const [editing, setEditing] = useState(false)
   const [focusPresentations, setFocusPresentations] = useState(false)
@@ -53,7 +53,9 @@ export function ProductListPage({ idMarca, idCategoria }: { idMarca?: number; id
     void Promise.resolve().then(() => {
       if (controller.signal.aborted) return null
       setLoading(true); setError(''); setData(null)
-      return listProducts(page, token, controller.signal, { idMarca, idCategoria })
+      return productId !== undefined
+        ? getProductDetail(productId, token, controller.signal).then(product => ({ pagina: 1, tamanoPagina: 20, total: 1, items: [product] }))
+        : listProducts(page, token, controller.signal, { idMarca, idCategoria })
     }).then(result => {
       if (result && !controller.signal.aborted) {
         const lastPage = Math.max(1, Math.ceil(result.total / result.tamanoPagina))
@@ -63,7 +65,7 @@ export function ProductListPage({ idMarca, idCategoria }: { idMarca?: number; id
     }).catch(failure => { if (!controller.signal.aborted) report(failure, setError) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [token, report, page, revision, idMarca, idCategoria])
+  }, [token, report, page, revision, idMarca, idCategoria, productId])
   useEffect(() => {
     if (!token || selected === null) return
     const controller = new AbortController()
@@ -133,11 +135,11 @@ export function ProductListPage({ idMarca, idCategoria }: { idMarca?: number; id
              
           </li>)}
         </ul>
-        <nav className="product-pagination" aria-label="Páginas de productos">
+        {productId === undefined && <nav className="product-pagination" aria-label="Páginas de productos">
           <button type="button" disabled={busy || page <= 1} onClick={() => { closeDetail(); setPage(value => value - 1) }}>Anterior</button>
           <span>Página {page} de {pages}</span>
           <button type="button" disabled={busy || page >= pages || page >= 100000} onClick={() => { closeDetail(); setPage(value => value + 1) }}>Siguiente</button>
-        </nav>
+        </nav>}
       </>}
     </section>
     {selected !== null && <section id="product-detail" ref={detailPanel} tabIndex={-1} className="product-card"

@@ -34,6 +34,7 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new CatalogoDbContext(options));
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<ProductoActualizarService>();
+builder.Services.AddScoped<ProductoBuscarAdminService>();
 builder.Services.AddScoped<CrearPresentacionServices>();
 builder.Services.AddScoped<ListarPresentacionServices>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
@@ -191,6 +192,18 @@ try
     Check(activeCatalog!.All(p => p.IdPresentacion != 1) && adminCatalog!.Any(p => p.IdPresentacion == 1 && !p.Estado), "Inactivas visibles solo en catálogo administrativo");
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación repetida idempotente");
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = true })).IsSuccessStatusCode, "Reactivación por administrador");
+    Login("VENDEDOR");
+    Check((await client.GetAsync("/api/Productos/buscar-administracion?nombre=Agua")).StatusCode == HttpStatusCode.Forbidden, "Búsqueda administrativa bloquea vendedor");
+    Login("ADMINISTRADOR");
+    foreach (var query in new[] { "", "nombre=ab", "nombre=Agua&codigoBarra=001", "codigoBarra=a%20b", "nombre=" + new string('x', 201) })
+        Check((await client.GetAsync("/api/Productos/buscar-administracion?" + query)).StatusCode == HttpStatusCode.BadRequest, "Búsqueda valida entrada: " + query[..Math.Min(25, query.Length)]);
+    var suggestions = (await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?nombre=Agua"))!;
+    Check(suggestions.Count > 0 && suggestions.Count <= 10 && suggestions.Select(p => p.IdProducto).Distinct().Count() == suggestions.Count,
+        "Sugerencias únicas por producto");
+    var byCode = (await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?codigoBarra=ABC01"))!;
+    Check(byCode.Single().IdProducto == 1, "Código exacto devuelve producto");
+    Check((await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?codigoBarra=ABC"))!.Count == 0,
+        "Código parcial no coincide");
     HttpResponseMessage? limited = null;
     for (var i = 0; i < 61; i++)
     {

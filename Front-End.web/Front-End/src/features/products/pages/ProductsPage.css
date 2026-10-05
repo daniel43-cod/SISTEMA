@@ -59,3 +59,11 @@
   .product-list > li { gap: 8px; flex-wrap: wrap; }
   .product-list > li > div:first-child { flex: 1 1 100%; }
 }
+.product-search { margin-bottom: 24px; min-width: 0; }
+.product-search-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.product-search-controls label { display: grid; gap: 6px; flex: 1 1 200px; min-width: 0; }
+.product-search-controls input, .product-search-controls select, .product-search button { min-height: 44px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: var(--color-surface); color: inherit; }
+.product-search-suggestions { list-style: none; padding: 0; margin: 12px 0; border: 1px solid #e2e8f0; border-radius: 10px; max-height: 320px; overflow-y: auto; }
+.product-search-suggestions button { width: 100%; text-align: left; border: 0; border-bottom: 1px solid #e2e8f0; cursor: pointer; overflow-wrap: anywhere; }
+.product-search-suggestions button:hover { background: #f1f5f9; color: #0f172a; }
+.product-search button:focus-visible, .product-search input:focus-visible, .product-search select:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

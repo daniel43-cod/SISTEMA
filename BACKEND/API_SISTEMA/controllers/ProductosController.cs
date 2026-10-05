@@ -36,6 +36,24 @@ namespace API_SISTEMA.controllers
 
 
         [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("buscar-administracion")]
+        [EnableRateLimiting("consulta-productos")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<List<ProductoSugerenciaDTO>>> BuscarAdministracion(
+            [FromQuery] BusquedaProductoAdminDTO filtro,
+            [FromServices] ProductoBuscarAdminService service, CancellationToken cancellationToken)
+        {
+            try { return Ok(await service.Buscar(filtro, cancellationToken)); }
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error en búsqueda administrativa de productos. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudieron buscar los productos.", traceId });
+            }
+        }
+
+        [Authorize(Roles = Roles.Administrador)]
         [HttpGet("listar")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]

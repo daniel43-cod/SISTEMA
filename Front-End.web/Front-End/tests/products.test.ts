@@ -114,3 +114,18 @@ test('Editar conserva IDs de presentaciones y valida duplicados antes de enviar'
   await assert.rejects(updateProduct(1, { ...data, presentaciones: [{ ...row, precio: 1.001 }] }, 'token'))
   assert.equal(mock.mock.callCount(), 1)
 })
+
+test('Búsqueda administrativa envía nombre o código y devuelve sugerencias sin presentaciones', async t => {
+  const { searchProducts } = await import('../src/features/products/api/searchProducts.ts')
+  const mock = t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    assert.ok(url === '/api/Productos/buscar-administracion?nombre=Coca' || url === '/api/Productos/buscar-administracion?codigoBarra=001')
+    return Response.json([{ idProducto: 1, nombre: 'Coca Cola' }])
+  })
+  assert.equal((await searchProducts('nombre', ' Coca ', 'token'))[0].nombre, 'Coca Cola')
+  assert.equal((await searchProducts('codigoBarra', '001', 'token'))[0].idProducto, 1)
+  await assert.rejects(searchProducts('nombre', 'co', 'token'))
+  assert.equal(mock.mock.callCount(), 2)
+  t.mock.method(globalThis, 'fetch', async () => Response.json([{ idProducto: 0, nombre: 'Inválido' }]))
+  await assert.rejects(searchProducts('nombre', 'Coca', 'token'))
+})

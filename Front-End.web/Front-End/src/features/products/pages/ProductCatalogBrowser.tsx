@@ -5,6 +5,7 @@ import { useBrands } from '../../brands/hooks/useBrands'
 import type { CategoryResponse } from '../../categories/types/category'
 import type { BrandResponse } from '../../brands/types/brand'
 import { ProductListPage } from './ProductListPage'
+import { ProductSearch } from '../components/ProductSearch'
 import './ProductsPage.css'
 
 function CategoryCardImage({ url }: { url?: string | null }) {
@@ -24,11 +25,14 @@ export function ProductCatalogBrowser() {
   const brands = useBrands()//carga las categorias desde la api
   const [category, setCategory] = useState<CategoryResponse | null>(null)
   const [brand, setBrand] = useState<BrandResponse | null>(null)
+  const [searchActive, setSearchActive] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => { title.current?.focus() }, [category, brand])
   if (session?.user.role !== 'ADMINISTRADOR') return null
   const selectedBrands = brands.items.filter(item => item.idCategoria === category?.idCategoria && item.estado)
   return <div className="product-catalog-browser">
+    <ProductSearch onResult={setSearchActive} />
+    {!searchActive && <>
     <nav className="product-catalog-path" aria-label="Navegación de productos">
       <button type="button" onClick={() => { setCategory(null); setBrand(null) }} aria-current={!category ? 'page' : undefined}>Categorías</button>
       {category && <><span aria-hidden="true">›</span><button type="button" onClick={() => setBrand(null)} aria-current={!brand ? 'page' : undefined}>{category.nombre}</button></>}
@@ -58,5 +62,6 @@ export function ProductCatalogBrowser() {
       </ul>}
     </>}
     {brand && category && <ProductListPage key={`${category.idCategoria}:${brand.idMarca}`} idMarca={brand.idMarca} idCategoria={category.idCategoria} />}
+    </>}
   </div>
 }
