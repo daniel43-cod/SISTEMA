@@ -3,3 +3,8 @@
 .products-sections button[aria-current="page"] { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 .products-sections button:hover { color: var(--color-primary); }
 .products-sections button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+
+.products-workspace { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+.products-workspace > .products-sections { flex-shrink: 0; }
+.products-section-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 4px 4px 24px; scrollbar-gutter: stable; }
+.products-section-content:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }

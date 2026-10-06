@@ -1,3 +1,4 @@
+﻿import '../../../shared/ui/catalog-row.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -109,7 +110,11 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
       {data && !data.items.length && <p>No hay productos registrados.</p>}
       {data && <>
         <ul className="product-list">
-          {data.items.map(product => <li key={product.idProducto}>
+          {data.items.map(product => <li key={product.idProducto} className="catalog-clickable-row">
+            <button className="catalog-row-open" type="button" disabled={busy} aria-label={`Ver detalles de ${product.nombre}`}
+              aria-expanded={selected === product.idProducto} aria-controls="product-detail" title='Ver detalles'
+              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>
+              </button>
             <div><strong>{product.nombre}</strong><span>Marca: {product.marca}</span></div>
             <div className="product-list-actions">
             <button className="Product-update-button" type="button" disabled={busy}
@@ -123,10 +128,7 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
                 setFocusPresentations(false); setEditing(true)
               }}>Editar
             </button>
-            <button className="product-detail-button" type="button" disabled={busy} aria-label={`Ver detalles de ${product.nombre}`}
-              aria-expanded={selected === product.idProducto} aria-controls="product-detail" title='Ver detalles'
-              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>Ver
-              </button>
+
              
             </div>
           </li>)}
@@ -176,3 +178,4 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
     </section>}
   </div>
 }
+

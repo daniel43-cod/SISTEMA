@@ -1,4 +1,5 @@
-﻿import { RefreshButton } from '../../../shared/ui/RefreshButton'
+﻿import { RowDetails } from '../../../shared/ui/RowDetails'
+import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useState } from 'react'
 import type { CategoryResponse } from '../types/category'
 
@@ -22,7 +23,8 @@ export function CategoryList({ items, loading, error, reload, onEdit, editing, o
     {error && <p className="category-error" role="alert">{error}</p>}
     {!loading && !error && !items.length && <p>No hay categorías para mostrar.</p>}
     <ul className="category-list">
-      {items.map(item => <li key={item.idCategoria}>
+      {items.map(item => <li key={item.idCategoria} className="catalog-clickable-row">
+        <RowDetails name={item.nombre} type="categoría" fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]} image={item.urlImagen ?? null} disabled={editing || loading || pending} />
         <CategoryImage key={item.urlImagen ?? ''} url={item.urlImagen} />
         <strong>{item.nombre}</strong>
         <div className="category-row-actions">
@@ -39,5 +41,6 @@ export function CategoryList({ items, loading, error, reload, onEdit, editing, o
     </ul>
   </section>
 }
+
 
 

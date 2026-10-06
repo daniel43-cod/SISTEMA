@@ -1,4 +1,5 @@
-﻿import { RefreshButton } from '../../../shared/ui/RefreshButton'
+﻿import { RowDetails } from '../../../shared/ui/RowDetails'
+import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { PresentationResponse } from '../types/presentation'
 
 type Props = {
@@ -23,7 +24,8 @@ export function PresentationList({ items, loading, error, onReload, onEdit, onSt
       <>
         <p className="presentation-hint" role="status">{items.length} presentaciones</p>
         <ul className="presentation-list-items">
-          {items.map(item => <li key={item.idPresentacion}>
+          {items.map(item => <li key={item.idPresentacion} className="catalog-clickable-row">
+        <RowDetails name={item.descripcion} type="presentación" fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}  disabled={editing || loading || pending} />
                         <strong>{item.descripcion}</strong>
             <div className="presentation-row-actions">
 
@@ -39,4 +41,5 @@ export function PresentationList({ items, loading, error, onReload, onEdit, onSt
       </>}
   </section>
 }
+
 

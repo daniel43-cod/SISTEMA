@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+﻿import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
 import { ProductsPage } from '../pages/ProductsPage'
 import { StaffNavigation } from '../navigation/StaffNavigation'
@@ -51,7 +51,7 @@ export function StaffLayout() {
   }
 
   return (
-    <div className="staff-shell">
+    <div className={`staff-shell ${current.id === 'productos' ? 'staff-shell-products' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">
@@ -117,7 +117,7 @@ export function StaffLayout() {
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
           <div className="staff-page-heading">
-            <div>{current.id !== 'inicio' && <span className="staff-eyebrow">{current.group}</span>}
+            <div>{current.id !== 'inicio' && current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
               <h1>{current.id === 'inicio' ? `Bienvenido, ${session.user.name}` : current.label}</h1>
               {current.id !== 'inicio' && <p>{current.description}</p>}
             </div>

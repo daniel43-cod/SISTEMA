@@ -134,3 +134,9 @@
 .product-brand-image img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; padding: 12px; box-sizing: border-box; }
 .product-brand-image-placeholder { display: grid; justify-items: center; gap: 8px; padding: 12px; font-size: .8rem; }
 .product-brand-card { align-content: start; }
+
+/* El área de apertura ocupa la fila sin ocultar su contenido. */
+.product-browser .product-list button.catalog-row-open { padding: 0; border: 0; background: transparent; }
+.product-browser .product-list button.catalog-row-open:hover:not(:disabled) { background: #0f172a05; }
+.product-list > li.catalog-clickable-row > div:not(.product-list-actions) { flex: 1 1 0; min-width: 0; gap: 3px; }
+.product-list > li.catalog-clickable-row > div:not(.product-list-actions) > span { font-size: .8rem; }

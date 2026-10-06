@@ -91,3 +91,10 @@
 
   .staff-page-heading { margin-bottom: 28px; }
 }
+/* En productos solo se desplaza el contenido del apartado seleccionado. */
+.staff-shell-products { height: 100dvh; min-height: 0; overflow: hidden; }
+.staff-shell-products .staff-workspace { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.staff-shell-products .staff-header { flex-shrink: 0; }
+.staff-shell-products .staff-content { display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%; box-sizing: border-box; margin: 0 auto; overflow: hidden; }
+.staff-shell-products .staff-page-heading { flex-shrink: 0; margin-bottom: 16px; }
+.staff-shell-products .staff-page-heading p:empty { display: none; }
