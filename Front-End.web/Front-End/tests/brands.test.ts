@@ -135,3 +135,32 @@ test('Editar marca admite archivo, enlace, quitar y conservar imagen', async t =
   await assert.rejects(updateBrand(3, { nombre: 'Marca', idCategoria: 2, quitarImagen: true, urlImagen: 'https://example.com/a.png' }, 'token'))
   assert.equal(mock.mock.callCount(), 0)
 })
+
+test('Administración lista marcas inactivas y cambia estado con PATCH autenticado', async t => {
+  const { changeBrandState } = await import('../src/features/brands/api/brandsApi.ts')
+  const row = { idMarca: 1, nombre: 'Marca', idCategoria: 2, estado: false, urlImagen: '/uploads/marcas/a.webp' }
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    if (options.method === 'GET') { assert.equal(url, '/api/Marcas/administracion'); return Response.json([row]) }
+    assert.equal(url, '/api/Marcas/1/estado')
+    assert.equal(options.method, 'PATCH')
+    assert.deepEqual(JSON.parse(options.body as string), { estado: false })
+    return Response.json(row)
+  })
+  assert.deepEqual(await listBrands('token', undefined, true), [row])
+  assert.deepEqual(await changeBrandState(1, false, 'token'), row)
+})
+
+test('Cambio de estado de marca valida ID, respuesta y permisos', async t => {
+  const { changeBrandState } = await import('../src/features/brands/api/brandsApi.ts')
+  const mock = t.mock.method(globalThis, 'fetch', async () => Response.json({ idMarca: 2, nombre: 'Otra', idCategoria: 1, estado: false }))
+  await assert.rejects(changeBrandState(0, false, 'token'))
+  assert.equal(mock.mock.callCount(), 0)
+  await assert.rejects(changeBrandState(1, false, 'token'))
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ idMarca: 1, nombre: 'Marca', idCategoria: 2, estado: true }))
+  await assert.rejects(changeBrandState(1, false, 'token'))
+  for (const status of [401, 403, 404, 500]) {
+    t.mock.method(globalThis, 'fetch', async () => new Response('secret', { status }))
+    await assert.rejects(changeBrandState(1, false, 'token'), error => error instanceof ApiError && error.status === status && !error.message.includes('secret'))
+  }
+})

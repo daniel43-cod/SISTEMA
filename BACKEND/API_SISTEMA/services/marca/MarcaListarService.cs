@@ -14,6 +14,15 @@ public class MarcaListarService
     }
 
     // Consulta de solo lectura: devuelve las marcas activas ordenadas por nombre e ID.
+    public Task<List<RespuestaMarcaDTO>> ListarAdministracion(CancellationToken cancellationToken = default)
+        => _context.Marcas.AsNoTracking()
+            .OrderBy(m => m.Nombre).ThenBy(m => m.IdMarca)
+            .Select(m => new RespuestaMarcaDTO
+            {
+                IdMarca = m.IdMarca, Nombre = m.Nombre, IdCategoria = m.IdCategoria,
+                NombreCategoria = m.Categoria.nombreCategoria, Estado = m.Estado, UrlImagen = m.UrlImagen
+            }).ToListAsync(cancellationToken);
+
     public Task<List<RespuestaMarcaDTO>> ListarActivas(CancellationToken cancellationToken = default)
     {
         return _context.Marcas.AsNoTracking()

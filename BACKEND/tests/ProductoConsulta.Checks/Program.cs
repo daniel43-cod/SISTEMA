@@ -40,9 +40,14 @@ builder.Services.AddScoped<CrearPresentacionServices>();
 builder.Services.AddScoped<ListarPresentacionServices>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
 builder.Services.AddScoped<EstadoPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.EstadoMarcaService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaListarService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
 builder.Services.AddControllers().AddApplicationPart(typeof(ProductosController).Assembly).AddControllersAsServices();
+builder.Services.AddTransient<MarcasController>(sp => new MarcasController(null!,
+    sp.GetRequiredService<ILogger<MarcasController>>(),
+    sp.GetRequiredService<API_SISTEMA.services.Marca.MarcaListarService>(), null!));
 builder.Services.AddTransient<CategoriaController>(sp => new CategoriaController(null!, null!,
     sp.GetRequiredService<ILogger<CategoriaController>>(), null!,
     sp.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaListarService>()));
@@ -300,6 +305,33 @@ try
         var categoria = await db.categorias.SingleAsync(c => c.IdCategoria == 1);
         Check(categoria.Estado && categoria.nombreCategoria == "Bebidas" && await db.Marcas.AnyAsync(m => m.IdMarca == 1), "Cambio de estado conserva nombre y marca asociada");
     }
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = false })).StatusCode == HttpStatusCode.Unauthorized, "Marca bloquea anónimo");
+    Check((await client.GetAsync("/api/Marcas/administracion")).StatusCode == HttpStatusCode.Unauthorized, "Listado de marcas bloquea anónimo");
+    Login("VENDEDOR");
+    Check((await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = false })).StatusCode == HttpStatusCode.Forbidden, "Marca bloquea vendedor");
+    Check((await client.GetAsync("/api/Marcas/administracion")).StatusCode == HttpStatusCode.Forbidden, "Listado de marcas bloquea vendedor");
+    Login("ADMINISTRADOR");
+    foreach (var payload in new object[] { new { }, new { estado = (bool?)null }, new { estado = "false" }, new { estado = false, nombre = "Cambio" } })
+        Check((await client.PatchAsJsonAsync("/api/Marcas/1/estado", payload)).StatusCode == HttpStatusCode.BadRequest, "Marca rechaza estado inválido o campos ajenos");
+    Check((await client.PatchAsJsonAsync("/api/Marcas/0/estado", new { estado = false })).StatusCode == HttpStatusCode.BadRequest, "Marca rechaza ID inválido");
+    Check((await client.PatchAsJsonAsync("/api/Marcas/999/estado", new { estado = false })).StatusCode == HttpStatusCode.NotFound, "Marca inexistente devuelve 404");
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var marca = await db.Marcas.SingleAsync(m => m.IdMarca == 1);
+        marca.UrlImagen = "https://example.com/marca.webp";
+        await db.SaveChangesAsync();
+    }
+    var estadoMarca = await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = false });
+    var marcaDesactivada = await estadoMarca.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>();
+    Check(estadoMarca.IsSuccessStatusCode && marcaDesactivada is { Estado: false, IdCategoria: 1, UrlImagen: "https://example.com/marca.webp" }, "Administrador desactiva marca conservando imagen y categoría");
+    Check((await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación de marca idempotente");
+    var marcasActivas = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>>("/api/Marcas");
+    var marcasAdmin = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>>("/api/Marcas/administracion");
+    Check(marcasActivas!.All(m => m.IdMarca != 1) && marcasAdmin!.Any(m => m.IdMarca == 1 && !m.Estado), "Marca inactiva visible en listado administrativo");
+    var reactivacion = await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = true });
+    Check(reactivacion.IsSuccessStatusCode && (await reactivacion.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>())!.Estado, "Administrador reactiva marca");
     Console.WriteLine($"{passed} comprobaciones aprobadas, sin SQL Server real.");
 }
 finally { await app.StopAsync(); }

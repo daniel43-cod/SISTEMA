@@ -57,15 +57,15 @@ async function saveBrand(data: CreateBrandRequest, token: string, signal?: Abort
 }
 
 // Consulta las marcas activas con el token de sesión y valida la respuesta antes de mostrarla.
-export async function listBrands(token: string, signal?: AbortSignal): Promise<BrandResponse[]> {
-  const result = await requestJson('/Marcas', { token, signal })
+export async function listBrands(token: string, signal?: AbortSignal, administration = false): Promise<BrandResponse[]> {
+  const result = await requestJson(administration ? '/Marcas/administracion' : '/Marcas', { token, signal })
   if (!Array.isArray(result)) throw new ApiError('El listado de marcas recibido no es válido.')
   const ids = new Set<number>()
   return result.map(value => {
     const row = value as Partial<BrandResponse> | null
     if (!row || !Number.isSafeInteger(row.idMarca) || row.idMarca! <= 0 ||
         !Number.isSafeInteger(row.idCategoria) || row.idCategoria! <= 0 ||
-        typeof row.nombre !== 'string' || !row.nombre.trim() || row.estado !== true ||
+        typeof row.nombre !== 'string' || !row.nombre.trim() || typeof row.estado !== 'boolean' || (!administration && !row.estado) ||
         (row.nombreCategoria != null && typeof row.nombreCategoria !== 'string') ||
         (row.urlImagen != null && typeof row.urlImagen !== 'string') || ids.has(row.idMarca!))
       throw new ApiError('El listado de marcas recibido no es válido.')
@@ -77,3 +77,15 @@ export async function listBrands(token: string, signal?: AbortSignal): Promise<B
 
 
 
+
+export async function changeBrandState(id: number, state: boolean, token: string, signal?: AbortSignal) {
+  if (!Number.isSafeInteger(id) || id <= 0 || typeof state !== 'boolean') throw new ApiError('Estado o marca inválidos.', 400)
+  const response = await requestJson(`/Marcas/${id}/estado`, { method: 'PATCH', body: { estado: state }, token, signal })
+  const row = response as Partial<BrandResponse> | null
+  if (!row || row.idMarca !== id || row.estado !== state || typeof row.nombre !== 'string' || !row.nombre.trim() ||
+      !Number.isSafeInteger(row.idCategoria) || row.idCategoria! <= 0 ||
+      (row.urlImagen != null && typeof row.urlImagen !== 'string') ||
+      (row.nombreCategoria != null && typeof row.nombreCategoria !== 'string'))
+    throw new ApiError('No se pudo confirmar el estado. Actualiza el listado antes de reintentar.')
+  return row as BrandResponse
+}

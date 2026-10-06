@@ -46,6 +46,43 @@ public class MarcasController : ControllerBase
         }
     }
 
+    [Authorize(Roles = Roles.Administrador)]
+    [HttpPatch("{idMarca:int}/estado")]
+    [Consumes("application/json")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> CambiarEstado([Range(1, int.MaxValue)] int idMarca,
+        [FromBody] CambiarEstadoMarcaDTO dto, [FromServices] EstadoMarcaService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var resultado = await service.CambiarEstado(idMarca, dto, cancellationToken);
+            if (resultado is null) return NotFound(new { mensaje = "La marca no existe." });
+            return Ok(resultado);
+        }
+        catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var traceId = HttpContext.TraceIdentifier;
+            _logger.LogError(ex, "Error al cambiar estado de marca. Referencia: {TraceId}", traceId);
+            return StatusCode(500, new { mensaje = "No se pudo cambiar el estado de la marca.", traceId });
+        }
+    }
+
+    [Authorize(Roles = Roles.Administrador)]
+    [HttpGet("administracion")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> ListarAdministracion(CancellationToken cancellationToken)
+    {
+        try { return Ok(await _listarService.ListarAdministracion(cancellationToken)); }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var traceId = HttpContext.TraceIdentifier;
+            _logger.LogError(ex, "Error al listar marcas para administración. Referencia: {TraceId}", traceId);
+            return StatusCode(500, new { mensaje = "No se pudieron listar las marcas.", traceId });
+        }
+    }
+
     // La edición valida permisos en la API, aunque el frontend oculte el botón.
     [Authorize(Roles = Roles.Administrador)]
     [HttpPut("{idMarca:int}")]

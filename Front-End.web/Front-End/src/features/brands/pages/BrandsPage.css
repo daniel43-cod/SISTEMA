@@ -32,3 +32,13 @@
 .brand-preview-frame:hover:not(:disabled) { background: #f1f5f9; border-color: var(--color-primary); }
 .brand-preview-frame:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
 .brand-preview-frame:disabled { cursor: wait; opacity: .65; }
+
+.brand-list .brand-row-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.brand-state-button { min-height: 44px; padding: 8px; border: 0; background: transparent; border-radius: 6px; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.brand-state-active { color: #166534; }
+.brand-state-inactive { color: #9a3412; }
+.brand-state-active:hover:not(:disabled) { color: #14532d; }
+.brand-state-inactive:hover:not(:disabled) { color: #7c2d12; }
+.brand-state-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.brand-state-button:disabled { opacity: .6; cursor: default; }
+@media (max-width: 380px) { .brand-list li { flex-wrap: wrap; } .brand-list .brand-row-actions { margin-left: auto; } }

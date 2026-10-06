@@ -5,7 +5,7 @@ import { listBrands } from '../api/brandsApi'
 import type { BrandResponse } from '../types/brand'
 
 // Centraliza carga, errores y actualización del listado sin mezclarlos con la interfaz.
-export function useBrands() {
+export function useBrands(administration = false) {
   const { session, logout } = useAuth()
   const [items, setItems] = useState<BrandResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,7 +19,7 @@ export function useBrands() {
     async function load() {
       setLoading(true); setError('')
       try {
-        const rows = await listBrands(token, controller.signal)
+        const rows = await listBrands(token, controller.signal, administration)
         if (!controller.signal.aborted) setItems(rows)
       } catch (failure) {
         if (controller.signal.aborted) return
@@ -31,6 +31,7 @@ export function useBrands() {
     void load()
     // Cancela la consulta al salir o recargar, evitando resultados de peticiones anteriores.
     return () => controller.abort()
-  }, [session, logout, revision])
+  }, [session, logout, revision, administration])
   return { items, loading, error, reload }
 }
+
