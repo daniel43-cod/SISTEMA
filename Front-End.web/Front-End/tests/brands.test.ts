@@ -110,3 +110,28 @@ test('Crear marca con enlace usa JSON y rechaza enlace junto con archivo', async
     imagen: new File(['png'], 'a.png', { type: 'image/png' }) }, 'token'))
   assert.equal(mock.mock.callCount(), 0)
 })
+
+test('Editar marca admite archivo, enlace, quitar y conservar imagen', async t => {
+  const { updateBrand } = await import('../src/features/brands/api/brandsApi.ts')
+  const row = { idMarca: 3, nombre: 'Marca', idCategoria: 2, estado: true }
+  for (const changes of [{}, { urlImagen: 'https://example.com/a.png' }, { quitarImagen: true }]) {
+    t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+      assert.equal(url, '/api/Marcas/3')
+      assert.equal(options.method, 'PUT')
+      assert.deepEqual(JSON.parse(options.body as string), { nombre: 'Marca', idCategoria: 2, ...changes })
+      return Response.json(row)
+    })
+    await updateBrand(3, { nombre: 'Marca', idCategoria: 2, ...changes }, 'token')
+  }
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Marcas/3/con-imagen')
+    assert.equal(options.method, 'PUT')
+    assert.equal((options.headers as Record<string, string>)['Content-Type'], undefined)
+    assert.equal(((options.body as FormData).get('Imagen') as File).name, 'a.png')
+    return Response.json(row)
+  })
+  await updateBrand(3, { nombre: 'Marca', idCategoria: 2, imagen: new File(['png'], 'a.png', { type: 'image/png' }) }, 'token')
+  const mock = t.mock.method(globalThis, 'fetch', async () => { throw new Error('No debe consultar') })
+  await assert.rejects(updateBrand(3, { nombre: 'Marca', idCategoria: 2, quitarImagen: true, urlImagen: 'https://example.com/a.png' }, 'token'))
+  assert.equal(mock.mock.callCount(), 0)
+})

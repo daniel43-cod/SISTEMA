@@ -20,4 +20,11 @@ Si el alta falla antes de confirmar la transacción se limpia el archivo creado.
 No se descargan URLs externas. Conservar uploads entre despliegues.
 
 La respuesta de creación y el listado incluyen urlImagen (ruta local o enlace).
-La edición sigue conservando la imagen existente.
+La edición, exclusiva de administradores, admite:
+- PUT /api/Marcas/{id}: JSON con Nombre, IdCategoria y UrlImagen opcional.
+- PUT /api/Marcas/{id}/con-imagen: multipart con Nombre, IdCategoria e Imagen.
+- QuitarImagen=true elimina la referencia actual; no admite archivo/enlace simultáneamente.
+
+Si se omiten imagen/enlace y QuitarImagen, se conserva la imagen existente.
+La imagen anterior no se borra del disco porque podría estar referenciada por otra marca.
+Los archivos nuevos se limpian si la actualización falla antes de confirmar la transacción.

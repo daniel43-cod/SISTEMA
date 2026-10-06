@@ -49,12 +49,26 @@ public class MarcasController : ControllerBase
     // La edición valida permisos en la API, aunque el frontend oculte el botón.
     [Authorize(Roles = Roles.Administrador)]
     [HttpPut("{idMarca:int}")]
-    public async Task<ActionResult<RespuestaMarcaDTO>> Actualizar(int idMarca,
+    [Consumes("application/json")]
+    public Task<ActionResult<RespuestaMarcaDTO>> Actualizar(int idMarca,
         [FromBody] ActualizarMarcaDTO dto, CancellationToken cancellationToken)
+        => ActualizarInterno(idMarca, dto, null, cancellationToken);
+
+    [Authorize(Roles = Roles.Administrador)]
+    [HttpPut("{idMarca:int}/con-imagen")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
+    public Task<ActionResult<RespuestaMarcaDTO>> ActualizarConImagen(int idMarca,
+        [FromForm] ActualizarMarcaConImagenDTO dto, CancellationToken cancellationToken)
+        => ActualizarInterno(idMarca, dto, dto.Imagen, cancellationToken);
+
+    private async Task<ActionResult<RespuestaMarcaDTO>> ActualizarInterno(int idMarca,
+        ActualizarMarcaDTO dto, IFormFile? imagen, CancellationToken cancellationToken)
     {
         try
         {
-            var marca = await _actualizarService.ActualizarMarca(idMarca, dto, cancellationToken);
+            var marca = await _actualizarService.ActualizarMarca(idMarca, dto, cancellationToken, imagen);
             if (marca is null) return NotFound(new { mensaje = "La marca no existe." });
             return Ok(marca);
         }

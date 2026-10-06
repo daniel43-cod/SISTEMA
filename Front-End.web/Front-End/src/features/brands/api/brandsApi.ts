@@ -14,8 +14,6 @@ async function saveBrand(data: CreateBrandRequest, token: string, signal?: Abort
   if (!data.nombre.trim() || data.nombre.trim().length > 100 ||
       !Number.isSafeInteger(data.idCategoria) || data.idCategoria <= 0)
     throw new ApiError('Ingresa un nombre de hasta 100 caracteres y selecciona una categoría.', 400)
-  if (id !== undefined && (data.imagen || data.urlImagen))
-    throw new ApiError('La imagen solo se puede agregar al crear la marca.', 400)
   const urlImagen = data.urlImagen?.trim() || undefined
   if (urlImagen) {
     let url: URL
@@ -23,12 +21,14 @@ async function saveBrand(data: CreateBrandRequest, token: string, signal?: Abort
     if (url.protocol !== 'https:' || url.username || url.password || url.href.length > 2048)
       throw new ApiError('Ingresa un enlace HTTPS de hasta 2048 caracteres.', 400)
   }
+  if (data.quitarImagen && (id === undefined || data.imagen || urlImagen))
+    throw new ApiError('No puedes quitar y reemplazar la imagen al mismo tiempo.', 400)
   if (data.imagen && urlImagen) throw new ApiError('Elige un archivo o un enlace, no ambos.', 400)
   if (data.imagen && (!['image/jpeg', 'image/png', 'image/webp'].includes(data.imagen.type) ||
       data.imagen.size === 0 || data.imagen.size > 5 * 1024 * 1024))
     throw new ApiError('Selecciona una imagen JPEG, PNG o WebP de hasta 5 MB.', 400)
-  let body: FormData | { nombre: string; idCategoria: number; urlImagen?: string } = {
-    nombre: data.nombre.trim(), idCategoria: data.idCategoria, ...(urlImagen ? { urlImagen } : {}),
+  let body: FormData | { nombre: string; idCategoria: number; urlImagen?: string; quitarImagen?: boolean } = {
+    nombre: data.nombre.trim(), idCategoria: data.idCategoria, ...(urlImagen ? { urlImagen } : {}), ...(data.quitarImagen ? { quitarImagen: true } : {}),
   }
   if (data.imagen) {
     body = new FormData()
@@ -37,7 +37,7 @@ async function saveBrand(data: CreateBrandRequest, token: string, signal?: Abort
     body.append('Imagen', data.imagen)
   }
   try {
-    const result = await requestJson(id ? '/Marcas/' + id : data.imagen ? '/Marcas/con-imagen' : '/Marcas', {
+    const result = await requestJson(id ? '/Marcas/' + id + (data.imagen ? '/con-imagen' : '') : data.imagen ? '/Marcas/con-imagen' : '/Marcas', {
       method: id ? 'PUT' : 'POST', body, token, signal, validationMessages: true,
     })
     const row = result as Partial<BrandResponse> | null
@@ -73,6 +73,7 @@ export async function listBrands(token: string, signal?: AbortSignal): Promise<B
     return { ...(row.urlImagen != null ? { urlImagen: row.urlImagen } : {}), ...(row.nombreCategoria != null ? { nombreCategoria: row.nombreCategoria } : {}), idMarca: row.idMarca!, nombre: row.nombre, idCategoria: row.idCategoria!, estado: row.estado }
   })
 }
+
 
 
 

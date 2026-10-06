@@ -2,8 +2,8 @@
 import { Input } from '../../../shared/ui/Input'
 import { Button } from '../../../shared/ui/Button'
 
-export function BrandImagePicker({ url, file, onChange, disabled }: {
-  url: string; file?: File; onChange: (url: string, file?: File) => void; disabled: boolean
+export function BrandImagePicker({ url, file, onChange, disabled, currentImage }: {
+  currentImage?: string; url: string; file?: File; onChange: (url: string, file?: File) => void; disabled: boolean
 }) {
   const [preview, setPreview] = useState('')
   const [failed, setFailed] = useState(false)
@@ -25,7 +25,8 @@ export function BrandImagePicker({ url, file, onChange, disabled }: {
     }
     onChange('', selected); setPreview(URL.createObjectURL(selected)); setFailed(false); setError('')
   }
-  const previewUrl = preview || (/^https:\/\//i.test(url.trim()) ? url.trim() : '')
+  const existingImage = !url && !file && currentImage && (/^https:\/\//i.test(currentImage) || /^\/uploads\/marcas\/[a-f0-9]{32}\.webp$/.test(currentImage)) ? currentImage : ''
+  const previewUrl = preview || existingImage || (/^https:\/\//i.test(url.trim()) ? url.trim() : '')
   return (
     <fieldset disabled={disabled} className="brand-image">
       <legend>Imagen (opcional)</legend>
@@ -64,10 +65,11 @@ export function BrandImagePicker({ url, file, onChange, disabled }: {
         </button>
       </div>
     
-      {(file || url) && <Button className="brand-secondary" onClick={clearImage}>Quitar imagen</Button>}
+      {(file || url || existingImage) && <Button className="brand-secondary" onClick={clearImage}>Quitar imagen</Button>}
       <small>JPEG, PNG o WebP, hasta 5 MB.</small>
       {error && <p className="brand-error" role="alert">{error}</p>}
     </fieldset>
   )
 }
+
 
