@@ -32,6 +32,9 @@ impuesto o descripcion debe actualizarse.
 
 Imágenes: JPEG/PNG/WebP hasta 5 MiB, convertidas a WebP en wwwroot/uploads/productos.
 No se descargan enlaces externos. El endpoint anterior de reemplazo reutiliza esa validación.
+Para URLs de imagen, ejecutar `docs/sql/producto-imagen.sql` en la base `SISTEMA`.
+El modelo admite 2048 caracteres; cambiar el modelo no amplía automáticamente una columna existente.
+
 Debe existir id_marca y su FK en SQL. Verificar que las columnas de nombre/código/imagen
 admitan 200/100/2048 caracteres y precio sea decimal(18,2); no se modificó SQL.
 Publicar /uploads/productos desde el backend y conservar archivos entre despliegues.

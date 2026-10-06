@@ -1,4 +1,4 @@
-﻿import { API_BASE_URL } from '../config/api.ts'
+import { API_BASE_URL } from '../config/api.ts'
 import { ApiError } from './ApiError.ts'
 
 //realiza las peticiones
@@ -7,6 +7,7 @@ type RequestOptions = {
   body?: unknown
   token?: string
   signal?: AbortSignal
+  validationMessages?: boolean
 }
 
 export function parseRetryAfter(value: string | null): number {
@@ -37,6 +38,25 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
         401: 'La sesión no es válida. Inicia sesión nuevamente.',
         403: 'No tienes permiso para realizar esta acción.',
         429: 'Demasiados intentos. Espera antes de volver a intentarlo.',
+      }
+      if (response.status === 400 && options.validationMessages) {
+        try {
+          const validation = await response.json()
+          // Solo el contrato de validación; nunca title/detail ni respuestas HTML.
+          if (typeof validation?.mensaje === 'string' && validation.mensaje.length <= 500 &&
+              !/[<>\x00-\x1f]/.test(validation.mensaje))
+            messages[400] = validation.mensaje
+          else if (validation?.errors && typeof validation.errors === 'object') {
+            const fields = Object.keys(validation.errors)
+            if (fields.some(field => /precio/i.test(field))) messages[400] = 'Revisa el precio de las presentaciones.'
+            else if (fields.some(field => /presentaciones/i.test(field))) messages[400] = 'Revisa las presentaciones, sus cantidades y su estado.'
+            else if (fields.some(field => /codigo_barra/i.test(field))) messages[400] = 'Revisa el código de barras.'
+            else if (fields.some(field => /IdMarca/i.test(field))) messages[400] = 'Selecciona una marca válida.'
+            else if (fields.some(field => /stock_minimo/i.test(field))) messages[400] = 'Revisa la existencia mínima.'
+            else if (fields.some(field => /nombre/i.test(field))) messages[400] = 'Revisa el nombre del producto.'
+            else if (fields.some(field => /imagen/i.test(field))) messages[400] = 'Revisa la imagen seleccionada o su enlace.'
+          }
+        } catch { /* Una respuesta sin el contrato conserva el mensaje genérico. */ }
       }
       // No mostrar mensajes internos del servidor sin un contrato explícito.
       throw new ApiError(messages[response.status] ?? 'No se pudo completar la solicitud. Inténtalo más tarde.',

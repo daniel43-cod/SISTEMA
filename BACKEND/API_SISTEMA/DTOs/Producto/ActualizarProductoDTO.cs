@@ -4,8 +4,12 @@ using System.Text.Json.Serialization;
 namespace API_SISTEMA.DTOs.Productos;
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed class ActualizarProductoDTO
+public class ActualizarProductoDTO
 {
+    // Omitir conserva la imagen actual; QuitarImagen permite eliminarla.
+    [StringLength(2048)]
+    public string? UrlImagen { get; set; }
+    public bool QuitarImagen { get; set; }
     [Required, StringLength(100)]
     public string codigo_barra { get; set; } = string.Empty;
     [Required, StringLength(200)]
@@ -17,6 +21,11 @@ public sealed class ActualizarProductoDTO
     // null conserva las presentaciones; una lista reemplaza su configuración activa.
     [MaxLength(100)]
     public List<ActualizarProductoPresentacionDTO>? presentaciones { get; set; }
+}
+
+public sealed class ActualizarProductoConImagenDTO : ActualizarProductoDTO
+{
+    public IFormFile? Imagen { get; set; }
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]

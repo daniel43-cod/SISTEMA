@@ -1,4 +1,4 @@
-﻿import { test } from 'node:test'
+import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createProduct } from '../src/features/products/api/productsApi.ts'
 import { validateProduct } from '../src/features/products/schemas/productSchema.ts'
@@ -145,4 +145,52 @@ test('Carga nombres una vez y filtra en memoria sin nuevas solicitudes', async t
   assert.equal(filterProductNames(names, 'CAFE')[0].idProducto, 3)
   assert.equal(mock.mock.callCount(), 1)
   assert.equal(filterProductNames(Array.from({ length: 15 }, (_, i) => ({ idProducto: i + 1, nombre: 'Coca ' + i })), 'coca').length, 10)
+})
+
+test('Editar imagen envía archivo y presentaciones juntas como multipart', async t => {
+  const { updateProduct } = await import('../src/features/products/api/updateProduct.ts')
+  const row = { id_producto_presentacion: 9, id_presentacion: 2, unidades_equivalentes: 12, precio: 25.5, estado: true }
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Productos/1/con-imagen')
+    assert.equal(options.method, 'PUT')
+    assert.ok(options.body instanceof FormData)
+    assert.ok(options.body.get('Imagen') instanceof File)
+    assert.equal(options.body.get('presentaciones[0].id_producto_presentacion'), '9')
+    assert.equal(options.body.get('presentaciones[0].estado'), 'true')
+    assert.equal((options.headers as Record<string, string>)['Content-Type'], undefined)
+    return Response.json({ idProducto: 1 })
+  })
+  await updateProduct(1, { ...valid(), presentaciones: [row], imagen: new File(['x'], 'a.png', { type: 'image/png' }) }, 'token')
+})
+
+test('Editar permite enlace o quitar imagen y rechaza opciones incompatibles', async t => {
+  const { updateProduct } = await import('../src/features/products/api/updateProduct.ts')
+  const bodies: Record<string, unknown>[] = []
+  const mock = t.mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+    bodies.push(JSON.parse(options.body as string))
+    return Response.json({ idProducto: 1 })
+  })
+  await updateProduct(1, { ...valid(), presentaciones: undefined, urlImagen: 'https://example.com/a.png' }, 'token')
+  await updateProduct(1, { ...valid(), presentaciones: undefined, quitarImagen: true }, 'token')
+  assert.equal(bodies[0].urlImagen, 'https://example.com/a.png')
+  assert.equal(bodies[1].quitarImagen, true)
+  await assert.rejects(updateProduct(1, { ...valid(), presentaciones: undefined, urlImagen: 'http://example.com/a.png' }, 'token'))
+  await assert.rejects(updateProduct(1, { ...valid(), presentaciones: undefined, urlImagen: 'https://example.com/a.png', quitarImagen: true }, 'token'))
+  assert.equal(mock.mock.callCount(), 2)
+})
+test('Editar muestra validaciones concretas y conserva un mensaje seguro para errores internos', async t => {
+  const { updateProduct } = await import('../src/features/products/api/updateProduct.ts')
+  const data = { codigo_barra: '001', nombre: 'Agua', idMarca: 1, stock_minimo: 2 }
+  t.mock.method(globalThis, 'fetch', async () => Response.json(
+    { mensaje: 'La marca y su categoría deben existir y estar activas.' }, { status: 400 }))
+  await assert.rejects(updateProduct(1, data, 'token'), error =>
+    error instanceof ApiError && error.message === 'La marca y su categoría deben existir y estar activas.')
+  t.mock.method(globalThis, 'fetch', async () => Response.json(
+    { errors: { 'presentaciones[0].precio': ['Internal details'] } }, { status: 400 }))
+  await assert.rejects(updateProduct(1, data, 'token'), error =>
+    error instanceof ApiError && error.message === 'Revisa el precio de las presentaciones.')
+  t.mock.method(globalThis, 'fetch', async () => Response.json(
+    { detail: 'SQL password=secret' }, { status: 400 }))
+  await assert.rejects(updateProduct(1, data, 'token'), error =>
+    error instanceof ApiError && error.message === 'Revisa los datos ingresados.')
 })

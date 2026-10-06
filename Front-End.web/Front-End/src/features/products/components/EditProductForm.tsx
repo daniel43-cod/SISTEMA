@@ -6,6 +6,7 @@ import { ApiError } from '../../../shared/api/ApiError'
 import { updateProduct } from '../api/updateProduct'
 import { usePresentations } from '../../presentations/hooks/usePresentations'
 import type { ProductDetail } from '../types/product'
+import { ProductImagePicker } from './ProductImagePicker'
 
 export function EditProductForm({ product, onSaved, onCancel, onPending, focusPresentations = false }: {
   focusPresentations?: boolean; product: ProductDetail; onSaved: () => void; onCancel: () => void; onPending: (value: boolean) => void
@@ -25,14 +26,19 @@ export function EditProductForm({ product, onSaved, onCancel, onPending, focusPr
     presentation: String(item.idPresentacion), label: item.descripcion ?? 'Sin descripción',
     units: String(item.unidadesEquivalentes), price: String(item.precio), active: item.activa,
   })))
+  const [presentationsChanged, setPresentationsChanged] = useState(false)
   const nextKey = useRef(0)
   function changeRow(key: string, patch: Partial<(typeof rows)[number]>) {
+    setPresentationsChanged(true)
     setRows(previous => previous.map(row => row.key === key ? { ...row, ...patch } : row))
   }
   const [name, setName] = useState(product.nombre)
   const [code, setCode] = useState(product.codigoBarra ?? '')
   const [brand, setBrand] = useState(String(product.idMarca))
   const [minimum, setMinimum] = useState(String(product.stockMinimo))
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageFile, setImageFile] = useState<File>()
+  const [imageChanged, setImageChanged] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const request = useRef<AbortController | null>(null)
@@ -46,9 +52,10 @@ export function EditProductForm({ product, onSaved, onCancel, onPending, focusPr
     try {
       if (!minimum.trim()) throw new ApiError('Ingresa la existencia mínima.', 400)
       await updateProduct(product.idProducto, { nombre: name, codigo_barra: code, idMarca: Number(brand), stock_minimo: Number(minimum),
-        presentaciones: rows.map(row => ({ ...(row.id ? { id_producto_presentacion: row.id } : {}),
+        ...(imageChanged ? { urlImagen: imageUrl, imagen: imageFile, quitarImagen: !imageUrl.trim() && !imageFile } : {}),
+        ...(presentationsChanged ? { presentaciones: rows.map(row => ({ ...(row.id ? { id_producto_presentacion: row.id } : {}),
           id_presentacion: Number(row.presentation), unidades_equivalentes: row.units.trim() ? Number(row.units) : 0,
-          precio: row.price.trim() ? Number(row.price) : 0, estado: row.active })) }, session.token, controller.signal)
+          precio: row.price.trim() ? Number(row.price) : 0, estado: row.active })) } : {}) }, session.token, controller.signal)
       if (!controller.signal.aborted) onSaved()
     } catch (failure) {
       if (controller.signal.aborted) return
@@ -83,14 +90,16 @@ export function EditProductForm({ product, onSaved, onCancel, onPending, focusPr
           <label className="field">Unidades equivalentes<input required type="number" min="1" max="2147483647" step="1" value={row.units} onChange={event => changeRow(row.key, { units: event.target.value })} /></label>
           <label className="field">Precio de venta (Q)<input required type="number" min="0.01" step="0.01" value={row.price} onChange={event => changeRow(row.key, { price: event.target.value })} /></label>
           <label><input type="checkbox" checked={row.active} onChange={event => changeRow(row.key, { active: event.target.checked })} /> Activa</label>
-          {!row.id && <button type="button" onClick={() => setRows(previous => previous.filter(item => item.key !== row.key))}>Quitar presentación nueva</button>}
+          {!row.id && <button type="button" onClick={() => { setPresentationsChanged(true); setRows(previous => previous.filter(item => item.key !== row.key)) }}>Quitar presentación nueva</button>}
         </div>)}
         <button type="button" disabled={catalog.loading || Boolean(catalog.error) || rows.length >= 100}
-          onClick={() => setRows(previous => [...previous, { key: `new-${nextKey.current++}`, id: 0, presentation: '', label: '', units: '1', price: '', active: true }])}>Agregar presentación</button>
+          onClick={() => { setPresentationsChanged(true); setRows(previous => [...previous, { key: `new-${nextKey.current++}`, id: 0, presentation: '', label: '', units: '1', price: '', active: true }]); }}>Agregar presentación</button>
         {catalog.loading && <p role="status">Cargando presentaciones…</p>}
         {catalog.error && <><p role="alert" className="product-error">{catalog.error}</p><button type="button" onClick={catalog.reload}>Reintentar presentaciones</button></>}
       </section>
     </fieldset>
+    <ProductImagePicker url={imageUrl} file={imageFile} currentImage={!imageChanged ? product.imagen ?? undefined : undefined}
+      disabled={pending} onChange={(url, file) => { setImageUrl(url); setImageFile(file); setImageChanged(true) }} />
     {brands.loading && <p role="status">Cargando marcas…</p>}
     {brands.error && <><p role="alert" className="product-error">{brands.error}</p><button type="button" disabled={pending} onClick={brands.reload}>Reintentar marcas</button></>}
     {error && <p role="alert" className="product-error">{error}</p>}

@@ -7,14 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services.ProductoS;
 
-public sealed class ProductoActualizarService(SistemaDbContext context)
+public sealed class ProductoActualizarService(SistemaDbContext context, ProductoImagenService imagenes)
 {
     public async Task<ProductoResumenDTO?> ActualizarProducto(int id, ActualizarProductoDTO dto,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, IFormFile? imagen = null)
     {
         if (id <= 0) throw new ValidationException("El ID del producto debe ser mayor que cero.");
         if (dto is null) throw new ValidationException("La información del producto es obligatoria.");
         Validator.ValidateObject(dto, new ValidationContext(dto), validateAllProperties: true);
+        var url = imagenes.ValidarUrl(dto.UrlImagen);
+        if ((url != null && imagen != null) || (dto.QuitarImagen && (url != null || imagen != null)))
+            throw new ValidationException("Elige un enlace, un archivo o quitar la imagen, no varias opciones.");
         if (dto.codigo_barra.Any(char.IsControl) || dto.codigo_barra.Trim().Any(char.IsWhiteSpace))
             throw new ValidationException("El código de barras no admite espacios internos ni caracteres de control.");
         if (dto.nombre.Any(char.IsControl))
@@ -102,8 +105,23 @@ public sealed class ProductoActualizarService(SistemaDbContext context)
         producto.nombre = nombre;
         producto.IdMarca = marca.IdMarca;
         producto.stock_minimo = dto.stock_minimo!.Value;
-        await context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        string? archivo = null;
+        var commitIniciado = false;
+        try
+        {
+            if (imagen != null) url = archivo = await imagenes.GuardarAsync(imagen, cancellationToken);
+            if (dto.QuitarImagen) producto.imagen = null;
+            else if (url != null) producto.imagen = url;
+            await context.SaveChangesAsync(cancellationToken);
+            commitIniciado = true;
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            // Conservar el archivo si el resultado del commit es incierto.
+            if (archivo != null && !commitIniciado) imagenes.Eliminar(archivo);
+            throw;
+        }
         return new ProductoResumenDTO
         {
             IdProducto = producto.id_producto, CodigoBarra = producto.codigo_barra, Nombre = producto.nombre,

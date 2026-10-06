@@ -117,10 +117,26 @@ namespace API_SISTEMA.controllers
         public async Task<ActionResult<ProductoResumenDTO>> ActualizarProducto(
             [Range(1, int.MaxValue)] int id, [FromBody] ActualizarProductoDTO dto,
             [FromServices] ProductoActualizarService actualizarService, CancellationToken cancellationToken)
+            => await ActualizarInterno(id, dto, actualizarService, cancellationToken);
+
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpPut("{id:int}/con-imagen")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public Task<ActionResult<ProductoResumenDTO>> ActualizarConImagen(
+            [Range(1, int.MaxValue)] int id, [FromForm] ActualizarProductoConImagenDTO dto,
+            [FromServices] ProductoActualizarService actualizarService, CancellationToken cancellationToken)
+            => ActualizarInterno(id, dto, actualizarService, cancellationToken, dto.Imagen);
+
+        private async Task<ActionResult<ProductoResumenDTO>> ActualizarInterno(int id,
+            ActualizarProductoDTO dto, ProductoActualizarService actualizarService,
+            CancellationToken cancellationToken, IFormFile? imagen = null)
         {
             try
             {
-                var producto = await actualizarService.ActualizarProducto(id, dto, cancellationToken);
+                var producto = await actualizarService.ActualizarProducto(id, dto, cancellationToken, imagen);
                 if (producto is null) return NotFound(new { mensaje = "El producto no existe." });
                 return Ok(producto);
             }

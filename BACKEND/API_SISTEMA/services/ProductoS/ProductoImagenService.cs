@@ -26,7 +26,10 @@ public sealed class ProductoImagenService
         if (valor.Length > 2048 || !Uri.TryCreate(valor, UriKind.Absolute, out var uri) ||
             uri.Scheme != Uri.UriSchemeHttps || string.IsNullOrEmpty(uri.Host) || uri.UserInfo.Length > 0)
             throw new ValidationException("La imagen debe tener una URL HTTPS válida de hasta 2048 caracteres.");
-        return uri.AbsoluteUri;
+        var urlNormalizada = uri.AbsoluteUri;
+        if (urlNormalizada.Length > 2048)
+            throw new ValidationException("La imagen debe tener una URL HTTPS válida de hasta 2048 caracteres.");
+        return urlNormalizada;
     }
 
     public async Task<string> GuardarAsync(IFormFile archivo, CancellationToken cancellationToken)

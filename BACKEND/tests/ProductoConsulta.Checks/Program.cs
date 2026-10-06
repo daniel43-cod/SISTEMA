@@ -34,6 +34,7 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new CatalogoDbContext(options));
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<ProductoActualizarService>();
+builder.Services.AddSingleton<ProductoImagenService>();
 builder.Services.AddScoped<ProductoBuscarAdminService>();
 builder.Services.AddScoped<CrearPresentacionServices>();
 builder.Services.AddScoped<ListarPresentacionServices>();
@@ -127,6 +128,40 @@ try
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Forbidden, "Edición de vendedor bloqueada");
     Login("ADMINISTRADOR");
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Conserva nombre y código propios");
+    edit.UrlImagen = "https://example.com/producto.png";
+    var imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
+    Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen == edit.UrlImagen,
+        "Edición guarda enlace de imagen");
+    edit.UrlImagen = null;
+    imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
+    Check((await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen == "https://example.com/producto.png",
+        "Omitir imagen conserva la anterior");
+    edit.UrlImagen = "http://example.com/insegura.png";
+    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest,
+        "Edición rechaza enlace sin HTTPS");
+    edit.UrlImagen = null;
+    using (var multipart = new MultipartFormDataContent())
+    {
+        multipart.Add(new StringContent("001"), "codigo_barra");
+        multipart.Add(new StringContent("Agua"), "nombre");
+        multipart.Add(new StringContent("1"), "IdMarca");
+        multipart.Add(new StringContent("3"), "stock_minimo");
+        using var pixels = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(2, 2);
+        using var bytes = new MemoryStream();
+        await pixels.SaveAsync(bytes, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+        multipart.Add(new ByteArrayContent(bytes.ToArray()), "Imagen", "producto.png");
+        imageResponse = await client.PutAsync("/api/Productos/1/con-imagen", multipart);
+        var uploaded = imageResponse.IsSuccessStatusCode
+            ? (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen : null;
+        Check(uploaded?.StartsWith("/uploads/productos/") == true, "Edición multipart reemplaza imagen con archivo validado");
+        using var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<ProductoImagenService>().Eliminar(uploaded!);
+    }
+    edit.QuitarImagen = true;
+    imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
+    Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen == null,
+        "Edición permite quitar imagen");
+    edit.QuitarImagen = false;
     edit.codigo_barra = " 002 ";
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Conflict, "Código duplicado rechazado");
     edit.codigo_barra = "001"; edit.nombre = " agua 2 ";
