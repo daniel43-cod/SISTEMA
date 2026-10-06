@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { useCategories } from '../../categories/hooks/useCategories'
 import { useBrands } from '../../brands/hooks/useBrands'
@@ -18,6 +18,25 @@ function CategoryCardImage({ url }: { url?: string | null }) {
   return <span className="product-category-image">{valid && !failed
     ? <img src={url!} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
     : <span>Sin imagen</span>}</span>
+}
+function BrandCardImage({ url, name }: { url?: string | null; name: string }) {
+  const [failed, setFailed] = useState(false)
+  const source = url?.trim() ?? ''
+  let valid = /^\/uploads\/marcas\/[a-f0-9]{32}\.webp$/.test(source)
+  if (source.startsWith('https://')) {
+    try {
+      const parsed = new URL(source)
+      valid = Boolean(parsed.hostname) && !parsed.username && !parsed.password
+    } catch { valid = false }
+  }
+  return <span className="product-brand-image">
+    {valid && !failed
+      ? <img src={source} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+      : <span className="product-brand-image-placeholder" aria-hidden="true">
+          <span className="product-brand-emblem">{name.trim().slice(0, 2).toLocaleUpperCase('es')}</span>
+          <span>Sin imagen</span>
+        </span>}
+  </span>
 }
 export function ProductCatalogBrowser() {
   const { session } = useAuth()//comproba que el usuario sea admin
@@ -56,7 +75,7 @@ export function ProductCatalogBrowser() {
       {brands.error && <><p role="alert" className="product-error">{brands.error}</p><button type="button" onClick={brands.reload}>Reintentar</button></>}
       {!brands.loading && !brands.error && !selectedBrands.length && <p>No hay marcas disponibles en esta categoría.</p>}
       {!brands.loading && !brands.error && <ul className="product-catalog-grid">
-        {selectedBrands.map(item => <li key={item.idMarca}><button type="button" className="product-brand-card" onClick={() => setBrand(item)}><span className="product-brand-emblem" aria-hidden="true">{item.nombre.trim().slice(0, 2).toLocaleUpperCase('es')}</span>
+        {selectedBrands.map(item => <li key={item.idMarca}><button type="button" className="product-brand-card" onClick={() => setBrand(item)}><BrandCardImage key={item.urlImagen ?? ''} url={item.urlImagen} name={item.nombre} />
             <strong>{item.nombre}</strong>
             <span className="product-brand-category">{category.nombre}</span></button></li>)}
       </ul>}
