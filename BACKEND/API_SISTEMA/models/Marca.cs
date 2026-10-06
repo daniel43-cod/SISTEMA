@@ -15,6 +15,10 @@ namespace API_SISTEMA.models
         [Column("nombre")]
         public string Nombre { get; set; } = string.Empty;
 
+        [MaxLength(2048)]
+        [Column("ruta_imagen")]
+        public string? UrlImagen { get; set; }
+
         [Column("estado")]
         public bool Estado { get; set; }
 

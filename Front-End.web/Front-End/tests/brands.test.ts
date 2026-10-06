@@ -51,3 +51,62 @@ test('Editar rechaza ID inválido y conserva errores de permisos, duplicado y re
       error => error instanceof ApiError && error.status === status && !error.message.includes('secret'))
   }
 })
+
+test('Crear marca con imagen envía multipart autenticado al nuevo endpoint', async t => {
+  const { createBrand } = await import('../src/features/brands/api/brandsApi.ts')
+  const file = new File(['png'], 'marca.png', { type: 'image/png' })
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Marcas/con-imagen')
+    assert.equal(options.method, 'POST')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    assert.equal((options.headers as Record<string, string>)['Content-Type'], undefined)
+    const body = options.body as FormData
+    assert.equal(body.get('Nombre'), 'Marca')
+    assert.equal(body.get('IdCategoria'), '2')
+    assert.equal((body.get('Imagen') as File).name, 'marca.png')
+    return Response.json({ idMarca: 1, nombre: 'Marca', idCategoria: 2, estado: true, urlImagen: '/uploads/marcas/a.webp' })
+  })
+  assert.equal((await createBrand({ nombre: ' Marca ', idCategoria: 2, imagen: file }, 'token')).urlImagen, '/uploads/marcas/a.webp')
+})
+
+test('Crear marca rechaza archivos inválidos sin realizar peticiones', async t => {
+  const { createBrand } = await import('../src/features/brands/api/brandsApi.ts')
+  const mock = t.mock.method(globalThis, 'fetch', async () => Response.json({}))
+  for (const file of [new File(['svg'], 'a.svg', { type: 'image/svg+xml' }),
+    new File([], 'a.png', { type: 'image/png' }),
+    new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'a.png', { type: 'image/png' })]) {
+    await assert.rejects(createBrand({ nombre: 'Marca', idCategoria: 2, imagen: file }, 'token'), ApiError)
+  }
+  assert.equal(mock.mock.callCount(), 0)
+})
+
+test('Crear sin imagen conserva JSON y el listado conserva la ruta de imagen', async t => {
+  const { createBrand } = await import('../src/features/brands/api/brandsApi.ts')
+  const row = { idMarca: 1, nombre: 'Marca', idCategoria: 2, estado: true, urlImagen: '/uploads/marcas/a.webp' }
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Marcas')
+    if (options.method === 'POST') {
+      assert.deepEqual(JSON.parse(options.body as string), { nombre: 'Marca', idCategoria: 2 })
+      return Response.json(row)
+    }
+    return Response.json([row])
+  })
+  await createBrand({ nombre: 'Marca', idCategoria: 2 }, 'token')
+  assert.deepEqual(await listBrands('token'), [row])
+})
+
+test('Crear marca con enlace usa JSON y rechaza enlace junto con archivo', async t => {
+  const { createBrand } = await import('../src/features/brands/api/brandsApi.ts')
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Marcas')
+    assert.deepEqual(JSON.parse(options.body as string), { nombre: 'Marca', idCategoria: 2, urlImagen: 'https://example.com/marca.png' })
+    return Response.json({ idMarca: 1, nombre: 'Marca', idCategoria: 2, estado: true, urlImagen: 'https://example.com/marca.png' })
+  })
+  await createBrand({ nombre: 'Marca', idCategoria: 2, urlImagen: ' https://example.com/marca.png ' }, 'token')
+  const mock = t.mock.method(globalThis, 'fetch', async () => { throw new Error('No debe consultar') })
+  for (const urlImagen of ['http://example.com/a.png', 'https://user:pass@example.com/a.png', 'invalido'])
+    await assert.rejects(createBrand({ nombre: 'Marca', idCategoria: 2, urlImagen }, 'token'))
+  await assert.rejects(createBrand({ nombre: 'Marca', idCategoria: 2, urlImagen: 'https://example.com/a.png',
+    imagen: new File(['png'], 'a.png', { type: 'image/png' }) }, 'token'))
+  assert.equal(mock.mock.callCount(), 0)
+})

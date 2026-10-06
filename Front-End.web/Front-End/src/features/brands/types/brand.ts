@@ -1,3 +1,2 @@
-﻿export interface CreateBrandRequest { nombre: string; idCategoria: number }
-export interface BrandResponse extends CreateBrandRequest { idMarca: number; estado: boolean; nombreCategoria?: string | null }
-
+﻿export interface CreateBrandRequest { nombre: string; idCategoria: number; imagen?: File; urlImagen?: string | null }
+export interface BrandResponse { idMarca: number; nombre: string; idCategoria: number; estado: boolean; nombreCategoria?: string | null; urlImagen?: string | null }

@@ -70,12 +70,26 @@ public class MarcasController : ControllerBase
     // La creación sigue siendo exclusiva de administradores.
     [Authorize(Roles = Roles.Administrador)]
     [HttpPost]
-    public async Task<ActionResult<RespuestaMarcaDTO>> Crear([FromBody] CrearMarcaDTO dto,
+    [Consumes("application/json")]
+    public Task<ActionResult<RespuestaMarcaDTO>> Crear([FromBody] CrearMarcaDTO dto,
         CancellationToken cancellationToken)
+        => CrearInterno(dto, null, cancellationToken);
+
+    [Authorize(Roles = Roles.Administrador)]
+    [HttpPost("con-imagen")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
+    public Task<ActionResult<RespuestaMarcaDTO>> CrearConImagen([FromForm] CrearMarcaConImagenDTO dto,
+        CancellationToken cancellationToken)
+        => CrearInterno(dto, dto.Imagen, cancellationToken);
+
+    private async Task<ActionResult<RespuestaMarcaDTO>> CrearInterno(CrearMarcaDTO dto,
+        IFormFile? imagen, CancellationToken cancellationToken)
     {
         try
         {
-            var marca = await _crearService.CrearMarca(dto, cancellationToken);
+            var marca = await _crearService.CrearMarca(dto, cancellationToken, imagen);
             return StatusCode(StatusCodes.Status201Created, marca);
         }
         catch (ValidationException ex)

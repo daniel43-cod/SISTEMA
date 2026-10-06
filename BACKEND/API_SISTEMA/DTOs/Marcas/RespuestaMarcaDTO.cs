@@ -7,4 +7,5 @@ public sealed class RespuestaMarcaDTO
     public int IdCategoria { get; init; }
     public string? NombreCategoria { get; init; }
     public bool Estado { get; init; }
+    public string? UrlImagen { get; init; }
 }

@@ -1,4 +1,5 @@
-﻿import { useId, useState } from 'react'
+﻿import { BrandImagePicker } from './BrandImagePicker'
+import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Input } from '../../../shared/ui/Input'
 import { Button } from '../../../shared/ui/Button'
@@ -9,6 +10,8 @@ import type { BrandResponse } from '../types/brand'
 export function BrandForm({ onSaved, brand }: { onSaved: () => void; brand?: BrandResponse }) {
   const [name, setName] = useState(brand?.nombre ?? '')
   const [category, setCategory] = useState(brand ? String(brand.idCategoria) : '')
+  const [image, setImage] = useState<File>()
+  const [imageUrl, setImageUrl] = useState('')
   const id = useId()
   const { items, loading, error: listError, reload } = useCategories()
   const { submit, pending, error } = useSaveBrand(brand?.idMarca)
@@ -16,7 +19,7 @@ export function BrandForm({ onSaved, brand }: { onSaved: () => void; brand?: Bra
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!active.some(item => item.idCategoria === Number(category))) return
-    if (await submit({ nombre: name, idCategoria: Number(category) })) onSaved()
+    if (await submit({ nombre: name, idCategoria: Number(category), ...(!brand ? { imagen: image, urlImagen: imageUrl } : {}) })) onSaved()
   }
   return <form className="brand-form" onSubmit={save} aria-busy={pending}>
     <Input label="Nombre de la marca" value={name} onChange={event => setName(event.target.value)}
@@ -30,6 +33,7 @@ export function BrandForm({ onSaved, brand }: { onSaved: () => void; brand?: Bra
         {active.map(item => <option key={item.idCategoria} value={item.idCategoria}>{item.nombre}</option>)}
       </select>
     </div>
+    {!brand && <BrandImagePicker url={imageUrl} file={image} onChange={(url, file) => { setImageUrl(url); setImage(file) }} disabled={pending} />}
     {listError && <div role="alert"><p>{listError}</p><Button onClick={reload}>Reintentar</Button></div>}
     {!loading && !listError && !active.length && <p role="status">Primero crea una categoría en el apartado Categorías.</p>}
     {error && <p className="brand-error" role="alert">{error}</p>}
@@ -38,4 +42,6 @@ export function BrandForm({ onSaved, brand }: { onSaved: () => void; brand?: Bra
     </Button>
   </form>
 }
+
+
 

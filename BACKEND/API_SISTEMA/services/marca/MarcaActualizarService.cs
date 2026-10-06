@@ -53,6 +53,7 @@ public class MarcaActualizarService
         {
             IdMarca = marca.IdMarca,
             Nombre = marca.Nombre,
+            UrlImagen = marca.UrlImagen,
             IdCategoria = marca.IdCategoria,
             Estado = marca.Estado
         };

@@ -152,6 +152,7 @@ builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaListarService>();
 
 // Marcas: servicio de creación con una instancia por petición.
 builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaCrearService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaImagenService>();
 builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaActualizarService>();
 
 

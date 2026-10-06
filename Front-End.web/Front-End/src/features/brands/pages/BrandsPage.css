@@ -1,4 +1,4 @@
-.brand-card { width: 100%; max-width: 560px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: var(--color-surface); }
+﻿.brand-card { width: 100%; max-width: 560px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: var(--color-surface); }
 .brand-card h2 { margin-top: 0; padding-right: 40px; font-size: 1.4rem; }
 .brand-form { display: grid; gap: 16px; margin-top: 24px; }
 .brand-form .button { justify-self: start; width: auto; min-height: 44px; padding: 8px 12px; font-size: .85rem; }
@@ -16,3 +16,19 @@
 .brand-list strong { font-size: .9rem; }
 .brand-list div span { font-size: .8rem; color: var(--color-muted); }
 .brand-active { font-size: .75rem; color: var(--color-success); background: #f0fdf4; border-radius: 6px; padding: 4px 8px; }
+
+.brand-image { min-width: 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: grid; gap: 16px; }
+.brand-image-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.brand-preview-panel { display: grid; gap: 8px; }
+.brand-preview-label { font-size: .85rem; font-weight: 600; color: var(--color-muted); }
+.brand-preview-frame { width: 100%; height: 220px; display: grid; place-items: center; overflow: hidden; border: 1px dashed #94a3b8; border-radius: 12px; background: #f8fafc; }
+.brand-image-preview { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+.brand-preview-placeholder { display: grid; justify-items: center; gap: 12px; padding: 20px; color: var(--color-muted); text-align: center; }
+.brand-preview-placeholder > span { margin: 0; font-size: .85rem; line-height: 1.5; }
+.brand-image p { overflow-wrap: anywhere; }
+.brand-form .brand-secondary { background: transparent; color: var(--color-muted); border-color: #cbd5e1; }
+.brand-form .brand-secondary:hover:not(:disabled) { background: #f1f5f9; }
+.brand-preview-frame { padding: 0; font: inherit; cursor: pointer; color: var(--color-muted); }
+.brand-preview-frame:hover:not(:disabled) { background: #f1f5f9; border-color: var(--color-primary); }
+.brand-preview-frame:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.brand-preview-frame:disabled { cursor: wait; opacity: .65; }

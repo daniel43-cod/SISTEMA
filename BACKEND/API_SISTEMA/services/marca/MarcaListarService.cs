@@ -26,6 +26,7 @@ public class MarcaListarService
                 // Obtiene el nombre de la categoría relacionada, no el de la marca.
                 NombreCategoria = c.Categoria.nombreCategoria,
                 Nombre = c.Nombre,
+                UrlImagen = c.UrlImagen,
                 Estado = c.Estado
             })
             .ToListAsync(cancellationToken);
