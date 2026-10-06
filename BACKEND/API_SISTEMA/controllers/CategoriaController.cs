@@ -53,6 +53,43 @@ namespace API_SISTEMA.controllers
             }
         }
 
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpPatch("{idCategoria:int}/estado")]
+        [Consumes("application/json")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> CambiarEstado([Range(1, int.MaxValue)] int idCategoria,
+            [FromBody] CambiarEstadoCategoriaDTO dto, [FromServices] EstadoCategoriaService service,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var resultado = await service.CambiarEstado(idCategoria, dto, cancellationToken);
+                if (resultado is null) return NotFound(new { mensaje = "La categoría no existe." });
+                return Ok(resultado);
+            }
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al cambiar estado de categoría. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudo cambiar el estado de la categoría.", traceId });
+            }
+        }
+
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("administracion")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> ListarAdministracion(CancellationToken cancellationToken)
+        {
+            try { return Ok(await _listarService.ListarAdministracion(cancellationToken)); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al listar categorías para administración. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudieron listar las categorías.", traceId });
+            }
+        }
+
         // El permiso se comprueba en el servidor, no solo en el menú del frontend.
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost]

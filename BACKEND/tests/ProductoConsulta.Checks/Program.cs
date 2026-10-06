@@ -40,7 +40,12 @@ builder.Services.AddScoped<CrearPresentacionServices>();
 builder.Services.AddScoped<ListarPresentacionServices>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
 builder.Services.AddScoped<EstadoPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
 builder.Services.AddControllers().AddApplicationPart(typeof(ProductosController).Assembly).AddControllersAsServices();
+builder.Services.AddTransient<CategoriaController>(sp => new CategoriaController(null!, null!,
+    sp.GetRequiredService<ILogger<CategoriaController>>(), null!,
+    sp.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaListarService>()));
 builder.Services.AddTransient<ProductosController>(sp => new ProductosController(
     sp.GetRequiredService<ProductoService>(), null!, null!, null!,
     sp.GetRequiredService<ILogger<ProductosController>>()));
@@ -272,6 +277,28 @@ try
         var failure = await client.GetAsync(url);
         var body = await failure.Content.ReadAsStringAsync();
         Check(failure.StatusCode == HttpStatusCode.InternalServerError && body.Contains("traceId") && !body.Contains("SQLite"), "Error interno controlado: " + url);
+    }
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = false })).StatusCode == HttpStatusCode.Unauthorized, "Categoría bloquea anónimo");
+    Login("VENDEDOR");
+    Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = false })).StatusCode == HttpStatusCode.Forbidden, "Categoría bloquea vendedor");
+    Check((await client.GetAsync("/api/Categoria/administracion")).StatusCode == HttpStatusCode.Forbidden, "Categorías administrativas bloquean vendedor");
+    Login("ADMINISTRADOR");
+    foreach (var payload in new object[] { new { }, new { estado = (bool?)null }, new { estado = "false" }, new { estado = false, nombre = "Cambio" } })
+        Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", payload)).StatusCode == HttpStatusCode.BadRequest, "Categoría rechaza estado inválido o campos ajenos");
+    Check((await client.PatchAsJsonAsync("/api/Categoria/0/estado", new { estado = false })).StatusCode == HttpStatusCode.BadRequest, "Categoría rechaza ID inválido");
+    Check((await client.PatchAsJsonAsync("/api/Categoria/999/estado", new { estado = false })).StatusCode == HttpStatusCode.NotFound, "Categoría inexistente devuelve 404");
+    Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = false })).IsSuccessStatusCode, "Administrador desactiva categoría");
+    Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivar categoría es idempotente");
+    var categoriasActivas = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Categoria.RespuestaCategoriaDTO>>("/api/Categoria");
+    var categoriasAdmin = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Categoria.RespuestaCategoriaDTO>>("/api/Categoria/administracion");
+    Check(categoriasActivas!.All(c => c.IdCategoria != 1) && categoriasAdmin!.Any(c => c.IdCategoria == 1 && !c.Estado), "Categoría inactiva visible solo en listado administrativo");
+    Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = true })).IsSuccessStatusCode, "Administrador reactiva categoría");
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var categoria = await db.categorias.SingleAsync(c => c.IdCategoria == 1);
+        Check(categoria.Estado && categoria.nombreCategoria == "Bebidas" && await db.Marcas.AnyAsync(m => m.IdMarca == 1), "Cambio de estado conserva nombre y marca asociada");
     }
     Console.WriteLine($"{passed} comprobaciones aprobadas, sin SQL Server real.");
 }

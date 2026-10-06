@@ -106,3 +106,32 @@ test('Actualizar imagen usa multipart y rechaza ID de respuesta diferente', asyn
   })
   await assert.rejects(updateCategory(7, { nombre: 'Bebidas', imagen: new File(['x'], 'a.png', { type: 'image/png' }) }, 'token'))
 })
+
+test('Administración lista categorías inactivas y cambia estado con PATCH autenticado', async t => {
+  const { listCategories, changeCategoryState } = await import('../src/features/categories/api/categoriesApi.ts')
+  const row = { idCategoria: 1, nombre: 'Bebidas', estado: false }
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    if (options.method === 'GET') { assert.equal(url, '/api/Categoria/administracion'); return Response.json([row]) }
+    assert.equal(url, '/api/Categoria/1/estado')
+    assert.equal(options.method, 'PATCH')
+    assert.deepEqual(JSON.parse(options.body as string), { estado: false })
+    return Response.json(row)
+  })
+  assert.deepEqual(await listCategories('token', undefined, true), [row])
+  assert.deepEqual(await changeCategoryState(1, false, 'token'), row)
+})
+
+test('Cambio de estado de categoría valida ID, respuesta y permisos', async t => {
+  const { changeCategoryState } = await import('../src/features/categories/api/categoriesApi.ts')
+  const mock = t.mock.method(globalThis, 'fetch', async () => Response.json({ idCategoria: 2, nombre: 'Otra', estado: false }))
+  await assert.rejects(changeCategoryState(0, false, 'token'))
+  assert.equal(mock.mock.callCount(), 0)
+  await assert.rejects(changeCategoryState(1, false, 'token'))
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ idCategoria: 1, nombre: 'Bebidas', estado: true }))
+  await assert.rejects(changeCategoryState(1, false, 'token'))
+  for (const status of [401, 403, 404, 500]) {
+    t.mock.method(globalThis, 'fetch', async () => new Response('secret', { status }))
+    await assert.rejects(changeCategoryState(1, false, 'token'), error => error instanceof ApiError && error.status === status && !error.message.includes('secret'))
+  }
+})

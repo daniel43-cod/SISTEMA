@@ -14,6 +14,15 @@ public class CategoriaListarService
     }
 
     // Consulta de solo lectura: devuelve las categorías activas ordenadas por nombre.
+    public Task<List<RespuestaCategoriaDTO>> ListarAdministracion(CancellationToken cancellationToken = default)
+        => _context.categorias.AsNoTracking()
+            .OrderBy(c => c.nombreCategoria).ThenBy(c => c.IdCategoria)
+            .Select(c => new RespuestaCategoriaDTO
+            {
+                IdCategoria = c.IdCategoria, Nombre = c.nombreCategoria,
+                Estado = c.Estado, UrlImagen = c.UrlImagen
+            }).ToListAsync(cancellationToken);
+
     public Task<List<RespuestaCategoriaDTO>> ListarActivas(CancellationToken cancellationToken = default)
     {
         return _context.categorias.AsNoTracking()

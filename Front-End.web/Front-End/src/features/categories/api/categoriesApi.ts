@@ -49,12 +49,22 @@ async function saveCategory(data: CreateCategoryRequest & { quitarImagen?: boole
 }
 
 
-export async function listCategories(token: string, signal?: AbortSignal) {
-  const response = await requestJson('/Categoria', { token, signal })
+export async function listCategories(token: string, signal?: AbortSignal, administration = false) {
+  const response = await requestJson(administration ? '/Categoria/administracion' : '/Categoria', { token, signal })
   try {
     if (!Array.isArray(response)) throw new Error()
     const rows = response.map(parseCategory)
     if (new Set(rows.map(row => row.idCategoria)).size !== rows.length) throw new Error()
     return rows
   } catch { throw new ApiError('El listado de categorías recibido no es válido.') }
+}
+
+export async function changeCategoryState(id: number, state: boolean, token: string, signal?: AbortSignal) {
+  if (!Number.isSafeInteger(id) || id <= 0 || typeof state !== 'boolean') throw new ApiError('Estado o categoría inválidos.', 400)
+  const response = await requestJson(`/Categoria/${id}/estado`, { method: 'PATCH', body: { estado: state }, token, signal })
+  try {
+    const updated = parseCategory(response)
+    if (updated.idCategoria !== id || updated.estado !== state) throw new Error()
+    return updated
+  } catch { throw new ApiError('No se pudo confirmar el estado. Actualiza el listado antes de reintentar.') }
 }

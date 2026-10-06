@@ -146,6 +146,7 @@ builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaImagenService
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
 builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
 
 //marcas
 builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaListarService>();

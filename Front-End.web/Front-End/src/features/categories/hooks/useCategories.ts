@@ -4,7 +4,7 @@ import { listCategories } from '../api/categoriesApi'
 import { ApiError } from '../../../shared/api/ApiError'
 import type { CategoryResponse } from '../types/category'
 
-export function useCategories() {
+export function useCategories(administration = false) {
   const { session, logout } = useAuth()
   const [items, setItems] = useState<CategoryResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -17,7 +17,7 @@ export function useCategories() {
     async function load() {
       setLoading(true); setError('')
       try {
-        const rows = await listCategories(session!.token, controller.signal)
+        const rows = await listCategories(session!.token, controller.signal, administration)
         if (!controller.signal.aborted) setItems(rows)
       } catch (failure) {
         if (controller.signal.aborted) return
@@ -27,6 +27,7 @@ export function useCategories() {
     }
     void load()
     return () => controller.abort()
-  }, [session, logout, revision])
+  }, [session, logout, revision, administration])
   return { items, loading, error, reload }
 }
+

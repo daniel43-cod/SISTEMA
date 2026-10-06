@@ -40,3 +40,13 @@
 .category-list-action:disabled { color: var(--color-muted); cursor: default; }
 .category-list-action:hover:not(:disabled) { background: #eff6ff; }
 .category-list-action:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.category-row-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.category-state-button { min-height: 44px; padding: 8px; border: 0; background: transparent; border-radius: 6px; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.category-state-active { color: #166534; }
+.category-state-inactive { color: #9a3412; }
+.category-state-active:hover:not(:disabled) { color: #14532d; }
+.category-state-inactive:hover:not(:disabled) { color: #7c2d12; }
+.category-state-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.category-state-button:disabled { opacity: .6; cursor: default; }
+@media (max-width: 380px) { .category-list li { flex-wrap: wrap; } .category-row-actions { margin-left: auto; } }
