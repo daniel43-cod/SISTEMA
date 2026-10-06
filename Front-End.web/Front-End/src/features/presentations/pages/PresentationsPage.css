@@ -1,4 +1,4 @@
-.presentation-card { width: 100%; max-width: 560px; padding: clamp(20px, 4vw, 32px); background: var(--color-surface); border: 1px solid #e2e8f0; border-radius: 16px; }
+﻿.presentation-card { width: 100%; max-width: 560px; padding: clamp(20px, 4vw, 32px); background: var(--color-surface); border: 1px solid #e2e8f0; border-radius: 16px; }
 .presentation-label { color: var(--color-primary); font-size: .75rem; font-weight: 650; }
 .presentation-card h2 { margin: 10px 0; font-size: 1.4rem; }
 .presentation-description, .presentation-hint { color: var(--color-muted); font-size: .85rem; line-height: 1.7; }
@@ -25,3 +25,11 @@
 .presentation-edit-button { min-height: 44px; padding: 8px; border: 0; border-radius: 6px; background: transparent; color: var(--color-primary); font-size: .8rem; }
 .presentation-edit-button:hover:not(:disabled) { background: #eff6ff; }
 .presentation-edit-button:disabled { color: var(--color-muted); }
+.presentation-state-button { min-height: 44px; min-width: 78px; padding: 8px 12px; border: 0; background: transparent; border-radius: 6px; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.presentation-state-active { color: #166534; }
+.presentation-state-active:hover:not(:disabled) { color: #14532d; }
+.presentation-state-inactive { color: #9a3412; }
+.presentation-state-inactive:hover:not(:disabled) { color: #7c2d12; }
+.presentation-state-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.presentation-state-button:disabled { opacity: .6; cursor: default; }
+

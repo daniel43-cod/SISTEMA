@@ -26,15 +26,17 @@ export function PresentationList({ items, loading, error, onReload, onEdit, onSt
           {items.map(item => <li key={item.idPresentacion}>
                         <strong>{item.descripcion}</strong>
             <div className="presentation-row-actions">
-              <span className="presentation-active">{item.estado ? "Activa" : "Inactiva"}</span>
+
               {onEdit && <button type="button" className="presentation-edit-button" disabled={editing || pending}
                 aria-label={'Editar ' + item.descripcion} onClick={() => onEdit(item)}>Editar</button>}
-              {onStateChange && <button type="button" className="presentation-edit-button" disabled={editing || pending || loading}
-                aria-label={`${item.estado ? 'Desactivar' : 'Activar'} ${item.descripcion}`}
-                onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar' : 'Activar'}</button>}
+              {onStateChange && <button type="button" className={`presentation-state-button ${item.estado ? 'presentation-state-active' : 'presentation-state-inactive'}`} disabled={editing || pending || loading}
+                aria-pressed={item.estado} title={item.estado ? 'Desactivar presentación' : 'Activar presentación'}
+                aria-label={`${item.estado ? 'Activo' : 'Inactivo'}: ${item.descripcion}. ${item.estado ? 'Desactivar' : 'Activar'} presentación`}
+                onClick={() => onStateChange(item)}>{item.estado ? 'Activo' : 'Inactivo'}</button>}
             </div>
           </li>)}
         </ul>
       </>}
   </section>
 }
+
