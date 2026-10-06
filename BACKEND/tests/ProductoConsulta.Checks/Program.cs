@@ -204,6 +204,20 @@ try
     Check(byCode.Single().IdProducto == 1, "Código exacto devuelve producto");
     Check((await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?codigoBarra=ABC"))!.Count == 0,
         "Código parcial no coincide");
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.GetAsync("/api/Productos/nombres")).StatusCode == HttpStatusCode.Unauthorized, "Nombres bloquea anónimo");
+    foreach (var role in new[] { "VENDEDOR", "CLIENTE" })
+    {
+        Login(role);
+        Check((await client.GetAsync("/api/Productos/nombres")).StatusCode == HttpStatusCode.Forbidden, "Nombres bloquea " + role);
+    }
+    Login("ADMINISTRADOR");
+    var namesResponse = await client.GetAsync("/api/Productos/nombres");
+    var namesJson = System.Text.Json.JsonDocument.Parse(await namesResponse.Content.ReadAsStringAsync());
+    Check(namesResponse.IsSuccessStatusCode && namesResponse.Headers.CacheControl?.NoStore == true &&
+        namesJson.RootElement.GetArrayLength() == 2 && namesJson.RootElement.EnumerateArray().All(p =>
+            p.EnumerateObject().Count() == 2 && p.TryGetProperty("idProducto", out _) && p.TryGetProperty("nombre", out _)),
+        "Lista completa de nombres e IDs sin otros datos y sin caché HTTP");
     HttpResponseMessage? limited = null;
     for (var i = 0; i < 61; i++)
     {

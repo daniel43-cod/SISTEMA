@@ -54,6 +54,22 @@ namespace API_SISTEMA.controllers
         }
 
         [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("nombres")]
+        [EnableRateLimiting("consulta-productos")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<List<ProductoSugerenciaDTO>>> ListarNombres(
+            [FromServices] ProductoBuscarAdminService service, CancellationToken cancellationToken)
+        {
+            try { return Ok(await service.ListarNombres(cancellationToken)); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al listar nombres de productos. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudieron cargar los nombres de productos.", traceId });
+            }
+        }
+
+        [Authorize(Roles = Roles.Administrador)]
         [HttpGet("listar")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]

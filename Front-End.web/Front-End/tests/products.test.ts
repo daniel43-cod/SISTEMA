@@ -129,3 +129,20 @@ test('Búsqueda administrativa envía nombre o código y devuelve sugerencias si
   t.mock.method(globalThis, 'fetch', async () => Response.json([{ idProducto: 0, nombre: 'Inválido' }]))
   await assert.rejects(searchProducts('nombre', 'Coca', 'token'))
 })
+
+test('Carga nombres una vez y filtra en memoria sin nuevas solicitudes', async t => {
+  const { loadProductNames, filterProductNames } = await import('../src/features/products/api/searchProducts.ts')
+  const mock = t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Productos/nombres')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    return Response.json([{ idProducto: 1, nombre: 'Coca Cola 2.5', stock: 5 }, { idProducto: 2, nombre: 'Coca Cola 3 litros' }, { idProducto: 3, nombre: 'Café' }])
+  })
+  const names = await loadProductNames('token')
+  assert.deepEqual(Object.keys(names[0]), ['idProducto', 'nombre'])
+  assert.equal(filterProductNames(names, 'co').length, 0)
+  assert.equal(filterProductNames(names, 'coc').length, 2)
+  assert.equal(filterProductNames(names, 'coca c').length, 2)
+  assert.equal(filterProductNames(names, 'CAFE')[0].idProducto, 3)
+  assert.equal(mock.mock.callCount(), 1)
+  assert.equal(filterProductNames(Array.from({ length: 15 }, (_, i) => ({ idProducto: i + 1, nombre: 'Coca ' + i })), 'coca').length, 10)
+})

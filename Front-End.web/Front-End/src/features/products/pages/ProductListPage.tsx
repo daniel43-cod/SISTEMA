@@ -10,13 +10,12 @@ import './ProductsPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 
-export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?: number; idCategoria?: number; productId?: number } = {}) {
+export function ProductListPage({ idMarca, idCategoria, productId, onProductSaved }: { idMarca?: number; idCategoria?: number; productId?: number; onProductSaved?: () => void } = {}) {
   const { session, logout } = useAuth()
   const [editing, setEditing] = useState(false)
   const [focusPresentations, setFocusPresentations] = useState(false)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState('')
-  const [page, setPage] = useState(1)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<ProductPage | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,17 +54,27 @@ export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?:
       setLoading(true); setError(''); setData(null)
       return productId !== undefined
         ? getProductDetail(productId, token, controller.signal).then(product => ({ pagina: 1, tamanoPagina: 20, total: 1, items: [product] }))
-        : listProducts(page, token, controller.signal, { idMarca, idCategoria })
+        : (async () => {
+            const first = await listProducts(1, token, controller.signal, { idMarca, idCategoria })
+            const items = [...first.items]
+            const ids = new Set(items.map(item => item.idProducto))
+            const lastPage = Math.ceil(first.total / first.tamanoPagina)
+            for (let next = 2; next <= lastPage; next++) {
+              const batch = await listProducts(next, token, controller.signal, { idMarca, idCategoria })
+              for (const item of batch.items) {
+                if (!ids.has(item.idProducto)) { ids.add(item.idProducto); items.push(item) }
+              }
+            }
+            return { ...first, items }
+          })()
     }).then(result => {
       if (result && !controller.signal.aborted) {
-        const lastPage = Math.max(1, Math.ceil(result.total / result.tamanoPagina))
-        if (page > lastPage) setPage(lastPage)
-        else setData(result)
+        setData(result)
       }
     }).catch(failure => { if (!controller.signal.aborted) report(failure, setError) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [token, report, page, revision, idMarca, idCategoria, productId])
+  }, [token, report, revision, idMarca, idCategoria, productId])
   useEffect(() => {
     if (!token || selected === null) return
     const controller = new AbortController()
@@ -81,7 +90,6 @@ export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?:
   }, [token, report, selected, revision])
   useEffect(() => { if (selected !== null) detailPanel.current?.focus() }, [selected])
   if (!token) return null
-  const pages = data ? Math.max(1, Math.ceil(data.total / data.tamanoPagina)) : 1
   const busy = loading || waiting > 0 || editing || saving
   function closeDetail() {
     if (saving) return
@@ -90,7 +98,7 @@ export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?:
   }
 
   return <div className="product-browser">
-    <section className="product-card" aria-labelledby="product-list-title" aria-busy={loading}>
+    <section className="product-card product-list-card" aria-labelledby="product-list-title" aria-busy={loading}>
       <div className="product-list-heading">
         <h2 id="product-list-title">Productos</h2>
         <RefreshButton loading={busy} onClick={() => setRevision(value => value + 1)} label="Actualizar productos" />
@@ -103,7 +111,8 @@ export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?:
         <ul className="product-list">
           {data.items.map(product => <li key={product.idProducto}>
             <div><strong>{product.nombre}</strong><span>Marca: {product.marca}</span></div>
-                        <button className="Product-update-button" type="button" disabled={busy}
+            <div className="product-list-actions">
+            <button className="Product-update-button" type="button" disabled={busy}
               aria-label={`Editar ${product.nombre}`} title="Editar producto"
               aria-controls="product-detail"
               onClick={event => {
@@ -112,34 +121,16 @@ export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?:
                 if (selected !== product.idProducto) setDetail(null)
                 setSelected(product.idProducto)
                 setFocusPresentations(false); setEditing(true)
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-                  strokeLinejoin="round" aria-hidden="true">
-                  <path d="m16 3 5 5" />
-                  <path d="M4 16 16.5 3.5a3.54 3.54 0 0 1 5 5L9 21l-6 1 1-6Z" />
-                </svg>
+              }}>Editar
             </button>
             <button className="product-detail-button" type="button" disabled={busy} aria-label={`Ver detalles de ${product.nombre}`}
               aria-expanded={selected === product.idProducto} aria-controls="product-detail" title='Ver detalles'
-              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>
-               <svg
-               width="20"
-               height="20" viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="1.8"strokeLinecap="round"
-               strokeLinejoin="round"aria-hidden="true"
-               >
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-                <circle cx="12" cy="12" r="3" />
-               </svg>
+              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>Ver
               </button>
              
+            </div>
           </li>)}
         </ul>
-        {productId === undefined && <nav className="product-pagination" aria-label="Páginas de productos">
-          <button type="button" disabled={busy || page <= 1} onClick={() => { closeDetail(); setPage(value => value - 1) }}>Anterior</button>
-          <span>Página {page} de {pages}</span>
-          <button type="button" disabled={busy || page >= pages || page >= 100000} onClick={() => { closeDetail(); setPage(value => value + 1) }}>Siguiente</button>
-        </nav>}
       </>}
     </section>
     {selected !== null && <section id="product-detail" ref={detailPanel} tabIndex={-1} className="product-card"
@@ -153,17 +144,11 @@ export function ProductListPage({ idMarca, idCategoria, productId }: { idMarca?:
       {notice && <p role="status">{notice}</p>}
       {detail && editing && <EditProductForm key={detail.idProducto} focusPresentations={focusPresentations} product={detail} onPending={setSaving}
         onCancel={() => { setEditing(false); detailPanel.current?.focus() }}
-        onSaved={() => { setEditing(false); setSaving(false); setNotice('Producto actualizado correctamente.'); setRevision(value => value + 1) }} />}
+        onSaved={() => { setEditing(false); setSaving(false); setNotice('Producto actualizado correctamente.'); onProductSaved?.(); setRevision(value => value + 1) }} />}
       {detail && !editing && <>
                    <button className="Product-update-button" type="button" disabled={detailLoading || waiting > 0 || saving}
           aria-label={`Editar ${detail.nombre}`} title="Editar producto"
-          onClick={() => { setNotice(''); setFocusPresentations(false); setEditing(true) }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-                  strokeLinejoin="round" aria-hidden="true">
-                  <path d="m16 3 5 5" />
-                  <path d="M4 16 16.5 3.5a3.54 3.54 0 0 1 5 5L9 21l-6 1 1-6Z" />
-                </svg>
+          onClick={() => { setNotice(''); setFocusPresentations(false); setEditing(true) }}>Editar
         </button>
         <h3>{detail.nombre}</h3>
         <ProductDetailImage key={`${detail.idProducto}:${detail.imagen ?? ""}`} image={detail.imagen} name={detail.nombre} />

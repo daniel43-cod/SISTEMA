@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { useCategories } from '../../categories/hooks/useCategories'
 import { useBrands } from '../../brands/hooks/useBrands'
@@ -25,21 +25,19 @@ export function ProductCatalogBrowser() {
   const brands = useBrands()//carga las categorias desde la api
   const [category, setCategory] = useState<CategoryResponse | null>(null)
   const [brand, setBrand] = useState<BrandResponse | null>(null)
+  const [namesRevision, setNamesRevision] = useState(0)
+  const refreshNames = useCallback(() => setNamesRevision(value => value + 1), [])
   const [searchActive, setSearchActive] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => { title.current?.focus() }, [category, brand])
   if (session?.user.role !== 'ADMINISTRADOR') return null
   const selectedBrands = brands.items.filter(item => item.idCategoria === category?.idCategoria && item.estado)
   return <div className="product-catalog-browser">
-    <ProductSearch onResult={setSearchActive} />
+    <ProductSearch onResult={setSearchActive} namesRevision={namesRevision} onNamesRefresh={refreshNames}
+      onBack={category ? () => { if (brand) setBrand(null); else setCategory(null) } : undefined}
+      backLabel={brand ? 'Volver a las marcas' : 'Volver a las categorías'} />
     {!searchActive && <>
-    <nav className="product-catalog-path" aria-label="Navegación de productos">
-      <button type="button" onClick={() => { setCategory(null); setBrand(null) }} aria-current={!category ? 'page' : undefined}>Categorías</button>
-      {category && <><span aria-hidden="true">›</span><button type="button" onClick={() => setBrand(null)} aria-current={!brand ? 'page' : undefined}>{category.nombre}</button></>}
-      {brand && <><span aria-hidden="true">›</span><span aria-current="page">{brand.nombre}</span></>}
-    </nav>
-    <h2 ref={title} tabIndex={-1}>{brand ? `Productos de ${brand.nombre}` : category ? `Marcas de ${category.nombre}` : 'Selecciona una categoría'}</h2>
-    {category && <button type="button" className="product-catalog-back" onClick={() => { if (brand) setBrand(null); else setCategory(null) }}>← {brand ? 'Volver a las marcas' : 'Volver a las categorías'}</button>}
+    <h2 ref={title} tabIndex={-1} className={category ? 'product-navigation-title' : undefined}>{category ? (brand ? 'Productos' : 'Marcas') : 'Categorías'}</h2>
     {!category && <>
       {categories.loading && <p role="status">Cargando categorías…</p>}
       {categories.error && <><p role="alert" className="product-error">{categories.error}</p><button type="button" onClick={categories.reload}>Reintentar</button></>}
@@ -58,10 +56,12 @@ export function ProductCatalogBrowser() {
       {brands.error && <><p role="alert" className="product-error">{brands.error}</p><button type="button" onClick={brands.reload}>Reintentar</button></>}
       {!brands.loading && !brands.error && !selectedBrands.length && <p>No hay marcas disponibles en esta categoría.</p>}
       {!brands.loading && !brands.error && <ul className="product-catalog-grid">
-        {selectedBrands.map(item => <li key={item.idMarca}><button type="button" className="product-brand-card" onClick={() => setBrand(item)}><strong>{item.nombre}</strong><span>Ver productos →</span></button></li>)}
+        {selectedBrands.map(item => <li key={item.idMarca}><button type="button" className="product-brand-card" onClick={() => setBrand(item)}><span className="product-brand-emblem" aria-hidden="true">{item.nombre.trim().slice(0, 2).toLocaleUpperCase('es')}</span>
+            <strong>{item.nombre}</strong>
+            <span className="product-brand-category">{category.nombre}</span></button></li>)}
       </ul>}
     </>}
-    {brand && category && <ProductListPage key={`${category.idCategoria}:${brand.idMarca}`} idMarca={brand.idMarca} idCategoria={category.idCategoria} />}
+    {brand && category && <ProductListPage key={`${category.idCategoria}:${brand.idMarca}`} idMarca={brand.idMarca} idCategoria={category.idCategoria} onProductSaved={refreshNames} />}
     </>}
   </div>
 }

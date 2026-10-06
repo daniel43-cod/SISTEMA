@@ -7,6 +7,12 @@ namespace API_SISTEMA.services.ProductoS;
 
 public sealed class ProductoBuscarAdminService(SistemaDbContext context)
 {
+    public Task<List<ProductoSugerenciaDTO>> ListarNombres(CancellationToken cancellationToken = default) =>
+        context.productos.AsNoTracking()
+            .OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
+            .Select(p => new ProductoSugerenciaDTO { IdProducto = p.id_producto, Nombre = p.nombre })
+            .ToListAsync(cancellationToken);
+
     public Task<List<ProductoSugerenciaDTO>> Buscar(BusquedaProductoAdminDTO filtro,
         CancellationToken cancellationToken = default)
     {
