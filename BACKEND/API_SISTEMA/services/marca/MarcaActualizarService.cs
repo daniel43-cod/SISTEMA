@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.services.Auditoria;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Marcas;
@@ -9,11 +10,13 @@ namespace API_SISTEMA.services.Marca;
 
 public class MarcaActualizarService
 {
+    private readonly CatalogoAuditoriaService _auditoria;
     private readonly SistemaDbContext _context;
     private readonly MarcaImagenService _imagenes;
 
-    public MarcaActualizarService(SistemaDbContext context, MarcaImagenService imagenes)
+    public MarcaActualizarService(SistemaDbContext context, MarcaImagenService imagenes, CatalogoAuditoriaService auditoria)
     {
+        _auditoria = auditoria;
         _context = context;
         _imagenes = imagenes;
     }
@@ -62,11 +65,14 @@ public class MarcaActualizarService
         if (duplicada) throw new MarcaDuplicadaException();
 
         // Conserva estado e imagen si no se solicitó un cambio explícito.
-        marca.Nombre = nombre;
+        var anteriores = new Dictionary<string, object?> { ["nombre"] = marca.Nombre, ["idCategoria"] = marca.IdCategoria, ["urlImagen"] = marca.UrlImagen };
+            marca.Nombre = nombre;
         marca.IdCategoria = dto.IdCategoria;
         if (dto.QuitarImagen) marca.UrlImagen = null;
         else if (url != null) marca.UrlImagen = url;
-        await _context.SaveChangesAsync(cancellationToken);
+        await _auditoria.Agregar("MARCA_EDITADA", "marcas", marca.IdMarca, anteriores,
+                new Dictionary<string, object?> { ["nombre"] = marca.Nombre, ["idCategoria"] = marca.IdCategoria, ["urlImagen"] = marca.UrlImagen }, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         commitIniciado = true;
         await transaction.CommitAsync(cancellationToken);
 

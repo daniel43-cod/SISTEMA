@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.services.Auditoria;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Marcas;
@@ -9,11 +10,13 @@ namespace API_SISTEMA.services.Marca;
 
 public class MarcaCrearService
 {
+    private readonly CatalogoAuditoriaService _auditoria;
     private readonly SistemaDbContext _context;
     private readonly MarcaImagenService _imagenes;
 
-    public MarcaCrearService(SistemaDbContext context, MarcaImagenService imagenes)
+    public MarcaCrearService(SistemaDbContext context, MarcaImagenService imagenes, CatalogoAuditoriaService auditoria)
     {
+        _auditoria = auditoria;
         _context = context;
         _imagenes = imagenes;
     }
@@ -60,6 +63,9 @@ public class MarcaCrearService
                 Estado = true // El cliente no elige el estado inicial ni el ID.
             };
             _context.Marcas.Add(marca);
+            await _context.SaveChangesAsync(cancellationToken);
+            await _auditoria.Agregar("MARCA_CREADA", "marcas", marca.IdMarca, null,
+                new Dictionary<string, object?> { ["nombre"] = marca.Nombre, ["idCategoria"] = marca.IdCategoria, ["urlImagen"] = marca.UrlImagen, ["estado"] = marca.Estado }, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             commitIniciado = true;
             await transaction.CommitAsync(cancellationToken);

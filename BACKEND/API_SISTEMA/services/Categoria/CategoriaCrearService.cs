@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.services.Auditoria;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Categoria;
@@ -10,12 +11,14 @@ namespace API_SISTEMA.services.Categoria
     public class CategoriaCrearService
     {
         // El contenedor de dependencias proporciona el contexto de esta petición.
-        private readonly SistemaDbContext _context;
+        private readonly CatalogoAuditoriaService _auditoria;
+    private readonly SistemaDbContext _context;
         private readonly CategoriaImagenService _imagenes;
 
-        public CategoriaCrearService(SistemaDbContext context, CategoriaImagenService imagenes)
+        public CategoriaCrearService(SistemaDbContext context, CategoriaImagenService imagenes, CatalogoAuditoriaService auditoria)
         {
-            _context = context;
+            _auditoria = auditoria;
+        _context = context;
             _imagenes = imagenes;
         }
 
@@ -61,6 +64,9 @@ namespace API_SISTEMA.services.Categoria
                     UrlImagen = url
                 };
             _context.categorias.Add(categoria);
+            await _context.SaveChangesAsync(cancellationToken);
+            await _auditoria.Agregar("CATEGORIA_CREADA", "categorias", categoria.IdCategoria, null,
+                new Dictionary<string, object?> { ["nombre"] = categoria.nombreCategoria, ["urlImagen"] = categoria.UrlImagen, ["estado"] = categoria.Estado }, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             // Si falla la confirmación, su resultado podría ser incierto: conservar el archivo.
             commitIniciado = true;

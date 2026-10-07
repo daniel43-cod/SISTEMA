@@ -31,6 +31,15 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<API_SISTEMA.services.Auditoria.CatalogoAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaImagenService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaCrearService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.services.Marca.EstadoMarcaService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaImagenService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
 builder.Services.AddScoped<API_SISTEMA.services.Auditoria.PresentacionAuditoriaService>();
 builder.Services.AddScoped<API_SISTEMA.services.Prestacion.CrearPresentacionServices>();
 builder.Services.AddScoped<API_SISTEMA.services.Prestacion.ActualizarPresentacionService>();
@@ -287,7 +296,57 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var accessorCatalogo = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        accessorCatalogo.HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+        { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks")) };
+        try
+        {
+            var categoria = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaCrearService>()
+                .CrearCategoria(new() { Nombre = "Bebidas", UrlImagen = "https://example.com/categoria.png" });
+            var marca = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaCrearService>()
+                .CrearMarca(new() { Nombre = "Marca inicial", IdCategoria = categoria.IdCategoria });
+            var editarMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaActualizarService>();
+            await editarMarca.ActualizarMarca(marca.IdMarca, new() { Nombre = "Marca nueva", IdCategoria = categoria.IdCategoria });
+            await editarMarca.ActualizarMarca(marca.IdMarca, new() { Nombre = "Marca nueva", IdCategoria = categoria.IdCategoria });
+            var editarCategoria = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
+            await editarCategoria.ActualizarCategoria(categoria.IdCategoria, new() { Nombre = "Bebidas", QuitarImagen = true });
+            await editarCategoria.ActualizarCategoria(categoria.IdCategoria, new() { Nombre = "Bebidas" });
+            var estadoMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.EstadoMarcaService>();
+            await estadoMarca.CambiarEstado(marca.IdMarca, new() { Estado = false });
+            await estadoMarca.CambiarEstado(marca.IdMarca, new() { Estado = false });
+            await estadoMarca.CambiarEstado(marca.IdMarca, new() { Estado = true });
+            var estadoCategoria = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
+            await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = false });
+            await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = false });
+            await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = true });
+            var eventos = await db.AuditoriaEventos.AsNoTracking().Where(e => e.Entidad == "marcas" || e.Entidad == "categorias").ToListAsync();
+            Check(eventos.Count == 8, "Marca y categor?a: creaci?n, edici?n y estados sin eventos por cambios vac?os");
+            Check(eventos.All(e => e.IdUsuario == 1 && e.UsuarioResponsable == "admin"), "Auditor?a de cat?logo identifica al responsable");
+            var edicion = eventos.Single(e => e.Accion == "MARCA_EDITADA");
+            Check(edicion.DatosAnteriores == "{\"nombre\":\"Marca inicial\"}" && edicion.DatosNuevos == "{\"nombre\":\"Marca nueva\"}", "Edici?n de marca registra solo nombre alterado");
+            var imagenQuitada = eventos.Single(e => e.Accion == "CATEGORIA_EDITADA");
+            Check(imagenQuitada.DatosNuevos == "{\"urlImagen\":null}" && !imagenQuitada.DatosAnteriores!.Contains("nombre"), "Quitar imagen registra solo URL anterior y null nuevo");
+            Check(eventos.Where(e => e.Accion.EndsWith("ACTIVADA")).All(e => e.DatosNuevos == "{\"estado\":true}" || e.DatosNuevos == "{\"estado\":false}"), "Cambios de estado registran solo estado");
+        }
+        finally { accessorCatalogo.HttpContext = null; }
         await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento");
+        accessorCatalogo.HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+        { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks")) };
+        try
+        {
+            var categoriasAntes = await db.categorias.CountAsync();
+            var marcasAntes = await db.Marcas.CountAsync();
+            var categoriaId = await db.categorias.Select(c => c.IdCategoria).FirstAsync();
+            var categoriaRevertida = false;
+            var marcaRevertida = false;
+            try { await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaCrearService>().CrearCategoria(new() { Nombre = "Rollback categoria" }); }
+            catch (DbUpdateException) { categoriaRevertida = true; db.ChangeTracker.Clear(); }
+            try { await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaCrearService>().CrearMarca(new() { Nombre = "Rollback marca", IdCategoria = categoriaId }); }
+            catch (DbUpdateException) { marcaRevertida = true; db.ChangeTracker.Clear(); }
+            Check(categoriaRevertida && await db.categorias.CountAsync() == categoriasAntes, "Fallo de auditoria revierte categoria");
+            Check(marcaRevertida && await db.Marcas.CountAsync() == marcasAntes, "Fallo de auditoria revierte marca");
+        }
+        finally { accessorCatalogo.HttpContext = null; }
         var cantidadAntes = await db.presentaciones.CountAsync();
         var accessor = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         accessor.HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
@@ -327,7 +386,7 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.

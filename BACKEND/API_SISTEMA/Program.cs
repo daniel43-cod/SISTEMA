@@ -116,6 +116,7 @@ builder.Services.AddScoped<PermisoService>();
 builder.Services.AddScoped<ProductoPrecioService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<API_SISTEMA.services.Auditoria.PresentacionAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.services.Auditoria.CatalogoAuditoriaService>();
 builder.Services.AddScoped<API_SISTEMA.services.Sesiones.SesionCierreService>();
 builder.Services.AddHostedService<API_SISTEMA.services.Sesiones.SesionExpiracionWorker>();
 builder.Services.AddHttpContextAccessor();

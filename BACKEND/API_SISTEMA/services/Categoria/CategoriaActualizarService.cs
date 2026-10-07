@@ -1,3 +1,4 @@
+using API_SISTEMA.services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.data;
@@ -9,11 +10,13 @@ namespace API_SISTEMA.services.Categoria;
 
 public class CategoriaActualizarService
 {
+    private readonly CatalogoAuditoriaService _auditoria;
     private readonly SistemaDbContext _context;
     private readonly CategoriaImagenService _imagenes;
 
-    public CategoriaActualizarService(SistemaDbContext context, CategoriaImagenService imagenes)
+    public CategoriaActualizarService(SistemaDbContext context, CategoriaImagenService imagenes, CatalogoAuditoriaService auditoria)
     {
+        _auditoria = auditoria;
         _context = context;
         _imagenes = imagenes;
     }
@@ -66,10 +69,13 @@ public class CategoriaActualizarService
                 c.nombreCategoria.Trim().ToUpper() == normalizado, cancellationToken);
             if (duplicada) throw new CategoriaDuplicadaException();
 
+            var anteriores = new Dictionary<string, object?> { ["nombre"] = categoria.nombreCategoria, ["urlImagen"] = categoria.UrlImagen };
             categoria.nombreCategoria = nombre;
             if (dto.QuitarImagen) categoria.UrlImagen = null;
             else if (url != null) categoria.UrlImagen = url;
             // Estado y fecha de creación se mantienen.
+            await _auditoria.Agregar("CATEGORIA_EDITADA", "categorias", categoria.IdCategoria, anteriores,
+                new Dictionary<string, object?> { ["nombre"] = categoria.nombreCategoria, ["urlImagen"] = categoria.UrlImagen }, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             // Una confirmación fallida puede tener resultado incierto; conservar el archivo.
             commitIniciado = true;
