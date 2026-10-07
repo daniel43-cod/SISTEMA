@@ -1,4 +1,4 @@
-import { test } from 'node:test'
+﻿import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { loginStaff } from '../src/features/auth/api/authApi.ts'
 import { validateLogin, parseStaffSession } from '../src/features/auth/schemas/loginSchema.ts'
@@ -94,3 +94,12 @@ test('No envía tokens a URLs arbitrarias', async t => {
   await assert.rejects(requestJson('//other.example/', { token: 'secret' }))
   assert.equal(mock.mock.callCount(), 0)
 })
+test('La duración la define el backend: admite sesiones superiores a 60 minutos', () => {
+  const tokenWithMinutes = (minutes: number) => 'h.' + Buffer.from(JSON.stringify({
+    sub: '1', tipo_cuenta: 'usuario', id_sesion: 'b765f4e4-e04b-405b-b53e-68a7b3c86dd8',
+    exp: Math.floor(Date.now() / 1000) + minutes * 60,
+  })).toString('base64url') + '.s'
+  assert.ok(parseStaffSession(sessionResponse({ token: tokenWithMinutes(60) })).expiresAt > Date.now())
+  assert.ok(parseStaffSession(sessionResponse({ token: tokenWithMinutes(120) })).expiresAt > Date.now())
+})
+

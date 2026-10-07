@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services.Prestacion;
 
-public class CrearPresentacionServices(SistemaDbContext context)
+public class CrearPresentacionServices(SistemaDbContext context, API_SISTEMA.services.Auditoria.PresentacionAuditoriaService auditoria)
 {
     public async Task<PresentacionRespuestaDTO> CrearPresentacion(
         CrearPresentacionDTO dto, CancellationToken cancellationToken = default)
@@ -30,6 +30,9 @@ public class CrearPresentacionServices(SistemaDbContext context)
             Descripcion = descripcion, 
             Estado = true };
         context.presentaciones.Add(presentacion);
+        await context.SaveChangesAsync(cancellationToken);
+        await auditoria.Agregar("PRESENTACION_CREADA", presentacion, null,
+            new { descripcion = presentacion.Descripcion, estado = presentacion.Estado }, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 

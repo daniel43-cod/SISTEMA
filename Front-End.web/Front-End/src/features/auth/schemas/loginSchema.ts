@@ -1,4 +1,4 @@
-import type { LoginCredentials, StaffSession } from '../types/auth.ts'
+﻿import type { LoginCredentials, StaffSession } from '../types/auth.ts'
 
 export type LoginErrors = Partial<Record<keyof LoginCredentials, string>>
 
@@ -29,7 +29,7 @@ export function parseStaffSession(value: unknown): StaffSession {
     const bytes = Uint8Array.from(atob(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, '=')), c => c.charCodeAt(0))
     const payload: unknown = JSON.parse(new TextDecoder().decode(bytes))
     if (!isRecord(payload) || typeof payload.exp !== 'number' || !Number.isSafeInteger(payload.exp) ||
-      payload.exp * 1000 <= Date.now() || payload.exp * 1000 > Date.now() + 31 * 60 * 1000 ||
+      payload.exp * 1000 <= Date.now() || !Number.isSafeInteger(payload.exp * 1000) ||
       payload.tipo_cuenta !== 'usuario' || payload.sub !== String(value.id_usuario)) throw new Error()
     // Solo programamos el vencimiento de la UI. La firma y permisos los valida la API.
     return {
@@ -38,3 +38,4 @@ export function parseStaffSession(value: unknown): StaffSession {
     }
   } catch { throw new Error('La respuesta de sesión no es válida o ya venció.') }
 }
+

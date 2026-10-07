@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -30,6 +31,11 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<API_SISTEMA.services.Auditoria.PresentacionAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.services.Prestacion.CrearPresentacionServices>();
+builder.Services.AddScoped<API_SISTEMA.services.Prestacion.ActualizarPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.services.Prestacion.EstadoPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.services.Prestacion.ListarPresentacionServices>();
 builder.Services.AddScoped<API_SISTEMA.services.Sesiones.SesionCierreService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<API_SISTEMA.Securyti.ContextoPeticion>();
@@ -128,7 +134,33 @@ try
             "Login guarda responsable validado, fecha y referencia sin credenciales");
     }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
-    Check(jwt.ValidTo <= DateTime.UtcNow.AddMinutes(31), "Sesión interna limitada a 30 minutos");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    var nueva = await client.PostAsJsonAsync("/api/Presentaciones", new { descripcion = "Unidad auditoría" });
+    Check(nueva.StatusCode == HttpStatusCode.Created, "Crear presentación auditada");
+    var presentacionAuditada = await nueva.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>();
+    var ruta = "/api/Presentaciones/" + presentacionAuditada!.IdPresentacion;
+    Check((await client.PutAsJsonAsync(ruta, new { descripcion = "Caja auditoría" })).IsSuccessStatusCode, "Editar presentación auditada");
+    await client.PutAsJsonAsync(ruta, new { descripcion = "Caja auditoría" });
+    await client.PatchAsJsonAsync(ruta + "/estado", new { estado = false });
+    await client.PatchAsJsonAsync(ruta + "/estado", new { estado = false });
+    await client.PatchAsJsonAsync(ruta + "/estado", new { estado = true });
+    using (var scope = app.Services.CreateScope())
+    {
+        var eventos = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos
+            .Where(e => e.Entidad == "presentaciones").OrderBy(e => e.IdAuditoria).ToListAsync();
+        Check(eventos.Select(e => e.Accion).SequenceEqual(new[] { "PRESENTACION_CREADA", "PRESENTACION_EDITADA",
+            "PRESENTACION_DESACTIVADA", "PRESENTACION_ACTIVADA" }), "Cuatro eventos y sin duplicados al guardar igual");
+        Check(eventos.All(e => e.IdUsuario == 1 && e.UsuarioResponsable == "admin" && e.IdRegistro == presentacionAuditada.IdPresentacion.ToString()),
+            "Auditoría identifica responsable y presentación");
+        Check(eventos[1].DatosAnteriores!.Contains("Unidad auditor") && eventos[1].DatosNuevos!.Contains("Caja auditor"),
+            "Auditoría conserva descripción anterior y nueva");
+        Check(eventos[1].DatosAnteriores == "{\"descripcion\":\"Unidad auditor\\u00EDa\"}" &&
+            !eventos[1].DatosNuevos!.Contains("estado"), "Edición registra solo descripción modificada");
+        Check(eventos[2].DatosAnteriores == "{\"estado\":true}" && eventos[2].DatosNuevos == "{\"estado\":false}" &&
+            eventos[3].DatosAnteriores == "{\"estado\":false}" && eventos[3].DatosNuevos == "{\"estado\":true}",
+            "Activación y desactivación registran solo estado modificado");
+    }
+    Check(jwt.ValidTo <= DateTime.UtcNow.AddMinutes(61), "Sesión interna respeta el máximo actual de 60 minutos");
     Check(jwt.Claims.All(c => !c.Value.Contains("Password123") && !c.Value.StartsWith("$2")), "JWT sin contraseña ni hash en sus claims");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     var listing = await client.GetStringAsync("/api/Usuario");
@@ -256,6 +288,22 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
         await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento");
+        var cantidadAntes = await db.presentaciones.CountAsync();
+        var accessor = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        accessor.HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks"))
+        };
+        var falloAuditoria = false;
+        try
+        {
+            await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Prestacion.CrearPresentacionServices>()
+                .CrearPresentacion(new API_SISTEMA.DTOs.Presentaciones.CrearPresentacionDTO { Descripcion = "Debe revertirse" });
+        }
+        catch (DbUpdateException) { falloAuditoria = true; }
+        finally { accessor.HttpContext = null; }
+        Check(falloAuditoria && await db.presentaciones.CountAsync() == cantidadAntes,
+            "Fallo de auditoría revierte creación de presentación");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE sesiones_usuario");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE usuario");
     }
@@ -279,7 +327,7 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.

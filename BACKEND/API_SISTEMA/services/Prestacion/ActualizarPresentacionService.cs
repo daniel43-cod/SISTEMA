@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services.Prestacion;
 
-public class ActualizarPresentacionService(SistemaDbContext context)
+public class ActualizarPresentacionService(SistemaDbContext context, API_SISTEMA.services.Auditoria.PresentacionAuditoriaService auditoria)
 {
     // Devuelve null cuando el ID no existe, para que el controlador responda 404.
     public async Task<PresentacionRespuestaDTO?> ActualizarPresentacion(int idPresentacion,ActualizarPresentacionDTO dto,
@@ -40,7 +40,13 @@ public class ActualizarPresentacionService(SistemaDbContext context)
         if (existe)
             throw new PresentacionDuplicadaException();
 
-        presentacion.Descripcion = descripcion;
+        if (presentacion.Descripcion != descripcion)
+        {
+            var anterior = new { descripcion = presentacion.Descripcion };
+            presentacion.Descripcion = descripcion;
+            await auditoria.Agregar("PRESENTACION_EDITADA", presentacion, anterior,
+                new { descripcion = presentacion.Descripcion }, cancellationToken);
+        }
 
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
