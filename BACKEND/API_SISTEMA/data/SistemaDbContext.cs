@@ -35,6 +35,7 @@ namespace API_SISTEMA.data
         public DbSet<Tabla_permiso> tabla_Permisos { get; set; }
         public DbSet<Usuario> usuarios { get; set; }
         public DbSet<SesionUsuario> SesionesUsuario { get; set; }
+        public DbSet<AuditoriaEvento> AuditoriaEventos { get; set; }
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
@@ -58,6 +59,7 @@ namespace API_SISTEMA.data
         //mapear las tablas en SQLserver
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new AuditoriaEventoConfiguration());
 
             modelBuilder.Entity<Categoria>().ToTable("categoria");
             modelBuilder.Entity<Marca>().ToTable("marca");
@@ -69,7 +71,8 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<Ventas>().ToTable("ventas");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Productos>().ToTable("productos");
+            modelBuilder.Entity<Productos>().ToTable("productos", tabla =>
+                tabla.HasCheckConstraint("CK_productos_stock_minimo", "[stock_minimo] >= 0"));
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.Entity<Presentacion>().ToTable("presentaciones");
@@ -99,7 +102,8 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<EstadoVenta>().ToTable("estado_venta");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Producto_Presentacion>().ToTable("producto_presentacion ");
+            modelBuilder.Entity<Producto_Presentacion>().ToTable("producto_presentacion ", tabla =>
+                tabla.HasCheckConstraint("CK_producto_presentaciones_unidades", "[unidades_equivalentes] > 0"));
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<DetalleCompra>().ToTable("detalle_compra");
