@@ -28,7 +28,7 @@ export function CategoryList({ items, loading, error, reload, onEdit, editing, o
         <CategoryImage key={item.urlImagen ?? ''} url={item.urlImagen} />
         <strong>{item.nombre}</strong>
         <div className="category-row-actions">
-        {onEdit && <button type="button" className="category-list-action" disabled={editing || loading || pending}
+        {onEdit && <button type="button" className="category-list-action" disabled={!item.estado || editing || loading || pending}
           aria-label={'Editar ' + item.nombre} onClick={() => onEdit(item)}>Editar</button>}
         {onStateChange && <button type="button"
           className={`category-state-button ${item.estado ? 'category-state-active' : 'category-state-inactive'}`}

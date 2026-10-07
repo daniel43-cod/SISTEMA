@@ -29,7 +29,7 @@ export function PresentationList({ items, loading, error, onReload, onEdit, onSt
                         <strong>{item.descripcion}</strong>
             <div className="presentation-row-actions">
 
-              {onEdit && <button type="button" className="presentation-edit-button" disabled={editing || pending}
+              {onEdit && <button type="button" className="presentation-edit-button" disabled={!item.estado || editing || pending}
                 aria-label={'Editar ' + item.descripcion} onClick={() => onEdit(item)}>Editar</button>}
               {onStateChange && <button type="button" className={`presentation-state-button ${item.estado ? 'presentation-state-active' : 'presentation-state-inactive'}`} disabled={editing || pending || loading}
                 aria-pressed={item.estado} title={item.estado ? 'Desactivar presentación' : 'Activar presentación'}

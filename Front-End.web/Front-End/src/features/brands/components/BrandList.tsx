@@ -21,7 +21,7 @@ export function BrandList({ items, loading, error, reload, onEdit, onStateChange
                 {/* nombre es la marca; nombreCategoria viene de su relación en la API. */}
         <div><strong>{item.nombre}</strong><span>Categoría: {item.nombreCategoria || 'No disponible'}</span></div>
         <div className="brand-row-actions">
-        {onEdit && <button type="button" className="brand-refresh" disabled={loading || pending}
+        {onEdit && <button type="button" className="brand-refresh" disabled={!item.estado || loading || pending}
           aria-label={"Editar " + item.nombre} onClick={() => onEdit(item)}>Editar</button>}
         {onStateChange && <button type="button"
           className={`brand-state-button ${item.estado ? 'brand-state-active' : 'brand-state-inactive'}`}
