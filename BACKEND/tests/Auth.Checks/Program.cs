@@ -30,6 +30,9 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<API_SISTEMA.Securyti.ContextoPeticion>();
+builder.Services.AddScoped<API_SISTEMA.services.Auditoria.AuditoriaService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UsuarioTokenValidator>();
 builder.Services.Configure<JwtSettings>(o =>
@@ -115,6 +118,14 @@ try
         Check((await client.PostAsJsonAsync(route, Account())).StatusCode == HttpStatusCode.Unauthorized, "Alta anónima bloqueada: " + route);
 
     var token = await Token(await Login("admin", "Password123"));
+    using (var scope = app.Services.CreateScope())
+    {
+        var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.SingleAsync();
+        Check(evento.IdUsuario.HasValue && evento.UsuarioResponsable == "admin" && evento.Accion == "SESION_INICIADA" &&
+            evento.Resultado == "EXITOSO" && evento.FechaUtc > DateTime.UtcNow.AddMinutes(-1) &&
+            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.DatosNuevos is null && evento.DatosAnteriores is null,
+            "Login guarda responsable validado, fecha y referencia sin credenciales");
+    }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
     Check(jwt.ValidTo <= DateTime.UtcNow.AddMinutes(31), "Sesión interna limitada a 30 minutos");
     Check(jwt.Claims.All(c => !c.Value.Contains("Password123") && !c.Value.StartsWith("$2")), "JWT sin contraseña ni hash en sus claims");
@@ -141,7 +152,34 @@ try
     Check(badPassword.StatusCode == HttpStatusCode.Unauthorized && unknown.StatusCode == HttpStatusCode.Unauthorized &&
         await badPassword.Content.ReadAsStringAsync() == await unknown.Content.ReadAsStringAsync(), "Credenciales incorrectas sin enumeración por mensaje");
     Check((await Login("admin", new string('á', 37))).StatusCode == HttpStatusCode.BadRequest, "Límite de contraseña en bytes UTF-8");
+    using (var scope = app.Services.CreateScope())
+    {
+        var eventos = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.ToListAsync();
+        Check(eventos.Count(e => e.Accion == "SESION_INICIADA") == 1,
+            "Credenciales rechazadas no generan un evento exitoso");
+        var fallidos = eventos.Where(e => e.Accion == "LOGIN_FALLIDO").ToList();
+        Check(fallidos.Count == 2 && fallidos.Any(e => e.IdentificadorIntentado == "admin") &&
+            fallidos.Any(e => e.IdentificadorIntentado == "missing"), "Cuenta existente y desconocida registran intento fallido");
+        Check(fallidos.All(e => e.IdUsuario is null && e.UsuarioResponsable is null && e.IdRegistro is null &&
+            e.Resultado == "RECHAZADO" && e.Origen == "API" && !string.IsNullOrWhiteSpace(e.TraceId) &&
+            e.DatosAnteriores is null && e.DatosNuevos is null && e.Motivo == "Autenticación rechazada."),
+            "Intentos no atribuyen identidad ni guardan contraseña, token o detalles de cuenta");
+    }
 
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.PostAsync("/api/Login/cerrar-sesion", null)).StatusCode == HttpStatusCode.Unauthorized,
+        "Cierre voluntario exige autenticación");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    Check((await client.PostAsync("/api/Login/cerrar-sesion", null)).StatusCode == HttpStatusCode.NoContent,
+        "Cierre voluntario autenticado devuelve 204");
+    using (var scope = app.Services.CreateScope())
+    {
+        var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos
+            .SingleAsync(e => e.Accion == "SESION_CERRADA");
+        Check(evento.IdUsuario == 1 && evento.UsuarioResponsable == "admin" && evento.Resultado == "EXITOSO" &&
+            evento.Motivo == "Cierre voluntario de sesión." && !string.IsNullOrWhiteSpace(evento.TraceId),
+            "Auditoría de cierre atribuye responsable autenticado");
+    }
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
     {
         Check((await client.PostAsJsonAsync(route, Account(password: "a"))).StatusCode == HttpStatusCode.BadRequest, "Contraseña débil bloqueada: " + route);
@@ -185,7 +223,11 @@ try
     // Simula un fallo de almacenamiento real; nunca debe devolver el detalle SQL.
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
     using (var scope = app.Services.CreateScope())
-        await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().Database.ExecuteSqlRawAsync("DROP TABLE usuario");
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento");
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE usuario");
+    }
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Fallo de almacenamiento deniega sesión");
 
     var actionContext = new Microsoft.AspNetCore.Mvc.ActionContext(new Microsoft.AspNetCore.Http.DefaultHttpContext(),
@@ -206,8 +248,15 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento))
                 modelBuilder.Ignore(entity.ClrType);
+        // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.
+        var auditoria = modelBuilder.Entity<AuditoriaEvento>();
+        foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
+            auditoria.Metadata.RemoveCheckConstraint(constraint.Name);
+        auditoria.Property(e => e.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        auditoria.Property(e => e.DatosAnteriores).HasColumnType("TEXT");
+        auditoria.Property(e => e.DatosNuevos).HasColumnType("TEXT");
         modelBuilder.Entity<Rol>().Ignore(r => r.RolPermisos);
     }
 }

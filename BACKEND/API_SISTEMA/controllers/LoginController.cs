@@ -15,15 +15,23 @@ public class LoginController(LoginService loginService, UsuarioService usuarioSe
     [AllowAnonymous]
     [EnableRateLimiting("login-interno")]
     [HttpPost("Login")]
-    public async Task<IActionResult> Login(LoginDTOs dto)
+    public async Task<IActionResult> Login(LoginDTOs dto, CancellationToken cancellationToken)
     {
-        var respuesta = await loginService.Login(dto);
+        var respuesta = await loginService.Login(dto, cancellationToken);
         return respuesta is null
             ? Unauthorized("Usuario o contraseña incorrectos.")
             : Ok(respuesta);
     }
 
     // Alias de compatibilidad: ambas rutas ejecutan las mismas validaciones.
+    [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+    [HttpPost("cerrar-sesion")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> CerrarSesion(
+        [FromServices] API_SISTEMA.services.Auditoria.AuditoriaService auditoria,
+        CancellationToken cancellationToken)
+        => await auditoria.RegistrarCierreSesion(cancellationToken) ? NoContent() : Unauthorized();
+
     [Authorize(Roles = Roles.Administrador)]
     [HttpPost("crear")]
     public async Task<IActionResult> Crear(CrearCuentaDTOs dto)

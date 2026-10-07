@@ -30,10 +30,6 @@ namespace API_SISTEMA.services.Ventas
 
             try
             {
-                // =====================================================
-                // 1. BUSCAR VENTA ACTUAL
-                // =====================================================
-
                 var venta = await _context.ventas
                     .Include(v => v.DetalleVentas)
                     .FirstOrDefaultAsync(v =>
