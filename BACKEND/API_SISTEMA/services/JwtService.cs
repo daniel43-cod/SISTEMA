@@ -22,9 +22,9 @@ namespace API_SISTEMA.services
 
         //GENERA LOS TOKENS
 
-            public string GenerarToken(Usuario usuario)
+            public string GenerarToken(Usuario usuario, Guid? idSesion = null)
             {
-                return GenerarToken(usuario.id_usuario, usuario.nombre, usuario.rol.nombre, "usuario", ObtenerVersion(usuario));
+                return GenerarToken(usuario.id_usuario, usuario.nombre, usuario.rol.nombre, "usuario", ObtenerVersion(usuario), idSesion);
             }
 
             public string GenerarToken(API_SISTEMA.models.CuentaCliente cuenta)
@@ -36,7 +36,7 @@ namespace API_SISTEMA.services
                 HMACSHA256.HashData(Encoding.UTF8.GetBytes(_jwtSettings.Key),
                     Encoding.UTF8.GetBytes($"{usuario.id_usuario}:{usuario.id_rol}:{usuario.password}")));
 
-            private string GenerarToken(int id, string nombre, string rol, string tipoCuenta, string? version = null)
+            private string GenerarToken(int id, string nombre, string rol, string tipoCuenta, string? version = null, Guid? idSesion = null)
             {
                 var claims = new List<Claim>
                 {
@@ -47,6 +47,8 @@ namespace API_SISTEMA.services
             };
             if (version is not null)
                 claims.Add(new Claim("version_credencial", version));
+            if (idSesion.HasValue)
+                claims.Add(new Claim("id_sesion", idSesion.Value.ToString("D")));
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_jwtSettings.Key));
@@ -60,7 +62,7 @@ namespace API_SISTEMA.services
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(tipoCuenta == "usuario"
                 //tiempo de expiracion del tocken
-                    ? Math.Min(_jwtSettings.DurationInMinutes, 30) : _jwtSettings.DurationInMinutes),
+                    ? Math.Min(_jwtSettings.DurationInMinutes, 2) : _jwtSettings.DurationInMinutes),
                 signingCredentials: credenciales
             );
 

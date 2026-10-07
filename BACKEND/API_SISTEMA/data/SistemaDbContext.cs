@@ -374,6 +374,9 @@ namespace API_SISTEMA.data
                 .HasIndex(s => s.TokenHash).IsUnique();
             modelBuilder.Entity<SesionUsuario>()
                 .HasIndex(s => s.FechaVencimiento);
+            modelBuilder.Entity<SesionUsuario>().ToTable("sesiones_usuario", table =>
+                table.HasCheckConstraint("CK_sesiones_usuario_motivo_cierre",
+                    "motivo_cierre IN ('VOLUNTARIO', 'EXPIRACION')"));
         }
     }
 }

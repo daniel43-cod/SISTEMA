@@ -22,7 +22,7 @@ public sealed class LoginRateLimitPolicy : IRateLimiterPolicy<string>
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10, Window = TimeSpan.FromMinutes(1),
+                PermitLimit = 5, Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0, AutoReplenishment = true
             });
 }

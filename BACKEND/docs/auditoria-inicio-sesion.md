@@ -26,8 +26,9 @@ validado y de la cuenta en la BD; no se acepta un ID del cliente.
 El botón de salir notifica ese endpoint y limpia inmediatamente la sesión local.
 Si falla la notificación muestra que no se pudo confirmar el registro en el servidor.
 Expiración, respuestas 401 y cierre de pestaña no se etiquetan como cierre voluntario.
-Este endpoint registra la solicitud de cierre; no revoca el JWT, que conserva su
-vigencia hasta expirar. Repetir la petición puede generar otro evento de cierre.
+El endpoint cierra la sesión identificada por el claim id_sesion y registra el evento
+en la misma transacción. Su JWT deja de aceptarse. Un cierre repetido no genera otro
+evento; un token ya cerrado recibe 401. Ver `sesiones-expiracion.md`.
 
 Este cambio no registra cambios de catálogos.
 No se necesitan triggers ni se ejecutan modificaciones de esquema automáticamente.

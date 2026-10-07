@@ -32,6 +32,14 @@ public sealed class UsuarioTokenValidator(SistemaDbContext context, JwtService j
 
         try
         {
+            if (!Guid.TryParse(principal?.FindFirstValue("id_sesion"), out var idSesion) ||
+                !await context.SesionesUsuario.AsNoTracking().AnyAsync(s => s.IdSesion == idSesion &&
+                    s.IdUsuario == id && s.FechaRevocacion == null && s.MotivoCierre == null &&
+                    s.FechaVencimiento > DateTime.UtcNow, tokenContext.HttpContext.RequestAborted))
+            {
+                tokenContext.Fail("Sesión cerrada o vencida. Inicia sesión nuevamente.");
+                return;
+            }
             var user = await context.usuarios.AsNoTracking().Include(u => u.rol)
                 .SingleOrDefaultAsync(u => u.id_usuario == id, tokenContext.HttpContext.RequestAborted);
             var roles = principal!.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray();

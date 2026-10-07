@@ -30,9 +30,16 @@ public class LoginService(SistemaDbContext context, JwtService jwtService,
             return null;
         }
 
-        var token = jwtService.GenerarToken(user);
+        var idSesion = Guid.NewGuid();
+        var token = jwtService.GenerarToken(user, idSesion);
+        var sesion = new API_SISTEMA.models.SesionUsuario
+        {
+            IdSesion = idSesion, IdUsuario = user.id_usuario, FechaCreacion = DateTime.UtcNow,
+            FechaVencimiento = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo,
+            TokenHash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token))
+        };
         // No entregar el token si no fue posible persistir el evento de auditoría.
-        await auditoria.RegistrarInicioSesion(user, cancellationToken);
+        await auditoria.RegistrarInicioSesion(user, sesion, cancellationToken);
         return new LoginRespuestaDTOs
         {
             id_usuario = user.id_usuario, nombre = user.nombre,

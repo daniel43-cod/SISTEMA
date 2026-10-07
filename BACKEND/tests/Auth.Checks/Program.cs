@@ -30,6 +30,7 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<API_SISTEMA.services.Sesiones.SesionCierreService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<API_SISTEMA.Securyti.ContextoPeticion>();
 builder.Services.AddScoped<API_SISTEMA.services.Auditoria.AuditoriaService>();
@@ -123,7 +124,7 @@ try
         var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.SingleAsync();
         Check(evento.IdUsuario.HasValue && evento.UsuarioResponsable == "admin" && evento.Accion == "SESION_INICIADA" &&
             evento.Resultado == "EXITOSO" && evento.FechaUtc > DateTime.UtcNow.AddMinutes(-1) &&
-            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.DatosNuevos is null && evento.DatosAnteriores is null,
+            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.DatosNuevos!.Contains("idSesion") && evento.DatosAnteriores is null,
             "Login guarda responsable validado, fecha y referencia sin credenciales");
     }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
@@ -180,6 +181,11 @@ try
             evento.Motivo == "Cierre voluntario de sesión." && !string.IsNullOrWhiteSpace(evento.TraceId),
             "Auditoría de cierre atribuye responsable autenticado");
     }
+    Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token cerrado no puede volver a usarse");
+    using (var scope = app.Services.CreateScope())
+        token = (await scope.ServiceProvider.GetRequiredService<LoginService>().Login(
+            new API_SISTEMA.DTOs.Login.LoginDTOs { usuario = "admin", password = "Password123" }))!.token;
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
     {
         Check((await client.PostAsJsonAsync(route, Account(password: "a"))).StatusCode == HttpStatusCode.BadRequest, "Contraseña débil bloqueada: " + route);
@@ -206,12 +212,36 @@ try
 
     await UpdateAdmin(u => u.estado = false);
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token rechazado al desactivar cuenta");
-    Check((await Login("admin", "Password123")).StatusCode == HttpStatusCode.Unauthorized, "Cuenta inactiva no inicia sesión");
+    using (var scope = app.Services.CreateScope())
+        Check(await scope.ServiceProvider.GetRequiredService<LoginService>().Login(
+            new API_SISTEMA.DTOs.Login.LoginDTOs { usuario = "admin", password = "Password123" }) is null,
+            "Cuenta inactiva no inicia sesión");
     await UpdateAdmin(u => { u.estado = true; u.id_rol = 2; });
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token rechazado al cambiar rol");
     await UpdateAdmin(u => { u.id_rol = 1; u.password = BCrypt.Net.BCrypt.HashPassword("Changed123"); });
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token rechazado al cambiar contraseña");
 
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var fecha = DateTime.UtcNow.AddMinutes(-1);
+        var expirada = new SesionUsuario { IdSesion = Guid.NewGuid(), IdUsuario = 1,
+            FechaCreacion = fecha.AddMinutes(-30), FechaVencimiento = fecha,
+            TokenHash = System.Security.Cryptography.SHA256.HashData(Guid.NewGuid().ToByteArray()) };
+        db.SesionesUsuario.Add(expirada);
+        await db.SaveChangesAsync();
+        var processor = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Sesiones.SesionCierreService>();
+        Check(await processor.ProcesarVencidas() == 1, "Procesador detecta sesión vencida sin navegador");
+        Check(await processor.ProcesarVencidas() == 0, "Expiración no se registra dos veces");
+        var evento = await db.AuditoriaEventos.SingleAsync(e => e.Accion == "SESION_EXPIRADA");
+        Check(evento.IdRegistro == expirada.IdSesion.ToString("D") && evento.Origen == "SISTEMA" &&
+            evento.FechaUtc == fecha && evento.IdUsuario == 1, "Auditoría conserva fecha real y sesión expirada");
+        await db.Entry(expirada).ReloadAsync();
+        Check(expirada.MotivoCierre == "EXPIRACION" && expirada.FechaRevocacion == fecha,
+            "Expiración actualiza la sesión");
+        Check(await db.AuditoriaEventos.CountAsync(e => e.Accion == "SESION_CERRADA") == 1,
+            "Cierre voluntario no se convierte en expiración");
+    }
     HttpResponseMessage? limited = null;
     for (int i = 0; i < 11; i++)
     {
@@ -226,6 +256,7 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
         await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento");
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE sesiones_usuario");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE usuario");
     }
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Fallo de almacenamiento deniega sesión");
@@ -248,8 +279,9 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario))
                 modelBuilder.Ignore(entity.ClrType);
+        modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.
         var auditoria = modelBuilder.Entity<AuditoriaEvento>();
         foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())

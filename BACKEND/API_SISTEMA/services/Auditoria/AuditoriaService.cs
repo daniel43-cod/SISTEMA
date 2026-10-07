@@ -6,27 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services.Auditoria;
 
-public sealed class AuditoriaService(SistemaDbContext context, ContextoPeticion peticion)
+public sealed class AuditoriaService(SistemaDbContext context, ContextoPeticion peticion,
+    API_SISTEMA.services.Sesiones.SesionCierreService cierres)
 {
     public async Task<bool> RegistrarCierreSesion(CancellationToken cancellationToken = default)
     {
         var id = peticion.IdUsuario;
         if (!id.HasValue) return false;
-        var usuario = await context.usuarios.AsNoTracking()
-            .SingleOrDefaultAsync(u => u.id_usuario == id.Value, cancellationToken);
-        if (usuario is null) return false;
-        context.AuditoriaEventos.Add(new AuditoriaEvento
-        {
-            FechaUtc = DateTime.UtcNow,
-            IdUsuario = usuario.id_usuario,
-            UsuarioResponsable = usuario.usuario[..Math.Min(usuario.usuario.Length, 100)],
-            Accion = "SESION_CERRADA", Entidad = "usuario",
-            IdRegistro = usuario.id_usuario.ToString(CultureInfo.InvariantCulture),
-            Resultado = "EXITOSO", Origen = "API", Motivo = "Cierre voluntario de sesión.",
-            TraceId = peticion.TraceId, DireccionIp = peticion.DireccionIp
-        });
-        await context.SaveChangesAsync(cancellationToken);
-        return true;
+        if (!peticion.IdSesion.HasValue) return false;
+        return await cierres.Cerrar(peticion.IdSesion.Value, id.Value, false, cancellationToken);
     }
 
     public async Task RegistrarAutenticacionFallida(string identificador,
@@ -53,14 +41,16 @@ public sealed class AuditoriaService(SistemaDbContext context, ContextoPeticion 
     }
 
     // Login es anónimo: el responsable proviene de la cuenta validada por LoginService.
-    public async Task RegistrarInicioSesion(Usuario usuario, CancellationToken cancellationToken = default)
+    public async Task RegistrarInicioSesion(Usuario usuario, SesionUsuario sesion, CancellationToken cancellationToken = default)
     {
+        context.SesionesUsuario.Add(sesion);
         context.AuditoriaEventos.Add(new AuditoriaEvento
         {
             FechaUtc = DateTime.UtcNow,
             IdUsuario = usuario.id_usuario,
             UsuarioResponsable = usuario.usuario[..Math.Min(usuario.usuario.Length, 100)],
             Accion = "SESION_INICIADA",
+            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new { idSesion = sesion.IdSesion, fechaVencimientoUtc = sesion.FechaVencimiento }),
             Entidad = "usuario",
             IdRegistro = usuario.id_usuario.ToString(CultureInfo.InvariantCulture),
             Resultado = "EXITOSO",

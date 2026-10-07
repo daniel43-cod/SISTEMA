@@ -115,6 +115,8 @@ builder.Services.AddScoped<RolPermisoService>();
 builder.Services.AddScoped<PermisoService>();
 builder.Services.AddScoped<ProductoPrecioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<API_SISTEMA.services.Sesiones.SesionCierreService>();
+builder.Services.AddHostedService<API_SISTEMA.services.Sesiones.SesionExpiracionWorker>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<API_SISTEMA.Securyti.ContextoPeticion>();
 builder.Services.AddScoped<API_SISTEMA.services.Auditoria.AuditoriaService>();

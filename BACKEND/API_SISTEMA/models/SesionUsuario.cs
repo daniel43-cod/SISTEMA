@@ -15,7 +15,7 @@ public class SesionUsuario
     [Column("id_usuario")]
     public int IdUsuario { get; set; }
 
-    // Almacena el hash SHA-256 del token de renovación, nunca el token original.
+    // Almacena SHA-256 del JWT emitido, nunca el token original.
     [Required]
     [Column("token_hash", TypeName = "binary(32)")]
     [JsonIgnore]
@@ -30,6 +30,10 @@ public class SesionUsuario
 
     [Column("fecha_revocacion", TypeName = "datetime2")]
     public DateTime? FechaRevocacion { get; set; }
+
+    [MaxLength(20)]
+    [Column("motivo_cierre", TypeName = "varchar(20)")]
+    public string? MotivoCierre { get; set; }
 
     // SQL Server genera este valor para detectar actualizaciones simultáneas.
     [Timestamp]
