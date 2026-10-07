@@ -31,6 +31,10 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<API_SISTEMA.services.Auditoria.ProductoAuditoriaService>();
+builder.Services.AddScoped<ProductoCrearService>();
+builder.Services.AddScoped<API_SISTEMA.services.ProductoS.ProductoActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.services.ProductoS.ProductoImagenService>();
 builder.Services.AddScoped<API_SISTEMA.services.Auditoria.CatalogoAuditoriaService>();
 builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaImagenService>();
 builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaCrearService>();
@@ -136,10 +140,10 @@ try
     var token = await Token(await Login("admin", "Password123"));
     using (var scope = app.Services.CreateScope())
     {
-        var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.SingleAsync();
+        var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.Include(e => e.Detalles).SingleAsync();
         Check(evento.IdUsuario.HasValue && evento.UsuarioResponsable == "admin" && evento.Accion == "SESION_INICIADA" &&
             evento.Resultado == "EXITOSO" && evento.FechaUtc > DateTime.UtcNow.AddMinutes(-1) &&
-            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.DatosNuevos!.Contains("idSesion") && evento.DatosAnteriores is null,
+            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.Detalles.Any(d => d.Campo == "idSesion") && evento.DatosAnteriores is null && evento.DatosNuevos is null,
             "Login guarda responsable validado, fecha y referencia sin credenciales");
     }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
@@ -155,19 +159,18 @@ try
     await client.PatchAsJsonAsync(ruta + "/estado", new { estado = true });
     using (var scope = app.Services.CreateScope())
     {
-        var eventos = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos
+        var eventos = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.Include(e => e.Detalles)
             .Where(e => e.Entidad == "presentaciones").OrderBy(e => e.IdAuditoria).ToListAsync();
         Check(eventos.Select(e => e.Accion).SequenceEqual(new[] { "PRESENTACION_CREADA", "PRESENTACION_EDITADA",
             "PRESENTACION_DESACTIVADA", "PRESENTACION_ACTIVADA" }), "Cuatro eventos y sin duplicados al guardar igual");
         Check(eventos.All(e => e.IdUsuario == 1 && e.UsuarioResponsable == "admin" && e.IdRegistro == presentacionAuditada.IdPresentacion.ToString()),
             "Auditoría identifica responsable y presentación");
-        Check(eventos[1].DatosAnteriores!.Contains("Unidad auditor") && eventos[1].DatosNuevos!.Contains("Caja auditor"),
-            "Auditoría conserva descripción anterior y nueva");
-        Check(eventos[1].DatosAnteriores == "{\"descripcion\":\"Unidad auditor\\u00EDa\"}" &&
-            !eventos[1].DatosNuevos!.Contains("estado"), "Edición registra solo descripción modificada");
-        Check(eventos[2].DatosAnteriores == "{\"estado\":true}" && eventos[2].DatosNuevos == "{\"estado\":false}" &&
-            eventos[3].DatosAnteriores == "{\"estado\":false}" && eventos[3].DatosNuevos == "{\"estado\":true}",
-            "Activación y desactivación registran solo estado modificado");
+        Check(eventos[1].Detalles.Single().ValorAnterior == "Unidad auditor\u00eda" && eventos[1].Detalles.Single().ValorNuevo == "Caja auditor\u00eda",
+            "Detalle conserva descripcion anterior y nueva");
+        Check(eventos[1].Detalles.Single().Campo == "descripcion", "Edicion registra solo descripcion modificada");
+        Check(eventos[2].Detalles.Single().Campo == "estado" && eventos[2].Detalles.Single().ValorAnterior == "true" && eventos[2].Detalles.Single().ValorNuevo == "false" &&
+            eventos[3].Detalles.Single().ValorAnterior == "false" && eventos[3].Detalles.Single().ValorNuevo == "true",
+            "Estados se registran en detalles");
     }
     Check(jwt.ValidTo <= DateTime.UtcNow.AddMinutes(61), "Sesión interna respeta el máximo actual de 60 minutos");
     Check(jwt.Claims.All(c => !c.Value.Contains("Password123") && !c.Value.StartsWith("$2")), "JWT sin contraseña ni hash en sus claims");
@@ -196,7 +199,7 @@ try
     Check((await Login("admin", new string('á', 37))).StatusCode == HttpStatusCode.BadRequest, "Límite de contraseña en bytes UTF-8");
     using (var scope = app.Services.CreateScope())
     {
-        var eventos = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.ToListAsync();
+        var eventos = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.Include(e => e.Detalles).ToListAsync();
         Check(eventos.Count(e => e.Accion == "SESION_INICIADA") == 1,
             "Credenciales rechazadas no generan un evento exitoso");
         var fallidos = eventos.Where(e => e.Accion == "LOGIN_FALLIDO").ToList();
@@ -216,7 +219,7 @@ try
         "Cierre voluntario autenticado devuelve 204");
     using (var scope = app.Services.CreateScope())
     {
-        var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos
+        var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.Include(e => e.Detalles)
             .SingleAsync(e => e.Accion == "SESION_CERRADA");
         Check(evento.IdUsuario == 1 && evento.UsuarioResponsable == "admin" && evento.Resultado == "EXITOSO" &&
             evento.Motivo == "Cierre voluntario de sesión." && !string.IsNullOrWhiteSpace(evento.TraceId),
@@ -274,13 +277,13 @@ try
         var processor = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Sesiones.SesionCierreService>();
         Check(await processor.ProcesarVencidas() == 1, "Procesador detecta sesión vencida sin navegador");
         Check(await processor.ProcesarVencidas() == 0, "Expiración no se registra dos veces");
-        var evento = await db.AuditoriaEventos.SingleAsync(e => e.Accion == "SESION_EXPIRADA");
+        var evento = await db.AuditoriaEventos.Include(e => e.Detalles).SingleAsync(e => e.Accion == "SESION_EXPIRADA");
         Check(evento.IdRegistro == expirada.IdSesion.ToString("D") && evento.Origen == "SISTEMA" &&
             evento.FechaUtc == fecha && evento.IdUsuario == 1, "Auditoría conserva fecha real y sesión expirada");
         await db.Entry(expirada).ReloadAsync();
         Check(expirada.MotivoCierre == "EXPIRACION" && expirada.FechaRevocacion == fecha,
             "Expiración actualiza la sesión");
-        Check(await db.AuditoriaEventos.CountAsync(e => e.Accion == "SESION_CERRADA") == 1,
+        Check(await db.AuditoriaEventos.Include(e => e.Detalles).CountAsync(e => e.Accion == "SESION_CERRADA") == 1,
             "Cierre voluntario no se convierte en expiración");
     }
     HttpResponseMessage? limited = null;
@@ -305,6 +308,29 @@ try
                 .CrearCategoria(new() { Nombre = "Bebidas", UrlImagen = "https://example.com/categoria.png" });
             var marca = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaCrearService>()
                 .CrearMarca(new() { Nombre = "Marca inicial", IdCategoria = categoria.IdCategoria });
+            var presentacion = new Presentacion { Descripcion = "Unidad producto", Estado = true };
+            db.presentaciones.Add(presentacion);
+            await db.SaveChangesAsync();
+            var producto = await scope.ServiceProvider.GetRequiredService<ProductoCrearService>().CrearProducto(new()
+            {
+                nombre = "Producto auditoria", codigo_barra = "AUD001", IdMarca = marca.IdMarca,
+                presentaciones = [new() { id_presentacion = presentacion.IdPresentacion, unidades_equivalentes = 1, precio = 10m }]
+            });
+            var asociacion = producto.ProductoPresentaciones.Single();
+            var editarProducto = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.ProductoS.ProductoActualizarService>();
+            var dtoProducto = new API_SISTEMA.DTOs.Productos.ActualizarProductoDTO
+            {
+                nombre = "Producto nuevo", codigo_barra = "AUD001", IdMarca = marca.IdMarca, stock_minimo = 0,
+                presentaciones = [new() { id_producto_presentacion = asociacion.id_producto_presentacion,
+                    id_presentacion = presentacion.IdPresentacion, unidades_equivalentes = 1, precio = 12m, estado = true }]
+            };
+            await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
+            await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
+            var eventosProducto = await db.AuditoriaEventos.Include(e => e.Detalles).AsNoTracking().Where(e => e.Entidad == "productos" || e.Entidad == "producto_presentacion").ToListAsync();
+            Check(eventosProducto.Count == 4, "Producto y asociacion: creacion y edicion sin duplicar guardados iguales");
+            Check(eventosProducto.Single(e => e.Accion == "PRODUCTO_EDITADO").Detalles.Single().Campo == "nombre" && eventosProducto.Single(e => e.Accion == "PRODUCTO_EDITADO").Detalles.Single().ValorNuevo == "Producto nuevo", "Producto registra solo nombre modificado");
+            Check(eventosProducto.Single(e => e.Accion == "PRODUCTO_PRESENTACION_EDITADA").Detalles.Single().Campo == "precio" && eventosProducto.Single(e => e.Accion == "PRODUCTO_PRESENTACION_EDITADA").Detalles.Single().ValorNuevo == "12", "Presentacion de producto registra solo precio modificado");
+            Check(eventosProducto.All(e => e.IdUsuario == 1), "Producto registra responsable autenticado");
             var editarMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaActualizarService>();
             await editarMarca.ActualizarMarca(marca.IdMarca, new() { Nombre = "Marca nueva", IdCategoria = categoria.IdCategoria });
             await editarMarca.ActualizarMarca(marca.IdMarca, new() { Nombre = "Marca nueva", IdCategoria = categoria.IdCategoria });
@@ -319,21 +345,42 @@ try
             await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = false });
             await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = false });
             await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = true });
-            var eventos = await db.AuditoriaEventos.AsNoTracking().Where(e => e.Entidad == "marcas" || e.Entidad == "categorias").ToListAsync();
+            var eventos = await db.AuditoriaEventos.Include(e => e.Detalles).AsNoTracking().Where(e => e.Entidad == "marcas" || e.Entidad == "categorias").ToListAsync();
             Check(eventos.Count == 8, "Marca y categor?a: creaci?n, edici?n y estados sin eventos por cambios vac?os");
             Check(eventos.All(e => e.IdUsuario == 1 && e.UsuarioResponsable == "admin"), "Auditor?a de cat?logo identifica al responsable");
             var edicion = eventos.Single(e => e.Accion == "MARCA_EDITADA");
-            Check(edicion.DatosAnteriores == "{\"nombre\":\"Marca inicial\"}" && edicion.DatosNuevos == "{\"nombre\":\"Marca nueva\"}", "Edici?n de marca registra solo nombre alterado");
+            Check(edicion.Detalles.Single().Campo == "nombre" && edicion.Detalles.Single().ValorAnterior == "Marca inicial" && edicion.Detalles.Single().ValorNuevo == "Marca nueva", "Marca: solo nombre alterado");
             var imagenQuitada = eventos.Single(e => e.Accion == "CATEGORIA_EDITADA");
-            Check(imagenQuitada.DatosNuevos == "{\"urlImagen\":null}" && !imagenQuitada.DatosAnteriores!.Contains("nombre"), "Quitar imagen registra solo URL anterior y null nuevo");
-            Check(eventos.Where(e => e.Accion.EndsWith("ACTIVADA")).All(e => e.DatosNuevos == "{\"estado\":true}" || e.DatosNuevos == "{\"estado\":false}"), "Cambios de estado registran solo estado");
+            Check(imagenQuitada.Detalles.Single().Campo == "urlImagen" && imagenQuitada.Detalles.Single().ValorNuevo is null && imagenQuitada.Detalles.Single().ValorAnterior == "https://example.com/categoria.png", "Quitar imagen conserva URL anterior y null nuevo");
+            Check(eventos.Where(e => e.Accion.EndsWith("ACTIVADA")).All(e => e.Detalles.Single().Campo == "estado"), "Estado guarda solo campo alterado");
         }
         finally { accessorCatalogo.HttpContext = null; }
-        await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento");
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento_detalle");
         accessorCatalogo.HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
         { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks")) };
         try
         {
+            var productoAntes = await db.productos.AsNoTracking().SingleAsync();
+            var presentacionId = await db.producto_presentaciones.Select(p => p.IdPresentacion).FirstAsync();
+            var falloCrearProducto = false;
+            var falloEditarProducto = false;
+            try
+            {
+                await scope.ServiceProvider.GetRequiredService<ProductoCrearService>().CrearProducto(new()
+                { nombre = "Rollback producto", codigo_barra = "ROLL001", IdMarca = productoAntes.IdMarca,
+                  presentaciones = [new() { id_presentacion = presentacionId, unidades_equivalentes = 1, precio = 10m }] });
+            }
+            catch (DbUpdateException) { falloCrearProducto = true; db.ChangeTracker.Clear(); }
+            try
+            {
+                await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.ProductoS.ProductoActualizarService>()
+                    .ActualizarProducto(productoAntes.id_producto, new()
+                    { nombre = "Nombre revertido", codigo_barra = productoAntes.codigo_barra!, IdMarca = productoAntes.IdMarca, stock_minimo = 0 });
+            }
+            catch (DbUpdateException) { falloEditarProducto = true; db.ChangeTracker.Clear(); }
+            Check(falloCrearProducto && await db.productos.CountAsync() == 1, "Fallo de auditoria revierte creacion de producto y asociaciones");
+            Check(falloEditarProducto && (await db.productos.AsNoTracking().SingleAsync()).nombre == productoAntes.nombre,
+                "Fallo de auditoria revierte edicion de producto");
             var categoriasAntes = await db.categorias.CountAsync();
             var marcasAntes = await db.Marcas.CountAsync();
             var categoriaId = await db.categorias.Select(c => c.IdCategoria).FirstAsync();
@@ -363,6 +410,7 @@ try
         finally { accessor.HttpContext = null; }
         Check(falloAuditoria && await db.presentaciones.CountAsync() == cantidadAntes,
             "Fallo de auditoría revierte creación de presentación");
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE auditoria_evento");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE sesiones_usuario");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE usuario");
     }
@@ -386,10 +434,15 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(Producto_Presentacion))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.
+        var detalle = modelBuilder.Entity<AuditoriaEventoDetalle>();
+        foreach (var constraint in detalle.Metadata.GetCheckConstraints().ToArray())
+            detalle.Metadata.RemoveCheckConstraint(constraint.Name);
+        detalle.Property(d => d.ValorAnterior).HasColumnType("TEXT");
+        detalle.Property(d => d.ValorNuevo).HasColumnType("TEXT");
         var auditoria = modelBuilder.Entity<AuditoriaEvento>();
         foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
             auditoria.Metadata.RemoveCheckConstraint(constraint.Name);

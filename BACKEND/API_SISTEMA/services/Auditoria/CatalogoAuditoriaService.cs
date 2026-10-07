@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.Securyti;
@@ -29,8 +28,7 @@ public sealed class CatalogoAuditoriaService(SistemaDbContext context, ContextoP
             UsuarioResponsable = usuario.usuario[..Math.Min(usuario.usuario.Length, 100)],
             Accion = accion, Entidad = entidad, IdRegistro = id.ToString(CultureInfo.InvariantCulture),
             Resultado = "EXITOSO", Origen = "API", TraceId = peticion.TraceId, DireccionIp = peticion.DireccionIp,
-            DatosAnteriores = anteriores is null ? null : JsonSerializer.Serialize(anteriores),
-            DatosNuevos = JsonSerializer.Serialize(nuevos)
+            Detalles = AuditoriaDetalles.Crear(anteriores, nuevos)
         });
     }
 }

@@ -1,3 +1,4 @@
+using API_SISTEMA.services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.data;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services.ProductoS;
 
-public sealed class ProductoActualizarService(SistemaDbContext context, ProductoImagenService imagenes)
+public sealed class ProductoActualizarService(SistemaDbContext context, ProductoImagenService imagenes, ProductoAuditoriaService auditoria)
 {
     public async Task<ProductoResumenDTO?> ActualizarProducto(int id, ActualizarProductoDTO dto,
         CancellationToken cancellationToken = default, IFormFile? imagen = null)
@@ -47,6 +48,8 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
             IsolationLevel.Serializable, cancellationToken);
         var producto = await context.productos.SingleOrDefaultAsync(p => p.id_producto == id, cancellationToken);
         if (producto is null) return null;
+        var anteriores = ProductoAuditoriaService.Datos(producto);
+        var cambiosPresentaciones = new List<(API_SISTEMA.models.Producto_Presentacion Entidad, Dictionary<string, object?>? Anteriores)>();
 
         if (await context.productos.AnyAsync(p => p.id_producto != id && p.codigo_barra != null &&
             p.codigo_barra.Trim().ToUpper() == codigoNormalizado, cancellationToken))
@@ -66,6 +69,7 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
         {
             var existentes = await context.producto_presentaciones.Where(p => p.id_producto == id)
                 .ToListAsync(cancellationToken);
+            cambiosPresentaciones.AddRange(existentes.Select(p => (p, (Dictionary<string, object?>?)ProductoAuditoriaService.DatosPresentacion(p))));
             var ids = dto.presentaciones.Select(p => p.id_presentacion).ToList();
             var catalogo = await context.presentaciones.AsNoTracking().Where(p => ids.Contains(p.IdPresentacion))
                 .ToDictionaryAsync(p => p.IdPresentacion, cancellationToken);
@@ -97,7 +101,11 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
                 asociacion.precio = item.precio;
                 asociacion.unidades_equivalentes = item.unidades_equivalentes;
                 asociacion.estado = item.estado!.Value;
-                if (!item.id_producto_presentacion.HasValue) context.producto_presentaciones.Add(asociacion);
+                if (!item.id_producto_presentacion.HasValue)
+                {
+                    context.producto_presentaciones.Add(asociacion);
+                    cambiosPresentaciones.Add((asociacion, null));
+                }
             }
         }
 
@@ -112,6 +120,10 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
             if (imagen != null) url = archivo = await imagenes.GuardarAsync(imagen, cancellationToken);
             if (dto.QuitarImagen) producto.imagen = null;
             else if (url != null) producto.imagen = url;
+            await context.SaveChangesAsync(cancellationToken);
+            await auditoria.Registrar(producto, anteriores, cancellationToken);
+            foreach (var cambio in cambiosPresentaciones)
+                await auditoria.RegistrarPresentacion(cambio.Entidad, cambio.Anteriores, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
             commitIniciado = true;
             await transaction.CommitAsync(cancellationToken);

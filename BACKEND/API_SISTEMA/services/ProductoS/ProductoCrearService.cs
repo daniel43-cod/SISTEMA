@@ -1,3 +1,4 @@
+using API_SISTEMA.services.Auditoria;
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.data;
@@ -11,10 +12,12 @@ namespace API_SISTEMA.services;
 
 public class ProductoCrearService
 {
+    private readonly ProductoAuditoriaService _auditoria;
     private readonly SistemaDbContext _context;
     private readonly ProductoImagenService _imagenes;
-    public ProductoCrearService(SistemaDbContext context, ProductoImagenService imagenes)
+    public ProductoCrearService(SistemaDbContext context, ProductoImagenService imagenes, ProductoAuditoriaService auditoria)
     {
+        _auditoria = auditoria;
         _context = context;
         _imagenes = imagenes;
     }
@@ -84,6 +87,10 @@ public class ProductoCrearService
                 }).ToList()
             };
             _context.productos.Add(producto);
+            await _context.SaveChangesAsync(cancellationToken);
+            await _auditoria.Registrar(producto, null, cancellationToken);
+            foreach (var presentacion in producto.ProductoPresentaciones)
+                await _auditoria.RegistrarPresentacion(presentacion, null, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             commitIniciado = true;
             await transaction.CommitAsync(cancellationToken);

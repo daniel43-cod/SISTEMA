@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using API_SISTEMA.data;
 using API_SISTEMA.models;
 using API_SISTEMA.Securyti;
@@ -13,6 +12,8 @@ public sealed class PresentacionAuditoriaService(SistemaDbContext context, Conte
     public async Task Agregar(string accion, Presentacion presentacion, object? anterior, object nuevo,
         CancellationToken ct)
     {
+        var detalles = AuditoriaDetalles.Crear(anterior, nuevo);
+        if (anterior is not null && detalles.Count == 0) return;
         var idUsuario = peticion.IdUsuario ?? throw new InvalidOperationException("La auditoría requiere un usuario autenticado.");
         var usuario = await context.usuarios.AsNoTracking().SingleAsync(u => u.id_usuario == idUsuario, ct);
         context.AuditoriaEventos.Add(new AuditoriaEvento
@@ -22,8 +23,7 @@ public sealed class PresentacionAuditoriaService(SistemaDbContext context, Conte
             Accion = accion, Entidad = "presentaciones",
             IdRegistro = presentacion.IdPresentacion.ToString(CultureInfo.InvariantCulture),
             Resultado = "EXITOSO", Origen = "API", TraceId = peticion.TraceId, DireccionIp = peticion.DireccionIp,
-            DatosAnteriores = anterior is null ? null : JsonSerializer.Serialize(anterior),
-            DatosNuevos = JsonSerializer.Serialize(nuevo)
+            Detalles = detalles
         });
     }
 }

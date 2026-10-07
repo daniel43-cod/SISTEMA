@@ -36,6 +36,7 @@ namespace API_SISTEMA.data
         public DbSet<Usuario> usuarios { get; set; }
         public DbSet<SesionUsuario> SesionesUsuario { get; set; }
         public DbSet<AuditoriaEvento> AuditoriaEventos { get; set; }
+        public DbSet<AuditoriaEventoDetalle> AuditoriaEventoDetalles { get; set; }
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
@@ -60,6 +61,19 @@ namespace API_SISTEMA.data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new AuditoriaEventoConfiguration());
+
+            modelBuilder.Entity<AuditoriaEventoDetalle>(detalle =>
+            {
+                detalle.ToTable("auditoria_evento_detalle", "dbo", tabla =>
+                    tabla.HasCheckConstraint("CK_auditoria_detalle_campo", "LEN(LTRIM(RTRIM(campo))) > 0"));
+                detalle.HasOne(d => d.AuditoriaEvento)
+                    .WithMany(e => e.Detalles)
+                    .HasForeignKey(d => d.IdAuditoria)
+                    .OnDelete(DeleteBehavior.NoAction)
+                    .HasConstraintName("FK_auditoria_detalle_evento");
+                detalle.HasAlternateKey(d => new { d.IdAuditoria, d.Campo })
+                    .HasName("UQ_auditoria_detalle_campo");
+            });
 
             modelBuilder.Entity<Categoria>().ToTable("categoria");
             modelBuilder.Entity<Marca>().ToTable("marca");

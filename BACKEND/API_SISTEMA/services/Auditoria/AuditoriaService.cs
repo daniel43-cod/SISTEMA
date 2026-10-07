@@ -50,7 +50,7 @@ public sealed class AuditoriaService(SistemaDbContext context, ContextoPeticion 
             IdUsuario = usuario.id_usuario,
             UsuarioResponsable = usuario.usuario[..Math.Min(usuario.usuario.Length, 100)],
             Accion = "SESION_INICIADA",
-            DatosNuevos = System.Text.Json.JsonSerializer.Serialize(new { idSesion = sesion.IdSesion, fechaVencimientoUtc = sesion.FechaVencimiento }),
+            Detalles = AuditoriaDetalles.Crear(null, new { idSesion = sesion.IdSesion, fechaVencimientoUtc = sesion.FechaVencimiento }),
             Entidad = "usuario",
             IdRegistro = usuario.id_usuario.ToString(CultureInfo.InvariantCulture),
             Resultado = "EXITOSO",

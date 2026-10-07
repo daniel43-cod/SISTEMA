@@ -67,4 +67,6 @@ public sealed class AuditoriaEvento
 
     [JsonIgnore]
     public Usuario? Usuario { get; set; }
+
+    public ICollection<AuditoriaEventoDetalle> Detalles { get; set; } = new List<AuditoriaEventoDetalle>();
 }
