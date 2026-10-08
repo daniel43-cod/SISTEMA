@@ -1,12 +1,12 @@
 using System.Security.Claims;
-using API_SISTEMA.DTOs.Caja;
-using API_SISTEMA.services;
+using API_SISTEMA.Dtos.Caja;
+using API_SISTEMA.Services;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace API_SISTEMA.controllers;
+namespace API_SISTEMA.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -24,7 +24,7 @@ public class CajaController(CajaService servicio) : ControllerBase
     private int? UsuarioActual() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id > 0 ? id : null;
 
     [HttpPost("abrir")]
-    public async Task<IActionResult> AbrirCaja([FromBody] AperturaCajaDTOs dto, CancellationToken ct)
+    public async Task<IActionResult> AbrirCaja([FromBody] AperturaCajaDto dto, CancellationToken ct)
     {
         if (UsuarioActual() is not int id) return Unauthorized();
         var sesion = await servicio.AbrirCaja(dto, id, ct);
@@ -32,7 +32,7 @@ public class CajaController(CajaService servicio) : ControllerBase
     }
 
     [HttpPost("cerrar")]
-    public async Task<IActionResult> CerrarCaja([FromBody] CierreCajaDTOs dto, CancellationToken ct)
+    public async Task<IActionResult> CerrarCaja([FromBody] CierreCajaDto dto, CancellationToken ct)
     {
         if (UsuarioActual() is not int id) return Unauthorized();
         var sesion = await servicio.CerrarCaja(dto, id, ct);

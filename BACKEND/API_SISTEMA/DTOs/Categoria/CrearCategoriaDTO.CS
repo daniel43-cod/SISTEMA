@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.DTOs.Categoria;
+namespace API_SISTEMA.Dtos.Categoria;
 
-public class CrearCategoriaDTO
+public class CrearCategoriaDto
 {
     // El servidor asigna el estado y la fecha.
     [Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]

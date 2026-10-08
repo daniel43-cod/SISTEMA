@@ -1,8 +1,8 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class RolPermisoService
     {
@@ -15,14 +15,14 @@ namespace API_SISTEMA.services
             _context = context;
         }
 
-        public async Task<List<Rol_permisocs>>  ListarRol()
+        public async Task<List<RolPermiso>>  ListarRol()
         {
             return await _context.rol_Permisocs.ToListAsync();
         }
 
 
 
-        public async Task<Rol_permisocs> CrearRolPermiso(Rol_permisocs rol)
+        public async Task<RolPermiso> CrearRolPermiso(RolPermiso rol)
         {
 
             _context.rol_Permisocs.Add(rol);

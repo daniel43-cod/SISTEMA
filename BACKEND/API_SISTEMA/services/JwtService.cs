@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.models;
+﻿using API_SISTEMA.Models;
 using API_SISTEMA.Utilidades;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Security.Cryptography;
 
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class JwtService
     {
@@ -27,7 +27,7 @@ namespace API_SISTEMA.services
                 return GenerarToken(usuario.id_usuario, usuario.nombre, usuario.rol.nombre, "usuario", ObtenerVersion(usuario), idSesion);
             }
 
-            public string GenerarToken(API_SISTEMA.models.CuentaCliente cuenta)
+            public string GenerarToken(API_SISTEMA.Models.CuentaCliente cuenta)
             {
                 return GenerarToken(cuenta.IdCuentaCliente, cuenta.CorreoElectronico, "CLIENTE", "cuenta_cliente");
             }

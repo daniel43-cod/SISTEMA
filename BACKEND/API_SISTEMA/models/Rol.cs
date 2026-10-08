@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class Rol
     {
@@ -11,7 +11,7 @@ namespace API_SISTEMA.models
         public string descripcion { get; set; }
         public bool estado { get; set; }
     
-    public List<Rol_permisocs> RolPermisos { get; set; }
+    public List<RolPermiso> RolPermisos { get; set; }
     }
 
 }

@@ -1,8 +1,8 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.models;   
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Models;   
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Permisos
+namespace API_SISTEMA.Services.Permisos
 {
     public class PermisoUsuarioService
     {

@@ -1,7 +1,7 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class PermisoService
     {
@@ -43,7 +43,7 @@ namespace API_SISTEMA.services
                 throw new InvalidOperationException("El rol ya tiene asignado este permiso.");
             }
 
-            var nuevo = new Rol_permisocs
+            var nuevo = new RolPermiso
             {
                 id_rol = idRol,
                 id_permiso = idPermiso

@@ -1,9 +1,8 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Productos;
-using API_SISTEMA.DTOs.ProductosD;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Productos;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.ProductoS
+namespace API_SISTEMA.Services.Productos
 {
     public class BuscarCodigoBarraService
     {
@@ -14,7 +13,7 @@ namespace API_SISTEMA.services.ProductoS
             _context = context;
         }
 
-        public async Task<BuscarCodigoBarraDTO?> BuscarPorCodigoBarra(
+        public async Task<BuscarCodigoBarraDto?> BuscarPorCodigoBarra(
             string codigoBarra)
         {
             if (string.IsNullOrWhiteSpace(codigoBarra))
@@ -27,7 +26,7 @@ namespace API_SISTEMA.services.ProductoS
             var producto = await _context.productos
                 .AsNoTracking()
                 .Where(p => p.codigo_barra == codigoBarra)
-                .Select(p => new BuscarCodigoBarraDTO
+                .Select(p => new BuscarCodigoBarraDto
                 {
                     id_producto = p.id_producto,
                     codigo_barra = p.codigo_barra,
@@ -35,7 +34,7 @@ namespace API_SISTEMA.services.ProductoS
                     stock = p.stock ?? 0,
 
                     presentaciones = p.ProductoPresentaciones
-                        .Select(pr => new PresentacionCodigoBarraDTO
+                        .Select(pr => new PresentacionCodigoBarraDto
                         {
                             id_producto_presentacion =
                                 pr.id_producto_presentacion,

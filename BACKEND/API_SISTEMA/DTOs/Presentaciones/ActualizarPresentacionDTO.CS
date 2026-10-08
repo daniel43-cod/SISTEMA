@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.DTOs.Presentaciones;
+namespace API_SISTEMA.Dtos.Presentaciones;
 
-public sealed class ActualizarPresentacionDTO
+public sealed class ActualizarPresentacionDto
 {
     [Required(ErrorMessage = "La descripción es obligatoria.")]
     [StringLength(100, ErrorMessage = "La descripción admite hasta 100 caracteres.")]

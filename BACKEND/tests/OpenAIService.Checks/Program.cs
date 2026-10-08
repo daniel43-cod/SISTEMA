@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using API_SISTEMA.services.IA;
+using API_SISTEMA.Services.IA;
 
 var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
 {

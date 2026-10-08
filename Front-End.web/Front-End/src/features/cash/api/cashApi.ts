@@ -75,3 +75,37 @@ export async function closeCash(token: string, idSession: number, amount: number
   if (response.id_sesion_caja !== idSession) throw new ApiError('El resultado no corresponde al turno solicitado. Consulta el estado de la caja.')
   return response
 }
+
+export type CashMovement = {
+  id_movimiento_caja: number; id_sesion_caja: number; tipo_movimiento: string
+  naturaleza: string; usuario: string; fecha_movimiento: string; monto: number; descripcion: string | null
+}
+export type CashSummary = {
+  id_sesion_caja: number; monto_inicial: number; total_entradas: number; total_salidas: number
+  saldo_esperado: number; total_movimientos: number; movimientos: CashMovement[]
+}
+
+// Los totales proceden del servidor: los 100 movimientos visibles no representan toda la sesion.
+export function parseCashSummary(value: unknown, idSession: number): CashSummary {
+  const finite = (item: unknown): item is number => typeof item === 'number' && Number.isFinite(item)
+  if (!record(value) || !positiveId(value.id_sesion_caja) || value.id_sesion_caja !== idSession ||
+      !finite(value.monto_inicial) || value.monto_inicial < 0 ||
+      !finite(value.total_entradas) || value.total_entradas < 0 ||
+      !finite(value.total_salidas) || value.total_salidas < 0 || !finite(value.saldo_esperado) ||
+      typeof value.total_movimientos !== 'number' || !Number.isSafeInteger(value.total_movimientos) || value.total_movimientos < 0 ||
+      !Array.isArray(value.movimientos) || value.movimientos.length !== Math.min(100, value.total_movimientos) ||
+      value.movimientos.some(m => !record(m) || !positiveId(m.id_movimiento_caja) || m.id_sesion_caja !== idSession ||
+        typeof m.tipo_movimiento !== 'string' || typeof m.naturaleza !== 'string' ||
+        !['ENTRADA', 'INGRESO', 'SALIDA', 'EGRESO'].includes(m.naturaleza.trim().toUpperCase()) ||
+        typeof m.usuario !== 'string' || typeof m.fecha_movimiento !== 'string' || !Number.isFinite(Date.parse(m.fecha_movimiento)) ||
+        !finite(m.monto) || m.monto <= 0 || (m.descripcion !== null && typeof m.descripcion !== 'string')))
+    throw new ApiError('No se pudo interpretar el resumen de caja.')
+  if (new Set(value.movimientos.map(m => m.id_movimiento_caja)).size !== value.movimientos.length)
+    throw new ApiError('El resumen de caja contiene movimientos duplicados.')
+  return value as CashSummary
+}
+
+export async function loadCashSummary(token: string, idSession: number, signal?: AbortSignal): Promise<CashSummary> {
+  if (!positiveId(idSession)) throw new ApiError('El turno de caja no es válido.')
+  return parseCashSummary(await requestJson('/MovimientoCaja/listar?idSesionCaja=' + idSession, { token, signal }), idSession)
+}

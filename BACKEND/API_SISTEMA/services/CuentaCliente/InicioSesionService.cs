@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.RegistrCliente;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.RegistroCliente;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.CuentaCliente
+namespace API_SISTEMA.Services.CuentaCliente
 {
     public class InicioSesionService
     {

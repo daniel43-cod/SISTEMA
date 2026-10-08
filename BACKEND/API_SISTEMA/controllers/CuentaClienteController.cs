@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.DTOs.RegistrCliente;
-using API_SISTEMA.services.CuentaCliente;
+using API_SISTEMA.Dtos.RegistroCliente;
+using API_SISTEMA.Services.CuentaCliente;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

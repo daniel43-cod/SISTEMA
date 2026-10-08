@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.DTOs.Marcas;
-using API_SISTEMA.services.Marca;
+using API_SISTEMA.Dtos.Marcas;
+using API_SISTEMA.Services.Marca;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.controllers;
+namespace API_SISTEMA.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -29,7 +29,7 @@ public class MarcasController : ControllerBase
     // Administradores y vendedores pueden consultar las marcas activas.
     [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
     [HttpGet]
-    public async Task<ActionResult<List<RespuestaMarcaDTO>>> Listar(CancellationToken cancellationToken)
+    public async Task<ActionResult<List<RespuestaMarcaDto>>> Listar(CancellationToken cancellationToken)
     {
         try
         {
@@ -51,7 +51,7 @@ public class MarcasController : ControllerBase
     [Consumes("application/json")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> CambiarEstado([Range(1, int.MaxValue)] int idMarca,
-        [FromBody] CambiarEstadoMarcaDTO dto, [FromServices] EstadoMarcaService service,
+        [FromBody] CambiarEstadoMarcaDto dto, [FromServices] EstadoMarcaService service,
         CancellationToken cancellationToken)
     {
         try
@@ -87,8 +87,8 @@ public class MarcasController : ControllerBase
     [Authorize(Roles = Roles.Administrador)]
     [HttpPut("{idMarca:int}")]
     [Consumes("application/json")]
-    public Task<ActionResult<RespuestaMarcaDTO>> Actualizar(int idMarca,
-        [FromBody] ActualizarMarcaDTO dto, CancellationToken cancellationToken)
+    public Task<ActionResult<RespuestaMarcaDto>> Actualizar(int idMarca,
+        [FromBody] ActualizarMarcaDto dto, CancellationToken cancellationToken)
         => ActualizarInterno(idMarca, dto, null, cancellationToken);
 
     [Authorize(Roles = Roles.Administrador)]
@@ -96,12 +96,12 @@ public class MarcasController : ControllerBase
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(6 * 1024 * 1024)]
     [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
-    public Task<ActionResult<RespuestaMarcaDTO>> ActualizarConImagen(int idMarca,
-        [FromForm] ActualizarMarcaConImagenDTO dto, CancellationToken cancellationToken)
+    public Task<ActionResult<RespuestaMarcaDto>> ActualizarConImagen(int idMarca,
+        [FromForm] ActualizarMarcaConImagenDto dto, CancellationToken cancellationToken)
         => ActualizarInterno(idMarca, dto, dto.Imagen, cancellationToken);
 
-    private async Task<ActionResult<RespuestaMarcaDTO>> ActualizarInterno(int idMarca,
-        ActualizarMarcaDTO dto, IFormFile? imagen, CancellationToken cancellationToken)
+    private async Task<ActionResult<RespuestaMarcaDto>> ActualizarInterno(int idMarca,
+        ActualizarMarcaDto dto, IFormFile? imagen, CancellationToken cancellationToken)
     {
         try
         {
@@ -122,7 +122,7 @@ public class MarcasController : ControllerBase
     [Authorize(Roles = Roles.Administrador)]
     [HttpPost]
     [Consumes("application/json")]
-    public Task<ActionResult<RespuestaMarcaDTO>> Crear([FromBody] CrearMarcaDTO dto,
+    public Task<ActionResult<RespuestaMarcaDto>> Crear([FromBody] CrearMarcaDto dto,
         CancellationToken cancellationToken)
         => CrearInterno(dto, null, cancellationToken);
 
@@ -131,11 +131,11 @@ public class MarcasController : ControllerBase
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(6 * 1024 * 1024)]
     [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
-    public Task<ActionResult<RespuestaMarcaDTO>> CrearConImagen([FromForm] CrearMarcaConImagenDTO dto,
+    public Task<ActionResult<RespuestaMarcaDto>> CrearConImagen([FromForm] CrearMarcaConImagenDto dto,
         CancellationToken cancellationToken)
         => CrearInterno(dto, dto.Imagen, cancellationToken);
 
-    private async Task<ActionResult<RespuestaMarcaDTO>> CrearInterno(CrearMarcaDTO dto,
+    private async Task<ActionResult<RespuestaMarcaDto>> CrearInterno(CrearMarcaDto dto,
         IFormFile? imagen, CancellationToken cancellationToken)
     {
         try

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.DTOs.Productos;
-using API_SISTEMA.models;
-using API_SISTEMA.services;
-using API_SISTEMA.services.ProductoS;
+using API_SISTEMA.Dtos.Productos;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services;
+using API_SISTEMA.Services.Productos;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +11,7 @@ using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.RateLimiting;
 
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
@@ -39,8 +39,8 @@ namespace API_SISTEMA.controllers
         [HttpGet("buscar-administracion")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<ActionResult<List<ProductoSugerenciaDTO>>> BuscarAdministracion(
-            [FromQuery] BusquedaProductoAdminDTO filtro,
+        public async Task<ActionResult<List<ProductoSugerenciaDto>>> BuscarAdministracion(
+            [FromQuery] BusquedaProductoAdminDto filtro,
             [FromServices] ProductoBuscarAdminService service, CancellationToken cancellationToken)
         {
             try { return Ok(await service.Buscar(filtro, cancellationToken)); }
@@ -57,7 +57,7 @@ namespace API_SISTEMA.controllers
         [HttpGet("nombres")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<ActionResult<List<ProductoSugerenciaDTO>>> ListarNombres(
+        public async Task<ActionResult<List<ProductoSugerenciaDto>>> ListarNombres(
             [FromServices] ProductoBuscarAdminService service, CancellationToken cancellationToken)
         {
             try { return Ok(await service.ListarNombres(cancellationToken)); }
@@ -73,8 +73,8 @@ namespace API_SISTEMA.controllers
         [HttpGet("listar")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<ActionResult<ProductoPaginaDTO>> ListarProductos(
-            [FromQuery] ProductoConsultaDTO filtro, CancellationToken cancellationToken)
+        public async Task<ActionResult<ProductoPaginaDto>> ListarProductos(
+            [FromQuery] ProductoConsultaDto filtro, CancellationToken cancellationToken)
         {
             try
             {
@@ -93,7 +93,7 @@ namespace API_SISTEMA.controllers
         [HttpGet("{id:int}")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<ActionResult<ProductoDetalleDTO>> DetalleProducto(
+        public async Task<ActionResult<ProductoDetalleDto>> DetalleProducto(
             [Range(1, int.MaxValue)] int id, CancellationToken cancellationToken)
         {
             try
@@ -114,8 +114,8 @@ namespace API_SISTEMA.controllers
         [HttpPut("{id:int}")]
         [Consumes("application/json")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public async Task<ActionResult<ProductoResumenDTO>> ActualizarProducto(
-            [Range(1, int.MaxValue)] int id, [FromBody] ActualizarProductoDTO dto,
+        public async Task<ActionResult<ProductoResumenDto>> ActualizarProducto(
+            [Range(1, int.MaxValue)] int id, [FromBody] ActualizarProductoDto dto,
             [FromServices] ProductoActualizarService actualizarService, CancellationToken cancellationToken)
             => await ActualizarInterno(id, dto, actualizarService, cancellationToken);
 
@@ -125,13 +125,13 @@ namespace API_SISTEMA.controllers
         [RequestSizeLimit(6 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-        public Task<ActionResult<ProductoResumenDTO>> ActualizarConImagen(
-            [Range(1, int.MaxValue)] int id, [FromForm] ActualizarProductoConImagenDTO dto,
+        public Task<ActionResult<ProductoResumenDto>> ActualizarConImagen(
+            [Range(1, int.MaxValue)] int id, [FromForm] ActualizarProductoConImagenDto dto,
             [FromServices] ProductoActualizarService actualizarService, CancellationToken cancellationToken)
             => ActualizarInterno(id, dto, actualizarService, cancellationToken, dto.Imagen);
 
-        private async Task<ActionResult<ProductoResumenDTO>> ActualizarInterno(int id,
-            ActualizarProductoDTO dto, ProductoActualizarService actualizarService,
+        private async Task<ActionResult<ProductoResumenDto>> ActualizarInterno(int id,
+            ActualizarProductoDto dto, ProductoActualizarService actualizarService,
             CancellationToken cancellationToken, IFormFile? imagen = null)
         {
             try
@@ -176,7 +176,7 @@ namespace API_SISTEMA.controllers
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
         [Consumes("application/json")]
-        public Task<IActionResult> CrearProductos([FromBody] productocrear dto, CancellationToken cancellationToken)
+        public Task<IActionResult> CrearProductos([FromBody] CrearProductoDto dto, CancellationToken cancellationToken)
             => CrearInterno(dto, null, cancellationToken);
 
         // Archivo o foto: el navegador envía multipart con presentaciones[0].id_presentacion, etc.
@@ -185,11 +185,11 @@ namespace API_SISTEMA.controllers
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(6 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
-        public Task<IActionResult> CrearConImagen([FromForm] CrearProductoConImagenDTO dto,
+        public Task<IActionResult> CrearConImagen([FromForm] CrearProductoConImagenDto dto,
             CancellationToken cancellationToken)
             => CrearInterno(dto, dto.Imagen, cancellationToken);
 
-        private async Task<IActionResult> CrearInterno(productocrear dto, IFormFile? imagen,
+        private async Task<IActionResult> CrearInterno(CrearProductoDto dto, IFormFile? imagen,
             CancellationToken cancellationToken)
         {
             try

@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Mensaje;
-using API_SISTEMA.services.IA;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Mensaje;
+using API_SISTEMA.Services.IA;
 using Microsoft.EntityFrameworkCore;
-using ConversacionModel = API_SISTEMA.models.Conversacion;
-using MensajeModel = API_SISTEMA.models.Mensaje;
+using ConversacionModel = API_SISTEMA.Models.Conversacion;
+using MensajeModel = API_SISTEMA.Models.Mensaje;
 
-namespace API_SISTEMA.services.Conversacion
+namespace API_SISTEMA.Services.Conversacion
 {
     public class ConversacionService
     {

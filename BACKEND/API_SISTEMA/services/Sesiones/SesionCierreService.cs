@@ -1,9 +1,9 @@
-using API_SISTEMA.data;
-using API_SISTEMA.models;
-using API_SISTEMA.Securyti;
+using API_SISTEMA.Data;
+using API_SISTEMA.Models;
+using API_SISTEMA.Security;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Sesiones;
+namespace API_SISTEMA.Services.Sesiones;
 
 public sealed class SesionCierreService(SistemaDbContext context, ContextoPeticion peticion)
 {

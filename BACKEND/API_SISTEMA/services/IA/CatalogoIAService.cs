@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
-using API_SISTEMA.data;
+using API_SISTEMA.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.IA;
+namespace API_SISTEMA.Services.IA;
 
 // sealed impide heredar de esta clase. El constructor primario recibe el contexto
 public sealed class CatalogoIAService(SistemaDbContext context)

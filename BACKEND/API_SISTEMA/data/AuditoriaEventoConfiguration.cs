@@ -1,8 +1,8 @@
-using API_SISTEMA.models;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace API_SISTEMA.data;
+namespace API_SISTEMA.Data;
 
 public sealed class AuditoriaEventoConfiguration : IEntityTypeConfiguration<AuditoriaEvento>
 {

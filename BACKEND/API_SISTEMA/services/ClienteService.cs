@@ -1,9 +1,9 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Cliente;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Cliente;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class ClienteService
     {
@@ -21,10 +21,10 @@ namespace API_SISTEMA.services
         }
 
 
-        public async Task<List<ClienteBuscarDTOs>> BuscarClientes(string texto)
+        public async Task<List<ClienteBuscarDto>> BuscarClientes(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
-                return new List<ClienteBuscarDTOs>();
+                return new List<ClienteBuscarDto>();
 
             texto = texto.Trim();
 
@@ -33,7 +33,7 @@ namespace API_SISTEMA.services
                     c.nombre.Contains(texto) ||
                     c.apellido.Contains(texto) ||
                     c.nit.Contains(texto))
-                .Select(c => new ClienteBuscarDTOs
+                .Select(c => new ClienteBuscarDto
                 {
                     id_Cliente = c.id_cliente,
                     nombre = c.nombre,
@@ -52,10 +52,10 @@ namespace API_SISTEMA.services
             return clientes;
         }
 
-        public async Task<List<ListarClienteDTOs>> ListarClientes()
+        public async Task<List<ListarClienteDto>> ListarClientes()
         {
             return await _context.cliente
-                .Select(c => new ListarClienteDTOs
+                .Select(c => new ListarClienteDto
                 {
                     id_Cliente = c.id_cliente,
                     nombre = c.nombre,

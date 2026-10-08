@@ -1,18 +1,18 @@
 using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.DTOs.Presentaciones;
-using API_SISTEMA.services.Prestacion;
+using API_SISTEMA.Dtos.Presentaciones;
+using API_SISTEMA.Services.Presentaciones;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.controllers;
+namespace API_SISTEMA.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
 public class PresentacionesController(
-    CrearPresentacionServices crearService,
-    ListarPresentacionServices listarService,
+    CrearPresentacionService crearService,
+    ListarPresentacionService listarService,
     ActualizarPresentacionService actualizarService,
     ILogger<PresentacionesController> logger) : ControllerBase
 {
@@ -20,7 +20,7 @@ public class PresentacionesController(
     [Authorize(Roles = Roles.Administrador)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> CambiarEstado([Range(1, int.MaxValue)] int idPresentacion,
-        [FromBody] CambiarEstadoPresentacionDTO dto, [FromServices] EstadoPresentacionService service,
+        [FromBody] CambiarEstadoPresentacionDto dto, [FromServices] EstadoPresentacionService service,
         CancellationToken cancellationToken)
     {
         try
@@ -44,7 +44,7 @@ public class PresentacionesController(
 
     [HttpPost]
     [Authorize(Roles = Roles.Administrador)]
-    public async Task<IActionResult> Crear(CrearPresentacionDTO dto, CancellationToken cancellationToken)
+    public async Task<IActionResult> Crear(CrearPresentacionDto dto, CancellationToken cancellationToken)
     {
         try
         {
@@ -81,7 +81,7 @@ public class PresentacionesController(
     [HttpPut("{idPresentacion:int}")]
     [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Actualizar(
-        int idPresentacion, [FromBody] ActualizarPresentacionDTO dto, CancellationToken cancellationToken)
+        int idPresentacion, [FromBody] ActualizarPresentacionDto dto, CancellationToken cancellationToken)
     {
         try
         {

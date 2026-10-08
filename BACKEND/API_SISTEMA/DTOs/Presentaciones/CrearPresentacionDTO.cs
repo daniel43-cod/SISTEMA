@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.DTOs.Presentaciones;
+namespace API_SISTEMA.Dtos.Presentaciones;
 
-public sealed class CrearPresentacionDTO
+public sealed class CrearPresentacionDto
 {
     [Required(ErrorMessage = "La descripción es obligatoria.")]
     [StringLength(100, ErrorMessage = "La descripción admite hasta 100 caracteres.")]

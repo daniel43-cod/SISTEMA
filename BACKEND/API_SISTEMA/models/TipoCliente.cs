@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class TipoCliente
     {
@@ -10,6 +10,6 @@ namespace API_SISTEMA.models
         public bool estado { get; set; }
 
         //relacion para un producto que tiene muchos registrps
-        public ICollection<Producto_precio> ProductoPrecios { get; set; }
+        public ICollection<ProductoPrecio> ProductoPrecios { get; set; }
     }
 }

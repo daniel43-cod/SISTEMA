@@ -1,7 +1,7 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Models;
 
-namespace API_SISTEMA.services.ProductoS;
+namespace API_SISTEMA.Services.Productos;
 
 // Reutiliza la misma validación de imágenes también al reemplazar una imagen existente.
 public class SubirImagenService
@@ -13,7 +13,7 @@ public class SubirImagenService
         _context = context;
         _imagenes = imagenes;
     }
-    public async Task<Productos?> SubirImagen(int id, IFormFile imagen)
+    public async Task<API_SISTEMA.Models.Productos?> SubirImagen(int id, IFormFile imagen)
     {
         var producto = await _context.productos.FindAsync(id);
         if (producto is null) return null;

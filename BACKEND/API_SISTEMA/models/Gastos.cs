@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class Gastos
     {

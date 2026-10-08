@@ -4,13 +4,13 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
-using API_SISTEMA.controllers;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Productos;
-using API_SISTEMA.models;
-using API_SISTEMA.services;
-using API_SISTEMA.services.ProductoS;
-using API_SISTEMA.services.Prestacion;
+using API_SISTEMA.Controllers;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Productos;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services;
+using API_SISTEMA.Services.Productos;
+using API_SISTEMA.Services.Presentaciones;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -36,21 +36,21 @@ builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<ProductoActualizarService>();
 builder.Services.AddSingleton<ProductoImagenService>();
 builder.Services.AddScoped<ProductoBuscarAdminService>();
-builder.Services.AddScoped<CrearPresentacionServices>();
-builder.Services.AddScoped<ListarPresentacionServices>();
+builder.Services.AddScoped<CrearPresentacionService>();
+builder.Services.AddScoped<ListarPresentacionService>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
 builder.Services.AddScoped<EstadoPresentacionService>();
-builder.Services.AddScoped<API_SISTEMA.services.Marca.EstadoMarcaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaListarService>();
-builder.Services.AddScoped<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaListarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Marca.EstadoMarcaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaListarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Categoria.EstadoCategoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Categoria.CategoriaListarService>();
 builder.Services.AddControllers().AddApplicationPart(typeof(ProductosController).Assembly).AddControllersAsServices();
 builder.Services.AddTransient<MarcasController>(sp => new MarcasController(null!,
     sp.GetRequiredService<ILogger<MarcasController>>(),
-    sp.GetRequiredService<API_SISTEMA.services.Marca.MarcaListarService>(), null!));
+    sp.GetRequiredService<API_SISTEMA.Services.Marca.MarcaListarService>(), null!));
 builder.Services.AddTransient<CategoriaController>(sp => new CategoriaController(null!, null!,
     sp.GetRequiredService<ILogger<CategoriaController>>(), null!,
-    sp.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaListarService>()));
+    sp.GetRequiredService<API_SISTEMA.Services.Categoria.CategoriaListarService>()));
 builder.Services.AddTransient<ProductosController>(sp => new ProductosController(
     sp.GetRequiredService<ProductoService>(), null!, null!, null!,
     sp.GetRequiredService<ILogger<ProductosController>>()));
@@ -79,9 +79,9 @@ using (var scope = app.Services.CreateScope())
     var producto = new Productos { id_producto = 1, nombre = "Agua", codigo_barra = "001", Marca = marca, stock = 25, costo_unitario = 777m };
     db.AddRange(categoria, marca, unidad, caja, producto,
         new Productos { id_producto = 2, nombre = "Agua 2", codigo_barra = "002", Marca = marca, stock = null },
-        new Producto_Presentacion { id_producto_presentacion = 1, Producto = producto, Presentacion = unidad, estado = true, unidades_equivalentes = 1, precio = 5 },
-        new Producto_Presentacion { id_producto_presentacion = 2, Producto = producto, Presentacion = caja, estado = true, unidades_equivalentes = 12, precio = 50 },
-        new Producto_Presentacion { id_producto_presentacion = 3, Producto = producto, Presentacion = caja, estado = false, unidades_equivalentes = 0, precio = 50 });
+        new ProductoPresentacion { id_producto_presentacion = 1, Producto = producto, Presentacion = unidad, estado = true, unidades_equivalentes = 1, precio = 5 },
+        new ProductoPresentacion { id_producto_presentacion = 2, Producto = producto, Presentacion = caja, estado = true, unidades_equivalentes = 12, precio = 50 },
+        new ProductoPresentacion { id_producto_presentacion = 3, Producto = producto, Presentacion = caja, estado = false, unidades_equivalentes = 0, precio = 50 });
     await db.SaveChangesAsync();
 }
 await app.StartAsync();
@@ -108,22 +108,22 @@ try
     }
     Login("ADMINISTRADOR");
     var pageResponse = await client.GetAsync("/api/Productos/listar?tamanoPagina=1");
-    var page = (await pageResponse.Content.ReadFromJsonAsync<ProductoPaginaDTO>())!;
+    var page = (await pageResponse.Content.ReadFromJsonAsync<ProductoPaginaDto>())!;
     Check(pageResponse.IsSuccessStatusCode && page.Total == 2 && page.Items.Count == 1 && page.Items[0].IdProducto == 1,
         "Una fila por producto, conteo y orden estable");
     Check(pageResponse.Headers.CacheControl?.NoStore == true, "Respuesta sin almacenamiento en caché");
-    var second = (await client.GetFromJsonAsync<ProductoPaginaDTO>("/api/Productos/listar?tamanoPagina=1&pagina=2"))!;
+    var second = (await client.GetFromJsonAsync<ProductoPaginaDto>("/api/Productos/listar?tamanoPagina=1&pagina=2"))!;
     Check(second.Items.Single().IdProducto == 2 && second.Items[0].StockUnidades == 0, "Segunda página, producto sin presentaciones y stock nulo");
-    var filtered = (await client.GetFromJsonAsync<ProductoPaginaDTO>("/api/Productos/listar?texto=001&idMarca=1&idCategoria=1"))!;
+    var filtered = (await client.GetFromJsonAsync<ProductoPaginaDto>("/api/Productos/listar?texto=001&idMarca=1&idCategoria=1"))!;
     Check(filtered.Total == 1 && filtered.Items.Single().IdProducto == 1, "Filtros por código, marca y categoría");
     foreach (var query in new[] { "pagina=0", "pagina=100001", "tamanoPagina=101", "tamanoPagina=-1", "idMarca=0", "idCategoria=-1", "pagina=abc", "texto=" + new string('x', 101) })
         Check((await client.GetAsync("/api/Productos/listar?" + query)).StatusCode == HttpStatusCode.BadRequest, "Entrada inválida: " + query[..Math.Min(35, query.Length)]);
-    var injection = (await client.GetFromJsonAsync<ProductoPaginaDTO>("/api/Productos/listar?texto=" + Uri.EscapeDataString("' OR 1=1 --")))!;
+    var injection = (await client.GetFromJsonAsync<ProductoPaginaDto>("/api/Productos/listar?texto=" + Uri.EscapeDataString("' OR 1=1 --")))!;
     Check(injection.Total == 0, "Texto SQL tratado como búsqueda literal");
     var detailResponse = await client.GetAsync("/api/Productos/1");
     var detailBody = await detailResponse.Content.ReadAsStringAsync();
     if (!detailResponse.IsSuccessStatusCode) throw new Exception(detailBody);
-    var detail = (await detailResponse.Content.ReadFromJsonAsync<ProductoDetalleDTO>())!;
+    var detail = (await detailResponse.Content.ReadFromJsonAsync<ProductoDetalleDto>())!;
     Check(detail.Marca == "Marca A" && detail.Categoria == "Bebidas" && detail.Presentaciones.Count == 3 &&
         detail.Presentaciones.Single(p => p.IdProductoPresentacion == 2).PresentacionesDisponibles == 2 &&
         detail.Presentaciones.Single(p => p.IdProductoPresentacion == 3).PresentacionesDisponibles == 0,
@@ -131,7 +131,7 @@ try
     Check(!detailBody.Contains("costo", StringComparison.OrdinalIgnoreCase) && !detailBody.Contains("777"), "Sin costos internos");
     Check((await client.GetAsync("/api/Productos/0")).StatusCode == HttpStatusCode.BadRequest, "ID inválido");
     Check((await client.GetAsync("/api/Productos/999")).StatusCode == HttpStatusCode.NotFound, "Producto inexistente");
-    var edit = new ActualizarProductoDTO { codigo_barra = "001", nombre = "Agua", IdMarca = 1, stock_minimo = 3 };
+    var edit = new ActualizarProductoDto { codigo_barra = "001", nombre = "Agua", IdMarca = 1, stock_minimo = 3 };
     client.DefaultRequestHeaders.Authorization = null;
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Unauthorized, "Edición anónima bloqueada");
     Login("VENDEDOR");
@@ -140,11 +140,11 @@ try
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Conserva nombre y código propios");
     edit.UrlImagen = "https://example.com/producto.png";
     var imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
-    Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen == edit.UrlImagen,
+    Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDto>())!.Imagen == edit.UrlImagen,
         "Edición guarda enlace de imagen");
     edit.UrlImagen = null;
     imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
-    Check((await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen == "https://example.com/producto.png",
+    Check((await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDto>())!.Imagen == "https://example.com/producto.png",
         "Omitir imagen conserva la anterior");
     edit.UrlImagen = "http://example.com/insegura.png";
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.BadRequest,
@@ -162,14 +162,14 @@ try
         multipart.Add(new ByteArrayContent(bytes.ToArray()), "Imagen", "producto.png");
         imageResponse = await client.PutAsync("/api/Productos/1/con-imagen", multipart);
         var uploaded = imageResponse.IsSuccessStatusCode
-            ? (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen : null;
+            ? (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDto>())!.Imagen : null;
         Check(uploaded?.StartsWith("/uploads/productos/") == true, "Edición multipart reemplaza imagen con archivo validado");
         using var scope = app.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<ProductoImagenService>().Eliminar(uploaded!);
     }
     edit.QuitarImagen = true;
     imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
-    Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDTO>())!.Imagen == null,
+    Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDto>())!.Imagen == null,
         "Edición permite quitar imagen");
     edit.QuitarImagen = false;
     edit.codigo_barra = " 002 ";
@@ -185,13 +185,13 @@ try
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Actualización válida");
     edit.codigo_barra = " aBc01 "; edit.nombre = "Otro";
     Check((await client.PutAsJsonAsync("/api/Productos/2", edit)).StatusCode == HttpStatusCode.Conflict, "Código duplicado alfanumérico sin distinguir mayúsculas");
-    var updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
+    var updated = (await client.GetFromJsonAsync<ProductoDetalleDto>("/api/Productos/1"))!;
     Check(updated.Nombre == "Agua renovada" && updated.CodigoBarra == "ABC01" && updated.StockMinimo == 3 &&
         updated.StockUnidades == 25 && updated.Presentaciones.Count == 3, "Guarda edición y conserva stock y presentaciones");
     edit.codigo_barra = "ABC01"; edit.nombre = "Agua renovada";
     edit.presentaciones = [new() { id_producto_presentacion = 1, id_presentacion = 1, unidades_equivalentes = 2, precio = 8.50m, estado = true }];
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Edita equivalencia y precio y desactiva omitidas");
-    updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
+    updated = (await client.GetFromJsonAsync<ProductoDetalleDto>("/api/Productos/1"))!;
     Check(updated.Presentaciones.Count == 3 && updated.Presentaciones.Single(p => p.IdProductoPresentacion == 1).Precio == 8.50m &&
         updated.Presentaciones.Single(p => p.IdProductoPresentacion == 1).UnidadesEquivalentes == 2 &&
         !updated.Presentaciones.Single(p => p.IdProductoPresentacion == 2).Activa, "Conserva IDs y registros desactivados");
@@ -210,7 +210,7 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
         db.presentaciones.Add(new Presentacion { IdPresentacion = 3, Descripcion = "Paquete", Estado = true });
-        db.producto_presentaciones.Add(new Producto_Presentacion { id_producto = 2, IdPresentacion = 3, estado = true, unidades_equivalentes = 1, precio = 5 });
+        db.producto_presentaciones.Add(new ProductoPresentacion { id_producto = 2, IdPresentacion = 3, estado = true, unidades_equivalentes = 1, precio = 5 });
         await db.SaveChangesAsync();
         edit.presentaciones[0].id_producto_presentacion = await db.producto_presentaciones.Where(p => p.id_producto == 2).Select(p => p.id_producto_presentacion).SingleAsync();
     }
@@ -218,7 +218,7 @@ try
     edit.presentaciones[0].id_producto_presentacion = 1;
     edit.presentaciones.Add(new() { id_presentacion = 3, unidades_equivalentes = 6, precio = 25, estado = true });
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Agrega presentación nueva");
-    updated = (await client.GetFromJsonAsync<ProductoDetalleDTO>("/api/Productos/1"))!;
+    updated = (await client.GetFromJsonAsync<ProductoDetalleDto>("/api/Productos/1"))!;
     Check(updated.Presentaciones.Count == 4 && updated.Presentaciones.Single(p => p.IdPresentacion == 3).PresentacionesDisponibles == 4,
         "Nueva asociación con ID y disponibilidad");
     client.DefaultRequestHeaders.Authorization = null;
@@ -232,8 +232,8 @@ try
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/999/estado", new { estado = false })).StatusCode == HttpStatusCode.NotFound, "Estado inexistente");
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false, descripcion = "Cambio" })).StatusCode == HttpStatusCode.BadRequest, "Estado rechaza campos ajenos");
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación por administrador");
-    var activeCatalog = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>>("/api/Presentaciones");
-    var adminCatalog = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>>("/api/Presentaciones/administracion");
+    var activeCatalog = await client.GetFromJsonAsync<List<API_SISTEMA.Dtos.Presentaciones.PresentacionRespuestaDto>>("/api/Presentaciones");
+    var adminCatalog = await client.GetFromJsonAsync<List<API_SISTEMA.Dtos.Presentaciones.PresentacionRespuestaDto>>("/api/Presentaciones/administracion");
     Check(activeCatalog!.All(p => p.IdPresentacion != 1) && adminCatalog!.Any(p => p.IdPresentacion == 1 && !p.Estado), "Inactivas visibles solo en catálogo administrativo");
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación repetida idempotente");
     Check((await client.PatchAsJsonAsync("/api/Presentaciones/1/estado", new { estado = true })).IsSuccessStatusCode, "Reactivación por administrador");
@@ -242,12 +242,12 @@ try
     Login("ADMINISTRADOR");
     foreach (var query in new[] { "", "nombre=ab", "nombre=Agua&codigoBarra=001", "codigoBarra=a%20b", "nombre=" + new string('x', 201) })
         Check((await client.GetAsync("/api/Productos/buscar-administracion?" + query)).StatusCode == HttpStatusCode.BadRequest, "Búsqueda valida entrada: " + query[..Math.Min(25, query.Length)]);
-    var suggestions = (await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?nombre=Agua"))!;
+    var suggestions = (await client.GetFromJsonAsync<List<ProductoSugerenciaDto>>("/api/Productos/buscar-administracion?nombre=Agua"))!;
     Check(suggestions.Count > 0 && suggestions.Count <= 10 && suggestions.Select(p => p.IdProducto).Distinct().Count() == suggestions.Count,
         "Sugerencias únicas por producto");
-    var byCode = (await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?codigoBarra=ABC01"))!;
+    var byCode = (await client.GetFromJsonAsync<List<ProductoSugerenciaDto>>("/api/Productos/buscar-administracion?codigoBarra=ABC01"))!;
     Check(byCode.Single().IdProducto == 1, "Código exacto devuelve producto");
-    Check((await client.GetFromJsonAsync<List<ProductoSugerenciaDTO>>("/api/Productos/buscar-administracion?codigoBarra=ABC"))!.Count == 0,
+    Check((await client.GetFromJsonAsync<List<ProductoSugerenciaDto>>("/api/Productos/buscar-administracion?codigoBarra=ABC"))!.Count == 0,
         "Código parcial no coincide");
     client.DefaultRequestHeaders.Authorization = null;
     Check((await client.GetAsync("/api/Productos/nombres")).StatusCode == HttpStatusCode.Unauthorized, "Nombres bloquea anónimo");
@@ -295,8 +295,8 @@ try
     Check((await client.PatchAsJsonAsync("/api/Categoria/999/estado", new { estado = false })).StatusCode == HttpStatusCode.NotFound, "Categoría inexistente devuelve 404");
     Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = false })).IsSuccessStatusCode, "Administrador desactiva categoría");
     Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivar categoría es idempotente");
-    var categoriasActivas = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Categoria.RespuestaCategoriaDTO>>("/api/Categoria");
-    var categoriasAdmin = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Categoria.RespuestaCategoriaDTO>>("/api/Categoria/administracion");
+    var categoriasActivas = await client.GetFromJsonAsync<List<API_SISTEMA.Dtos.Categoria.RespuestaCategoriaDto>>("/api/Categoria");
+    var categoriasAdmin = await client.GetFromJsonAsync<List<API_SISTEMA.Dtos.Categoria.RespuestaCategoriaDto>>("/api/Categoria/administracion");
     Check(categoriasActivas!.All(c => c.IdCategoria != 1) && categoriasAdmin!.Any(c => c.IdCategoria == 1 && !c.Estado), "Categoría inactiva visible solo en listado administrativo");
     Check((await client.PatchAsJsonAsync("/api/Categoria/1/estado", new { estado = true })).IsSuccessStatusCode, "Administrador reactiva categoría");
     using (var scope = app.Services.CreateScope())
@@ -324,14 +324,14 @@ try
         await db.SaveChangesAsync();
     }
     var estadoMarca = await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = false });
-    var marcaDesactivada = await estadoMarca.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>();
+    var marcaDesactivada = await estadoMarca.Content.ReadFromJsonAsync<API_SISTEMA.Dtos.Marcas.RespuestaMarcaDto>();
     Check(estadoMarca.IsSuccessStatusCode && marcaDesactivada is { Estado: false, IdCategoria: 1, UrlImagen: "https://example.com/marca.webp" }, "Administrador desactiva marca conservando imagen y categoría");
     Check((await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = false })).IsSuccessStatusCode, "Desactivación de marca idempotente");
-    var marcasActivas = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>>("/api/Marcas");
-    var marcasAdmin = await client.GetFromJsonAsync<List<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>>("/api/Marcas/administracion");
+    var marcasActivas = await client.GetFromJsonAsync<List<API_SISTEMA.Dtos.Marcas.RespuestaMarcaDto>>("/api/Marcas");
+    var marcasAdmin = await client.GetFromJsonAsync<List<API_SISTEMA.Dtos.Marcas.RespuestaMarcaDto>>("/api/Marcas/administracion");
     Check(marcasActivas!.All(m => m.IdMarca != 1) && marcasAdmin!.Any(m => m.IdMarca == 1 && !m.Estado), "Marca inactiva visible en listado administrativo");
     var reactivacion = await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = true });
-    Check(reactivacion.IsSuccessStatusCode && (await reactivacion.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Marcas.RespuestaMarcaDTO>())!.Estado, "Administrador reactiva marca");
+    Check(reactivacion.IsSuccessStatusCode && (await reactivacion.Content.ReadFromJsonAsync<API_SISTEMA.Dtos.Marcas.RespuestaMarcaDto>())!.Estado, "Administrador reactiva marca");
     Console.WriteLine($"{passed} comprobaciones aprobadas, sin SQL Server real.");
 }
 finally { await app.StopAsync(); }
@@ -341,7 +341,7 @@ sealed class CatalogoDbContext(DbContextOptions<SistemaDbContext> options) : Sis
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        var keep = new[] { typeof(Productos), typeof(Marca), typeof(Categoria), typeof(Producto_Presentacion), typeof(Presentacion) };
+        var keep = new[] { typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion) };
         foreach (var entity in builder.Model.GetEntityTypes().ToArray())
             if (!keep.Contains(entity.ClrType)) builder.Ignore(entity.ClrType);
         builder.Entity<Productos>().Ignore(p => p.DetalleVentas).Ignore(p => p.ProductoPrecios);

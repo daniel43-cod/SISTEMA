@@ -1,10 +1,10 @@
-﻿using API_SISTEMA.models;
+﻿using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Abstractions;
 using System.Net.Security;
 using System.Runtime.InteropServices.Marshalling;
 
-namespace API_SISTEMA.data
+namespace API_SISTEMA.Data
 {
     public class SistemaDbContext :DbContext
     {
@@ -24,15 +24,15 @@ namespace API_SISTEMA.data
         public DbSet<Conversacion> Conversaciones {get;set;}
         public DbSet<Mensaje> Mensajes {get;set;}
         public DbSet<Cliente> cliente { get; set; }
-        public DbSet<Detalle_venta> detalle_Ventas { get; set; }
-        public DbSet<Inventario_movimiento> inventario_Movimientos { get; set; }
+        public DbSet<DetalleVenta> detalle_Ventas { get; set; }
+        public DbSet<InventarioMovimiento> inventario_Movimientos { get; set; }
         public DbSet<Pagos> pagos { get; set; }
-        public DbSet<Producto_precio> producto_precios { get; set; }
-        public DbSet<Productos> productos { get; set; }
+        public DbSet<ProductoPrecio> producto_precios { get; set; }
+        public DbSet<API_SISTEMA.Models.Productos> productos { get; set; }
         public DbSet<Proveedores> proveedores { get; set;}
         public DbSet<Rol> rols { get; set; }    
-        public DbSet<Rol_permisocs> rol_Permisocs { get; set; }
-        public DbSet<Tabla_permiso> tabla_Permisos { get; set; }
+        public DbSet<RolPermiso> rol_Permisocs { get; set; }
+        public DbSet<TablaPermiso> tabla_Permisos { get; set; }
         public DbSet<Usuario> usuarios { get; set; }
         public DbSet<SesionUsuario> SesionesUsuario { get; set; }
         public DbSet<AuditoriaEvento> AuditoriaEventos { get; set; }
@@ -40,19 +40,19 @@ namespace API_SISTEMA.data
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
-        public DbSet<Producto_Presentacion> producto_presentaciones { get; set; }
+        public DbSet<ProductoPresentacion> producto_presentaciones { get; set; }
         public DbSet<Presentacion> presentaciones { get; set; }
         public DbSet<DetalleCompra> detalle_compras { get; set; }
         public DbSet<RegistroCompras> registroCompras { get; set; }
         public DbSet<EstadoCompra> estado_compras { get; set; }
         public DbSet<PagosCompra> pagosCompras { get; set; }
         public DbSet<Empresa> empresa { get; set; }
-        public DbSet<caja> caja { get; set; }
+        public DbSet<API_SISTEMA.Models.Caja> caja { get; set; }
         public DbSet<SesionCaja> sesioncaja { get; set; }
         public DbSet<TipoMovimientoCaja> tipomovimientocaja {  get; set; }
         public DbSet<MovimientoCaja> movimientocaja { get; set; }
         public DbSet<Gastos> gastos { get; set; } 
-        public DbSet<usuario_permiso> usuario_permisos { get; set; }
+        public DbSet<UsuarioPermiso> usuario_permisos { get; set; }
 
 
 
@@ -85,14 +85,14 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<Ventas>().ToTable("ventas");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Productos>().ToTable("productos", tabla =>
+            modelBuilder.Entity<API_SISTEMA.Models.Productos>().ToTable("productos", tabla =>
                 tabla.HasCheckConstraint("CK_productos_stock_minimo", "[stock_minimo] >= 0"));
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.Entity<Presentacion>().ToTable("presentaciones");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Detalle_venta>().ToTable("detalle_venta");
+            modelBuilder.Entity<DetalleVenta>().ToTable("detalle_venta");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Usuario>().ToTable("usuario");
@@ -101,10 +101,10 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<Rol>().ToTable("rol");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Rol_permisocs>().ToTable("rol_permiso");
+            modelBuilder.Entity<RolPermiso>().ToTable("rol_permiso");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Producto_precio>().ToTable("producto_precio");
+            modelBuilder.Entity<ProductoPrecio>().ToTable("producto_precio");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Pagos>().ToTable("pagos");
@@ -116,7 +116,7 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<EstadoVenta>().ToTable("estado_venta");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Producto_Presentacion>().ToTable("producto_presentacion ", tabla =>
+            modelBuilder.Entity<ProductoPresentacion>().ToTable("producto_presentacion ", tabla =>
                 tabla.HasCheckConstraint("CK_producto_presentaciones_unidades", "[unidades_equivalentes] > 0"));
             base.OnModelCreating(modelBuilder);
 
@@ -141,7 +141,7 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<PagosCompra>().ToTable("pagos_compra");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<caja>().ToTable("caja");
+            modelBuilder.Entity<API_SISTEMA.Models.Caja>().ToTable("caja");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<MovimientoCaja>().ToTable("movimiento_caja");
@@ -164,19 +164,19 @@ namespace API_SISTEMA.data
             modelBuilder.Entity<Gastos>().ToTable("gastos"); 
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<usuario_permiso>().ToTable("usuario_permiso");
+            modelBuilder.Entity<UsuarioPermiso>().ToTable("usuario_permiso");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Rol_permisocs>().ToTable("rol_permiso");
+            modelBuilder.Entity<RolPermiso>().ToTable("rol_permiso");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Tabla_permiso>().ToTable("tabla_permisos"); 
+            modelBuilder.Entity<TablaPermiso>().ToTable("tabla_permisos"); 
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<usuario_permiso>().ToTable("usuario_permiso");
+            modelBuilder.Entity<UsuarioPermiso>().ToTable("usuario_permiso");
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Rol_permisocs>().ToTable("rol_permiso");
+            modelBuilder.Entity<RolPermiso>().ToTable("rol_permiso");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<CuentaCliente>().ToTable("cuenta_cliente");
@@ -190,29 +190,29 @@ namespace API_SISTEMA.data
 
 
 
-            modelBuilder.Entity<Rol_permisocs>()
+            modelBuilder.Entity<RolPermiso>()
                 .HasOne(rp => rp.Rol)
                 .WithMany(r => r.RolPermisos)
                 .HasForeignKey(rp => rp.id_rol);
 
             // Configuración de la relación Rol_permisocs <-> Tabla_permiso
-            modelBuilder.Entity<Rol_permisocs>()
+            modelBuilder.Entity<RolPermiso>()
                 .HasOne(rp => rp.Permiso)
                 .WithMany(p => p.RolPermisos)
                 .HasForeignKey(rp => rp.id_permiso);
 
-            modelBuilder.Entity<Producto_precio>()
+            modelBuilder.Entity<ProductoPrecio>()
                 .HasOne(p => p.Producto)
                 .WithMany(x => x.ProductoPrecios)
                 .HasForeignKey(p => p.id_producto);
 
-            modelBuilder.Entity<Producto_precio>()
+            modelBuilder.Entity<ProductoPrecio>()
                 .HasOne(p => p.TipoCliente)
                 .WithMany(x => x.ProductoPrecios)
                 .HasForeignKey(p => p.id_tipo_cliente);
                 base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Producto_Presentacion>()
+            modelBuilder.Entity<ProductoPresentacion>()
                .HasOne(pp => pp.Producto)
                .WithMany(p => p.ProductoPresentaciones)
                .HasForeignKey(pp => pp.id_producto);
@@ -232,7 +232,7 @@ namespace API_SISTEMA.data
                 .WithMany((e => e.Ventas))
                 .HasForeignKey(v => v.id_estado_venta);
 
-            modelBuilder.Entity<Detalle_venta>()
+            modelBuilder.Entity<DetalleVenta>()
                 .HasOne(v => v.producto_presentacion)
                 .WithMany()
                 .HasForeignKey(v => v.id_producto_presentacion);
@@ -339,12 +339,12 @@ namespace API_SISTEMA.data
                 .WithMany()
                 .HasForeignKey(v => v.id_sesion_caja);
 
-            modelBuilder.Entity<usuario_permiso>()
+            modelBuilder.Entity<UsuarioPermiso>()
                 .HasOne(v => v.Usuario)
                 .WithMany()
                 .HasForeignKey(v => v.id_usuario);
             
-            modelBuilder.Entity<usuario_permiso>()
+            modelBuilder.Entity<UsuarioPermiso>()
                 .HasOne(v => v.tabla_permiso)
                 .WithMany()
                 .HasForeignKey(v => v.id_permiso);
@@ -365,7 +365,7 @@ namespace API_SISTEMA.data
                 .WithMany()
                 .HasForeignKey(v => v.IdConversacion);
 
-            modelBuilder.Entity<Producto_Presentacion>()
+            modelBuilder.Entity<ProductoPresentacion>()
                 .HasOne(p => p.Presentacion)
                 .WithMany()
                 .HasForeignKey(p => p.IdPresentacion)
@@ -382,7 +382,7 @@ namespace API_SISTEMA.data
 
             // Una marca tiene muchos productos; cada producto requiere una marca.
             // Impide borrar una marca con productos asociados.
-            modelBuilder.Entity<Productos>()
+            modelBuilder.Entity<API_SISTEMA.Models.Productos>()
                 .HasOne(p => p.Marca)
                 .WithMany()
                 .HasForeignKey(p => p.IdMarca)

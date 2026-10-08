@@ -1,5 +1,5 @@
-﻿using API_SISTEMA.DTOs.Gastos;
-using API_SISTEMA.services.Gastos;
+﻿using API_SISTEMA.Dtos.Gastos;
+using API_SISTEMA.Services.Gastos;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     public class GastosController : Controller
     {
@@ -19,7 +19,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles =Roles.Administrador)]
         [HttpPost("CrearGasto")]
-        public async Task<IActionResult> CrearGasto(IngresarGastoDTOs gastoDto)
+        public async Task<IActionResult> CrearGasto(IngresarGastoDto gastoDto)
         {
             try
             {

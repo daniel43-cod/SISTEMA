@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class SesionCaja
     {
@@ -17,7 +17,7 @@ namespace API_SISTEMA.models
         public string observacion_apertura { get; set; }
         public DateTime? fecha_cierre { get; set;}
         public string? observacion_cierre { get; set; }
-        public caja caja { get; set; } = null!;
+        public Caja caja { get; set; } = null!;
         public Usuario usuarioapertura { get; set; }= null!;
         public Usuario? usuariocierre { get; set; }
       

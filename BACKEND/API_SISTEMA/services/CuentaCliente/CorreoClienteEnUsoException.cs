@@ -1,4 +1,4 @@
-namespace API_SISTEMA.services.CuentaCliente
+namespace API_SISTEMA.Services.CuentaCliente
 {
     public sealed class CorreoClienteEnUsoException : InvalidOperationException
     {

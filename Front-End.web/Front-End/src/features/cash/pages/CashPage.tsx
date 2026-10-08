@@ -5,13 +5,15 @@ import { Input } from '../../../shared/ui/Input'
 import { Button } from '../../../shared/ui/Button'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { ApiError } from '../../../shared/api/ApiError'
-import { loadCash, openCash, closeCash, parseOpeningAmount } from '../api/cashApi'
-import type { AvailableCash, CashSession, CashClosing } from '../api/cashApi'
+import { loadCash, loadCashSummary, openCash, closeCash, parseOpeningAmount } from '../api/cashApi'
+import type { AvailableCash, CashSession, CashClosing, CashSummary } from '../api/cashApi'
 import './CashPage.css'
 
 export function CashPage() {
   const { session } = useAuth()
   const [current, setCurrent] = useState<CashSession | null>(null)
+  const [summary, setSummary] = useState<CashSummary | null>(null)
+  const [summaryError, setSummaryError] = useState('')
   const [closing, setClosing] = useState(false)
   const [counted, setCounted] = useState('')
   const [closingNote, setClosingNote] = useState('')
@@ -51,6 +53,19 @@ export function CashPage() {
     return () => controller.abort()
   }, [token, isAdmin, version])
 
+  const currentId = current?.id_sesion_caja
+  useEffect(() => {
+    if (!token || !isAdmin || !currentId || phase !== 'ready') return
+    const controller = new AbortController()
+    // La consulta es independiente: un fallo del resumen no modifica el estado real de la caja.
+    loadCashSummary(token, currentId, controller.signal).then(data => {
+      if (!controller.signal.aborted) { setSummary(data); setSummaryError('') }
+    }).catch(cause => {
+      if (!controller.signal.aborted) setSummaryError(cause instanceof ApiError ? cause.message : 'No se pudieron consultar los movimientos.')
+    })
+    return () => controller.abort()
+  }, [token, isAdmin, currentId, phase, version])
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token || !isAdmin || busy.current || phase !== 'ready' || current) return
@@ -75,7 +90,7 @@ export function CashPage() {
         : cause instanceof ApiError ? cause.message : 'No se pudo abrir la caja.')
     } finally {
       // Siempre consulta el estado real: un timeout no prueba que la apertura haya fallado.
-      setPhase('loading')
+      setSummary(null); setSummaryError(''); setPhase('loading')
       setVersion(value => value + 1)
       busy.current = false
       setSaving(false)
@@ -114,7 +129,7 @@ export function CashPage() {
       // No se reintenta automaticamente: el servidor podria haber confirmado el cierre.
       setReview(null)
       setClosing(false)
-      setPhase('loading')
+      setSummary(null); setSummaryError(''); setPhase('loading')
       setVersion(value => value + 1)
       busy.current = false
       setSaving(false)
@@ -125,7 +140,7 @@ export function CashPage() {
   return <section className="cash-panel" aria-labelledby="cash-title" aria-busy={phase === 'loading' || saving}>
     <div className="cash-heading">
       <h2 id="cash-title">Sesión de caja</h2>
-      <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setPhase('loading'); setVersion(value => value + 1) }} />
+      <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }} />
     </div>
     {notice && <p className="cash-success" role="status">{notice}</p>}
     {result && <section className="cash-closing-result" aria-labelledby="cash-result-title">
@@ -140,7 +155,7 @@ export function CashPage() {
     </section>}
     {error && <p className="cash-error" role="alert">{error}</p>}
     {phase === 'loading' ? <p role="status">Consultando caja…</p> : phase === 'error' ?
-      <Button onClick={() => { setError(''); setPhase('loading'); setVersion(value => value + 1) }}>Volver a consultar</Button> :
+      <Button onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }}>Volver a consultar</Button> :
       current ? <>
         <p className="cash-status is-open"><span aria-hidden="true">●</span> Caja abierta</p>
         <dl className="cash-summary">
@@ -150,6 +165,34 @@ export function CashPage() {
           <div><dt>Fecha de apertura</dt><dd>{new Date(current.fecha_apertura).toLocaleString('es-GT')}</dd></div>
         </dl>
         <p className="cash-hint">Esta caja está disponible para las operaciones del equipo.</p>
+        <section className="cash-movements" aria-labelledby="cash-movements-title">
+          <h3 id="cash-movements-title">Movimientos del turno</h3>
+          {summaryError ? <p className="cash-error" role="alert">{summaryError} Usa actualizar para volver a consultar.</p> :
+            summary?.id_sesion_caja !== current.id_sesion_caja ? <p role="status">Consultando movimientos…</p> : <>
+              <dl className="cash-summary">
+                <div><dt>Entradas</dt><dd className="cash-incoming">{money(summary.total_entradas)}</dd></div>
+                <div><dt>Salidas</dt><dd className="cash-outgoing">{money(summary.total_salidas)}</dd></div>
+                <div><dt>Monto esperado</dt><dd>{money(summary.saldo_esperado)}</dd></div>
+                <div><dt>Total de movimientos</dt><dd>{summary.total_movimientos}</dd></div>
+              </dl>
+              <p className="cash-hint">Totales de todo el turno al consultar. Mostrando {summary.movimientos.length} de {summary.total_movimientos} movimientos, del más reciente al más antiguo.</p>
+              {summary.movimientos.length === 0 ? <p>Aún no hay movimientos en este turno.</p> :
+                <ul className="cash-movement-list">
+                  {summary.movimientos.map(movement => {
+                    const incoming = ['ENTRADA', 'INGRESO'].includes(movement.naturaleza.trim().toUpperCase())
+                    return <li key={movement.id_movimiento_caja}>
+                      <div className="cash-movement-info"><strong>{movement.tipo_movimiento}</strong>
+                        {movement.descripcion && <span>{movement.descripcion}</span>}
+                        <span>{movement.usuario} · {new Date(movement.fecha_movimiento).toLocaleString('es-GT')}</span>
+                      </div>
+                      <div className={incoming ? 'cash-incoming' : 'cash-outgoing'}>
+                        <span>{incoming ? 'Entrada' : 'Salida'}</span><strong>{incoming ? '+' : '−'}{money(movement.monto)}</strong>
+                      </div>
+                    </li>
+                  })}
+                </ul>}
+            </>}
+        </section>
         {!closing ? <Button className="cash-close-button" onClick={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}>Cerrar caja</Button> :
           <form className="cash-form cash-closing-form" onSubmit={reviewClosing}>
             <h3>Cierre del turno</h3>

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using API_SISTEMA.Utilidades;
-using API_SISTEMA.data;
-using API_SISTEMA.models;
+using API_SISTEMA.Data;
+using API_SISTEMA.Models;
 
-namespace API_SISTEMA.services.MovimientoCaja
+namespace API_SISTEMA.Services.MovimientoCaja
 {
     public class MovimientoCajaService
     {
@@ -22,11 +22,11 @@ namespace API_SISTEMA.services.MovimientoCaja
                 throw new InvalidOperationException("El movimiento requiere una transaccion.");
             if (monto <= 0 || monto > 99999999.99m || decimal.Round(monto, 2) != monto)
                 throw new CajaValidationException("El monto del movimiento no es valido.");
-            var sesion = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context);
+            var sesion = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context);
             if (sesion.id_sesion_caja != idSesionCaja)
                 throw new CajaValidationException("La sesion ya no esta abierta.");
 
-            var movimiento = new models.MovimientoCaja
+            var movimiento = new API_SISTEMA.Models.MovimientoCaja
             {
                 id_sesion_caja = idSesionCaja,
                 id_usuario = idUsuario,

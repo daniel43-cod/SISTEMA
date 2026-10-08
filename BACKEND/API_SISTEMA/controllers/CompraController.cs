@@ -1,7 +1,7 @@
-using API_SISTEMA.DTOs.Compras;
-using API_SISTEMA.services;
-using API_SISTEMA.services.CompraS;
-using API_SISTEMA.services.PagoCompra;
+using API_SISTEMA.Dtos.Compras;
+using API_SISTEMA.Services;
+using API_SISTEMA.Services.Compras;
+using API_SISTEMA.Services.PagoCompra;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -20,10 +20,10 @@ namespace API_SISTEMA.controllers
     {
         private readonly CompraService _context;
         private readonly CrearCompraService _crearCompraService;
-        private readonly Pago _pagoCompraService;
+        private readonly PagoCompraService _pagoCompraService;
 
 
-        public CompraController(CompraService service, Pago pagoCompraService, CrearCompraService crearCompraService)
+        public CompraController(CompraService service, PagoCompraService pagoCompraService, CrearCompraService crearCompraService)
         {
             _context = service;
             _pagoCompraService = pagoCompraService;
@@ -42,7 +42,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear([FromBody] RegistroComprasDTO compraDto, CancellationToken ct)
+        public async Task<IActionResult> Crear([FromBody] RegistroComprasDto compraDto, CancellationToken ct)
         {
                 var idUsuarioClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
@@ -79,7 +79,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost("pago-compra")]
-        public async Task<IActionResult> RegistrarPagoCompra([FromBody] AbonarSaldoCompraDTO dto, CancellationToken ct)
+        public async Task<IActionResult> RegistrarPagoCompra([FromBody] AbonarSaldoCompraDto dto, CancellationToken ct)
         {
                 var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 

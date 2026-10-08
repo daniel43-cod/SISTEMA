@@ -1,10 +1,10 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos;
+using API_SISTEMA.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class PagoService
     {

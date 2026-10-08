@@ -1,4 +1,4 @@
-﻿namespace API_SISTEMA.DTOs.Mensaje
+﻿namespace API_SISTEMA.Dtos.Mensaje
 {
     public class RespuestaMensajeDto
     {

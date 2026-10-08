@@ -1,6 +1,6 @@
-﻿namespace API_SISTEMA.DTOs.Categoria;
+﻿namespace API_SISTEMA.Dtos.Categoria;
 
-public sealed class RespuestaCategoriaDTO
+public sealed class RespuestaCategoriaDto
 {
     public int IdCategoria { get; init; }
     public string Nombre { get; init; } = string.Empty;

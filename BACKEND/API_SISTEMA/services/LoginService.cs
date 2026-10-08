@@ -1,18 +1,18 @@
 using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Login;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Login;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services;
+namespace API_SISTEMA.Services;
 
 public class LoginService(SistemaDbContext context, JwtService jwtService,
-    API_SISTEMA.services.Auditoria.AuditoriaService auditoria)
+    API_SISTEMA.Services.Auditoria.AuditoriaService auditoria)
 {
     // Evita omitir BCrypt cuando no existe la cuenta.
     private static readonly string DummyHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
 
-    public async Task<LoginRespuestaDTOs?> Login(LoginDTOs dto, CancellationToken cancellationToken = default)
+    public async Task<LoginRespuestaDto?> Login(LoginDto dto, CancellationToken cancellationToken = default)
     {
         if (!Validator.TryValidateObject(dto, new ValidationContext(dto), [], true))
             return null;
@@ -32,7 +32,7 @@ public class LoginService(SistemaDbContext context, JwtService jwtService,
 
         var idSesion = Guid.NewGuid();
         var token = jwtService.GenerarToken(user, idSesion);
-        var sesion = new API_SISTEMA.models.SesionUsuario
+        var sesion = new API_SISTEMA.Models.SesionUsuario
         {
             IdSesion = idSesion, IdUsuario = user.id_usuario, FechaCreacion = DateTime.UtcNow,
             FechaVencimiento = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo,
@@ -40,7 +40,7 @@ public class LoginService(SistemaDbContext context, JwtService jwtService,
         };
         // No entregar el token si no fue posible persistir el evento de auditoría.
         await auditoria.RegistrarInicioSesion(user, sesion, cancellationToken);
-        return new LoginRespuestaDTOs
+        return new LoginRespuestaDto
         {
             id_usuario = user.id_usuario, nombre = user.nombre,
             rol = user.rol.nombre, token = token

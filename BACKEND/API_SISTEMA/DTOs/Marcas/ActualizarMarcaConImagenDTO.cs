@@ -1,6 +1,6 @@
-namespace API_SISTEMA.DTOs.Marcas;
+namespace API_SISTEMA.Dtos.Marcas;
 
-public sealed class ActualizarMarcaConImagenDTO : ActualizarMarcaDTO
+public sealed class ActualizarMarcaConImagenDto : ActualizarMarcaDto
 {
     public IFormFile? Imagen { get; set; }
 }

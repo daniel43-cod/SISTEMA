@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.DTOs.Categoria;
+namespace API_SISTEMA.Dtos.Categoria;
 
-public class ActualizarCategoriaDTO
+public class ActualizarCategoriaDto
 {
     [Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]
     [StringLength(100, ErrorMessage = "El nombre admite hasta 100 caracteres.")]

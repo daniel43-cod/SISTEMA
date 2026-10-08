@@ -1,6 +1,6 @@
-namespace API_SISTEMA.DTOs.Categoria;
+namespace API_SISTEMA.Dtos.Categoria;
 
-public sealed class ActualizarCategoriaConImagenDTO : ActualizarCategoriaDTO
+public sealed class ActualizarCategoriaConImagenDto : ActualizarCategoriaDto
 {
     public IFormFile? Imagen { get; set; }
 }

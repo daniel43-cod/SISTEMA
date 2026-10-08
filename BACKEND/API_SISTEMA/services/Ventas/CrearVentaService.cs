@@ -1,13 +1,13 @@
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Ventas;
-using API_SISTEMA.models;
-using API_SISTEMA.services.MovimientoCaja;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Ventas;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services.MovimientoCaja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
-using API_SISTEMA.DTOs;
-using API_SISTEMA.services.Permisos;
+using API_SISTEMA.Dtos;
+using API_SISTEMA.Services.Permisos;
 
-namespace API_SISTEMA.services.Ventas
+namespace API_SISTEMA.Services.Ventas
 {
     public class CrearVentaService
     {
@@ -22,10 +22,10 @@ namespace API_SISTEMA.services.Ventas
             _permisoService = permisoService    ;
         }
 
-        public async Task<API_SISTEMA.models.Ventas> CrearVenta(CrearVentaDTO ventaDto, int idUsuario)
+        public async Task<API_SISTEMA.Models.Ventas> CrearVenta(CrearVentaDto ventaDto, int idUsuario)
         {
 
-            bool puedeVender = await _permisoService.TienePermiso(idUsuario, permisos.Vender);
+            bool puedeVender = await _permisoService.TienePermiso(idUsuario, API_SISTEMA.Utilidades.Permisos.Vender);
             if( !puedeVender)
                 throw new Exception("No tienes permiso para realizar ventas.");
 
@@ -37,7 +37,7 @@ namespace API_SISTEMA.services.Ventas
             // 1. Buscar sesión de caja abierta del usuario autenticado
             // El turno compartido queda bloqueado hasta confirmar la venta.
             using var transaction = await _context.Database.BeginTransactionAsync();
-            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context);
+            var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context);
 
             try
             {
@@ -78,7 +78,7 @@ namespace API_SISTEMA.services.Ventas
                 }
 
                 // 3. Crear cabecera inicialmente
-                var venta = new API_SISTEMA.models.Ventas
+                var venta = new API_SISTEMA.Models.Ventas
                 {
                     id_cliente = cliente.id_cliente,
                     id_usuario = idUsuario,
@@ -155,7 +155,7 @@ namespace API_SISTEMA.services.Ventas
 
                     producto.stock -= unidadesADescontar;
 
-                    var detalleVenta = new Detalle_venta
+                    var detalleVenta = new DetalleVenta
                     {
                         id_venta = venta.id_ventas,
                         id_producto =detalleDto.id_producto,

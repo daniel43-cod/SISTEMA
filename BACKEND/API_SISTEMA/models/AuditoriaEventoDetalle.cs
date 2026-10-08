@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace API_SISTEMA.models;
+namespace API_SISTEMA.Models;
 
 [Table("auditoria_evento_detalle", Schema = "dbo")]
 public sealed class AuditoriaEventoDetalle

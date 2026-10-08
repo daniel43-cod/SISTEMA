@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class DetalleCompra
     {
@@ -16,6 +16,6 @@ namespace API_SISTEMA.models
         [Required]
         public decimal precio { get; set; }
 
-        public Productos Productos { get; set; }
+        public API_SISTEMA.Models.Productos Productos { get; set; }
     }
 }

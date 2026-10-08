@@ -1,15 +1,15 @@
 using System.Data;
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Marcas;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Marcas;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Marca;
+namespace API_SISTEMA.Services.Marca;
 
 public sealed class EstadoMarcaService(SistemaDbContext context, CatalogoAuditoriaService auditoria)
 {
-    public async Task<RespuestaMarcaDTO?> CambiarEstado(int id, CambiarEstadoMarcaDTO dto,
+    public async Task<RespuestaMarcaDto?> CambiarEstado(int id, CambiarEstadoMarcaDto dto,
         CancellationToken cancellationToken = default)
     {
         if (id <= 0) throw new ValidationException("El ID debe ser mayor que cero.");
@@ -25,7 +25,7 @@ public sealed class EstadoMarcaService(SistemaDbContext context, CatalogoAuditor
             "marcas", marca.IdMarca, anteriores, new Dictionary<string, object?> { ["estado"] = marca.Estado }, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return new RespuestaMarcaDTO
+        return new RespuestaMarcaDto
         {
             IdMarca = marca.IdMarca, Nombre = marca.Nombre, IdCategoria = marca.IdCategoria,
             NombreCategoria = marca.Categoria.nombreCategoria,

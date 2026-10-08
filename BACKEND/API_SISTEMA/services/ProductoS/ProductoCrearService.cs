@@ -1,14 +1,14 @@
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Productos;
-using API_SISTEMA.models;
-using API_SISTEMA.services.ProductoS;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Productos;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services.Productos;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services;
+namespace API_SISTEMA.Services.Productos;
 
 public class ProductoCrearService
 {
@@ -23,7 +23,7 @@ public class ProductoCrearService
     }
 
     // Validación independiente del controlador para proteger también llamadas internas.
-    public static void Validar(productocrear dto)
+    public static void Validar(CrearProductoDto dto)
     {
         if (dto is null) throw new ValidationException("La información del producto es obligatoria.");
         Validator.ValidateObject(dto, new ValidationContext(dto), true);
@@ -42,7 +42,7 @@ public class ProductoCrearService
             throw new ValidationException("No puedes repetir una presentación en el mismo producto.");
     }
 
-    public async Task<Productos> CrearProducto(productocrear dto,
+    public async Task<API_SISTEMA.Models.Productos> CrearProducto(CrearProductoDto dto,
         CancellationToken cancellationToken = default, IFormFile? imagen = null)
     {
         Validar(dto);
@@ -57,7 +57,7 @@ public class ProductoCrearService
             // Serializa la verificación del código y el alta. Todo el producto se guarda junto.
             await using var transaction = await _context.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable, cancellationToken);
-            // La categoría se valida mediante la marca, sin almacenarla en Productos.
+            // La categoría se valida mediante la marca, sin almacenarla en API_SISTEMA.Models.Productos.
             var marcaValida = await _context.Marcas.AnyAsync(
                 m => m.IdMarca == dto.IdMarca && m.Estado && m.Categoria.Estado, cancellationToken);
             if (!marcaValida) throw new ValidationException("La marca y su categoría deben existir y estar activas.");
@@ -75,12 +75,12 @@ public class ProductoCrearService
                 p.Estado == true, cancellationToken) != ids.Count)
                 throw new ValidationException("Todas las presentaciones deben existir y estar activas.");
 
-            var producto = new Productos
+            var producto = new API_SISTEMA.Models.Productos
             {
                 codigo_barra = codigo, nombre = dto.nombre.Trim(), IdMarca = dto.IdMarca,
                 stock = 0, stock_minimo = dto.stock_minimo, imagen = url,
                 costo_unitario = null, fecha_creacion = DateTime.Now,
-                ProductoPresentaciones = dto.presentaciones.Select(p => new Producto_Presentacion
+                ProductoPresentaciones = dto.presentaciones.Select(p => new ProductoPresentacion
                 {
                     IdPresentacion = p.id_presentacion, unidades_equivalentes = p.unidades_equivalentes,
                     precio = p.precio, estado = true

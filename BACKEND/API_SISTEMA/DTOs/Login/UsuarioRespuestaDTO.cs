@@ -1,6 +1,6 @@
-namespace API_SISTEMA.DTOs.Login;
+namespace API_SISTEMA.Dtos.Login;
 
-public sealed class UsuarioRespuestaDTO
+public sealed class UsuarioRespuestaDto
 {
     public int id_usuario { get; init; }
     public int id_rol { get; init; }

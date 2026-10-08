@@ -1,4 +1,4 @@
-namespace API_SISTEMA.services.Sesiones;
+namespace API_SISTEMA.Services.Sesiones;
 
 public sealed class SesionExpiracionWorker(IServiceScopeFactory scopes, ILogger<SesionExpiracionWorker> logger)
     : BackgroundService

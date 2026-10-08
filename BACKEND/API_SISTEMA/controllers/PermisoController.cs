@@ -1,7 +1,7 @@
-﻿using API_SISTEMA.services;
+﻿using API_SISTEMA.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

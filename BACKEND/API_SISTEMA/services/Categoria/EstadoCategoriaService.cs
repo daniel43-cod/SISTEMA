@@ -1,15 +1,15 @@
 using System.Data;
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Categoria;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Categoria;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Categoria;
+namespace API_SISTEMA.Services.Categoria;
 
 public sealed class EstadoCategoriaService(SistemaDbContext context, CatalogoAuditoriaService auditoria)
 {
-    public async Task<RespuestaCategoriaDTO?> CambiarEstado(int id, CambiarEstadoCategoriaDTO dto,
+    public async Task<RespuestaCategoriaDto?> CambiarEstado(int id, CambiarEstadoCategoriaDto dto,
         CancellationToken cancellationToken = default)
     {
         if (id <= 0) throw new ValidationException("El ID debe ser mayor que cero.");
@@ -24,7 +24,7 @@ public sealed class EstadoCategoriaService(SistemaDbContext context, CatalogoAud
             "categorias", categoria.IdCategoria, anteriores, new Dictionary<string, object?> { ["estado"] = categoria.Estado }, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return new RespuestaCategoriaDTO
+        return new RespuestaCategoriaDto
         {
             IdCategoria = categoria.IdCategoria, Nombre = categoria.nombreCategoria,
             Estado = categoria.Estado, UrlImagen = categoria.UrlImagen

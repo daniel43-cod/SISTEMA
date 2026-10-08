@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class Productos
     {
@@ -20,10 +20,10 @@ namespace API_SISTEMA.models
         public decimal? costo_unitario { get; set; }
         public decimal? impuesto { get; set; } 
         public DateTime fecha_creacion {  get; set; }
-        public List<Detalle_venta> DetalleVentas { get; set; } = new();
-        public ICollection<Producto_precio> ProductoPrecios { get; set; } = new List<Producto_precio>();
+        public List<DetalleVenta> DetalleVentas { get; set; } = new();
+        public ICollection<ProductoPrecio> ProductoPrecios { get; set; } = new List<ProductoPrecio>();
 
-        public ICollection<Producto_Presentacion> ProductoPresentaciones { get; set; } = new List<Producto_Presentacion>();
+        public ICollection<ProductoPresentacion> ProductoPresentaciones { get; set; } = new List<ProductoPresentacion>();
 
     }
 }

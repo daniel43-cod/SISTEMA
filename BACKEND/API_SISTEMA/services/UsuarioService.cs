@@ -1,27 +1,27 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq.Expressions;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Login;
-using API_SISTEMA.models;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Login;
+using API_SISTEMA.Models;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services;
+namespace API_SISTEMA.Services;
 
 public class UsuarioService(SistemaDbContext context)
 {
-    private static readonly Expression<Func<Usuario, UsuarioRespuestaDTO>> Respuesta = u => new()
+    private static readonly Expression<Func<Usuario, UsuarioRespuestaDto>> Respuesta = u => new()
     {
         id_usuario = u.id_usuario, id_rol = u.id_rol, nombre = u.nombre,
         apellido = u.apellido, usuario = u.usuario, correo = u.correo,
         telefono = u.telefono, estado = u.estado, fecha_Creacion = u.fecha_Creacion
     };
 
-    public Task<List<UsuarioRespuestaDTO>> ListarUsuario() =>
+    public Task<List<UsuarioRespuestaDto>> ListarUsuario() =>
         context.usuarios.AsNoTracking().Select(Respuesta).ToListAsync();
 
-    public async Task<UsuarioRespuestaDTO> CrearUsuario(CrearCuentaDTOs dto)
+    public async Task<UsuarioRespuestaDto> CrearUsuario(CrearCuentaDto dto)
     {
         var errors = new List<ValidationResult>();
         if (!Validator.TryValidateObject(dto, new ValidationContext(dto), errors, true))

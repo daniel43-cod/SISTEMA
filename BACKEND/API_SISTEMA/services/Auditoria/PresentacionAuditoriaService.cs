@@ -1,10 +1,10 @@
 using System.Globalization;
-using API_SISTEMA.data;
-using API_SISTEMA.models;
-using API_SISTEMA.Securyti;
+using API_SISTEMA.Data;
+using API_SISTEMA.Models;
+using API_SISTEMA.Security;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Auditoria;
+namespace API_SISTEMA.Services.Auditoria;
 
 public sealed class PresentacionAuditoriaService(SistemaDbContext context, ContextoPeticion peticion)
 {

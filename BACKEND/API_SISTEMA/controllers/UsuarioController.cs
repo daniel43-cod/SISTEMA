@@ -1,10 +1,10 @@
-using API_SISTEMA.DTOs.Login;
-using API_SISTEMA.services;
+using API_SISTEMA.Dtos.Login;
+using API_SISTEMA.Services;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.controllers;
+namespace API_SISTEMA.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -16,5 +16,5 @@ public class UsuarioController(UsuarioService service) : ControllerBase
     public async Task<IActionResult> ListarUsuario() => Ok(await service.ListarUsuario());
 
     [HttpPost]
-    public async Task<IActionResult> Crear(CrearCuentaDTOs dto) => Ok(await service.CrearUsuario(dto));
+    public async Task<IActionResult> Crear(CrearCuentaDto dto) => Ok(await service.CrearUsuario(dto));
 }

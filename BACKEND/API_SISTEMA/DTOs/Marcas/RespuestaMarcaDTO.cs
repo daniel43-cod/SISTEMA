@@ -1,6 +1,6 @@
-namespace API_SISTEMA.DTOs.Marcas;
+namespace API_SISTEMA.Dtos.Marcas;
 
-public sealed class RespuestaMarcaDTO
+public sealed class RespuestaMarcaDto
 {
     public int IdMarca { get; init; }
     public string Nombre { get; init; } = string.Empty;

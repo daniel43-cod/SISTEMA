@@ -1,4 +1,4 @@
-namespace API_SISTEMA.services.IA;
+namespace API_SISTEMA.Services.IA;
 
 public sealed class OpenAIException(int statusCode, string message) : Exception(message)
 {

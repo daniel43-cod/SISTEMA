@@ -1,8 +1,8 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Ventas;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Ventas;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
-namespace API_SISTEMA.services.Ventas
+namespace API_SISTEMA.Services.Ventas
 {
     public class ActualizarVentaService
     {
@@ -13,7 +13,7 @@ namespace API_SISTEMA.services.Ventas
             _context = context;
         }
 
-        public async Task ModificarVenta(int idVenta,ModificarVentaDTO dto,int idUsuario)
+        public async Task ModificarVenta(int idVenta,ModificarVentaDto dto,int idUsuario)
         {
             if (dto == null)
                 throw new Exception(
@@ -308,7 +308,7 @@ namespace API_SISTEMA.services.Ventas
                         detalleDto.cantidad *
                         presentacion.precio;    
 
-                    var nuevoDetalle = new Detalle_venta
+                    var nuevoDetalle = new DetalleVenta
                     {
                         id_venta =
                             venta.id_ventas,

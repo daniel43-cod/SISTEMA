@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using API_SISTEMA.data;
-using API_SISTEMA.services;
+using API_SISTEMA.Data;
+using API_SISTEMA.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 

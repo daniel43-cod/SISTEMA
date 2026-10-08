@@ -1,12 +1,12 @@
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Marcas;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Marcas;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Marca;
+namespace API_SISTEMA.Services.Marca;
 
 public class MarcaCrearService
 {
@@ -21,7 +21,7 @@ public class MarcaCrearService
         _imagenes = imagenes;
     }
 
-    public async Task<RespuestaMarcaDTO> CrearMarca(CrearMarcaDTO dto,
+    public async Task<RespuestaMarcaDto> CrearMarca(CrearMarcaDto dto,
         CancellationToken cancellationToken = default, IFormFile? imagen = null)
     {
         if (dto is null)
@@ -55,7 +55,7 @@ public class MarcaCrearService
             if (imagen != null)
                 url = archivoGuardado = await _imagenes.GuardarAsync(imagen, cancellationToken);
 
-            var marca = new API_SISTEMA.models.Marca
+            var marca = new API_SISTEMA.Models.Marca
             {
                 Nombre = nombre,
                 IdCategoria = dto.IdCategoria,
@@ -70,7 +70,7 @@ public class MarcaCrearService
             commitIniciado = true;
             await transaction.CommitAsync(cancellationToken);
 
-            return new RespuestaMarcaDTO
+            return new RespuestaMarcaDto
             {
                 IdMarca = marca.IdMarca,
                 Nombre = marca.Nombre,

@@ -1,12 +1,12 @@
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Marcas;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Marcas;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Marca;
+namespace API_SISTEMA.Services.Marca;
 
 public class MarcaActualizarService
 {
@@ -21,7 +21,7 @@ public class MarcaActualizarService
         _imagenes = imagenes;
     }
 
-    public async Task<RespuestaMarcaDTO?> ActualizarMarca(int idMarca, ActualizarMarcaDTO dto,
+    public async Task<RespuestaMarcaDto?> ActualizarMarca(int idMarca, ActualizarMarcaDto dto,
         CancellationToken cancellationToken = default, IFormFile? imagen = null)
     {
         if (idMarca <= 0) throw new ValidationException("El ID de la marca debe ser mayor que cero.");
@@ -76,7 +76,7 @@ public class MarcaActualizarService
         commitIniciado = true;
         await transaction.CommitAsync(cancellationToken);
 
-        return new RespuestaMarcaDTO
+        return new RespuestaMarcaDto
         {
             IdMarca = marca.IdMarca,
             Nombre = marca.Nombre,

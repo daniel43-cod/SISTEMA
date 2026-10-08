@@ -1,16 +1,16 @@
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Productos;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Productos;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.ProductoS;
+namespace API_SISTEMA.Services.Productos;
 
 public sealed class ProductoActualizarService(SistemaDbContext context, ProductoImagenService imagenes, ProductoAuditoriaService auditoria)
 {
-    public async Task<ProductoResumenDTO?> ActualizarProducto(int id, ActualizarProductoDTO dto,
+    public async Task<ProductoResumenDto?> ActualizarProducto(int id, ActualizarProductoDto dto,
         CancellationToken cancellationToken = default, IFormFile? imagen = null)
     {
         if (id <= 0) throw new ValidationException("El ID del producto debe ser mayor que cero.");
@@ -49,7 +49,7 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
         var producto = await context.productos.SingleOrDefaultAsync(p => p.id_producto == id, cancellationToken);
         if (producto is null) return null;
         var anteriores = ProductoAuditoriaService.Datos(producto);
-        var cambiosPresentaciones = new List<(API_SISTEMA.models.Producto_Presentacion Entidad, Dictionary<string, object?>? Anteriores)>();
+        var cambiosPresentaciones = new List<(API_SISTEMA.Models.ProductoPresentacion Entidad, Dictionary<string, object?>? Anteriores)>();
 
         if (await context.productos.AnyAsync(p => p.id_producto != id && p.codigo_barra != null &&
             p.codigo_barra.Trim().ToUpper() == codigoNormalizado, cancellationToken))
@@ -97,7 +97,7 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
             {
                 var asociacion = item.id_producto_presentacion.HasValue
                     ? existentes.Single(p => p.id_producto_presentacion == item.id_producto_presentacion.Value)
-                    : new API_SISTEMA.models.Producto_Presentacion { id_producto = id, IdPresentacion = item.id_presentacion };
+                    : new API_SISTEMA.Models.ProductoPresentacion { id_producto = id, IdPresentacion = item.id_presentacion };
                 asociacion.precio = item.precio;
                 asociacion.unidades_equivalentes = item.unidades_equivalentes;
                 asociacion.estado = item.estado!.Value;
@@ -134,7 +134,7 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
             if (archivo != null && !commitIniciado) imagenes.Eliminar(archivo);
             throw;
         }
-        return new ProductoResumenDTO
+        return new ProductoResumenDto
         {
             IdProducto = producto.id_producto, CodigoBarra = producto.codigo_barra, Nombre = producto.nombre,
             Imagen = producto.imagen, StockUnidades = producto.stock ?? 0, StockMinimo = producto.stock_minimo ?? 0,

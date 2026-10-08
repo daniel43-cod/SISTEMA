@@ -1,21 +1,21 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Caja;
-using API_SISTEMA.models;
-using API_SISTEMA.services.Auditoria;
-using API_SISTEMA.services.Caja;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Caja;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services.Auditoria;
+using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services;
+namespace API_SISTEMA.Services;
 
 public class CajaService(SistemaDbContext context, CatalogoAuditoriaService auditoria, CajaSaldoService saldo)
 {
     // Consulta administrativa acotada; no expone entidades ni historial de caja.
-    public async Task<List<CajaDisponibleDTO>> CajasDisponibles(CancellationToken ct = default) =>
+    public async Task<List<CajaDisponibleDto>> CajasDisponibles(CancellationToken ct = default) =>
         await context.caja.AsNoTracking().Where(c => c.estado).OrderBy(c => c.id_caja).Take(100)
-            .Select(c => new CajaDisponibleDTO { IdCaja = c.id_caja, Nombre = c.nombre_caja ?? "Caja " + c.id_caja })
+            .Select(c => new CajaDisponibleDto { IdCaja = c.id_caja, Nombre = c.nombre_caja ?? "Caja " + c.id_caja })
             .ToListAsync(ct);
 
     private static void Validar(object dto, decimal monto)
@@ -36,7 +36,7 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
             throw new CajaValidationException("Se requiere un administrador activo.");
     }
 
-    public async Task<SesionCaja> AbrirCaja(AperturaCajaDTOs dto, int idUsuario, CancellationToken ct = default)
+    public async Task<SesionCaja> AbrirCaja(AperturaCajaDto dto, int idUsuario, CancellationToken ct = default)
     {
         if (dto is null) throw new CajaValidationException("Los datos son obligatorios.");
         Validar(dto, dto.monto_inicial);
@@ -63,7 +63,7 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
         return sesion;
     }
 
-    public async Task<SesionCaja> CerrarCaja(CierreCajaDTOs dto, int idUsuario, CancellationToken ct = default)
+    public async Task<SesionCaja> CerrarCaja(CierreCajaDto dto, int idUsuario, CancellationToken ct = default)
     {
         if (dto is null) throw new CajaValidationException("Los datos son obligatorios.");
         Validar(dto, dto.monto_contado);
@@ -95,8 +95,8 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
     }
 
     // Solo proyectamos el DTO; las consultas no cargan entidades para editar.
-    private IQueryable<ListarSesionesDTOs> Consulta() => context.sesioncaja.AsNoTracking()
-        .OrderByDescending(s => s.id_sesion_caja).Select(s => new ListarSesionesDTOs
+    private IQueryable<ListarSesionesDto> Consulta() => context.sesioncaja.AsNoTracking()
+        .OrderByDescending(s => s.id_sesion_caja).Select(s => new ListarSesionesDto
         {
             id_sesion_caja = s.id_sesion_caja, id_caja = s.id_caja, id_usuario_apertura = s.id_usuario_apertura,
             usuario_apertura = s.usuarioapertura.nombre, id_usuario_cierre = s.id_usuario_cierre,
@@ -107,13 +107,13 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
             observacion_apertura = s.observacion_apertura, observacion_cierre = s.observacion_cierre
         });
 
-    public async Task<ListarSesionesDTOs?> Actual(CancellationToken ct = default)
+    public async Task<ListarSesionesDto?> Actual(CancellationToken ct = default)
     {
         var actual = await CajaSesionActual.Consultar(context, ct);
         return actual is null ? null : await Consulta().SingleAsync(s => s.id_sesion_caja == actual.id_sesion_caja, ct);
     }
 
-    public async Task<List<ListarSesionesDTOs>> ListarSesionesCaja(int? idCaja = null, int pagina = 1, int tamanoPagina = 50, CancellationToken ct = default)
+    public async Task<List<ListarSesionesDto>> ListarSesionesCaja(int? idCaja = null, int pagina = 1, int tamanoPagina = 50, CancellationToken ct = default)
     {
         // Limites y orden estable evitan lecturas ilimitadas del historial.
         if (idCaja <= 0 || pagina < 1 || pagina > 1000000 || tamanoPagina < 1 || tamanoPagina > 100)

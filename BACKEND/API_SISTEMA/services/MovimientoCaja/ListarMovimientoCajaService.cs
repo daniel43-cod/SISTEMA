@@ -1,23 +1,23 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.MovimientoCaja;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.MovimientoCaja;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using API_SISTEMA.Utilidades;
 
-namespace API_SISTEMA.services.MovimientoCaja
+namespace API_SISTEMA.Services.MovimientoCaja
 {
     public class ListarMovimientoCajaService
     {
         private readonly SistemaDbContext _context;
-        private readonly API_SISTEMA.services.Caja.CajaSaldoService _saldo;
-        public ListarMovimientoCajaService(SistemaDbContext context, API_SISTEMA.services.Caja.CajaSaldoService saldo)
+        private readonly API_SISTEMA.Services.Caja.CajaSaldoService _saldo;
+        public ListarMovimientoCajaService(SistemaDbContext context, API_SISTEMA.Services.Caja.CajaSaldoService saldo)
         {
             _context = context;
             _saldo = saldo;
         }
 
-        public async Task<ResumenMovimientosCajaDTO?> ConsultarResumen(int idSesionCaja,
+        public async Task<ResumenMovimientosCajaDto?> ConsultarResumen(int idSesionCaja,
             CancellationToken cancellationToken = default)
         {
             if (idSesionCaja <= 0)
@@ -38,7 +38,7 @@ namespace API_SISTEMA.services.MovimientoCaja
 
             var movimientos = await consulta.OrderByDescending(m => m.fecha_movimiento)
                 .ThenByDescending(m => m.id_movimiento_caja).Take(100)
-                .Select(m => new ListarMovimientoCajaDTO
+                .Select(m => new ListarMovimientoCajaDto
                 {
                     id_movimiento_caja = m.id_movimiento_caja, id_sesion_caja = m.id_sesion_caja,
                     id_tipo_movimiento = m.id_tipo_movimiento, tipo_movimiento = m.tipoMovimientoCaja.nombre_movimiento,
@@ -48,11 +48,11 @@ namespace API_SISTEMA.services.MovimientoCaja
                     id_pago_venta = m.id_pago_venta, id_pago_compra = m.id_pago_compra
                 }).ToListAsync(cancellationToken);
 
-            var respuesta = new ResumenMovimientosCajaDTO
+            var respuesta = new ResumenMovimientosCajaDto
             {
                 id_sesion_caja = sesion.id_sesion_caja, monto_inicial = sesion.monto_inicial!.Value,
                 total_entradas = totales.Entradas, total_salidas = totales.Salidas,
-                saldo_esperado = sesion.monto_inicial.Value + (totales?.Entradas ?? 0m) - (totales?.Salidas ?? 0m),
+                saldo_esperado = totales.Esperado,
                 total_movimientos = totales.Cantidad, movimientos = movimientos
             };
             await transaccion.CommitAsync(cancellationToken);

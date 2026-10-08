@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.DTOs.Marcas;
+namespace API_SISTEMA.Dtos.Marcas;
 
-public class CrearMarcaDTO
+public class CrearMarcaDto
 {
     [Required(ErrorMessage = "El nombre de la marca es obligatorio.")]
     [StringLength(100, ErrorMessage = "El nombre admite hasta 100 caracteres.")]

@@ -1,4 +1,4 @@
-using API_SISTEMA.services.Categoria;
+using API_SISTEMA.Services.Categoria;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging.Abstractions;

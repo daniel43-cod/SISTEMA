@@ -1,0 +1,31 @@
+﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace API_SISTEMA.Models
+{
+    public class DetalleVenta
+    {
+        [Key]
+        public int id_detalle_venta {  get; set; }
+        public int id_venta { get; set; }
+        public int id_producto { get; set; }
+        public int cantidad { get; set; }
+        public decimal precio { get; set; }
+        public decimal? descuento { get; set; }
+        public decimal subtotal { get; set; }
+        public int id_producto_presentacion { get; set; }
+        public int unidades_descontadas { get; set; }
+        public decimal ganancia { get; set; }
+
+        public ProductoPresentacion producto_presentacion { get; set; } = null!;
+
+        [ForeignKey("id_producto")]
+        public API_SISTEMA.Models.Productos Producto { get; set; } = null!;
+
+        [ForeignKey("id_venta")]
+        public Ventas Venta { get; set; } = null!;
+
+
+    }
+}

@@ -1,6 +1,6 @@
-﻿namespace API_SISTEMA.DTOs.Ventas
+﻿namespace API_SISTEMA.Dtos.Ventas
 {
-    public class AbonarSaldoVentaDTO
+    public class AbonarSaldoVentaDto
     {
         public int id_venta { get; set; }
         public decimal monto { get; set; }

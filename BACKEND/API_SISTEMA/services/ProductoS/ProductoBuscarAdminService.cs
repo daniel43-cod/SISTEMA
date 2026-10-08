@@ -1,19 +1,19 @@
 using System.ComponentModel.DataAnnotations;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Productos;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Productos;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.ProductoS;
+namespace API_SISTEMA.Services.Productos;
 
 public sealed class ProductoBuscarAdminService(SistemaDbContext context)
 {
-    public Task<List<ProductoSugerenciaDTO>> ListarNombres(CancellationToken cancellationToken = default) =>
+    public Task<List<ProductoSugerenciaDto>> ListarNombres(CancellationToken cancellationToken = default) =>
         context.productos.AsNoTracking()
             .OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
-            .Select(p => new ProductoSugerenciaDTO { IdProducto = p.id_producto, Nombre = p.nombre })
+            .Select(p => new ProductoSugerenciaDto { IdProducto = p.id_producto, Nombre = p.nombre })
             .ToListAsync(cancellationToken);
 
-    public Task<List<ProductoSugerenciaDTO>> Buscar(BusquedaProductoAdminDTO filtro,
+    public Task<List<ProductoSugerenciaDto>> Buscar(BusquedaProductoAdminDto filtro,
         CancellationToken cancellationToken = default)
     {
         if (filtro is null) throw new ValidationException("La búsqueda es obligatoria.");
@@ -30,7 +30,7 @@ public sealed class ProductoBuscarAdminService(SistemaDbContext context)
             consulta = consulta.Where(p => p.codigo_barra == codigo);
         }
         return consulta.OrderBy(p => p.nombre).ThenBy(p => p.id_producto).Take(10)
-            .Select(p => new ProductoSugerenciaDTO { IdProducto = p.id_producto, Nombre = p.nombre })
+            .Select(p => new ProductoSugerenciaDto { IdProducto = p.id_producto, Nombre = p.nombre })
             .ToListAsync(cancellationToken);
     }
 }

@@ -1,7 +1,7 @@
-﻿using API_SISTEMA.DTOs;
+﻿using API_SISTEMA.Dtos;
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class Ventas
     {
@@ -25,6 +25,6 @@ namespace API_SISTEMA.models
         public Usuario usuario { get; set; }
         public Cliente cliente { get; set; }
         public SesionCaja sesionCaja { get; set; }
-        public List<Detalle_venta> DetalleVentas { get; set; } = new();
+        public List<DetalleVenta> DetalleVentas { get; set; } = new();
     }
 }

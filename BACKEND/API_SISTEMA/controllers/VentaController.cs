@@ -1,8 +1,8 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Ventas;
-using API_SISTEMA.models;
-using API_SISTEMA.services;
-using API_SISTEMA.services.Ventas;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Ventas;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services;
+using API_SISTEMA.Services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
@@ -22,10 +22,10 @@ namespace API_SISTEMA.controllers
 
         private readonly VentaService _context;
         private readonly CrearVentaService _crearVentaService;
-        private readonly AbonarSaldoVentaServices _pagoService;
-        private readonly BuscarVentaServices _buscarService;
+        private readonly AbonarSaldoVentaService _pagoService;
+        private readonly BuscarVentaService _buscarService;
         private readonly ActualizarVentaService _modificarVentaService;
-        public VentaController(VentaService service, AbonarSaldoVentaServices pago, CrearVentaService crearVenta, BuscarVentaServices buscarService, ActualizarVentaService modificarVentaService)
+        public VentaController(VentaService service, AbonarSaldoVentaService pago, CrearVentaService crearVenta, BuscarVentaService buscarService, ActualizarVentaService modificarVentaService)
         {
             _context = service;
             _pagoService = pago;
@@ -36,7 +36,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("listar")]
-        public async Task<IActionResult> ListarVentas([FromQuery] FiltrarVentasDTOs filtro)
+        public async Task<IActionResult> ListarVentas([FromQuery] FiltrarVentasDto filtro)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("AbonarVenta")]
-        public async Task<IActionResult> AbonarVenta( [FromBody] AbonarSaldoVentaDTO dto)
+        public async Task<IActionResult> AbonarVenta( [FromBody] AbonarSaldoVentaDto dto)
         {
             try
             {
@@ -142,7 +142,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear( [FromBody] CrearVentaDTO ventaDto)
+        public async Task<IActionResult> Crear( [FromBody] CrearVentaDto ventaDto)
         {
             try
             {
@@ -219,7 +219,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpPut("modificar/{idVenta}")]
-        public async Task<IActionResult> ModificarVenta(int idVenta, [FromBody] ModificarVentaDTO dto)
+        public async Task<IActionResult> ModificarVenta(int idVenta, [FromBody] ModificarVentaDto dto)
         {
             try
             {

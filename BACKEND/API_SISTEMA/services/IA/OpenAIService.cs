@@ -8,10 +8,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 // Agrupa estos tipos dentro del espacio de nombres de los servicios de IA.
-namespace API_SISTEMA.services.IA;
+namespace API_SISTEMA.Services.IA;
 
 // Define un turno de chat: Rol identifica qui?n habla y Contenido contiene su texto.
-public record TurnoIA(string Rol, string Contenido);
+
 
 // Servicio p?blico; sealed impide crear clases que hereden de ?l.
 public sealed class OpenAIService

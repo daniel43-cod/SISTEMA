@@ -1,6 +1,6 @@
-﻿namespace API_SISTEMA.DTOs.MovimientoCaja
+﻿namespace API_SISTEMA.Dtos.MovimientoCaja
 {
-    public class ListarMovimientoCajaDTO
+    public class ListarMovimientoCajaDto
     {
         
         public int id_movimiento_caja { get; set; }

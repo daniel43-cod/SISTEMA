@@ -4,10 +4,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using API_SISTEMA.controllers;
-using API_SISTEMA.data;
-using API_SISTEMA.models;
-using API_SISTEMA.services;
+using API_SISTEMA.Controllers;
+using API_SISTEMA.Data;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services;
+using API_SISTEMA.Services.Productos;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -32,35 +33,35 @@ builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<CompraService>();
-builder.Services.AddScoped<API_SISTEMA.services.MovimientoCaja.ListarMovimientoCajaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.MovimientoCaja.ListarMovimientoCajaService>();
 // Una misma regla de saldo para consultar y cerrar caja.
-builder.Services.AddScoped<API_SISTEMA.services.Caja.CajaSaldoService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Caja.CajaSaldoService>();
 builder.Services.AddScoped<CajaService>();
-builder.Services.AddScoped<API_SISTEMA.services.CompraS.CrearCompraService>();
-builder.Services.AddScoped<API_SISTEMA.services.PagoCompra.Pago>();
-builder.Services.AddScoped<API_SISTEMA.services.MovimientoCaja.MovimientoCajaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Auditoria.ProductoAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Compras.CrearCompraService>();
+builder.Services.AddScoped<API_SISTEMA.Services.PagoCompra.PagoCompraService>();
+builder.Services.AddScoped<API_SISTEMA.Services.MovimientoCaja.MovimientoCajaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.ProductoAuditoriaService>();
 builder.Services.AddScoped<ProductoCrearService>();
-builder.Services.AddScoped<API_SISTEMA.services.ProductoS.ProductoActualizarService>();
-builder.Services.AddScoped<API_SISTEMA.services.ProductoS.ProductoImagenService>();
-builder.Services.AddScoped<API_SISTEMA.services.Auditoria.CatalogoAuditoriaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaImagenService>();
-builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaCrearService>();
-builder.Services.AddScoped<API_SISTEMA.services.Marca.MarcaActualizarService>();
-builder.Services.AddScoped<API_SISTEMA.services.Marca.EstadoMarcaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaImagenService>();
-builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaCrearService>();
-builder.Services.AddScoped<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
-builder.Services.AddScoped<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Auditoria.PresentacionAuditoriaService>();
-builder.Services.AddScoped<API_SISTEMA.services.Prestacion.CrearPresentacionServices>();
-builder.Services.AddScoped<API_SISTEMA.services.Prestacion.ActualizarPresentacionService>();
-builder.Services.AddScoped<API_SISTEMA.services.Prestacion.EstadoPresentacionService>();
-builder.Services.AddScoped<API_SISTEMA.services.Prestacion.ListarPresentacionServices>();
-builder.Services.AddScoped<API_SISTEMA.services.Sesiones.SesionCierreService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Productos.ProductoActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Productos.ProductoImagenService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaImagenService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaCrearService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Marca.EstadoMarcaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Categoria.CategoriaImagenService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Categoria.CategoriaCrearService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Categoria.CategoriaActualizarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Categoria.EstadoCategoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.PresentacionAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Presentaciones.CrearPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Presentaciones.ActualizarPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Presentaciones.EstadoPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Presentaciones.ListarPresentacionService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Sesiones.SesionCierreService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<API_SISTEMA.Securyti.ContextoPeticion>();
-builder.Services.AddScoped<API_SISTEMA.services.Auditoria.AuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Security.ContextoPeticion>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.AuditoriaService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UsuarioTokenValidator>();
 builder.Services.Configure<JwtSettings>(o =>
@@ -168,7 +169,7 @@ try
     Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=999999")).StatusCode == HttpStatusCode.NotFound, "Endpoint de movimientos devuelve 404");
     var nueva = await client.PostAsJsonAsync("/api/Presentaciones", new { descripcion = "Unidad auditoría" });
     Check(nueva.StatusCode == HttpStatusCode.Created, "Crear presentación auditada");
-    var presentacionAuditada = await nueva.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>();
+    var presentacionAuditada = await nueva.Content.ReadFromJsonAsync<API_SISTEMA.Dtos.Presentaciones.PresentacionRespuestaDto>();
     var ruta = "/api/Presentaciones/" + presentacionAuditada!.IdPresentacion;
     Check((await client.PutAsJsonAsync(ruta, new { descripcion = "Caja auditoría" })).IsSuccessStatusCode, "Editar presentación auditada");
     await client.PutAsJsonAsync(ruta, new { descripcion = "Caja auditoría" });
@@ -246,7 +247,7 @@ try
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token cerrado no puede volver a usarse");
     using (var scope = app.Services.CreateScope())
         token = (await scope.ServiceProvider.GetRequiredService<LoginService>().Login(
-            new API_SISTEMA.DTOs.Login.LoginDTOs { usuario = "admin", password = "Password123" }))!.token;
+            new API_SISTEMA.Dtos.Login.LoginDto { usuario = "admin", password = "Password123" }))!.token;
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
     {
@@ -280,7 +281,7 @@ try
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token rechazado al desactivar cuenta");
     using (var scope = app.Services.CreateScope())
         Check(await scope.ServiceProvider.GetRequiredService<LoginService>().Login(
-            new API_SISTEMA.DTOs.Login.LoginDTOs { usuario = "admin", password = "Password123" }) is null,
+            new API_SISTEMA.Dtos.Login.LoginDto { usuario = "admin", password = "Password123" }) is null,
             "Cuenta inactiva no inicia sesión");
     await UpdateAdmin(u => { u.estado = true; u.id_rol = 2; });
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Token rechazado al cambiar rol");
@@ -296,7 +297,7 @@ try
             TokenHash = System.Security.Cryptography.SHA256.HashData(Guid.NewGuid().ToByteArray()) };
         db.SesionesUsuario.Add(expirada);
         await db.SaveChangesAsync();
-        var processor = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Sesiones.SesionCierreService>();
+        var processor = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Sesiones.SesionCierreService>();
         Check(await processor.ProcesarVencidas() == 1, "Procesador detecta sesión vencida sin navegador");
         Check(await processor.ProcesarVencidas() == 0, "Expiración no se registra dos veces");
         var evento = await db.AuditoriaEventos.Include(e => e.Detalles).SingleAsync(e => e.Accion == "SESION_EXPIRADA");
@@ -326,9 +327,9 @@ try
         { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks")) };
         try
         {
-            var categoria = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaCrearService>()
+            var categoria = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Categoria.CategoriaCrearService>()
                 .CrearCategoria(new() { Nombre = "Bebidas", UrlImagen = "https://example.com/categoria.png" });
-            var marca = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaCrearService>()
+            var marca = await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Marca.MarcaCrearService>()
                 .CrearMarca(new() { Nombre = "Marca inicial", IdCategoria = categoria.IdCategoria });
             var presentacion = new Presentacion { Descripcion = "Unidad producto", Estado = true };
             db.presentaciones.Add(presentacion);
@@ -339,8 +340,8 @@ try
                 presentaciones = [new() { id_presentacion = presentacion.IdPresentacion, unidades_equivalentes = 1, precio = 10m }]
             });
             var asociacion = producto.ProductoPresentaciones.Single();
-            var editarProducto = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.ProductoS.ProductoActualizarService>();
-            var dtoProducto = new API_SISTEMA.DTOs.Productos.ActualizarProductoDTO
+            var editarProducto = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Productos.ProductoActualizarService>();
+            var dtoProducto = new API_SISTEMA.Dtos.Productos.ActualizarProductoDto
             {
                 nombre = "Producto nuevo", codigo_barra = "AUD001", IdMarca = marca.IdMarca, stock_minimo = 0,
                 presentaciones = [new() { id_producto_presentacion = asociacion.id_producto_presentacion,
@@ -350,7 +351,7 @@ try
             await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
             db.proveedores.Add(new Proveedores { id_proveedor = 1, nombre = "Proveedor prueba", telefono = "123", fecha_creacion = DateTime.Now });
             db.estado_compras.AddRange(new EstadoCompra { id_estado_compra = 1, nombre_estado_compra = "Pagada", descripcion = "Pagada" }, new EstadoCompra { id_estado_compra = 2, nombre_estado_compra = "Pendiente", descripcion = "Pendiente" });
-            db.caja.Add(new caja { id_caja = 1, estado = true });
+            db.caja.Add(new API_SISTEMA.Models.Caja { id_caja = 1, estado = true });
             db.usuarios.Add(new Usuario { id_usuario = 900, id_rol = 1, nombre = "Segundo", apellido = "Admin", usuario = "adminCaja", password = "unused", telefono = "900", estado = true, fecha_Creacion = DateTime.Now });
             db.tipomovimientocaja.AddRange(new TipoMovimientoCaja { id_tipo_movimiento = 14, nombre_movimiento = "Compra", naturaleza = "Salida" }, new TipoMovimientoCaja { id_tipo_movimiento = 18, nombre_movimiento = "Abono", naturaleza = "EGRESO" });
             await db.SaveChangesAsync();
@@ -361,13 +362,13 @@ try
             try { await cajaService.AbrirCaja(new() { id_caja = 1, monto_inicial = 0 }, 900); } catch (CajaValidationException) { dobleApertura = true; }
             Check(dobleApertura && await db.sesioncaja.CountAsync(s => s.fecha_cierre == null) == 1, "Caja rechaza segunda apertura");
             accessorCatalogo.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks"));
-            var compras = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.CompraS.CrearCompraService>();
-            var compraDto = new API_SISTEMA.DTOs.Compras.RegistroComprasDTO
+            var compras = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Compras.CrearCompraService>();
+            var compraDto = new API_SISTEMA.Dtos.Compras.RegistroComprasDto
             { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.id_producto, cantidad = 5, precio = 50m }] };
             var compra = await compras.CrearCompra(compraDto, 1);
             Check(compra.IdProveedor == 1 && compra.TotalCompra == 50m && compra.SaldoPendiente == 30m && producto.stock == 5, "Compra usa proveedor, total de linea y stock correcto");
             Check(await db.pagosCompras.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.detalle_compras.SingleAsync()).subtotal == 50m, "Compra confirma pago, detalle y movimiento");
-            var pagoService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.PagoCompra.Pago>();
+            var pagoService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.PagoCompra.PagoCompraService>();
             var exceso = false;
             try { await pagoService.AbonarCompra(new() { id_compra = compra.IdCompra, monto = 31m }, 1); } catch (CompraValidationException) { exceso = true; }
             Check(exceso && await db.pagosCompras.CountAsync() == 1, "Abono mayor al saldo rechazado sin guardar pago");
@@ -383,7 +384,7 @@ try
             try { await cajaService.CerrarCaja(new() { id_sesion_caja = sesionCompartida.id_sesion_caja + 1, monto_contado = 50m }, 1); }
             catch (CajaValidationException) { cierreViejo = true; }
             Check(cierreViejo && await db.sesioncaja.AnyAsync(s => s.fecha_cierre == null), "Caja rechaza cierre de otro turno");
-            var resumenService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.MovimientoCaja.ListarMovimientoCajaService>();
+            var resumenService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.MovimientoCaja.ListarMovimientoCajaService>();
             var antesDeCerrar = (await resumenService.ConsultarResumen(sesionCompartida.id_sesion_caja))!;
             Check(antesDeCerrar.saldo_esperado == 50m, "Resumen previo coincide con compras y abonos");
             db.movimientocaja.Add(new MovimientoCaja { id_sesion_caja = sesionCompartida.id_sesion_caja,
@@ -422,13 +423,13 @@ try
                 "Totales incluyen movimientos fuera de pantalla y excluyen otras sesiones");
             Check(resumen.movimientos.Select(m => m.id_movimiento_caja).SequenceEqual(pruebaMovimientos.OrderByDescending(m => m.id_movimiento_caja).Take(100).Select(m => m.id_movimiento_caja)),
                 "Listado ordena por fecha e ID cuando las fechas coinciden");
-            var tokenResumen = (await scope.ServiceProvider.GetRequiredService<LoginService>().Login(new API_SISTEMA.DTOs.Login.LoginDTOs { usuario = "admin", password = "Changed123" }))!.token;
+            var tokenResumen = (await scope.ServiceProvider.GetRequiredService<LoginService>().Login(new API_SISTEMA.Dtos.Login.LoginDto { usuario = "admin", password = "Changed123" }))!.token;
             using var resumenRequest = new HttpRequestMessage(HttpMethod.Get, "/api/MovimientoCaja/listar?idSesionCaja=" + sesionCompartida.id_sesion_caja);
             resumenRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResumen);
             resumenRequest.Headers.Add("Accept", "application/json");
             using var resumenResponse = await client.SendAsync(resumenRequest);
             Check(resumenResponse.IsSuccessStatusCode, "Resumen HTTP status " + resumenResponse.StatusCode);
-            var resumenHttp = await resumenResponse.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.MovimientoCaja.ResumenMovimientosCajaDTO>();
+            var resumenHttp = await resumenResponse.Content.ReadFromJsonAsync<API_SISTEMA.Dtos.MovimientoCaja.ResumenMovimientosCajaDto>();
             Check(resumenResponse.IsSuccessStatusCode && resumenHttp!.total_movimientos == 153 && resumenHttp.movimientos.Count == 100 && resumenHttp.saldo_esperado == -7.25m,
                 "Endpoint entrega resumen completo y ultimos 100 de sesion cerrada");
             var movimientoInvalido = pruebaMovimientos[0].id_movimiento_caja;
@@ -451,17 +452,17 @@ try
             Check(eventosProducto.Single(e => e.Accion == "PRODUCTO_EDITADO").Detalles.Single().Campo == "nombre" && eventosProducto.Single(e => e.Accion == "PRODUCTO_EDITADO").Detalles.Single().ValorNuevo == "Producto nuevo", "Producto registra solo nombre modificado");
             Check(eventosProducto.Single(e => e.Accion == "PRODUCTO_PRESENTACION_EDITADA").Detalles.Single().Campo == "precio" && eventosProducto.Single(e => e.Accion == "PRODUCTO_PRESENTACION_EDITADA").Detalles.Single().ValorNuevo == "12", "Presentacion de producto registra solo precio modificado");
             Check(eventosProducto.All(e => e.IdUsuario == 1), "Producto registra responsable autenticado");
-            var editarMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaActualizarService>();
+            var editarMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Marca.MarcaActualizarService>();
             await editarMarca.ActualizarMarca(marca.IdMarca, new() { Nombre = "Marca nueva", IdCategoria = categoria.IdCategoria });
             await editarMarca.ActualizarMarca(marca.IdMarca, new() { Nombre = "Marca nueva", IdCategoria = categoria.IdCategoria });
-            var editarCategoria = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaActualizarService>();
+            var editarCategoria = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Categoria.CategoriaActualizarService>();
             await editarCategoria.ActualizarCategoria(categoria.IdCategoria, new() { Nombre = "Bebidas", QuitarImagen = true });
             await editarCategoria.ActualizarCategoria(categoria.IdCategoria, new() { Nombre = "Bebidas" });
-            var estadoMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.EstadoMarcaService>();
+            var estadoMarca = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Marca.EstadoMarcaService>();
             await estadoMarca.CambiarEstado(marca.IdMarca, new() { Estado = false });
             await estadoMarca.CambiarEstado(marca.IdMarca, new() { Estado = false });
             await estadoMarca.CambiarEstado(marca.IdMarca, new() { Estado = true });
-            var estadoCategoria = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.EstadoCategoriaService>();
+            var estadoCategoria = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Categoria.EstadoCategoriaService>();
             await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = false });
             await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = false });
             await estadoCategoria.CambiarEstado(categoria.IdCategoria, new() { Estado = true });
@@ -493,7 +494,7 @@ try
             catch (DbUpdateException) { falloCrearProducto = true; db.ChangeTracker.Clear(); }
             try
             {
-                await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.ProductoS.ProductoActualizarService>()
+                await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Productos.ProductoActualizarService>()
                     .ActualizarProducto(productoAntes.id_producto, new()
                     { nombre = "Nombre revertido", codigo_barra = productoAntes.codigo_barra!, IdMarca = productoAntes.IdMarca, stock_minimo = 0 });
             }
@@ -506,9 +507,9 @@ try
             var categoriaId = await db.categorias.Select(c => c.IdCategoria).FirstAsync();
             var categoriaRevertida = false;
             var marcaRevertida = false;
-            try { await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Categoria.CategoriaCrearService>().CrearCategoria(new() { Nombre = "Rollback categoria" }); }
+            try { await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Categoria.CategoriaCrearService>().CrearCategoria(new() { Nombre = "Rollback categoria" }); }
             catch (DbUpdateException) { categoriaRevertida = true; db.ChangeTracker.Clear(); }
-            try { await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Marca.MarcaCrearService>().CrearMarca(new() { Nombre = "Rollback marca", IdCategoria = categoriaId }); }
+            try { await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Marca.MarcaCrearService>().CrearMarca(new() { Nombre = "Rollback marca", IdCategoria = categoriaId }); }
             catch (DbUpdateException) { marcaRevertida = true; db.ChangeTracker.Clear(); }
             Check(categoriaRevertida && await db.categorias.CountAsync() == categoriasAntes, "Fallo de auditoria revierte categoria");
             Check(marcaRevertida && await db.Marcas.CountAsync() == marcasAntes, "Fallo de auditoria revierte marca");
@@ -523,8 +524,8 @@ try
         var falloAuditoria = false;
         try
         {
-            await scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.Prestacion.CrearPresentacionServices>()
-                .CrearPresentacion(new API_SISTEMA.DTOs.Presentaciones.CrearPresentacionDTO { Descripcion = "Debe revertirse" });
+            await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Presentaciones.CrearPresentacionService>()
+                .CrearPresentacion(new API_SISTEMA.Dtos.Presentaciones.CrearPresentacionDto { Descripcion = "Debe revertirse" });
         }
         catch (DbUpdateException) { falloAuditoria = true; }
         finally { accessor.HttpContext = null; }
@@ -554,7 +555,7 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(Producto_Presentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(ProductoPresentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(API_SISTEMA.Models.Caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.

@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
-    public class caja
+    public class Caja
     {
         [Key]
         public int id_caja { get; set; }

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class Presentacion
     {

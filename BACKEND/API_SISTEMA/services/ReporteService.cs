@@ -1,4 +1,4 @@
-﻿namespace API_SISTEMA.services
+﻿namespace API_SISTEMA.Services
 {
     public class ReporteService
     {

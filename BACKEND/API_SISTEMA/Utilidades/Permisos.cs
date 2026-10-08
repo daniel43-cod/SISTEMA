@@ -1,6 +1,6 @@
 ﻿namespace API_SISTEMA.Utilidades
 {
-    public static class permisos
+    public static class Permisos
     {
         public const int Vender = 1;
         public const int Descuento = 2;

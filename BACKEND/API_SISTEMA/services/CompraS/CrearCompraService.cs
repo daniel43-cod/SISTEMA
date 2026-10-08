@@ -1,13 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Compras;
-using API_SISTEMA.models;
-using API_SISTEMA.services.MovimientoCaja;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Compras;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services.MovimientoCaja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.CompraS
+namespace API_SISTEMA.Services.Compras
 {
     public class CrearCompraService
     {
@@ -32,7 +32,7 @@ namespace API_SISTEMA.services.CompraS
                 throw new CompraValidationException("Los montos deben respetar decimal(10,2), con hasta dos decimales.");
         }
 
-        public async Task<RegistroCompras> CrearCompra( RegistroComprasDTO compraDto, int idUsuario, CancellationToken ct = default)
+        public async Task<RegistroCompras> CrearCompra( RegistroComprasDto compraDto, int idUsuario, CancellationToken ct = default)
         {
             if (compraDto == null)
                 throw new CompraValidationException(
@@ -72,7 +72,7 @@ namespace API_SISTEMA.services.CompraS
                 );
 
             // Usa el turno compartido y bloquea el cierre hasta confirmar toda la compra.
-            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context, ct);
+            var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context, ct);
             var idsProductos = compraDto.detalle_compra.Select(d => d.id_producto).Distinct().ToList();
 
             var productos = await _context.productos.Where(p =>idsProductos.Contains(p.id_producto)).ToListAsync(ct);

@@ -1,8 +1,8 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class ProductoPrecioService
     {
@@ -14,7 +14,7 @@ namespace API_SISTEMA.services
             _context = context;
         }
 
-        public async Task<List<Producto_precio>> ListarProductoPrecio()
+        public async Task<List<ProductoPrecio>> ListarProductoPrecio()
         {
             return await _context.producto_precios.ToListAsync();
         }

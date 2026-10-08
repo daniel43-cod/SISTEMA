@@ -3,7 +3,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-    <Compile Include="../../API_SISTEMA/services/marca/MarcaImagenService.cs" Link="MarcaImagenService.cs" />
+    <Compile Include="../../API_SISTEMA/Services/Marca/MarcaImagenService.cs" Link="MarcaImagenService.cs" />
     <Using Include="Microsoft.AspNetCore.Http" /><Using Include="Microsoft.AspNetCore.Hosting" /><Using Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
 </Project>

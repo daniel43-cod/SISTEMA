@@ -89,3 +89,22 @@ test('Cierre conserva conflicto o falta de permisos y nunca reintenta automatica
     fetch.mock.restore()
   }
 })
+
+test('Resumen usa totales del backend aunque solo entregue los ultimos 100', async t => {
+  const { loadCashSummary, parseCashSummary } = await import('../src/features/cash/api/cashApi.ts')
+  const data = { id_sesion_caja: 7, monto_inicial: 50, total_entradas: 1000, total_salidas: 500,
+    saldo_esperado: 550, total_movimientos: 2000, movimientos: Array.from({ length: 100 }, (_, i) => ({
+      id_movimiento_caja: i + 1, id_sesion_caja: 7, tipo_movimiento: 'Compra', naturaleza: ' Salida ',
+      usuario: 'Admin', fecha_movimiento: '2026-10-07T18:00:00', monto: 1, descripcion: null })) }
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/MovimientoCaja/listar?idSesionCaja=7')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer token')
+    return Response.json(data)
+  })
+  assert.deepEqual(await loadCashSummary('token', 7), data)
+  assert.throws(() => parseCashSummary(data, 8), ApiError)
+  assert.throws(() => parseCashSummary({ ...data, total_salidas: NaN }, 7), ApiError)
+  assert.throws(() => parseCashSummary({ ...data, movimientos: [{ ...data.movimientos[0], id_sesion_caja: 8 }] }, 7), ApiError)
+  assert.throws(() => parseCashSummary({ ...data, movimientos: Array(100).fill(data.movimientos[0]) }, 7), ApiError)
+  assert.deepEqual(parseCashSummary({ ...data, total_movimientos: 0, movimientos: [] }, 7).movimientos, [])
+})

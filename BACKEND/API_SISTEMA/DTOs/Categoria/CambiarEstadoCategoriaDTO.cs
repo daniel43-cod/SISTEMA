@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace API_SISTEMA.DTOs.Categoria;
+namespace API_SISTEMA.Dtos.Categoria;
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed class CambiarEstadoCategoriaDTO
+public sealed class CambiarEstadoCategoriaDto
 {
     [Required(ErrorMessage = "El estado es obligatorio.")]
     public bool? Estado { get; set; }

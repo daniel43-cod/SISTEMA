@@ -1,12 +1,12 @@
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Categoria;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Categoria;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Categoria
+namespace API_SISTEMA.Services.Categoria
 {
     public class CategoriaCrearService
     {
@@ -22,8 +22,8 @@ namespace API_SISTEMA.services.Categoria
             _imagenes = imagenes;
         }
 
-        public async Task<RespuestaCategoriaDTO> CrearCategoria(
-            CrearCategoriaDTO dto, CancellationToken cancellationToken = default, IFormFile? imagen = null)
+        public async Task<RespuestaCategoriaDto> CrearCategoria(
+            CrearCategoriaDto dto, CancellationToken cancellationToken = default, IFormFile? imagen = null)
         {
             // Validar también aquí protege llamadas al servicio fuera del controlador.
             if (dto is null)
@@ -56,7 +56,7 @@ namespace API_SISTEMA.services.Categoria
                     throw new CategoriaDuplicadaException();
     
                 // El servidor asigna estado y fecha; el ID lo genera SQL Server.
-                var categoria = new API_SISTEMA.models.Categoria
+                var categoria = new API_SISTEMA.Models.Categoria
                 {
                     nombreCategoria = nombreCategoria,
                     FechaCreacion = DateTime.Now,
@@ -73,7 +73,7 @@ namespace API_SISTEMA.services.Categoria
             await transaction.CommitAsync(cancellationToken);
 
             // Devolvemos un DTO, sin exponer la entidad de Entity Framework.
-            return new RespuestaCategoriaDTO
+            return new RespuestaCategoriaDto
             {
                 IdCategoria = categoria.IdCategoria,
                 Nombre = categoria.nombreCategoria,

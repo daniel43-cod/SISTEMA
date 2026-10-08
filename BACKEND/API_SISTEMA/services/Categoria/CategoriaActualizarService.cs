@@ -1,12 +1,12 @@
-using API_SISTEMA.services.Auditoria;
+using API_SISTEMA.Services.Auditoria;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Categoria;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Categoria;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Categoria;
+namespace API_SISTEMA.Services.Categoria;
 
 public class CategoriaActualizarService
 {
@@ -22,8 +22,8 @@ public class CategoriaActualizarService
     }
 
     // Devuelve null si no existe la categoría; el controlador podrá responder 404.
-    public async Task<RespuestaCategoriaDTO?> ActualizarCategoria(
-        int idCategoria, ActualizarCategoriaDTO dto,
+    public async Task<RespuestaCategoriaDto?> ActualizarCategoria(
+        int idCategoria, ActualizarCategoriaDto dto,
         CancellationToken cancellationToken = default, IFormFile? imagen = null)
     {
         if (idCategoria <= 0)
@@ -82,7 +82,7 @@ public class CategoriaActualizarService
             await transaction.CommitAsync(cancellationToken);
 
             // No borrar la imagen anterior: podría estar referenciada por otro registro.
-            return new RespuestaCategoriaDTO
+            return new RespuestaCategoriaDto
             {
                 IdCategoria = categoria.IdCategoria,
                 Nombre = categoria.nombreCategoria,

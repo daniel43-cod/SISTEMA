@@ -1,12 +1,12 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Gastos;
-using API_SISTEMA.models;
-using API_SISTEMA.services.MovimientoCaja;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Gastos;
+using API_SISTEMA.Models;
+using API_SISTEMA.Services.MovimientoCaja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens.Experimental;
 
-namespace API_SISTEMA.services.Gastos
+namespace API_SISTEMA.Services.Gastos
 {
     public class CrearGastosService
     {
@@ -18,11 +18,11 @@ namespace API_SISTEMA.services.Gastos
             _movimientoCajaService = movimientoCajaService;
         }
 
-        public async Task<int> CrearGasto(IngresarGastoDTOs gastoDto, int IdUsuario)
+        public async Task<int> CrearGasto(IngresarGastoDto gastoDto, int IdUsuario)
         {
             // Pago/gasto y movimiento se confirman antes de permitir el cierre.
             await using var txCaja = await _context.Database.BeginTransactionAsync();
-            var turnoCompartido = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context);
+            var turnoCompartido = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context);
          var sesionCaja = turnoCompartido;
             if (sesionCaja == null)
             {
@@ -40,7 +40,7 @@ namespace API_SISTEMA.services.Gastos
             }
 
            
-            var gasto = new models.Gastos
+            var gasto = new API_SISTEMA.Models.Gastos
             {
                 id_sesion_caja = sesionCaja.id_sesion_caja,
                 id_usuario = IdUsuario,

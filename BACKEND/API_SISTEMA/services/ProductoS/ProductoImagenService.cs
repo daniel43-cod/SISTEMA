@@ -3,7 +3,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Processing;
 
-namespace API_SISTEMA.services.ProductoS;
+namespace API_SISTEMA.Services.Productos;
 
 // Maneja archivos propios; nunca descarga las URLs externas.
 public sealed class ProductoImagenService

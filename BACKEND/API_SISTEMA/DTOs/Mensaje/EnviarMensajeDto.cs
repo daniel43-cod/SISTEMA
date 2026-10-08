@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.DTOs.Mensaje
+namespace API_SISTEMA.Dtos.Mensaje
 {
     public class EnviarMensajeDto
     {

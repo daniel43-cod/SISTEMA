@@ -1,10 +1,10 @@
-using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Productos;
-using API_SISTEMA.models;
+using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Productos;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class ProductoService
     {
@@ -15,7 +15,7 @@ namespace API_SISTEMA.services
             _context = context;
         }
 
-        public async Task<ProductoPaginaDTO> ListarAdministracion(ProductoConsultaDTO filtro,
+        public async Task<ProductoPaginaDto> ListarAdministracion(ProductoConsultaDto filtro,
             CancellationToken cancellationToken)
         {
             Validator.ValidateObject(filtro, new ValidationContext(filtro), validateAllProperties: true);
@@ -32,7 +32,7 @@ namespace API_SISTEMA.services
             var total = await consulta.CountAsync(cancellationToken);
             var items = await consulta.OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
                 .Skip((filtro.Pagina - 1) * filtro.TamanoPagina).Take(filtro.TamanoPagina)
-                .Select(p => new ProductoResumenDTO
+                .Select(p => new ProductoResumenDto
                 {
                     IdProducto = p.id_producto, CodigoBarra = p.codigo_barra, Nombre = p.nombre,
                     Imagen = p.imagen, StockUnidades = p.stock ?? 0, StockMinimo = p.stock_minimo ?? 0,
@@ -40,18 +40,18 @@ namespace API_SISTEMA.services
                     IdCategoria = p.Marca.IdCategoria, Categoria = p.Marca.Categoria.nombreCategoria,
                     CategoriaActiva = p.Marca.Categoria.Estado
                 }).ToListAsync(cancellationToken);
-            return new ProductoPaginaDTO
+            return new ProductoPaginaDto
             {
                 Pagina = filtro.Pagina, TamanoPagina = filtro.TamanoPagina, Total = total, Items = items
             };
         }
 
-        public async Task<ProductoDetalleDTO?> ObtenerDetalleAdministracion(int id,
+        public async Task<ProductoDetalleDto?> ObtenerDetalleAdministracion(int id,
             CancellationToken cancellationToken)
         {
             if (id <= 0) throw new ValidationException("El ID del producto debe ser mayor que cero.");
             var detalle = await _context.productos.AsNoTracking().Where(p => p.id_producto == id)
-                .Select(p => new ProductoDetalleDTO
+                .Select(p => new ProductoDetalleDto
                 {
                     IdProducto = p.id_producto, CodigoBarra = p.codigo_barra, Nombre = p.nombre,
                     Imagen = p.imagen, StockUnidades = p.stock ?? 0, StockMinimo = p.stock_minimo ?? 0,
@@ -64,7 +64,7 @@ namespace API_SISTEMA.services
             detalle.Presentaciones = await _context.producto_presentaciones.AsNoTracking()
                 .Where(pp => pp.id_producto == id)
                 .OrderBy(pp => pp.Presentacion.Descripcion).ThenBy(pp => pp.id_producto_presentacion)
-                .Select(pp => new ProductoPresentacionDetalleDTO
+                .Select(pp => new ProductoPresentacionDetalleDto
                 {
                     IdProductoPresentacion = pp.id_producto_presentacion,
                     IdPresentacion = pp.IdPresentacion, Descripcion = pp.Presentacion.Descripcion,
@@ -78,11 +78,11 @@ namespace API_SISTEMA.services
                         ? detalle.StockUnidades / presentacion.UnidadesEquivalentes : 0;
             return detalle;
         }
-        public async Task<List<ListarPresentacionProductoDTO>> ListarPresentaciones(int idProducto)
+        public async Task<List<ListarPresentacionProductoDto>> ListarPresentaciones(int idProducto)
         {
             return await _context.producto_presentaciones
                 .Where(p => p.id_producto == idProducto)
-                .Select(p => new ListarPresentacionProductoDTO
+                .Select(p => new ListarPresentacionProductoDto
                 {
                     id_producto_presentacion = p.id_producto_presentacion,
                     id_producto = p.id_producto,
@@ -97,10 +97,10 @@ namespace API_SISTEMA.services
 
 
         //buscar producto para agregarlo a la venta
-        public async Task<List<ProductoVentaBuscarDTO>> BuscarProductosVenta(string texto)
+        public async Task<List<ProductoVentaBuscarDto>> BuscarProductosVenta(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
-                return new List<ProductoVentaBuscarDTO>();
+                return new List<ProductoVentaBuscarDto>();
 
             texto = texto.Trim();
 
@@ -110,7 +110,7 @@ namespace API_SISTEMA.services
                     p.Producto.nombre.Contains(texto) ||
                     (p.Presentacion.Descripcion != null && p.Presentacion.Descripcion.Contains(texto)) ||
                     p.Producto.codigo_barra.Contains(texto))
-                .Select(p => new ProductoVentaBuscarDTO
+                .Select(p => new ProductoVentaBuscarDto
                 {
                     id_producto = p.id_producto,
                     id_producto_presentacion = p.id_producto_presentacion,

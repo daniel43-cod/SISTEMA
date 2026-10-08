@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
-namespace API_SISTEMA.models
+namespace API_SISTEMA.Models
 {
     public class Categoria
     {

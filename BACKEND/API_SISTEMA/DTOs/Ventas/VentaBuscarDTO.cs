@@ -1,23 +1,14 @@
-﻿namespace API_SISTEMA.DTOs.Ventas
+﻿namespace API_SISTEMA.Dtos.Ventas
 {
-    public class VentaBuscarDTO
+    public class VentaBuscarDto
     {
         public int id_venta { get; set; }
         public DateTime fecha_venta { get; set; }
         public decimal total { get; set; }
 
-        public List<DetalleVentaBuscarDTO> detalles { get; set; }
+        public List<DetalleVentaBuscarDto> detalles { get; set; }
             = new();
     }
 
-    public class DetalleVentaBuscarDTO
-    {
-        public int id_detalle_venta { get; set; }
-        public int id_producto { get; set; }
-        public string producto { get; set; }
-        public int cantidad { get; set; }
-        public decimal precio { get; set; }
-        public decimal descuento { get; set; }
-        public decimal subtotal { get; set; }
-    }
+    
 }

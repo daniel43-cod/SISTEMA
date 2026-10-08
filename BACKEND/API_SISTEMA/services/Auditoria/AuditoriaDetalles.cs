@@ -1,7 +1,7 @@
 using System.Text.Json;
-using API_SISTEMA.models;
+using API_SISTEMA.Models;
 
-namespace API_SISTEMA.services.Auditoria;
+namespace API_SISTEMA.Services.Auditoria;
 
 internal static class AuditoriaDetalles
 {

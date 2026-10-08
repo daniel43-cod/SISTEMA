@@ -1,11 +1,10 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs.Empresa;
-using API_SISTEMA.DTOs.EmpresaDTOs;
-using API_SISTEMA.DTOs.Ventas;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos.Empresa;
+using API_SISTEMA.Dtos.Ventas;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class EmpresaService
     {
@@ -19,7 +18,7 @@ namespace API_SISTEMA.services
 
 
 
-        public async Task<Empresa> CrearEmpresa(EmpresaDTOs empresaDto)
+        public async Task<Empresa> CrearEmpresa(EmpresaDto empresaDto)
         {
             if (empresaDto == null)
                 throw new Exception("Los datos de la empresa son obligatorios.");

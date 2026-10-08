@@ -1,11 +1,11 @@
-﻿using API_SISTEMA.data;
-using API_SISTEMA.DTOs;
-using API_SISTEMA.DTOs.Catalogo;
-using API_SISTEMA.models;
+﻿using API_SISTEMA.Data;
+using API_SISTEMA.Dtos;
+using API_SISTEMA.Dtos.Catalogo;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.Json;
 
-namespace API_SISTEMA.services
+namespace API_SISTEMA.Services
 {
     public class CategoriaService
     {
@@ -19,12 +19,12 @@ namespace API_SISTEMA.services
         }
 
      
-        public async Task<List<ProductoCatalogoDTOs>> ListarCatalogoPorCategoria(int idCategoria)
+        public async Task<List<ProductoCatalogoDto>> ListarCatalogoPorCategoria(int idCategoria)
         {
             var productos = await _context.productos
                 // El producto obtiene su categoría a través de la marca.
                 .Where(p => p.Marca.IdCategoria == idCategoria)
-                .Select(p => new ProductoCatalogoDTOs
+                .Select(p => new ProductoCatalogoDto
                 {
                     id_producto = p.id_producto,
                     nombre = p.nombre,
@@ -32,7 +32,7 @@ namespace API_SISTEMA.services
                     stock = p.stock??0,
 
                     presentaciones = p.ProductoPresentaciones
-                        .Select(pp => new PresentacionCatalogoDTOs
+                        .Select(pp => new PresentacionCatalogoDto
                         {
                             id_producto_presentacion = pp.id_producto_presentacion,
                             presentacion = pp.Presentacion.Descripcion,

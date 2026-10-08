@@ -1,6 +1,6 @@
-namespace API_SISTEMA.DTOs.Presentaciones;
+namespace API_SISTEMA.Dtos.Presentaciones;
 
-public sealed class PresentacionRespuestaDTO
+public sealed class PresentacionRespuestaDto
 {
     public int IdPresentacion { get; init; }
     public string? Descripcion { get; init; }

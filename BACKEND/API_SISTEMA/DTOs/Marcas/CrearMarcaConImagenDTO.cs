@@ -1,6 +1,6 @@
-namespace API_SISTEMA.DTOs.Marcas;
+namespace API_SISTEMA.Dtos.Marcas;
 
-public sealed class CrearMarcaConImagenDTO : CrearMarcaDTO
+public sealed class CrearMarcaConImagenDto : CrearMarcaDto
 {
     public IFormFile? Imagen { get; set; }
 }

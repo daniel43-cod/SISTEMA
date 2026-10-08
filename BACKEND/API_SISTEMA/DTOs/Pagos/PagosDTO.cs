@@ -1,6 +1,6 @@
-﻿namespace API_SISTEMA.DTOs.Pagos
+﻿namespace API_SISTEMA.Dtos.Pagos
 {
-    public class PagosDTO
+    public class PagosDto
     {
         public decimal monto_pagado { get; set; }
 

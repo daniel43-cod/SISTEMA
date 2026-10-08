@@ -1,9 +1,9 @@
-using API_SISTEMA.data;
-using API_SISTEMA.models;
+using API_SISTEMA.Data;
+using API_SISTEMA.Models;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.services.Caja;
+namespace API_SISTEMA.Services.Caja;
 
 public static class CajaSesionActual
 {

@@ -1,10 +1,10 @@
-﻿using API_SISTEMA.DTOs.EmpresaDTOs;
-using API_SISTEMA.services;
+﻿using API_SISTEMA.Dtos.Empresa;
+using API_SISTEMA.Services;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Authorize(Roles =Roles.Administrador)]
     [Route("api/[controller]")]
@@ -19,7 +19,7 @@ namespace API_SISTEMA.controllers
         }
 
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear([FromBody] EmpresaDTOs empresaDto)
+        public async Task<IActionResult> Crear([FromBody] EmpresaDto empresaDto)
         {
             try
             {

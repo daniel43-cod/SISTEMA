@@ -1,7 +1,7 @@
-﻿using API_SISTEMA.services;
+﻿using API_SISTEMA.Services;
 using Microsoft.AspNetCore.Http;
-using API_SISTEMA.services.Categoria;
-using API_SISTEMA.DTOs.Categoria;
+using API_SISTEMA.Services.Categoria;
+using API_SISTEMA.Dtos.Categoria;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +9,7 @@ using API_SISTEMA.Utilidades;
 using System.ComponentModel.Design;
 
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -35,7 +35,7 @@ namespace API_SISTEMA.controllers
 
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet]
-        public async Task<ActionResult<List<RespuestaCategoriaDTO>>> Listar(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<RespuestaCategoriaDto>>> Listar(CancellationToken cancellationToken)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace API_SISTEMA.controllers
         [Consumes("application/json")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> CambiarEstado([Range(1, int.MaxValue)] int idCategoria,
-            [FromBody] CambiarEstadoCategoriaDTO dto, [FromServices] EstadoCategoriaService service,
+            [FromBody] CambiarEstadoCategoriaDto dto, [FromServices] EstadoCategoriaService service,
             CancellationToken cancellationToken)
         {
             try
@@ -94,7 +94,7 @@ namespace API_SISTEMA.controllers
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost]
         [Consumes("application/json")]
-        public Task<IActionResult> Crear([FromBody] CrearCategoriaDTO dto, CancellationToken cancellationToken)
+        public Task<IActionResult> Crear([FromBody] CrearCategoriaDto dto, CancellationToken cancellationToken)
             => CrearInterno(dto, null, cancellationToken);
 
         [Authorize(Roles = Roles.Administrador)]
@@ -102,13 +102,13 @@ namespace API_SISTEMA.controllers
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(6 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
-        public Task<IActionResult> CrearConImagen([FromForm] CrearCategoriaConImagenDTO dto, CancellationToken cancellationToken)
+        public Task<IActionResult> CrearConImagen([FromForm] CrearCategoriaConImagenDto dto, CancellationToken cancellationToken)
             => CrearInterno(dto, dto.Imagen, cancellationToken);
 
         [Authorize(Roles = Roles.Administrador)]
         [HttpPut("{idCategoria:int}")]
         [Consumes("application/json")]
-        public Task<IActionResult> Actualizar(int idCategoria, [FromBody] ActualizarCategoriaDTO dto,
+        public Task<IActionResult> Actualizar(int idCategoria, [FromBody] ActualizarCategoriaDto dto,
             CancellationToken cancellationToken)
             => ActualizarInterno(idCategoria, dto, null, cancellationToken);
 
@@ -118,11 +118,11 @@ namespace API_SISTEMA.controllers
         [RequestSizeLimit(6 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
         public Task<IActionResult> ActualizarConImagen(int idCategoria,
-            [FromForm] ActualizarCategoriaConImagenDTO dto, CancellationToken cancellationToken)
+            [FromForm] ActualizarCategoriaConImagenDto dto, CancellationToken cancellationToken)
             => ActualizarInterno(idCategoria, dto, dto.Imagen, cancellationToken);
 
         // Ambos formatos comparten el servicio y las mismas respuestas de error.
-        private async Task<IActionResult> ActualizarInterno(int idCategoria, ActualizarCategoriaDTO dto,
+        private async Task<IActionResult> ActualizarInterno(int idCategoria, ActualizarCategoriaDto dto,
             IFormFile? imagen, CancellationToken cancellationToken)
         {
             try
@@ -152,7 +152,7 @@ namespace API_SISTEMA.controllers
             }
         }
 
-        private async Task<IActionResult> CrearInterno(CrearCategoriaDTO dto, IFormFile? imagen, CancellationToken cancellationToken)
+        private async Task<IActionResult> CrearInterno(CrearCategoriaDto dto, IFormFile? imagen, CancellationToken cancellationToken)
         {
             try
             {

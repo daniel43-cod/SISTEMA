@@ -1,14 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using API_SISTEMA.DTOs.Productos;
-using API_SISTEMA.services;
+using API_SISTEMA.Dtos.Productos;
+using API_SISTEMA.Services.Productos;
 
-productocrear Valid() => new()
+CrearProductoDto Valid() => new()
 {
     codigo_barra = "00123", nombre = "Coca 2.5", IdMarca = 1, stock_minimo = 0,
     presentaciones = [new() { id_presentacion = 1, unidades_equivalentes = 6, precio = 20.50m }]
 };
-void Invalid(Action<productocrear> change)
+void Invalid(Action<CrearProductoDto> change)
 {
     var dto = Valid(); change(dto);
     try { ProductoCrearService.Validar(dto); }
@@ -36,7 +36,7 @@ foreach (var json in new[] {
     """{"unidades_equivalentes":2147483648}"""
 })
 {
-    try { JsonSerializer.Deserialize<ProductoPresentacionDTO>(json); }
+    try { JsonSerializer.Deserialize<ProductoPresentacionDto>(json); }
     catch (JsonException) { continue; }
     throw new Exception("Se aceptó un tipo numérico inválido.");
 }

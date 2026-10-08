@@ -1,13 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using API_SISTEMA.DTOs.Mensaje;
-using API_SISTEMA.services.Conversacion;
-using API_SISTEMA.services.IA;
+using API_SISTEMA.Dtos.Mensaje;
+using API_SISTEMA.Services.Conversacion;
+using API_SISTEMA.Services.IA;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
