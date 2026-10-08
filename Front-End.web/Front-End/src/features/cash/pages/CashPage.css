@@ -1,0 +1,16 @@
+.cash-panel { width: 100%; max-width: 760px; padding: clamp(16px, 4vw, 28px); background: var(--color-surface); color: var(--color-text); border: 1px solid #e2e8f0; border-radius: 16px; display: grid; gap: 20px; }
+.cash-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cash-heading h2 { font-size: 1.2rem; }
+.cash-form, .cash-form fieldset { display: grid; gap: 20px; min-width: 0; }
+.cash-form fieldset { border: 0; padding: 0; margin: 0; }
+.cash-form select { font: inherit; }
+.cash-form .button { max-width: 260px; }
+.cash-status { font-weight: 650; }
+.cash-status.is-open, .cash-success { color: var(--color-success); }
+.cash-status.is-closed { color: var(--color-warning); }
+.cash-error { color: var(--color-error); }
+.cash-hint { color: var(--color-muted); line-height: 1.6; }
+.cash-summary { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.cash-summary dt { color: var(--color-muted); font-size: .875rem; margin-bottom: 6px; }
+.cash-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .cash-summary { grid-template-columns: 1fr; } .cash-form .button { max-width: none; } }

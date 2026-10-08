@@ -15,7 +15,7 @@ const admin: readonly StaffRole[] = ['ADMINISTRADOR']
 export const staffNavigation: readonly StaffNavigationItem[] = [
   { id: 'inicio', label: 'Inicio', group: 'General', description: 'Tu espacio de trabajo diario.', roles: staff },
   { id: 'ventas', label: 'Ventas', group: 'Operación', description: 'Nueva venta, historial y operaciones autorizadas.', roles: staff },
-  { id: 'caja', label: 'Caja', group: 'Operación', description: 'Apertura, movimientos y cierre de caja.', roles: staff },
+  { id: 'caja', label: 'Caja', group: 'Operación', description: 'Consulta y apertura de la caja compartida.', roles: admin },
   { id: 'pedidos', label: 'Pedidos', group: 'Operación', description: 'Preparación, entrega a domicilio y retiro en el negocio.', roles: staff },
   { id: 'productos', label: 'Productos', group: 'Inventario', description: '', roles: staff },
   { id: 'compras', label: 'Compras', group: 'Inventario', description: 'Registro de compras y seguimiento de pagos.', roles: admin },

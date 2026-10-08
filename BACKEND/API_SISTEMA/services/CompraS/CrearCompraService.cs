@@ -71,16 +71,8 @@ namespace API_SISTEMA.services.CompraS
                     "El proveedor indicado no existe."
                 );
 
-            var cajas = await _context.sesioncaja.Where(s => s.id_usuario_apertura == idUsuario && s.fecha_cierre == null).Take(2).ToListAsync(ct);
-            if (cajas.Count != 1)
-            {
-                throw new CompraValidationException(
-                    "Debes tener una sesión de caja abierta " +
-                    "para registrar una compra."
-                );
-            }
-
-            var sesionCaja = cajas[0];
+            // Usa el turno compartido y bloquea el cierre hasta confirmar toda la compra.
+            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context, ct);
             var idsProductos = compraDto.detalle_compra.Select(d => d.id_producto).Distinct().ToList();
 
             var productos = await _context.productos.Where(p =>idsProductos.Contains(p.id_producto)).ToListAsync(ct);

@@ -30,12 +30,8 @@ namespace API_SISTEMA.services
                 throw new Exception("Usuario no encontrado.");
             }
 
-            var sesionCaja = await _context.sesioncaja
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s =>
-                    s.id_usuario_apertura == idUsuario &&
-                    s.fecha_cierre == null
-                );
+            // Consulta del turno compartido; el responsable de cada operacion se conserva.
+            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.Consultar(_context);
 
             if (sesionCaja == null)
             {

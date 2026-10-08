@@ -148,6 +148,14 @@ namespace API_SISTEMA.data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<SesionCaja>().ToTable("sesion_caja");
+            // SQL Server permite un solo NULL en este indice: una unica sesion abierta global.
+            modelBuilder.Entity<SesionCaja>().HasIndex(s => s.fecha_cierre).IsUnique()
+                .HasFilter("[fecha_cierre] IS NULL").HasDatabaseName("UX_sesion_caja_unica_abierta");
+            modelBuilder.Entity<SesionCaja>().Property(s => s.monto_inicial).HasPrecision(10, 2);
+            modelBuilder.Entity<SesionCaja>().Property(s => s.monto_esperado).HasPrecision(10, 2);
+            modelBuilder.Entity<SesionCaja>().Property(s => s.monto_contado).HasPrecision(10, 2);
+            modelBuilder.Entity<SesionCaja>().Property(s => s.diferencia).HasPrecision(10, 2);
+            modelBuilder.Entity<MovimientoCaja>().Property(s => s.monto).HasPrecision(10, 2);
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<TipoMovimientoCaja>().ToTable("tipo_movimiento_caja");

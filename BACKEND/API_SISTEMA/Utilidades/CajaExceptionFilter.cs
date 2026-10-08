@@ -5,18 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Utilidades;
 
-public sealed class CompraExceptionFilter(ILogger<CompraExceptionFilter> logger) : IExceptionFilter
+public sealed class CajaExceptionFilter(ILogger<CajaExceptionFilter> logger) : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
-        if (context.Exception is CompraValidationException validation)
+        if (context.Exception is CajaValidationException validation)
         {
             context.Result = new BadRequestObjectResult(new { mensaje = validation.Message });
-        }
-        // Caja cerrada es un rechazo de negocio, no un error interno del servidor.
-        else if (context.Exception is CajaValidationException caja)
-        {
-            context.Result = new BadRequestObjectResult(new { mensaje = caja.Message });
         }
         else if (context.Exception is OperationCanceledException && context.HttpContext.RequestAborted.IsCancellationRequested)
         {
@@ -26,7 +21,7 @@ public sealed class CompraExceptionFilter(ILogger<CompraExceptionFilter> logger)
             (context.Exception.GetBaseException() is SqlException sql &&
              sql.Number is 1205 or 1222 or 2601 or 2627 or 547))
         {
-            logger.LogWarning(context.Exception, "Conflicto en compras. Referencia: {TraceId}", context.HttpContext.TraceIdentifier);
+            logger.LogWarning(context.Exception, "Conflicto en caja. Referencia: {TraceId}", context.HttpContext.TraceIdentifier);
             context.Result = new ConflictObjectResult(new
             {
                 mensaje = "No se pudo confirmar la operación por un conflicto de datos. Actualiza y vuelve a intentarlo.",
@@ -36,10 +31,10 @@ public sealed class CompraExceptionFilter(ILogger<CompraExceptionFilter> logger)
         else
         {
             var traceId = context.HttpContext.TraceIdentifier;
-            logger.LogError(context.Exception, "Error en compras. Referencia: {TraceId}", traceId);
+            logger.LogError(context.Exception, "Error en caja. Referencia: {TraceId}", traceId);
             context.Result = new ObjectResult(new
             {
-                mensaje = "No se pudo completar la operación de compra. Inténtalo de nuevo.",
+                mensaje = "No se pudo completar la operación de caja. Inténtalo de nuevo.",
                 traceId
             }) { StatusCode = StatusCodes.Status500InternalServerError };
         }

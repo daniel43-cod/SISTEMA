@@ -32,6 +32,7 @@ builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<CompraService>();
+builder.Services.AddScoped<CajaService>();
 builder.Services.AddScoped<API_SISTEMA.services.CompraS.CrearCompraService>();
 builder.Services.AddScoped<API_SISTEMA.services.PagoCompra.Pago>();
 builder.Services.AddScoped<API_SISTEMA.services.MovimientoCaja.MovimientoCajaService>();
@@ -64,7 +65,7 @@ builder.Services.Configure<JwtSettings>(o =>
     o.Key = key; o.Issuer = "checks"; o.Audience = "checks"; o.DurationInMinutes = 720;
 });
 builder.Services.AddControllers().AddApplicationPart(typeof(LoginController).Assembly);
-builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); });
+builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
@@ -141,6 +142,7 @@ try
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
         Check((await client.PostAsJsonAsync(route, Account())).StatusCode == HttpStatusCode.Unauthorized, "Alta anónima bloqueada: " + route);
 
+    Check((await client.PostAsJsonAsync("/api/Caja/abrir", new {})).StatusCode == HttpStatusCode.Unauthorized, "Caja bloquea apertura anonima");
     Check((await client.GetAsync("/api/Compra/listar")).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea consulta anonima");
     Check((await client.PostAsJsonAsync("/api/Compra/crear", new {})).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea escritura anonima");
     var token = await Token(await Login("admin", "Password123"));
@@ -260,6 +262,8 @@ try
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account("segundo", "3000", "segundo@example.com"))).IsSuccessStatusCode, "Alias de alta funcional");
     var employeeToken = await Token(await Login("empleado", "Password123"));
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
+    Check((await client.PostAsJsonAsync("/api/Caja/abrir", new { id_caja = 1, monto_inicial = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede abrir caja");
+    Check((await client.PostAsJsonAsync("/api/Caja/cerrar", new { id_sesion_caja = 1, monto_contado = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede cerrar caja");
     Check((await client.PostAsJsonAsync("/api/Compra/pago-compra", new { id_compra = 1, monto = 1 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede registrar pagos de compras");
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account())).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede crear cuentas");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -339,9 +343,16 @@ try
             db.proveedores.Add(new Proveedores { id_proveedor = 1, nombre = "Proveedor prueba", telefono = "123", fecha_creacion = DateTime.Now });
             db.estado_compras.AddRange(new EstadoCompra { id_estado_compra = 1, nombre_estado_compra = "Pagada", descripcion = "Pagada" }, new EstadoCompra { id_estado_compra = 2, nombre_estado_compra = "Pendiente", descripcion = "Pendiente" });
             db.caja.Add(new caja { id_caja = 1, estado = true });
-            db.sesioncaja.Add(new SesionCaja { id_sesion_caja = 1, id_caja = 1, id_usuario_apertura = 1, observacion_apertura = "Prueba", fecha_apertura = DateTime.Now });
+            db.usuarios.Add(new Usuario { id_usuario = 900, id_rol = 1, nombre = "Segundo", apellido = "Admin", usuario = "adminCaja", password = "unused", telefono = "900", estado = true, fecha_Creacion = DateTime.Now });
             db.tipomovimientocaja.AddRange(new TipoMovimientoCaja { id_tipo_movimiento = 14, nombre_movimiento = "Compra", naturaleza = "EGRESO" }, new TipoMovimientoCaja { id_tipo_movimiento = 18, nombre_movimiento = "Abono", naturaleza = "EGRESO" });
             await db.SaveChangesAsync();
+            var cajaService = scope.ServiceProvider.GetRequiredService<CajaService>();
+            accessorCatalogo.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "900")], "checks"));
+            var sesionCompartida = await cajaService.AbrirCaja(new() { id_caja = 1, monto_inicial = 100m }, 900);
+            var dobleApertura = false;
+            try { await cajaService.AbrirCaja(new() { id_caja = 1, monto_inicial = 0 }, 900); } catch (CajaValidationException) { dobleApertura = true; }
+            Check(dobleApertura && await db.sesioncaja.CountAsync(s => s.fecha_cierre == null) == 1, "Caja rechaza segunda apertura");
+            accessorCatalogo.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks"));
             var compras = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.CompraS.CrearCompraService>();
             var compraDto = new API_SISTEMA.DTOs.Compras.RegistroComprasDTO
             { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.id_producto, cantidad = 5, precio = 50m }] };
@@ -360,6 +371,19 @@ try
             Check(precision && await db.registroCompras.CountAsync() == 1, "Compra rechaza mas de dos decimales");
             var listado = await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras();
             Check(listado.Single().nombre_proveedor == "Proveedor prueba", "Listado obtiene proveedor");
+            var cierreViejo = false;
+            try { await cajaService.CerrarCaja(new() { id_sesion_caja = sesionCompartida.id_sesion_caja + 1, monto_contado = 50m }, 1); }
+            catch (CajaValidationException) { cierreViejo = true; }
+            Check(cierreViejo && await db.sesioncaja.AnyAsync(s => s.fecha_cierre == null), "Caja rechaza cierre de otro turno");
+            var cerrada = await cajaService.CerrarCaja(new() { id_sesion_caja = sesionCompartida.id_sesion_caja, monto_contado = 50m }, 1);
+            Check(cerrada.id_usuario_apertura == 900 && cerrada.id_usuario_cierre == 1 && cerrada.monto_esperado == 50m && cerrada.diferencia == 0, "Otro admin cierra caja y descuenta compras y abonos");
+            var cajaAuditoria = await db.AuditoriaEventos.Include(e => e.Detalles).Where(e => e.Entidad == "sesion_caja").ToListAsync();
+            Check(cajaAuditoria.Count == 2 && cajaAuditoria.Any(e => e.Accion == "CAJA_ABIERTA" && e.IdUsuario == 900) && cajaAuditoria.Any(e => e.Accion == "CAJA_CERRADA" && e.IdUsuario == 1), "Auditoria atribuye apertura y cierre a sus responsables reales");
+            compraDto.detalle_compra[0].precio = 50m;
+            var operacionCerrada = false;
+            try { await compras.CrearCompra(compraDto, 1); } catch (CajaValidationException) { operacionCerrada = true; }
+            Check(operacionCerrada, "Caja cerrada impide registrar compras");
+            await cajaService.AbrirCaja(new() { id_caja = 1, monto_inicial = 50m }, 1);
             // Forzar un fallo tardio permite verificar que compra, pago y stock se revierten juntos.
             await db.Database.ExecuteSqlRawAsync("DROP TABLE movimiento_caja");
             compraDto.detalle_compra[0].precio = 50m;

@@ -20,7 +20,10 @@ namespace API_SISTEMA.services.Gastos
 
         public async Task<int> CrearGasto(IngresarGastoDTOs gastoDto, int IdUsuario)
         {
-         var sesionCaja = await _context.sesioncaja.FirstOrDefaultAsync(s =>  s.id_usuario_apertura == IdUsuario &&s.fecha_cierre == null);
+            // Pago/gasto y movimiento se confirman antes de permitir el cierre.
+            await using var txCaja = await _context.Database.BeginTransactionAsync();
+            var turnoCompartido = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context);
+         var sesionCaja = turnoCompartido;
             if (sesionCaja == null)
             {
                 throw new Exception("No tienes una sesión de caja abierta.");
@@ -59,6 +62,7 @@ namespace API_SISTEMA.services.Gastos
               idPagoCompra: null
           );
             await _context.SaveChangesAsync();
+            await txCaja.CommitAsync();
             return gasto.id_gastos;
         }
     }

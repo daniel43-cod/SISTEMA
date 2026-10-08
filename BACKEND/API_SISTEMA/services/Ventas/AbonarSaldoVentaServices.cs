@@ -21,10 +21,13 @@ namespace API_SISTEMA.services.Ventas
 
         public async Task<Pagos> AbonarVenta(AbonarSaldoVentaDTO dto, int idUsuario)
         {
+            // Pago/gasto y movimiento se confirman antes de permitir el cierre.
+            await using var txCaja = await _context.Database.BeginTransactionAsync();
+            var turnoCompartido = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context);
             // 1. Buscar la venta
             var venta = await _context.ventas.FirstOrDefaultAsync(v => v.id_ventas == dto.id_venta);
 
-            var sesionCaja = await _context.sesioncaja.FirstOrDefaultAsync(s => s.id_usuario_apertura == idUsuario && s.fecha_cierre == null);
+            var sesionCaja = turnoCompartido;
 
 
             if(sesionCaja == null)
@@ -96,6 +99,7 @@ namespace API_SISTEMA.services.Ventas
                     idPagoVenta: pagoventa.id_pago
                 );
             await _context.SaveChangesAsync();
+            await txCaja.CommitAsync();
             return pagoventa;
 
 

@@ -1,157 +1,59 @@
-﻿using API_SISTEMA.DTOs.Caja;
+using System.Security.Claims;
+using API_SISTEMA.DTOs.Caja;
 using API_SISTEMA.services;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
-namespace API_SISTEMA.controllers
+namespace API_SISTEMA.controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize(Roles = Roles.Administrador)] // Solo administradores administran el turno compartido.
+[TypeFilter(typeof(CajaExceptionFilter))] // Nunca se devuelven excepciones SQL ni trazas internas.
+[EnableRateLimiting("caja")]
+[RequestSizeLimit(16384)]
+public class CajaController(CajaService servicio) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CajaController : ControllerBase
+    // El selector del frontend recibe solo identificadores y nombres de cajas activas.
+    [HttpGet("disponibles")]
+    public async Task<IActionResult> Disponibles(CancellationToken ct)
+        => Ok(await servicio.CajasDisponibles(ct));
+
+    private int? UsuarioActual() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id > 0 ? id : null;
+
+    [HttpPost("abrir")]
+    public async Task<IActionResult> AbrirCaja([FromBody] AperturaCajaDTOs dto, CancellationToken ct)
     {
-        
-        private readonly CajaService _cajaService;
-
-        public CajaController(CajaService cajaService)
-        {
-            _cajaService = cajaService;
-        }
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpPost("abrir")]
-        public async Task<IActionResult> AbrirCaja([FromBody] AperturaCajaDTOs caja)
-        {
-            
-
-            try
-            {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-
-                var sesionCaja = await _cajaService
-                    .AbrirCaja(caja, idUsuario);
-
-                return Ok(new
-                {
-                    mensaje = "Caja abierta correctamente.",
-                    monto_inicial = sesionCaja.monto_inicial
-                   
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
-
-
-
-
-        }
-
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpPost("cerrar")]
-        public async Task<IActionResult> CerrarCaja([FromBody] CierreCajaDTOs dto)
-        {
-            try
-            {
-                var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje =
-                            "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                var sesion = await _cajaService
-                    .CerrarCaja(dto, idUsuario);
-
-                return Ok(new
-                {
-                    mensaje = "Caja cerrada correctamente.",
-                    id_sesion_caja = sesion.id_sesion_caja,
-                    fecha_apertura = sesion.fecha_apertura,
-                    fecha_cierre = sesion.fecha_cierre,
-                    monto_inicial = sesion.monto_inicial,
-                    monto_esperado = sesion.monto_esperado,
-                    monto_contado = sesion.monto_contado,
-                    diferencia = sesion.diferencia
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message
-                });
-            }
-
-
-        }
-
-
-        //para una caja en especifica
-
-        [Authorize(Roles = Roles.Administrador)]
-        [HttpGet("ListarSesionesCaja/{idCaja}")]
-        public async Task<IActionResult> ListarSesionesCaja(int idCaja)
-        {
-            try
-            {
-                var sesiones = await _cajaService.ListarSesionesCaja(idCaja);
-
-                return Ok(sesiones);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = "Ocurrió un error al listar las sesiones de la caja.",
-                    detalle = ex.Message
-                });
-            }
-        }
-
-        //para todas las cajas
-
-
-        [Authorize(Roles = Roles.Administrador)]
-        [HttpGet("ListarSesionesCaja")]
-        public async Task<IActionResult> ListarSesionesCaja()
-        {
-            try
-            {
-                var sesiones = await _cajaService.ListarSesionesCaja();
-
-                return Ok(sesiones);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = "Ocurrió un error al listar las sesiones de la caja.",
-                    detalle = ex.Message
-                });
-            }
-        }
+        if (UsuarioActual() is not int id) return Unauthorized();
+        var sesion = await servicio.AbrirCaja(dto, id, ct);
+        return Ok(new { mensaje = "Caja abierta correctamente.", id_sesion_caja = sesion.id_sesion_caja, sesion.monto_inicial });
     }
+
+    [HttpPost("cerrar")]
+    public async Task<IActionResult> CerrarCaja([FromBody] CierreCajaDTOs dto, CancellationToken ct)
+    {
+        if (UsuarioActual() is not int id) return Unauthorized();
+        var sesion = await servicio.CerrarCaja(dto, id, ct);
+        return Ok(new { mensaje = "Caja cerrada correctamente.", sesion.id_sesion_caja,
+            sesion.id_usuario_apertura, sesion.id_usuario_cierre, sesion.fecha_apertura, sesion.fecha_cierre,
+            sesion.monto_inicial, sesion.monto_esperado, sesion.monto_contado, sesion.diferencia });
+    }
+
+    [HttpGet("actual")]
+    public async Task<IActionResult> Actual(CancellationToken ct)
+    {
+        // Consulta administrativa del turno; no abre una caja ni cambia sus datos.
+        var actual = await servicio.Actual(ct);
+        return actual is null ? NoContent() : Ok(actual);
+    }
+
+    [HttpGet("ListarSesionesCaja/{idCaja}")]
+    public async Task<IActionResult> ListarSesionesCaja(int idCaja, [FromQuery] int pagina = 1, [FromQuery] int tamanoPagina = 50, CancellationToken ct = default)
+        => Ok(await servicio.ListarSesionesCaja(idCaja, pagina, tamanoPagina, ct));
+
+    [HttpGet("ListarSesionesCaja")]
+    public async Task<IActionResult> ListarSesionesCaja([FromQuery] int pagina = 1, [FromQuery] int tamanoPagina = 50, CancellationToken ct = default)
+        => Ok(await servicio.ListarSesionesCaja(null, pagina, tamanoPagina, ct));
 }

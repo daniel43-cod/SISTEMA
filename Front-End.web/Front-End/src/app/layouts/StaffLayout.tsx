@@ -1,4 +1,5 @@
-﻿import { useEffect, useId, useRef, useState } from 'react'
+import { CashPage } from '../../features/cash/pages/CashPage'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
 import { ProductsPage } from '../pages/ProductsPage'
 import { StaffNavigation } from '../navigation/StaffNavigation'
@@ -132,7 +133,7 @@ export function StaffLayout() {
                   <span className="staff-shortcut-action">Abrir sección <span aria-hidden="true">→</span></span>
                 </button>)}
             </div>
-          </section> : current.id === 'productos' ? <ProductsPage /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+          </section> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>

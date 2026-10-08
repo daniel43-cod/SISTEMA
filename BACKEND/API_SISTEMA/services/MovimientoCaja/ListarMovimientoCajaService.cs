@@ -17,11 +17,8 @@ namespace API_SISTEMA.services.MovimientoCaja
     int idUsuario)
         {
             // 1. Buscar la sesión abierta del usuario
-            var sesionCaja = await _context.sesioncaja
-                .FirstOrDefaultAsync(s =>
-                    s.id_usuario_apertura == idUsuario &&
-                    s.fecha_cierre == null
-                );
+            // Consulta del turno compartido; el responsable de cada operacion se conserva.
+            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.Consultar(_context);
 
             if (sesionCaja == null)
             {

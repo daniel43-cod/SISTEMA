@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.data;
+using API_SISTEMA.data;
 using API_SISTEMA.DTOs.Ventas;
 using API_SISTEMA.models;
 using API_SISTEMA.services.MovimientoCaja;
@@ -35,20 +35,9 @@ namespace API_SISTEMA.services.Ventas
             if (ventaDto.detalles == null || ventaDto.detalles.Count == 0) throw new Exception("La venta debe tener al menos un producto.");
 
             // 1. Buscar sesión de caja abierta del usuario autenticado
-            var sesionCaja = await _context.sesioncaja
-                .FirstOrDefaultAsync(s =>
-                    s.id_usuario_apertura == idUsuario &&
-                    s.fecha_cierre == null
-                );
-
-            if (sesionCaja == null)
-            {
-                throw new Exception(
-                    "Debes abrir una caja para poder realizar la venta."
-                );
-            }
-
-            using var transaction =await _context.Database.BeginTransactionAsync();
+            // El turno compartido queda bloqueado hasta confirmar la venta.
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.ParaOperacion(_context);
 
             try
             {

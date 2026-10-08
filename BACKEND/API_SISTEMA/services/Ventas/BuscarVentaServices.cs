@@ -18,11 +18,8 @@ namespace API_SISTEMA.services.Ventas
 
         public async Task<List<VentaBuscarDTO>> BuscarVentasClienteCajaActiva(  int idUsuario, int idCliente)
         {
-            var sesionCaja = await _context.sesioncaja
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s =>
-                    s.id_usuario_apertura == idUsuario &&
-                    s.fecha_cierre == null);
+            // Consulta del turno compartido; el responsable de cada operacion se conserva.
+            var sesionCaja = await API_SISTEMA.services.Caja.CajaSesionActual.Consultar(_context);
 
             if (sesionCaja == null)
                 throw new Exception("El usuario no tiene una caja abierta.");
