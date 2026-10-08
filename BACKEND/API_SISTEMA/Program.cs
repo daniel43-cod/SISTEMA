@@ -129,6 +129,8 @@ builder.Services.AddScoped<PagoService>();
 builder.Services.AddScoped<EmpresaService>();
 builder.Services.AddScoped<CompraService>();
 builder.Services.AddScoped<JwtService>();
+// Una misma regla de saldo para consultar y cerrar caja.
+builder.Services.AddScoped<API_SISTEMA.services.Caja.CajaSaldoService>();
 builder.Services.AddScoped<CajaService>();
 builder.Services.AddScoped<Pago>();
 builder.Services.AddScoped<CrearGastosService>();

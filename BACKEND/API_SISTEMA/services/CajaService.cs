@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.services;
 
-public class CajaService(SistemaDbContext context, CatalogoAuditoriaService auditoria)
+public class CajaService(SistemaDbContext context, CatalogoAuditoriaService auditoria, CajaSaldoService saldo)
 {
     // Consulta administrativa acotada; no expone entidades ni historial de caja.
     public async Task<List<CajaDisponibleDTO>> CajasDisponibles(CancellationToken ct = default) =>
@@ -73,20 +73,9 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
         // El ID evita que un formulario antiguo cierre accidentalmente un turno nuevo.
         if (sesion.id_sesion_caja != dto.id_sesion_caja)
             throw new CajaValidationException("La sesion indicada ya no es la caja abierta.");
-        var movimientos = await context.movimientocaja.AsNoTracking().Where(m => m.id_sesion_caja == sesion.id_sesion_caja)
-            .Select(m => new { m.monto, m.tipoMovimientoCaja.naturaleza }).ToListAsync(ct);
-        // No se suman ventas otra vez: sus cobros ya estan registrados como movimientos.
-        decimal esperado = sesion.monto_inicial ?? 0;
-        foreach (var m in movimientos)
-        {
-            var naturaleza = m.naturaleza?.Trim().ToUpperInvariant();
-            // El catalogo existente usa Entrada/Salida; se conservan sus datos y se admite Ingreso/Egreso.
-            var entrada = naturaleza is "ENTRADA" or "INGRESO";
-            var salida = naturaleza is "SALIDA" or "EGRESO";
-            if (m.monto <= 0 || (!entrada && !salida))
-                throw new CajaValidationException("Hay movimientos con monto o naturaleza invalida. Revisa el turno antes de cerrar.");
-            esperado += entrada ? m.monto : -m.monto;
-        }
+        // Recalcula todos los movimientos bajo el bloqueo del cierre; no confia en el resumen previo del cliente.
+        var totales = await saldo.Calcular(sesion.id_sesion_caja, sesion.monto_inicial, ct);
+        var esperado = totales.Esperado;
         var diferencia = dto.monto_contado - esperado;
         if (Math.Abs(esperado) > 99999999.99m || Math.Abs(diferencia) > 99999999.99m)
             throw new CajaValidationException("El resultado del cierre supera decimal(10,2).");

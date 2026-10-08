@@ -32,6 +32,9 @@ builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<CompraService>();
+builder.Services.AddScoped<API_SISTEMA.services.MovimientoCaja.ListarMovimientoCajaService>();
+// Una misma regla de saldo para consultar y cerrar caja.
+builder.Services.AddScoped<API_SISTEMA.services.Caja.CajaSaldoService>();
 builder.Services.AddScoped<CajaService>();
 builder.Services.AddScoped<API_SISTEMA.services.CompraS.CrearCompraService>();
 builder.Services.AddScoped<API_SISTEMA.services.PagoCompra.Pago>();
@@ -145,6 +148,7 @@ try
     Check((await client.PostAsJsonAsync("/api/Caja/abrir", new {})).StatusCode == HttpStatusCode.Unauthorized, "Caja bloquea apertura anonima");
     Check((await client.GetAsync("/api/Compra/listar")).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea consulta anonima");
     Check((await client.PostAsJsonAsync("/api/Compra/crear", new {})).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea escritura anonima");
+    Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=1")).StatusCode == HttpStatusCode.Unauthorized, "Movimientos bloquea consulta anonima");
     var token = await Token(await Login("admin", "Password123"));
     using (var scope = app.Services.CreateScope())
     {
@@ -159,6 +163,9 @@ try
     Check((await client.GetAsync("/api/Compra/listar?tamanoPagina=101")).StatusCode == HttpStatusCode.BadRequest, "Listado de compras limita cantidad solicitada");
     Check((await client.PostAsJsonAsync("/api/Compra/crear", new { id_proveedor = 0, detalle_compra = new object[0] })).StatusCode == HttpStatusCode.BadRequest, "Endpoint valida DTO de compra");
     Check((await client.GetAsync("/api/Compra/detalle/999999")).StatusCode == HttpStatusCode.NotFound, "Detalle devuelve 404 para compra inexistente");
+    foreach (var url in new[] { "/api/MovimientoCaja/listar", "/api/MovimientoCaja/listar?idSesionCaja=0", "/api/MovimientoCaja/listar?idSesionCaja=-1", "/api/MovimientoCaja/listar?idSesionCaja=abc" })
+        Check((await client.GetAsync(url)).StatusCode == HttpStatusCode.BadRequest, "Movimientos valida parametro de sesion: " + url);
+    Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=999999")).StatusCode == HttpStatusCode.NotFound, "Endpoint de movimientos devuelve 404");
     var nueva = await client.PostAsJsonAsync("/api/Presentaciones", new { descripcion = "Unidad auditoría" });
     Check(nueva.StatusCode == HttpStatusCode.Created, "Crear presentación auditada");
     var presentacionAuditada = await nueva.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>();
@@ -262,6 +269,7 @@ try
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account("segundo", "3000", "segundo@example.com"))).IsSuccessStatusCode, "Alias de alta funcional");
     var employeeToken = await Token(await Login("empleado", "Password123"));
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
+    Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=1")).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede consultar resumen financiero");
     Check((await client.PostAsJsonAsync("/api/Caja/abrir", new { id_caja = 1, monto_inicial = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede abrir caja");
     Check((await client.PostAsJsonAsync("/api/Caja/cerrar", new { id_sesion_caja = 1, monto_contado = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede cerrar caja");
     Check((await client.PostAsJsonAsync("/api/Compra/pago-compra", new { id_compra = 1, monto = 1 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede registrar pagos de compras");
@@ -375,8 +383,14 @@ try
             try { await cajaService.CerrarCaja(new() { id_sesion_caja = sesionCompartida.id_sesion_caja + 1, monto_contado = 50m }, 1); }
             catch (CajaValidationException) { cierreViejo = true; }
             Check(cierreViejo && await db.sesioncaja.AnyAsync(s => s.fecha_cierre == null), "Caja rechaza cierre de otro turno");
-            var cerrada = await cajaService.CerrarCaja(new() { id_sesion_caja = sesionCompartida.id_sesion_caja, monto_contado = 50m }, 1);
-            Check(cerrada.id_usuario_apertura == 900 && cerrada.id_usuario_cierre == 1 && cerrada.monto_esperado == 50m && cerrada.diferencia == 0, "Otro admin cierra caja y descuenta compras y abonos");
+            var resumenService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.MovimientoCaja.ListarMovimientoCajaService>();
+            var antesDeCerrar = (await resumenService.ConsultarResumen(sesionCompartida.id_sesion_caja))!;
+            Check(antesDeCerrar.saldo_esperado == 50m, "Resumen previo coincide con compras y abonos");
+            db.movimientocaja.Add(new MovimientoCaja { id_sesion_caja = sesionCompartida.id_sesion_caja,
+                id_usuario = 1, id_tipo_movimiento = 14, monto = 1m, fecha_movimiento = DateTime.Now });
+            await db.SaveChangesAsync();
+            var cerrada = await cajaService.CerrarCaja(new() { id_sesion_caja = sesionCompartida.id_sesion_caja, monto_contado = 49m }, 1);
+            Check(cerrada.id_usuario_apertura == 900 && cerrada.id_usuario_cierre == 1 && cerrada.monto_esperado == 49m && cerrada.diferencia == 0, "Cierre recalcula e incluye movimientos posteriores al resumen");
             var cajaAuditoria = await db.AuditoriaEventos.Include(e => e.Detalles).Where(e => e.Entidad == "sesion_caja").ToListAsync();
             Check(cajaAuditoria.Count == 2 && cajaAuditoria.Any(e => e.Accion == "CAJA_ABIERTA" && e.IdUsuario == 900) && cajaAuditoria.Any(e => e.Accion == "CAJA_CERRADA" && e.IdUsuario == 1), "Auditoria atribuye apertura y cierre a sus responsables reales");
             compraDto.detalle_compra[0].precio = 50m;
@@ -384,6 +398,44 @@ try
             try { await compras.CrearCompra(compraDto, 1); } catch (CajaValidationException) { operacionCerrada = true; }
             Check(operacionCerrada, "Caja cerrada impide registrar compras");
             await cajaService.AbrirCaja(new() { id_caja = 1, monto_inicial = 50m }, 1);
+            var turnoNuevo = await db.sesioncaja.AsNoTracking().SingleAsync(s => s.fecha_cierre == null);
+            var vacio = await resumenService.ConsultarResumen(turnoNuevo.id_sesion_caja);
+            Check(vacio is not null && vacio.total_movimientos == 0 && vacio.movimientos.Count == 0 && vacio.total_entradas == 0 && vacio.total_salidas == 0 && vacio.saldo_esperado == 50m, "Resumen de sesion sin movimientos conserva monto inicial");
+            Check(await resumenService.ConsultarResumen(999999) is null, "Resumen de sesion inexistente devuelve null");
+            var idInvalido = false;
+            try { await resumenService.ConsultarResumen(0); } catch (CajaValidationException) { idInvalido = true; }
+            Check(idInvalido, "Resumen valida ID antes de consultar");
+            db.tipomovimientocaja.Add(new TipoMovimientoCaja { id_tipo_movimiento = 10, nombre_movimiento = "Venta", naturaleza = " entrada " });
+            var fechaComun = DateTime.Now.AddMinutes(1);
+            var pruebaMovimientos = Enumerable.Range(0, 150).Select(i => new MovimientoCaja
+            {
+                id_sesion_caja = sesionCompartida.id_sesion_caja, id_usuario = 1,
+                id_tipo_movimiento = i % 2 == 0 ? 10 : 14,
+                monto = i % 2 == 0 ? 1.25m : 2m, fecha_movimiento = fechaComun
+            }).ToList();
+            db.movimientocaja.AddRange(pruebaMovimientos);
+            db.movimientocaja.Add(new MovimientoCaja { id_sesion_caja = turnoNuevo.id_sesion_caja, id_usuario = 1, id_tipo_movimiento = 10, monto = 999m, fecha_movimiento = fechaComun });
+            await db.SaveChangesAsync();
+            var resumen = (await resumenService.ConsultarResumen(sesionCompartida.id_sesion_caja))!;
+            Check(resumen.total_movimientos == 153 && resumen.movimientos.Count == 100, "Resumen cuenta toda la sesion y limita listado a 100");
+            Check(resumen.total_entradas == 93.75m && resumen.total_salidas == 201m && resumen.saldo_esperado == -7.25m,
+                "Totales incluyen movimientos fuera de pantalla y excluyen otras sesiones");
+            Check(resumen.movimientos.Select(m => m.id_movimiento_caja).SequenceEqual(pruebaMovimientos.OrderByDescending(m => m.id_movimiento_caja).Take(100).Select(m => m.id_movimiento_caja)),
+                "Listado ordena por fecha e ID cuando las fechas coinciden");
+            var tokenResumen = (await scope.ServiceProvider.GetRequiredService<LoginService>().Login(new API_SISTEMA.DTOs.Login.LoginDTOs { usuario = "admin", password = "Changed123" }))!.token;
+            using var resumenRequest = new HttpRequestMessage(HttpMethod.Get, "/api/MovimientoCaja/listar?idSesionCaja=" + sesionCompartida.id_sesion_caja);
+            resumenRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResumen);
+            resumenRequest.Headers.Add("Accept", "application/json");
+            using var resumenResponse = await client.SendAsync(resumenRequest);
+            Check(resumenResponse.IsSuccessStatusCode, "Resumen HTTP status " + resumenResponse.StatusCode);
+            var resumenHttp = await resumenResponse.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.MovimientoCaja.ResumenMovimientosCajaDTO>();
+            Check(resumenResponse.IsSuccessStatusCode && resumenHttp!.total_movimientos == 153 && resumenHttp.movimientos.Count == 100 && resumenHttp.saldo_esperado == -7.25m,
+                "Endpoint entrega resumen completo y ultimos 100 de sesion cerrada");
+            var movimientoInvalido = pruebaMovimientos[0].id_movimiento_caja;
+            await db.movimientocaja.Where(m => m.id_movimiento_caja == movimientoInvalido).ExecuteUpdateAsync(set => set.SetProperty(m => m.monto, -1m));
+            var rechazoResumen = false;
+            try { await resumenService.ConsultarResumen(sesionCompartida.id_sesion_caja); } catch (CajaValidationException) { rechazoResumen = true; }
+            Check(rechazoResumen, "Resumen rechaza movimiento invalido sin ocultarlo fuera del listado");
             // Forzar un fallo tardio permite verificar que compra, pago y stock se revierten juntos.
             await db.Database.ExecuteSqlRawAsync("DROP TABLE movimiento_caja");
             compraDto.detalle_compra[0].precio = 50m;

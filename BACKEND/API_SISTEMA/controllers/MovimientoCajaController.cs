@@ -1,54 +1,31 @@
-﻿using API_SISTEMA.services.MovimientoCaja;
+using System.ComponentModel.DataAnnotations;
+using API_SISTEMA.DTOs.MovimientoCaja;
+using API_SISTEMA.services.MovimientoCaja;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
-namespace API_SISTEMA.controllers
+using Microsoft.AspNetCore.RateLimiting;
+
+namespace API_SISTEMA.controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize(Roles = Roles.Administrador)] // El resumen financiero es exclusivamente administrativo.
+[TypeFilter(typeof(CajaExceptionFilter))] // No expone mensajes SQL ni trazas al cliente.
+[EnableRateLimiting("caja")]
+public class MovimientoCajaController(ListarMovimientoCajaService service) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MovimientoCajaController : Controller
+    [HttpGet("listar")]
+    [ProducesResponseType(typeof(ResumenMovimientosCajaDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListarMovimientos(
+        [FromQuery, Range(1, int.MaxValue)] int idSesionCaja, CancellationToken cancellationToken)
     {
-
-
-        private readonly ListarMovimientoCajaService _service;
-
-        public MovimientoCajaController(ListarMovimientoCajaService service)
-        {
-            _service = service;
-        }
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpGet("listar")]
-        public async Task<IActionResult> ListarMovimientos()
-        {
-            try
-            {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                var movimientos =
-                    await _service.ListarMovimientos(idUsuario);
-
-                return Ok(movimientos);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message
-                });
-            }
-        }
+        // La sesion es explicita: permite revisar el turno actual o uno cerrado sin cambiar de turno accidentalmente.
+        var resumen = await service.ConsultarResumen(idSesionCaja, cancellationToken);
+        return resumen is null
+            ? NotFound(new { mensaje = "La sesion de caja no existe." })
+            : Ok(resumen);
     }
 }
