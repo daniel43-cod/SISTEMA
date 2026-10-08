@@ -5,6 +5,7 @@ using API_SISTEMA.services.PagoCompra;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -12,6 +13,8 @@ namespace API_SISTEMA.controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableRateLimiting("compras")]
+    [RequestSizeLimit(131072)]
     [TypeFilter(typeof(CompraExceptionFilter))]
     public class CompraController : ControllerBase
     {
@@ -31,19 +34,19 @@ namespace API_SISTEMA.controllers
         [Authorize(Roles = Roles.Administrador)]
 
         [HttpGet("listar")]
-        public async Task<IActionResult> listar()
+        public async Task<IActionResult> listar([FromQuery] int pagina = 1, [FromQuery] int tamanoPagina = 50, CancellationToken ct = default)
         {
-           var compras = await _context.listarcompras();
+           var compras = await _context.listarcompras(pagina, tamanoPagina, ct);
             return Ok(compras);
         }
 
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear([FromBody] RegistroComprasDTO compraDto)
+        public async Task<IActionResult> Crear([FromBody] RegistroComprasDTO compraDto, CancellationToken ct)
         {
                 var idUsuarioClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario) || idUsuario <= 0)
                 {
                     return Unauthorized(new
                     {
@@ -51,11 +54,12 @@ namespace API_SISTEMA.controllers
                     });
                 }
 
-                var compra = await _crearCompraService.CrearCompra(compraDto, idUsuario);
+                var compra = await _crearCompraService.CrearCompra(compraDto, idUsuario, ct);
 
                 return Ok(new
                 {
                     mensaje = "Compra registrada correctamente",
+                    id_compra = compra.IdCompra,
                    
                 });
 
@@ -64,22 +68,22 @@ namespace API_SISTEMA.controllers
         [Authorize(Roles = Roles.Administrador)]
         //listar detallecompras
         [HttpGet("detalle/{id_compra}")] 
-        public async Task<IActionResult> ListarDetalleCompra(int id_compra)
+        public async Task<IActionResult> ListarDetalleCompra(int id_compra, CancellationToken ct)
         {
-                var detalleCompra = await _context.ListarDetalleCompra(id_compra);
-                return Ok(detalleCompra);
+                var detalleCompra = await _context.ListarDetalleCompra(id_compra, ct);
+                return detalleCompra is null ? NotFound(new { mensaje = "La compra no existe." }) : Ok(detalleCompra);
 
                
 
         }
 
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost("pago-compra")]
-        public async Task<IActionResult> RegistrarPagoCompra(AbonarSaldoCompraDTO  dto)
+        public async Task<IActionResult> RegistrarPagoCompra([FromBody] AbonarSaldoCompraDTO dto, CancellationToken ct)
         {
                 var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario) || idUsuario <= 0)
                 {
                     return Unauthorized(new
                     {
@@ -87,7 +91,7 @@ namespace API_SISTEMA.controllers
                     });
                 }
 
-                var pago = await _pagoCompraService.AbonarCompra(dto, idUsuario);
+                var pago = await _pagoCompraService.AbonarCompra(dto, idUsuario, ct);
 
                 return Ok(new
                 {

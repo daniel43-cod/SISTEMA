@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.DTOs.Compras
 {
@@ -10,7 +10,7 @@ namespace API_SISTEMA.DTOs.Compras
         public decimal subtotal { get; set; }
         public int id_producto { get; set; }
         public int cantidad { get; set; }
-        public string nombre_producto { get; set; }
+        public string nombre_producto { get; set; } = string.Empty;
         public decimal precio { get; set; }
     }
 }

@@ -31,6 +31,10 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<CompraService>();
+builder.Services.AddScoped<API_SISTEMA.services.CompraS.CrearCompraService>();
+builder.Services.AddScoped<API_SISTEMA.services.PagoCompra.Pago>();
+builder.Services.AddScoped<API_SISTEMA.services.MovimientoCaja.MovimientoCajaService>();
 builder.Services.AddScoped<API_SISTEMA.services.Auditoria.ProductoAuditoriaService>();
 builder.Services.AddScoped<ProductoCrearService>();
 builder.Services.AddScoped<API_SISTEMA.services.ProductoS.ProductoActualizarService>();
@@ -60,7 +64,7 @@ builder.Services.Configure<JwtSettings>(o =>
     o.Key = key; o.Issuer = "checks"; o.Audience = "checks"; o.DurationInMinutes = 720;
 });
 builder.Services.AddControllers().AddApplicationPart(typeof(LoginController).Assembly);
-builder.Services.AddRateLimiter(o => o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"));
+builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
@@ -137,6 +141,8 @@ try
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
         Check((await client.PostAsJsonAsync(route, Account())).StatusCode == HttpStatusCode.Unauthorized, "Alta anónima bloqueada: " + route);
 
+    Check((await client.GetAsync("/api/Compra/listar")).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea consulta anonima");
+    Check((await client.PostAsJsonAsync("/api/Compra/crear", new {})).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea escritura anonima");
     var token = await Token(await Login("admin", "Password123"));
     using (var scope = app.Services.CreateScope())
     {
@@ -148,6 +154,9 @@ try
     }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    Check((await client.GetAsync("/api/Compra/listar?tamanoPagina=101")).StatusCode == HttpStatusCode.BadRequest, "Listado de compras limita cantidad solicitada");
+    Check((await client.PostAsJsonAsync("/api/Compra/crear", new { id_proveedor = 0, detalle_compra = new object[0] })).StatusCode == HttpStatusCode.BadRequest, "Endpoint valida DTO de compra");
+    Check((await client.GetAsync("/api/Compra/detalle/999999")).StatusCode == HttpStatusCode.NotFound, "Detalle devuelve 404 para compra inexistente");
     var nueva = await client.PostAsJsonAsync("/api/Presentaciones", new { descripcion = "Unidad auditoría" });
     Check(nueva.StatusCode == HttpStatusCode.Created, "Crear presentación auditada");
     var presentacionAuditada = await nueva.Content.ReadFromJsonAsync<API_SISTEMA.DTOs.Presentaciones.PresentacionRespuestaDTO>();
@@ -251,6 +260,7 @@ try
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account("segundo", "3000", "segundo@example.com"))).IsSuccessStatusCode, "Alias de alta funcional");
     var employeeToken = await Token(await Login("empleado", "Password123"));
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
+    Check((await client.PostAsJsonAsync("/api/Compra/pago-compra", new { id_compra = 1, monto = 1 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede registrar pagos de compras");
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account())).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede crear cuentas");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -326,6 +336,40 @@ try
             };
             await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
             await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
+            db.proveedores.Add(new Proveedores { id_proveedor = 1, nombre = "Proveedor prueba", telefono = "123", fecha_creacion = DateTime.Now });
+            db.estado_compras.AddRange(new EstadoCompra { id_estado_compra = 1, nombre_estado_compra = "Pagada", descripcion = "Pagada" }, new EstadoCompra { id_estado_compra = 2, nombre_estado_compra = "Pendiente", descripcion = "Pendiente" });
+            db.caja.Add(new caja { id_caja = 1, estado = true });
+            db.sesioncaja.Add(new SesionCaja { id_sesion_caja = 1, id_caja = 1, id_usuario_apertura = 1, observacion_apertura = "Prueba", fecha_apertura = DateTime.Now });
+            db.tipomovimientocaja.AddRange(new TipoMovimientoCaja { id_tipo_movimiento = 14, nombre_movimiento = "Compra", naturaleza = "EGRESO" }, new TipoMovimientoCaja { id_tipo_movimiento = 18, nombre_movimiento = "Abono", naturaleza = "EGRESO" });
+            await db.SaveChangesAsync();
+            var compras = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.CompraS.CrearCompraService>();
+            var compraDto = new API_SISTEMA.DTOs.Compras.RegistroComprasDTO
+            { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.id_producto, cantidad = 5, precio = 50m }] };
+            var compra = await compras.CrearCompra(compraDto, 1);
+            Check(compra.IdProveedor == 1 && compra.TotalCompra == 50m && compra.SaldoPendiente == 30m && producto.stock == 5, "Compra usa proveedor, total de linea y stock correcto");
+            Check(await db.pagosCompras.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.detalle_compras.SingleAsync()).subtotal == 50m, "Compra confirma pago, detalle y movimiento");
+            var pagoService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.services.PagoCompra.Pago>();
+            var exceso = false;
+            try { await pagoService.AbonarCompra(new() { id_compra = compra.IdCompra, monto = 31m }, 1); } catch (CompraValidationException) { exceso = true; }
+            Check(exceso && await db.pagosCompras.CountAsync() == 1, "Abono mayor al saldo rechazado sin guardar pago");
+            await pagoService.AbonarCompra(new() { id_compra = compra.IdCompra, monto = 30m }, 1);
+            Check(compra.SaldoPendiente == 0 && compra.IdEstadoCompra == 1 && await db.movimientocaja.CountAsync() == 2, "Abono liquida compra y actualiza estado y caja");
+            var precision = false;
+            compraDto.detalle_compra[0].precio = 1.001m;
+            try { await compras.CrearCompra(compraDto, 1); } catch (CompraValidationException) { precision = true; }
+            Check(precision && await db.registroCompras.CountAsync() == 1, "Compra rechaza mas de dos decimales");
+            var listado = await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras();
+            Check(listado.Single().nombre_proveedor == "Proveedor prueba", "Listado obtiene proveedor");
+            // Forzar un fallo tardio permite verificar que compra, pago y stock se revierten juntos.
+            await db.Database.ExecuteSqlRawAsync("DROP TABLE movimiento_caja");
+            compraDto.detalle_compra[0].precio = 50m;
+            var revertida = false;
+            try { await compras.CrearCompra(compraDto, 1); } catch (DbUpdateException) { revertida = true; db.ChangeTracker.Clear(); }
+            Check(revertida && await db.registroCompras.CountAsync() == 1 && await db.pagosCompras.CountAsync() == 2 && (await db.productos.AsNoTracking().SingleAsync()).stock == 5, "Fallo de movimiento revierte compra, pago y stock");
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM pagos_compra");
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM detalle_compra");
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM registro_compras");
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM sesion_caja");
             var eventosProducto = await db.AuditoriaEventos.Include(e => e.Detalles).AsNoTracking().Where(e => e.Entidad == "productos" || e.Entidad == "producto_presentacion").ToListAsync();
             Check(eventosProducto.Count == 4, "Producto y asociacion: creacion y edicion sin duplicar guardados iguales");
             Check(eventosProducto.Single(e => e.Accion == "PRODUCTO_EDITADO").Detalles.Single().Campo == "nombre" && eventosProducto.Single(e => e.Accion == "PRODUCTO_EDITADO").Detalles.Single().ValorNuevo == "Producto nuevo", "Producto registra solo nombre modificado");
@@ -434,7 +478,7 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(Producto_Presentacion))
+            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(Producto_Presentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.

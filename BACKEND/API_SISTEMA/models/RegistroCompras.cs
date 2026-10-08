@@ -38,9 +38,9 @@ namespace API_SISTEMA.models
 
          [Column("observacion", TypeName ="nvarchar(100)")]
         public string? Observacion { get; set; } 
-        public Usuario Usuario { get; set; }
-        public Proveedores Proveedores { get; set; } 
-        public EstadoCompra EstadoCompra { get; set; }
+        public Usuario Usuario { get; set; } = null!;
+        public Proveedores Proveedores { get; set; }  = null!;
+        public EstadoCompra EstadoCompra { get; set; } = null!;
 
     }
 }

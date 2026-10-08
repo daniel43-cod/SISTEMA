@@ -36,6 +36,7 @@ builder.Services.AddOptions<JwtSettings>()
 builder.Services.AddScoped<UsuarioTokenValidator>();
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddPolicy<string, CompraRateLimitPolicy>("compras");
     options.AddPolicy<string, LoginRateLimitPolicy>("login-interno");
     options.AddPolicy<string, ProductoConsultaRateLimitPolicy>("consulta-productos");
 });
