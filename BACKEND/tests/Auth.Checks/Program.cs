@@ -143,7 +143,7 @@ try
         var evento = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().AuditoriaEventos.Include(e => e.Detalles).SingleAsync();
         Check(evento.IdUsuario.HasValue && evento.UsuarioResponsable == "admin" && evento.Accion == "SESION_INICIADA" &&
             evento.Resultado == "EXITOSO" && evento.FechaUtc > DateTime.UtcNow.AddMinutes(-1) &&
-            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.Detalles.Any(d => d.Campo == "idSesion") && evento.DatosAnteriores is null && evento.DatosNuevos is null,
+            !string.IsNullOrWhiteSpace(evento.TraceId) && evento.Detalles.Any(d => d.Campo == "idSesion"),
             "Login guarda responsable validado, fecha y referencia sin credenciales");
     }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
@@ -207,7 +207,7 @@ try
             fallidos.Any(e => e.IdentificadorIntentado == "missing"), "Cuenta existente y desconocida registran intento fallido");
         Check(fallidos.All(e => e.IdUsuario is null && e.UsuarioResponsable is null && e.IdRegistro is null &&
             e.Resultado == "RECHAZADO" && e.Origen == "API" && !string.IsNullOrWhiteSpace(e.TraceId) &&
-            e.DatosAnteriores is null && e.DatosNuevos is null && e.Motivo == "Autenticación rechazada."),
+            e.Detalles.Count == 0 && e.Motivo == "Autenticación rechazada."),
             "Intentos no atribuyen identidad ni guardan contraseña, token o detalles de cuenta");
     }
 
@@ -447,8 +447,6 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
         foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
             auditoria.Metadata.RemoveCheckConstraint(constraint.Name);
         auditoria.Property(e => e.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
-        auditoria.Property(e => e.DatosAnteriores).HasColumnType("TEXT");
-        auditoria.Property(e => e.DatosNuevos).HasColumnType("TEXT");
         modelBuilder.Entity<Rol>().Ignore(r => r.RolPermisos);
     }
 }

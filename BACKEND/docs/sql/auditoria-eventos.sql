@@ -42,8 +42,6 @@ GO
                 CONSTRAINT DF_auditoria_evento_origen DEFAULT 'API',
 
             -- Guardar únicamente campos permitidos; nunca serializar la entidad completa.
-            datos_anteriores nvarchar(max) NULL,
-            datos_nuevos nvarchar(max) NULL,
             motivo nvarchar(500) NULL,
             trace_id varchar(128) NULL,
             -- IPv4 o IPv6. El backend debe considerar solo proxies configurados como confiables.
@@ -58,10 +56,6 @@ GO
                 CHECK (resultado IN ('EXITOSO', 'RECHAZADO', 'FALLIDO')),
             CONSTRAINT CK_auditoria_evento_origen
                 CHECK (origen IN ('API', 'SISTEMA', 'SQL')),
-            CONSTRAINT CK_auditoria_evento_anteriores_json
-                CHECK (datos_anteriores IS NULL OR ISJSON(datos_anteriores) = 1),
-            CONSTRAINT CK_auditoria_evento_nuevos_json
-                CHECK (datos_nuevos IS NULL OR ISJSON(datos_nuevos) = 1),
             CONSTRAINT CK_auditoria_evento_registro_entidad
                 CHECK (id_registro IS NULL OR
                     (entidad IS NOT NULL AND LEN(LTRIM(RTRIM(entidad))) > 0))

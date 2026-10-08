@@ -224,19 +224,19 @@ namespace API_SISTEMA.data
                 .HasForeignKey(v => v.id_producto_presentacion);
 
             modelBuilder.Entity<RegistroCompras>()
-                .HasOne(v => v.usuario)
+                .HasOne(v => v.Usuario)
                 .WithMany()
-                .HasForeignKey(v => v.id_usuario);
+                .HasForeignKey(v => v.IdUsuario);
 
             modelBuilder.Entity<RegistroCompras>()
-                .HasOne(v => v.empresa)
+                .HasOne(v => v.Proveedores)
                 .WithMany()
-                .HasForeignKey(v => v.id_empresa);
+                .HasForeignKey(v => v.IdProveedor);
 
             modelBuilder.Entity<RegistroCompras>()
-                .HasOne(v => v.estado_compra)
+                .HasOne(v => v.EstadoCompra)
                 .WithMany()
-                .HasForeignKey(v => v.id_estado_compra);
+                .HasForeignKey(v => v.IdEstadoCompra);
 
             modelBuilder.Entity<DetalleCompra>()
                 .HasOne(v => v.Productos)

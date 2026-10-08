@@ -46,13 +46,6 @@ public sealed class AuditoriaEvento
     [Column("origen", TypeName = "varchar(20)")]
     public string Origen { get; set; } = "API";
 
-    // JSON con campos permitidos; nunca incluir credenciales o tokens.
-    [Column("datos_anteriores", TypeName = "nvarchar(max)")]
-    public string? DatosAnteriores { get; set; }
-
-    [Column("datos_nuevos", TypeName = "nvarchar(max)")]
-    public string? DatosNuevos { get; set; }
-
     [MaxLength(500)]
     [Column("motivo")]
     public string? Motivo { get; set; }

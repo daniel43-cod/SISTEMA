@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Primitives;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography.X509Certificates;
 
 namespace API_SISTEMA.models
@@ -8,22 +9,38 @@ namespace API_SISTEMA.models
     public class RegistroCompras
     {
         [Key]
-        public int id_compra { get; set; }
+        [Column("id_compra")]
+        public int IdCompra { get; set; }
+
         [Required]
-        public int id_empresa { get; set; }
+        [Column("id_proveedor")]
+        public int IdProveedor { get; set; }
+        
         [Required]
-        public int id_usuario { get; set; }
+        [Column("id_usuario")]
+        public int IdUsuario { get; set; }
+
         [Required]
-        public int id_estado_compra { get; set; }
+        [Column("id_estado_compra")]
+        public int IdEstadoCompra { get; set; }
+
         [Required]
-        public DateTime fecha_ingreso { get; set; }
+        [Column("fecha_ingreso")]
+        public DateTime FechaIngreso { get; set; }
+
         [Required]
-        public decimal? total_compra { get; set; }
-        public decimal? saldo_pendiente { get; set; }
-        public string? observacion { get; set; } 
-        public Usuario usuario { get; set; }
-        public Empresa empresa { get; set; }
-        public EstadoCompra estado_compra { get; set; }
+        [Column("total_compra")]
+        public decimal TotalCompra { get; set; } 
+
+        [Required]
+        [Column("saldo_pendiente")]
+        public decimal SaldoPendiente { get; set; }
+
+         [Column("observacion", TypeName ="nvarchar(100)")]
+        public string? Observacion { get; set; } 
+        public Usuario Usuario { get; set; }
+        public Proveedores Proveedores { get; set; } 
+        public EstadoCompra EstadoCompra { get; set; }
 
     }
 }

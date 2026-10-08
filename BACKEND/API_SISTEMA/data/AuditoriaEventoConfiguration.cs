@@ -13,8 +13,6 @@ public sealed class AuditoriaEventoConfiguration : IEntityTypeConfiguration<Audi
             table.HasCheckConstraint("CK_auditoria_evento_accion", "LEN(LTRIM(RTRIM(accion))) > 0");
             table.HasCheckConstraint("CK_auditoria_evento_resultado", "resultado IN ('EXITOSO', 'RECHAZADO', 'FALLIDO')");
             table.HasCheckConstraint("CK_auditoria_evento_origen", "origen IN ('API', 'SISTEMA', 'SQL')");
-            table.HasCheckConstraint("CK_auditoria_evento_anteriores_json", "datos_anteriores IS NULL OR ISJSON(datos_anteriores) = 1");
-            table.HasCheckConstraint("CK_auditoria_evento_nuevos_json", "datos_nuevos IS NULL OR ISJSON(datos_nuevos) = 1");
             table.HasCheckConstraint("CK_auditoria_evento_registro_entidad",
                 "id_registro IS NULL OR (entidad IS NOT NULL AND LEN(LTRIM(RTRIM(entidad))) > 0)");
         });
