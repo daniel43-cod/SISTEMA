@@ -5,13 +5,19 @@ import { Input } from '../../../shared/ui/Input'
 import { Button } from '../../../shared/ui/Button'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { ApiError } from '../../../shared/api/ApiError'
-import { loadCash, openCash, parseOpeningAmount } from '../api/cashApi'
-import type { AvailableCash, CashSession } from '../api/cashApi'
+import { loadCash, openCash, closeCash, parseOpeningAmount } from '../api/cashApi'
+import type { AvailableCash, CashSession, CashClosing } from '../api/cashApi'
 import './CashPage.css'
 
 export function CashPage() {
   const { session } = useAuth()
   const [current, setCurrent] = useState<CashSession | null>(null)
+  const [closing, setClosing] = useState(false)
+  const [counted, setCounted] = useState('')
+  const [closingNote, setClosingNote] = useState('')
+  const [review, setReview] = useState<{ id: number; amount: number; note: string } | null>(null)
+  const [result, setResult] = useState<CashClosing | null>(null)
+  const money = (value: number) => new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(value)
   const [available, setAvailable] = useState<AvailableCash[]>([])
   const [selected, setSelected] = useState('')
   const [amount, setAmount] = useState('')
@@ -30,6 +36,8 @@ export function CashPage() {
     const controller = new AbortController()
     loadCash(token, controller.signal).then(data => {
       if (controller.signal.aborted) return
+      setClosing(false)
+      setReview(null)
       setCurrent(data.current)
       setAvailable(data.available)
       setSelected(value => data.available.some(item => String(item.idCaja) === value) ? value :
@@ -57,6 +65,7 @@ export function CashPage() {
     setSaving(true)
     try {
       await openCash(token, id, parsedAmount, note)
+      setResult(null)
       setNotice('Caja abierta correctamente.')
       setAmount('')
       setNote('')
@@ -73,6 +82,45 @@ export function CashPage() {
     }
   }
 
+  function reviewClosing(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!current || saving || busy.current || phase !== 'ready') return
+    setError('')
+    const parsed = parseOpeningAmount(counted)
+    if (parsed === null) { setError('Ingresa el efectivo contado, con hasta dos decimales.'); return }
+    if (closingNote.length > 100) { setError('La observación admite hasta 100 caracteres.'); return }
+    setReview({ id: current.id_sesion_caja, amount: parsed, note: closingNote })
+  }
+
+  async function confirmClosing() {
+    if (!token || !isAdmin || !current || !review || busy.current || phase !== 'ready') return
+    if (review.id !== current.id_sesion_caja) { setReview(null); setError('El turno cambió. Actualiza la caja.'); return }
+    busy.current = true
+    setSaving(true)
+    setError('')
+    setNotice('')
+    setResult(null)
+    try {
+      const closed = await closeCash(token, review.id, review.amount, review.note)
+      setResult(closed)
+      setNotice('Caja cerrada correctamente.')
+      setCounted('')
+      setClosingNote('')
+    } catch (cause) {
+      setError(cause instanceof ApiError && cause.status === 409
+        ? 'Otra operación cambió la caja. Revisa el estado actualizado antes de continuar.'
+        : cause instanceof ApiError ? cause.message : 'No se pudo cerrar la caja.')
+    } finally {
+      // No se reintenta automaticamente: el servidor podria haber confirmado el cierre.
+      setReview(null)
+      setClosing(false)
+      setPhase('loading')
+      setVersion(value => value + 1)
+      busy.current = false
+      setSaving(false)
+    }
+  }
+
   if (!isAdmin) return <p>No tienes permiso para administrar la caja.</p>
   return <section className="cash-panel" aria-labelledby="cash-title" aria-busy={phase === 'loading' || saving}>
     <div className="cash-heading">
@@ -80,6 +128,16 @@ export function CashPage() {
       <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setPhase('loading'); setVersion(value => value + 1) }} />
     </div>
     {notice && <p className="cash-success" role="status">{notice}</p>}
+    {result && <section className="cash-closing-result" aria-labelledby="cash-result-title">
+      <h3 id="cash-result-title">Resultado del cierre · turno {result.id_sesion_caja}</h3>
+      <dl className="cash-summary">
+        <div><dt>Monto esperado</dt><dd>{money(result.monto_esperado)}</dd></div>
+        <div><dt>Efectivo contado</dt><dd>{money(result.monto_contado)}</dd></div>
+        <div><dt>{result.diferencia === 0 ? 'Diferencia' : result.diferencia > 0 ? 'Sobrante' : 'Faltante'}</dt>
+          <dd className={result.diferencia === 0 ? 'cash-success' : 'cash-difference'}>{money(Math.abs(result.diferencia))}</dd></div>
+        <div><dt>Fecha de cierre</dt><dd>{new Date(result.fecha_cierre).toLocaleString('es-GT')}</dd></div>
+      </dl>
+    </section>}
     {error && <p className="cash-error" role="alert">{error}</p>}
     {phase === 'loading' ? <p role="status">Consultando caja…</p> : phase === 'error' ?
       <Button onClick={() => { setError(''); setPhase('loading'); setVersion(value => value + 1) }}>Volver a consultar</Button> :
@@ -92,6 +150,30 @@ export function CashPage() {
           <div><dt>Fecha de apertura</dt><dd>{new Date(current.fecha_apertura).toLocaleString('es-GT')}</dd></div>
         </dl>
         <p className="cash-hint">Esta caja está disponible para las operaciones del equipo.</p>
+        {!closing ? <Button className="cash-close-button" onClick={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}>Cerrar caja</Button> :
+          <form className="cash-form cash-closing-form" onSubmit={reviewClosing}>
+            <h3>Cierre del turno</h3>
+            <p className="cash-hint">Cuenta el efectivo disponible. Al confirmar, se cerrará la caja para todo el equipo.</p>
+            <fieldset disabled={saving || review !== null}>
+              <Input label="Efectivo contado (Q)" value={counted} required inputMode="decimal" maxLength={11}
+                placeholder="0.00" onChange={event => setCounted(event.target.value)} />
+              <Input label="Observación del cierre (opcional)" value={closingNote} maxLength={100}
+                onChange={event => setClosingNote(event.target.value)} />
+              {!review && <div className="cash-actions">
+                <Button type="submit">Revisar cierre</Button>
+                <Button className="cash-secondary" onClick={() => { setClosing(false); setError('') }}>Cancelar</Button>
+              </div>}
+            </fieldset>
+            {review && <div className="cash-confirmation" role="group" aria-labelledby="cash-confirm-title">
+              <h3 id="cash-confirm-title">Confirmar cierre</h3>
+              <p>Efectivo contado: <strong>{money(review.amount)}</strong>.</p>
+              <p>Se cerrará el turno {review.id}. El servidor calculará el monto esperado y la diferencia al confirmar.</p>
+              <div className="cash-actions">
+                <Button className="cash-close-button" disabled={saving} onClick={confirmClosing}>{saving ? 'Cerrando caja…' : 'Confirmar cierre'}</Button>
+                <Button className="cash-secondary" disabled={saving} onClick={() => setReview(null)}>Volver a editar</Button>
+              </div>
+            </div>}
+          </form>}
       </> : <>
         <p className="cash-status is-closed">Caja cerrada</p>
         {available.length === 0 ? <p>No hay cajas activas disponibles para abrir.</p> :

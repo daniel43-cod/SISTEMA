@@ -80,9 +80,12 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
         foreach (var m in movimientos)
         {
             var naturaleza = m.naturaleza?.Trim().ToUpperInvariant();
-            if (m.monto <= 0 || (naturaleza != "INGRESO" && naturaleza != "EGRESO"))
+            // El catalogo existente usa Entrada/Salida; se conservan sus datos y se admite Ingreso/Egreso.
+            var entrada = naturaleza is "ENTRADA" or "INGRESO";
+            var salida = naturaleza is "SALIDA" or "EGRESO";
+            if (m.monto <= 0 || (!entrada && !salida))
                 throw new CajaValidationException("Hay movimientos con monto o naturaleza invalida. Revisa el turno antes de cerrar.");
-            esperado += naturaleza == "INGRESO" ? m.monto : -m.monto;
+            esperado += entrada ? m.monto : -m.monto;
         }
         var diferencia = dto.monto_contado - esperado;
         if (Math.Abs(esperado) > 99999999.99m || Math.Abs(diferencia) > 99999999.99m)

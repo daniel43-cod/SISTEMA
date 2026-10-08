@@ -11,7 +11,7 @@ El script no modifica datos: rechaza varias sesiones abiertas y crea el índice 
 filtrado. El mapeo EF por sí solo no aplica este cambio a una base existente.
 
 Los importes de sesión y movimientos se mapean como `decimal(10,2)`.
-Las naturalezas admitidas de movimientos son `INGRESO` y `EGRESO` (sin distinguir
+Las naturalezas admitidas de movimientos son `Entrada`/`Ingreso` y `Salida`/`Egreso` (sin distinguir
 mayúsculas ni espacios exteriores). Un movimiento inválido impide cerrar: no se
 omite ni se interpreta por su ID. Revisar este catálogo en SQL Server.
 

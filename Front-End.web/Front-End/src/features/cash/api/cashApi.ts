@@ -47,3 +47,31 @@ export async function openCash(token: string, idCaja: number, amount: number, no
   await requestJson('/Caja/abrir', { method: 'POST', token, validationMessages: true,
     body: { id_caja: idCaja, monto_inicial: amount, observacion: note.trim() || null } })
 }
+
+export type CashClosing = {
+  id_sesion_caja: number; id_usuario_apertura: number; id_usuario_cierre: number
+  fecha_cierre: string; monto_inicial: number; monto_esperado: number
+  monto_contado: number; diferencia: number
+}
+
+export function parseCashClosing(value: unknown): CashClosing {
+  if (!record(value) || !positiveId(value.id_sesion_caja) || !positiveId(value.id_usuario_apertura) ||
+      !positiveId(value.id_usuario_cierre) || typeof value.fecha_cierre !== 'string' ||
+      !Number.isFinite(Date.parse(value.fecha_cierre)) ||
+      ['monto_inicial', 'monto_esperado', 'monto_contado', 'diferencia'].some(key =>
+        typeof value[key] !== 'number' || !Number.isFinite(value[key]) || Math.abs(value[key]) > 99999999.99) ||
+      (value.monto_inicial as number) < 0 || (value.monto_contado as number) < 0)
+    throw new ApiError('No se pudo interpretar el resultado del cierre. Consulta el estado de la caja.')
+  return value as CashClosing
+}
+
+export async function closeCash(token: string, idSession: number, amount: number, note: string): Promise<CashClosing> {
+  // Se envia el turno revisado, nunca el usuario responsable ni saldos calculados en el navegador.
+  if (!positiveId(idSession) || !Number.isFinite(amount) || amount < 0 || amount > 99999999.99 ||
+      Math.abs(Math.round(amount * 100) - amount * 100) > 0.00001 || note.length > 100)
+    throw new ApiError('Revisa los datos del cierre.')
+  const response = parseCashClosing(await requestJson('/Caja/cerrar', { method: 'POST', token, validationMessages: true,
+    body: { id_sesion_caja: idSession, monto_contado: amount, observacion_cierre: note.trim() || null } }))
+  if (response.id_sesion_caja !== idSession) throw new ApiError('El resultado no corresponde al turno solicitado. Consulta el estado de la caja.')
+  return response
+}

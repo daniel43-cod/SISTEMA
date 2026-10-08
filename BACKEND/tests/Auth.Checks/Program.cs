@@ -344,7 +344,7 @@ try
             db.estado_compras.AddRange(new EstadoCompra { id_estado_compra = 1, nombre_estado_compra = "Pagada", descripcion = "Pagada" }, new EstadoCompra { id_estado_compra = 2, nombre_estado_compra = "Pendiente", descripcion = "Pendiente" });
             db.caja.Add(new caja { id_caja = 1, estado = true });
             db.usuarios.Add(new Usuario { id_usuario = 900, id_rol = 1, nombre = "Segundo", apellido = "Admin", usuario = "adminCaja", password = "unused", telefono = "900", estado = true, fecha_Creacion = DateTime.Now });
-            db.tipomovimientocaja.AddRange(new TipoMovimientoCaja { id_tipo_movimiento = 14, nombre_movimiento = "Compra", naturaleza = "EGRESO" }, new TipoMovimientoCaja { id_tipo_movimiento = 18, nombre_movimiento = "Abono", naturaleza = "EGRESO" });
+            db.tipomovimientocaja.AddRange(new TipoMovimientoCaja { id_tipo_movimiento = 14, nombre_movimiento = "Compra", naturaleza = "Salida" }, new TipoMovimientoCaja { id_tipo_movimiento = 18, nombre_movimiento = "Abono", naturaleza = "EGRESO" });
             await db.SaveChangesAsync();
             var cajaService = scope.ServiceProvider.GetRequiredService<CajaService>();
             accessorCatalogo.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "900")], "checks"));

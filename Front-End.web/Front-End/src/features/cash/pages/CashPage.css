@@ -14,3 +14,17 @@
 .cash-summary dt { color: var(--color-muted); font-size: .875rem; margin-bottom: 6px; }
 .cash-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 @media (max-width: 520px) { .cash-summary { grid-template-columns: 1fr; } .cash-form .button { max-width: none; } }
+
+.cash-closing-form, .cash-closing-result { border-top: 1px solid #e2e8f0; padding-top: 20px; }
+.cash-closing-result { display: grid; gap: 16px; }
+.cash-closing-result h3, .cash-closing-form h3 { margin: 0; font-size: 1rem; }
+.cash-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.cash-actions .button { width: auto; flex: 1; }
+.cash-panel .cash-close-button { background: #b91c1c; color: white; max-width: 260px; }
+.cash-panel .cash-close-button:hover:not(:disabled) { background: #991b1b; }
+.cash-panel .cash-close-button:disabled { background: #e2e8f0; color: #475569; }
+.cash-panel .cash-secondary { background: white; color: var(--color-text); border-color: var(--color-border); }
+.cash-panel .cash-secondary:hover:not(:disabled) { background: #f1f5f9; }
+.cash-confirmation { display: grid; gap: 14px; padding: 16px; background: #fff7ed; border-radius: 10px; line-height: 1.6; }
+.cash-difference { color: var(--color-warning); }
+@media (max-width: 520px) { .cash-actions { flex-direction: column; } .cash-panel .cash-close-button { width: 100%; max-width: none; } .cash-actions .button { max-width: none; } }
