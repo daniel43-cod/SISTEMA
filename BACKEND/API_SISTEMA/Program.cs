@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using API_SISTEMA.Services.CatalogoPublico;
 
 var builder = WebApplication.CreateBuilder(args);
 //agregue la coneciom del appsetings
@@ -96,6 +97,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddSingleton<ConexionDbContext>();
 //agregue el services del usuario
 builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.CatalogoPublico.CatalogoPublicoService>();
 builder.Services.AddScoped<CrearPresentacionService>();
 builder.Services.AddScoped<ListarPresentacionService>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
@@ -167,6 +169,8 @@ builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaCrearService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaImagenService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaActualizarService>();
 
+//catalogo publico
+builder.Services.AddScoped<CatalogoPublicoService>();
 
 var app = builder.Build();
 

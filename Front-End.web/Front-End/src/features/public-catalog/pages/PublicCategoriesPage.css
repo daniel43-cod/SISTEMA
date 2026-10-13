@@ -1,0 +1,33 @@
+.public-catalog { min-height: 100dvh; background: #f5f7fa; color: #182b3a; font-family: inherit; }
+.public-catalog *, .public-catalog *::before, .public-catalog *::after { box-sizing: border-box; }
+.public-catalog-header { background: white; border-bottom: 1px solid #e1e7ed; padding: 20px max(24px, calc((100% - 1120px) / 2)); }
+.public-catalog-brand { display: inline-flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; font-weight: 750; font-size: 21px; }
+.public-catalog-brand img { border-radius: 12px; object-fit: cover; }
+.public-catalog-brand small { display: block; margin-top: 3px; font-size: 10px; letter-spacing: .14em; color: #607384; }
+.public-catalog-main { max-width: 1168px; margin: auto; padding: 48px 24px 64px; }
+.public-catalog-eyebrow { color: #38695c; font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+.public-catalog-main h1 { font-size: clamp(30px, 5vw, 44px); margin: 10px 0; line-height: 1.2; }
+.public-catalog-description { color: #596a78; margin-bottom: 32px; line-height: 1.6; }
+.public-categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; padding: 0; margin: 0; list-style: none; }
+.public-category-card { background: white; border: 1px solid #e1e7ed; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 16px #182b3a06; }
+.public-category-image { aspect-ratio: 4 / 3; background: #eaf0ed; }
+.public-category-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.public-category-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #537267; }
+.public-category-placeholder span { font-size: 44px; font-weight: 750; }
+.public-category-placeholder small { font-size: 13px; }
+.public-category-card h2 { font-size: 19px; line-height: 1.4; margin: 0; padding: 20px; overflow-wrap: anywhere; }
+.public-catalog-message { padding: 28px; background: white; border: 1px solid #e1e7ed; border-radius: 16px; line-height: 1.6; }
+.public-catalog-message button { border: 0; border-radius: 8px; background: #245f4e; color: white; padding: 12px 20px; font: inherit; cursor: pointer; }
+.public-catalog-message button:hover { background: #1b493c; }
+.public-catalog button:focus-visible, .public-catalog a:focus-visible { outline: 3px solid #247a61; outline-offset: 4px; }
+.public-catalog-footer { max-width: 1120px; margin: auto; padding: 24px; color: #607384; border-top: 1px solid #e1e7ed; font-size: 13px; }
+.public-catalog-skip { position: absolute; left: 16px; top: -100px; background: white; padding: 12px; color: #182b3a; z-index: 10; }
+.public-catalog-skip:focus { top: 12px; }
+@media (max-width: 520px) {
+  .public-catalog-header { padding: 16px; }
+  .public-catalog-main { padding: 30px 16px 40px; }
+  .public-categories-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .public-category-card { border-radius: 12px; }
+  .public-category-card h2 { font-size: 16px; padding: 14px 12px; }
+  .public-category-placeholder span { font-size: 32px; }
+}

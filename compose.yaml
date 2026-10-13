@@ -1,0 +1,23 @@
+services:
+  backend:
+    build:
+      context: ./BACKEND
+      dockerfile: Dockerfile
+    image: pos-backend:dev
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__ConexionSQL: ${SQL_CONNECTION_STRING}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./Front-End.web/Front-End
+      dockerfile: Dockerfile
+    image: pos-frontend:dev
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

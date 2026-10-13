@@ -1,0 +1,39 @@
+name: pos-desarrollo
+
+services:
+  backend:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src/API_SISTEMA
+    command: dotnet watch run --no-launch-profile
+    volumes:
+      - ./BACKEND:/src
+      - backend_obj:/src/API_SISTEMA/obj
+      - backend_bin:/src/API_SISTEMA/bin
+      - "${APPDATA}/Microsoft/UserSecrets/129edc18-0e43-4354-9fb9-c9a63b053f5e:/root/.microsoft/usersecrets/129edc18-0e43-4354-9fb9-c9a63b053f5e:ro"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__ConexionSQL: ${SQL_CONNECTION_STRING}
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    ports:
+      - "127.0.0.1:8081:8080"
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
+    volumes:
+      - ./Front-End.web/Front-End:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      API_PROXY_TARGET: http://backend:8080
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  backend_obj:
+  backend_bin:
+  frontend_node_modules:

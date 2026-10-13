@@ -1,0 +1,17 @@
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\bin\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\bin\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\bin\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\bin\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\bin\CategoriaImagen.Checks\debug\SixLabors.ImageSharp.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.csproj.AssemblyReference.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.AssemblyInfoInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.AssemblyInfo.cs
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.csproj.CoreCompileInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.sourcelink.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\Categori.09D7AA4A.Up2Date
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\refint\CategoriaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\CategoriaImagen.Checks.genruntimeconfig.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-CategoriaImagen\obj\CategoriaImagen.Checks\debug\ref\CategoriaImagen.Checks.dll

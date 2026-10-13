@@ -1,0 +1,14 @@
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\bin\OpenAIService.Checks\debug\OpenAIService.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\bin\OpenAIService.Checks\debug\OpenAIService.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\bin\OpenAIService.Checks\debug\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\bin\OpenAIService.Checks\debug\OpenAIService.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.AssemblyInfoInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.AssemblyInfo.cs
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.csproj.CoreCompileInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.sourcelink.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\refint\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\OpenAIService.Checks.genruntimeconfig.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-OpenAIService\obj\OpenAIService.Checks\debug\ref\OpenAIService.Checks.dll

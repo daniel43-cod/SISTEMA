@@ -1,0 +1,17 @@
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\bin\MarcaImagen.Checks\debug\MarcaImagen.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\bin\MarcaImagen.Checks\debug\MarcaImagen.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\bin\MarcaImagen.Checks\debug\MarcaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\bin\MarcaImagen.Checks\debug\MarcaImagen.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\bin\MarcaImagen.Checks\debug\SixLabors.ImageSharp.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.csproj.AssemblyReference.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.AssemblyInfoInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.AssemblyInfo.cs
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.csproj.CoreCompileInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.sourcelink.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaIma.B28CDEE7.Up2Date
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\refint\MarcaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\MarcaImagen.Checks.genruntimeconfig.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\naming-MarcaImagen\obj\MarcaImagen.Checks\debug\ref\MarcaImagen.Checks.dll

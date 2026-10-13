@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '../../Front-End.web/Front-End');
+let target = path.join(root, 'src/features/cash/pages/CashPage.tsx');
+let content = fs.readFileSync(target, 'utf8').replace("    setPhase('loading')\n    loadCash", '    loadCash');
+content = content.replaceAll("setError(''); setVersion", "setError(''); setPhase('loading'); setVersion");
+fs.writeFileSync(target, content);
+target = path.join(root, 'src/app/layouts/StaffLayout.tsx');
+content = fs.readFileSync(target, 'utf8').replaceAll('\uFEFF', '').replace('<CashPage />', '<CashPage key={session.user.id} />');
+fs.writeFileSync(target, content);

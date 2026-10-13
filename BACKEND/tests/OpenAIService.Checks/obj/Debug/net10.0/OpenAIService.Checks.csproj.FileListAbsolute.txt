@@ -1,0 +1,15 @@
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\bin\Debug\net10.0\OpenAIService.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\bin\Debug\net10.0\OpenAIService.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\bin\Debug\net10.0\OpenAIService.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\bin\Debug\net10.0\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\bin\Debug\net10.0\OpenAIService.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.AssemblyInfoInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.AssemblyInfo.cs
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.csproj.CoreCompileInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.sourcelink.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\refint\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.genruntimeconfig.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\ref\OpenAIService.Checks.dll
