@@ -367,6 +367,7 @@ try
             { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 50m }] };
             var compra = await compras.CrearCompra(compraDto, 1);
             Check(compra.IdProveedor == 1 && compra.TotalCompra == 50m && compra.SaldoPendiente == 30m && producto.Stock == 5, "Compra usa proveedor, total de linea y stock correcto");
+            Check(producto.PrecioPromedioCompra == 10m, "Primera compra calcula costo por unidad con el total de línea");
             Check(await db.pagosCompras.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.detalle_compras.SingleAsync()).subtotal == 50m, "Compra confirma pago, detalle y movimiento");
             var pagoService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.PagoCompra.PagoCompraService>();
             var exceso = false;
@@ -437,12 +438,40 @@ try
             var rechazoResumen = false;
             try { await resumenService.ConsultarResumen(sesionCompartida.id_sesion_caja); } catch (CajaValidationException) { rechazoResumen = true; }
             Check(rechazoResumen, "Resumen rechaza movimiento invalido sin ocultarlo fuera del listado");
+            // Compras sin pago aíslan el promedio de los movimientos de caja ya comprobados.
+            var compraPromedio = await compras.CrearCompra(new()
+            { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 60m }] }, 1);
+            Check(producto.Stock == 10 && producto.PrecioPromedioCompra == 11m,
+                "Nueva compra pondera inventario anterior y costo total recibido");
+            producto.Stock = 2; // Simula unidades restantes después de vender.
+            await db.SaveChangesAsync();
+            var compraRestante = await compras.CrearCompra(new()
+            { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 3, precio = 39m }] }, 1);
+            Check(producto.Stock == 5 && producto.PrecioPromedioCompra == 12.2m,
+                "Promedio usa stock restante, no cantidades de compras históricas");
+            await db.detalle_compras.Where(d => d.id_registro_compra == compraPromedio.IdCompra ||
+                d.id_registro_compra == compraRestante.IdCompra).ExecuteDeleteAsync();
+            await db.registroCompras.Where(c => c.IdCompra == compraPromedio.IdCompra ||
+                c.IdCompra == compraRestante.IdCompra).ExecuteDeleteAsync();
+            producto.PrecioPromedioCompra = 0m;
+            await db.SaveChangesAsync();
+            var compraSinCosto = await compras.CrearCompra(new()
+            { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 60, precio = 920m }] }, 1);
+            Check(producto.Stock == 65 && producto.PrecioPromedioCompra == 15.333333m,
+                "Costo previo cero usa total entre unidades recibidas sin diluirlo con stock anterior");
+            await db.detalle_compras.Where(d => d.id_registro_compra == compraSinCosto.IdCompra).ExecuteDeleteAsync();
+            await db.registroCompras.Where(c => c.IdCompra == compraSinCosto.IdCompra).ExecuteDeleteAsync();
+            producto.Stock = 5;
+            producto.PrecioPromedioCompra = 10m;
+            await db.SaveChangesAsync();
             // Forzar un fallo tardio permite verificar que compra, pago y stock se revierten juntos.
             await db.Database.ExecuteSqlRawAsync("DROP TABLE movimiento_caja");
             compraDto.detalle_compra[0].precio = 50m;
             var revertida = false;
             try { await compras.CrearCompra(compraDto, 1); } catch (DbUpdateException) { revertida = true; db.ChangeTracker.Clear(); }
             Check(revertida && await db.registroCompras.CountAsync() == 1 && await db.pagosCompras.CountAsync() == 2 && (await db.productos.AsNoTracking().SingleAsync()).Stock == 5, "Fallo de movimiento revierte compra, pago y stock");
+            Check((await db.productos.AsNoTracking().SingleAsync()).PrecioPromedioCompra == 10m,
+                "Fallo de compra conserva el costo promedio anterior");
             await db.Database.ExecuteSqlRawAsync("DELETE FROM pagos_compra");
             await db.Database.ExecuteSqlRawAsync("DELETE FROM detalle_compra");
             await db.Database.ExecuteSqlRawAsync("DELETE FROM registro_compras");

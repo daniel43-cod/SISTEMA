@@ -124,6 +124,8 @@ namespace API_SISTEMA.Data
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.Entity<RegistroCompras>().ToTable("registro_compras");
+            modelBuilder.Entity<API_SISTEMA.Models.Productos>()
+                .Property(p => p.PrecioPromedioCompra).HasPrecision(18, 6);
             modelBuilder.Entity<RegistroCompras>().Property(c => c.TotalCompra).HasPrecision(10, 2);
             modelBuilder.Entity<RegistroCompras>().Property(c => c.SaldoPendiente).HasPrecision(10, 2);
             modelBuilder.Entity<DetalleCompra>().Property(c => c.precio).HasPrecision(10, 2);

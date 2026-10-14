@@ -34,17 +34,12 @@ namespace API_SISTEMA.Services.Compras
 
         public async Task<RegistroCompras> CrearCompra( RegistroComprasDto compraDto, int idUsuario, CancellationToken ct = default)
         {
-            if (compraDto == null)
-                throw new CompraValidationException(
-                    "La información de la compra es obligatoria."
-                );
+            if (compraDto == null)throw new CompraValidationException("La información de la compra es obligatoria.");
 
-            if (compraDto.detalle_compra == null ||
-                compraDto.detalle_compra.Count == 0)
+            if (compraDto.detalle_compra == null || compraDto.detalle_compra.Count == 0)
             {
-                throw new CompraValidationException(
-                    "Debes enviar al menos un detalle de compra."
-                );
+                throw new CompraValidationException("Debes enviar al menos un detalle de compra."
+);
             }
 
 
@@ -80,6 +75,7 @@ namespace API_SISTEMA.Services.Compras
             var productosPorId = productos.ToDictionary(p => p.IdProducto);
 
             decimal totalCompra = 0;
+            var inventarioActualizado = new Dictionary<int, (int Stock, decimal CostoPromedio)>();
 
             foreach (var detalleDto in compraDto.detalle_compra)
             {
@@ -98,6 +94,26 @@ namespace API_SISTEMA.Services.Compras
                     throw new CompraValidationException($"El producto con ID " +$"{detalleDto.id_producto} no existe."
                     );
                 }
+
+                var producto = productosPorId[detalleDto.id_producto];
+                var stockAnterior = producto.Stock ?? 0;
+                var costoAnterior = producto.PrecioPromedioCompra ?? 0m;
+                if (stockAnterior < 0 || costoAnterior < 0)
+                    throw new CompraValidationException($"El producto {producto.Nombre} tiene inventario o costo inválido.");
+                var stockNuevo = (long)stockAnterior + detalleDto.cantidad;
+                if (stockNuevo > int.MaxValue)
+                    throw new CompraValidationException("La cantidad supera el stock maximo permitido.");
+
+                // precio es el total de la línea; cantidad son unidades base, no paquetes.
+                // Si no hay costo previo, la nueva compra sirve como referencia para todo el stock.
+                var costoPromedio = decimal.Round(
+                    costoAnterior == 0m
+                        ? detalleDto.precio / detalleDto.cantidad
+                        : (stockAnterior * costoAnterior + detalleDto.precio) / stockNuevo,
+                    6, MidpointRounding.AwayFromZero);
+                if (costoPromedio <= 0m || costoPromedio > 999999999999.999999m)
+                    throw new CompraValidationException("El precio promedio de compra supera la precisión permitida.");
+                inventarioActualizado.Add(producto.IdProducto, ((int)stockNuevo, costoPromedio));
 
                 // precio representa el total de esta linea, como en el contrato actual.
                 totalCompra += detalleDto.precio;
@@ -180,10 +196,9 @@ namespace API_SISTEMA.Services.Compras
 
                     _context.detalle_compras.Add(detalle);
 
-                    var stockNuevo = (long)(producto.Stock ?? 0) + detalleDto.cantidad;
-                    if (stockNuevo > int.MaxValue)
-                        throw new CompraValidationException("La cantidad supera el stock maximo permitido.");
-                    producto.Stock = (int)stockNuevo;
+                    var inventario = inventarioActualizado[producto.IdProducto];
+                    producto.PrecioPromedioCompra = inventario.CostoPromedio;
+                    producto.Stock = inventario.Stock;
                 }
 
                 await _context.SaveChangesAsync(ct);

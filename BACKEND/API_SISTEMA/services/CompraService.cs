@@ -8,6 +8,11 @@ namespace API_SISTEMA.Services;
 
 public class CompraService(SistemaDbContext context, MovimientoCajaService movimientos)
 {
+    public Task<List<ProveedorCompraDto>> ListarProveedores(CancellationToken ct = default)
+        => context.proveedores.AsNoTracking().OrderBy(p => p.nombre).ThenBy(p => p.id_proveedor)
+            .Select(p => new ProveedorCompraDto { IdProveedor = p.id_proveedor, Nombre = p.nombre })
+            .ToListAsync(ct);
+
     public async Task<List<ListarComprasDto>> listarcompras(int pagina = 1, int tamanoPagina = 50, CancellationToken ct = default)
     {
         if (pagina < 1 || pagina > 1000000 || tamanoPagina < 1 || tamanoPagina > 100)

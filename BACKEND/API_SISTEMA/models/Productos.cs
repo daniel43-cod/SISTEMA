@@ -26,7 +26,7 @@ namespace API_SISTEMA.Models
         public int? Stock { get; set; }
         [Column("stock_minimo")]
         [JsonPropertyName("stock_minimo")]
-        public int? StockMinimo { get; set; }
+        public int? StockMinimo { get; set; }   
         [MaxLength(2048)]
         [Column("imagen")]
         public string? Imagen { get; set; }

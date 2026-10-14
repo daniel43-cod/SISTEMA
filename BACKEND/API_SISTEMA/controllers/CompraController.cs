@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using API_SISTEMA.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Controllers
 {
@@ -32,7 +34,12 @@ namespace API_SISTEMA.Controllers
 
 
         [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("proveedores")]
+        [ProducesResponseType(typeof(List<ProveedorCompraDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<ProveedorCompraDto>>> ListarProveedores(CancellationToken ct)
+            => Ok(await _context.ListarProveedores(ct));
 
+        [Authorize(Roles = Roles.Administrador)]
         [HttpGet("listar")]
         public async Task<IActionResult> listar([FromQuery] int pagina = 1, [FromQuery] int tamanoPagina = 50, CancellationToken ct = default)
         {
@@ -42,7 +49,15 @@ namespace API_SISTEMA.Controllers
 
         [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
-        public async Task<IActionResult> Crear([FromBody] RegistroComprasDto compraDto, CancellationToken ct)
+        [Consumes("application/json")]
+        [ProducesResponseType(typeof(RespuestaCrearCompraDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<RespuestaCrearCompraDto>> Crear([FromBody] RegistroComprasDto compraDto,
+            [FromServices] SistemaDbContext db, CancellationToken ct)
         {
                 var idUsuarioClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
@@ -56,11 +71,25 @@ namespace API_SISTEMA.Controllers
 
                 var compra = await _crearCompraService.CrearCompra(compraDto, idUsuario, ct);
 
-                return Ok(new
+                // El servicio usa este mismo contexto por petición. Tomamos los valores ya
+                // guardados, sin consultar de nuevo después de confirmar la transacción.
+                var ids = compraDto.detalle_compra.Select(d => d.id_producto).ToHashSet();
+                var productos = db.ChangeTracker.Entries<API_SISTEMA.Models.Productos>()
+                    .Where(e => ids.Contains(e.Entity.IdProducto))
+                    .OrderBy(e => e.Entity.IdProducto)
+                    .Select(e => new ProductoCompraActualizadoDto
+                    {
+                        IdProducto = e.Entity.IdProducto,
+                        Stock = e.Entity.Stock ?? 0,
+                        PrecioPromedioCompra = e.Entity.PrecioPromedioCompra ?? 0m
+                    }).ToList();
+
+                return Ok(new RespuestaCrearCompraDto
                 {
-                    mensaje = "Compra registrada correctamente",
-                    id_compra = compra.IdCompra,
-                   
+                    IdCompra = compra.IdCompra,
+                    TotalCompra = compra.TotalCompra,
+                    SaldoPendiente = compra.SaldoPendiente,
+                    Productos = productos
                 });
 
         }
