@@ -29,7 +29,11 @@ export function PublicProductsList({ idMarca, cartItems, setQuantity }: {
               producto: product.nombre, presentacion: presentation.nombre, precio: presentation.precio }
             const label = `${product.nombre}, ${presentation.nombre}`
             return <li key={presentation.idProductoPresentacion} className="public-presentation">
-              <div><strong>{presentation.nombre}</strong><span>{money.format(presentation.precio)}</span>
+              <div className="public-presentation-info">
+                <div className="public-presentation-heading">
+                  <strong>{presentation.nombre}</strong>
+                  <span>{money.format(presentation.precio)}</span>
+                </div>
                 <small>{presentation.disponible ? 'Disponible' : 'Agotado'}</small></div>
               <div className="public-quantity" role="group" aria-label={`Cantidad en carrito de ${label}`}>
                 <button type="button" aria-label={`Quitar uno: ${label}`} disabled={quantity === 0}

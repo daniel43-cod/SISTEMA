@@ -1,0 +1,14 @@
+
+@media (max-width: 640px) {
+  .public-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .public-products-grid > .public-category-card { min-width: 0; border-radius: 12px; }
+  .public-products-grid .public-category-card h2 { font-size: 15px; padding: 12px 10px; }
+  .public-products-grid .public-presentations { padding: 0 8px 12px; }
+  .public-products-grid .public-presentation { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 0; }
+  .public-products-grid .public-presentation strong { font-size: 13px; line-height: 1.4; }
+  .public-products-grid .public-presentation span { font-size: 14px; overflow-wrap: anywhere; }
+  .public-products-grid .public-presentation small { font-size: 12px; }
+  .public-products-grid .public-quantity { justify-content: center; gap: 4px; }
+  .public-products-grid .public-quantity button { width: clamp(32px, 10vw, 40px); height: 40px; padding: 0; }
+  .public-products-grid .public-quantity output { min-width: 18px; font-size: 14px; }
+}

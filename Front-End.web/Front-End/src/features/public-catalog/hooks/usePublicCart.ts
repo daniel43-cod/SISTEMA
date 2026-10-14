@@ -4,7 +4,7 @@ import { CART_KEY, cartTotalCents, parseCart, setCartQuantity } from '../utils/c
 
 export function usePublicCart() {
   const [items, setItems] = useState<CartItem[]>(() => {
-    try { return parseCart(localStorage.getItem(CART_KEY)) } catch { return [] }
+    try { return parseCart(sessionStorage.getItem(CART_KEY)) } catch { return [] }
   })
   const currentItems = useRef(items)
   const [storageError, setStorageError] = useState('')
@@ -12,9 +12,9 @@ export function usePublicCart() {
     currentItems.current = next
     setItems(next)
     try {
-      localStorage.setItem(CART_KEY, JSON.stringify(next))
+      sessionStorage.setItem(CART_KEY, JSON.stringify(next))
       setStorageError('')
-    } catch { setStorageError('El carrito funciona en esta página, pero no pudo guardarse para tu próxima visita.') }
+    } catch { setStorageError('No se pudo guardar el carrito en esta pestaña. Si recargas la página, podrías perderlo.') }
   }
   function setQuantity(item: Omit<CartItem, 'cantidad'>, cantidad: number) {
     save(setCartQuantity(currentItems.current, item, cantidad))

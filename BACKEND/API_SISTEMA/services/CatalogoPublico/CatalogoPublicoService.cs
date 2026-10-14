@@ -6,8 +6,7 @@ namespace API_SISTEMA.Services.CatalogoPublico;
 
 public sealed class CatalogoPublicoService(SistemaDbContext context)
 {
-    public async Task<ProductosPublicosPaginaDto?> ListarProductosPorMarca(
-        int idMarca, int pagina = 1, int tamanoPagina = 24, CancellationToken cancellationToken = default)
+    public async Task<ProductosPublicosPaginaDto?> ListarProductosPorMarca(int idMarca, int pagina = 1, int tamanoPagina = 24, CancellationToken cancellationToken = default)
     {
         if (idMarca <= 0) throw new ArgumentOutOfRangeException(nameof(idMarca));
         if (pagina < 1 || pagina > 100000) throw new ArgumentOutOfRangeException(nameof(pagina));

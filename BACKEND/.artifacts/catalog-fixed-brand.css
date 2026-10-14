@@ -1,0 +1,7 @@
+
+.public-catalog { --public-header-height: 85px; }
+.public-catalog-header { position: sticky; top: 0; z-index: 10; height: var(--public-header-height); }
+.public-catalog-heading-sticky { top: var(--public-header-height); }
+@media (max-width: 520px) {
+  .public-catalog { --public-header-height: 77px; }
+}

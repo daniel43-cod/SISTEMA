@@ -3,7 +3,7 @@ import type { PublicBrand } from '../types/brand'
 import { CatalogImage } from '../components/CatalogImage'
 import { PublicBrandsList } from '../components/PublicBrandsList'
 import { PublicProductsList } from '../components/PublicProductsList'
-import { PublicCart } from '../components/PublicCart'
+import { FloatingPublicCart } from '../components/FloatingPublicCart'
 import { useEffect, useRef, useState } from 'react'
 import { usePublicCategories } from '../hooks/usePublicCategories'
 import { usePublicCart } from '../hooks/usePublicCart'
@@ -30,23 +30,34 @@ export function PublicCategoriesPage() {
     <header className="public-catalog-header">
       <a className="public-catalog-brand" href={`${import.meta.env.BASE_URL}catalogo`}>
         <img src={`${import.meta.env.BASE_URL}icono_principal.jpeg`} alt="" width="44" height="44" />
-        <span>Sistema<small>CATÁLOGO PÚBLICO</small></span>
+        <span>Distrbuidora San Antonio<small>CATÁLOGO</small></span>
       </a>
-      <a className="public-cart-link" href="#public-cart-title">Carrito ({cart.count})</a>
+
     </header>
     <main id="public-categories" className="public-catalog-main">
-      <p className="public-catalog-eyebrow">EXPLORA NUESTROS PRODUCTOS</p>
-      <h1 ref={headingRef} tabIndex={-1}>{selectedBrand ? `Productos de ${selectedBrand.nombre}`
-        : selectedCategory ? `Marcas de ${selectedCategory.nombre}` : 'Categorías disponibles'}</h1>
-      <p className="public-catalog-description">{selectedBrand
-        ? 'Elige tus presentaciones y usa + para agregarlas al carrito.'
-        : selectedCategory ? 'Conoce las marcas disponibles en esta categoría.'
-        : 'Conoce nuestras categorías sin crear una cuenta.'}</p>
-      {selectedCategory && <button type="button" className="public-catalog-back"
-        onClick={() => {
-          if (selectedBrand) setSelectedBrand(null)
-          else setSelectedCategory(null)
-        }}>{selectedBrand ? '← Volver a las marcas' : '← Volver a las categorías'}</button>}
+      <div className={selectedCategory ? 'public-catalog-heading public-catalog-heading-sticky' : 'public-catalog-heading'}>
+        <p className="public-catalog-eyebrow">EXPLORA NUESTROS PRODUCTOS</p>
+        <div className="public-catalog-title-row">
+          {selectedCategory && <button type="button" className="public-catalog-back-icon"
+            aria-label={selectedBrand ? 'Volver a las marcas' : 'Volver a las categorías'}
+            title={selectedBrand ? 'Volver a las marcas' : 'Volver a las categorías'}
+            onClick={() => {
+              if (selectedBrand) setSelectedBrand(null)
+              else setSelectedCategory(null)
+            }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m12 19-7-7 7-7M5 12h14" />
+            </svg>
+          </button>}
+          <h1 ref={headingRef} tabIndex={-1}>{selectedBrand ? `Productos de ${selectedBrand.nombre}`
+            : selectedCategory ? `Marcas de ${selectedCategory.nombre}` : 'Categorías disponibles'}</h1>
+        </div>
+      </div>
+      {!selectedBrand && <p className="public-catalog-description">{selectedCategory
+        ? 'Conoce las marcas disponibles en esta categoría.'
+        : 'Conoce nuestras categorías sin crear una cuenta.'}</p>}
+
       {selectedBrand
         ? <PublicProductsList key={selectedBrand.idMarca} idMarca={selectedBrand.idMarca}
             cartItems={cart.items} setQuantity={cart.setQuantity} />
@@ -69,7 +80,7 @@ export function PublicCategoriesPage() {
               </li>)}
             </ul>}
           </>}
-      <PublicCart items={cart.items} total={cart.total} count={cart.count} storageError={cart.storageError}
+      <FloatingPublicCart items={cart.items} total={cart.total} count={cart.count} storageError={cart.storageError}
         setQuantity={cart.setQuantity} clear={cart.clear} />
     </main>
     <footer className="public-catalog-footer">Sistema · Catálogo público</footer>

@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\coy81\\Desktop\\SISTEMA\\SISTEMA\\BACKEND\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{8B3A5033-6A22-7588-9528-8F0C9119C9AE}|API_SISTEMA\\API_SISTEMA.csproj|c:\\users\\coy81\\desktop\\sistema\\sistema\\backend\\api_sistema\\dtos\\compras\\abonarsaldocompradto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B3A5033-6A22-7588-9528-8F0C9119C9AE}|API_SISTEMA\\API_SISTEMA.csproj|solutionrelative:api_sistema\\dtos\\compras\\abonarsaldocompradto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AbonarSaldoCompraDto.cs",
+              "DocumentMoniker": "C:\\Users\\coy81\\Desktop\\SISTEMA\\SISTEMA\\BACKEND\\API_SISTEMA\\DTOs\\Compras\\AbonarSaldoCompraDto.cs",
+              "RelativeDocumentMoniker": "API_SISTEMA\\DTOs\\Compras\\AbonarSaldoCompraDto.cs",
+              "ToolTip": "C:\\Users\\coy81\\Desktop\\SISTEMA\\SISTEMA\\BACKEND\\API_SISTEMA\\DTOs\\Compras\\AbonarSaldoCompraDto.cs",
+              "RelativeToolTip": "API_SISTEMA\\DTOs\\Compras\\AbonarSaldoCompraDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-14T02:12:06.437Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
