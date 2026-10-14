@@ -347,8 +347,8 @@ try
                 presentaciones = [new() { id_producto_presentacion = asociacion.id_producto_presentacion,
                     id_presentacion = presentacion.IdPresentacion, unidades_equivalentes = 1, precio = 12m, estado = true }]
             };
-            await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
-            await editarProducto.ActualizarProducto(producto.id_producto, dtoProducto);
+            await editarProducto.ActualizarProducto(producto.IdProducto, dtoProducto);
+            await editarProducto.ActualizarProducto(producto.IdProducto, dtoProducto);
             db.proveedores.Add(new Proveedores { id_proveedor = 1, nombre = "Proveedor prueba", telefono = "123", fecha_creacion = DateTime.Now });
             db.estado_compras.AddRange(new EstadoCompra { id_estado_compra = 1, nombre_estado_compra = "Pagada", descripcion = "Pagada" }, new EstadoCompra { id_estado_compra = 2, nombre_estado_compra = "Pendiente", descripcion = "Pendiente" });
             db.caja.Add(new API_SISTEMA.Models.Caja { id_caja = 1, estado = true });
@@ -364,9 +364,9 @@ try
             accessorCatalogo.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks"));
             var compras = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Compras.CrearCompraService>();
             var compraDto = new API_SISTEMA.Dtos.Compras.RegistroComprasDto
-            { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.id_producto, cantidad = 5, precio = 50m }] };
+            { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 50m }] };
             var compra = await compras.CrearCompra(compraDto, 1);
-            Check(compra.IdProveedor == 1 && compra.TotalCompra == 50m && compra.SaldoPendiente == 30m && producto.stock == 5, "Compra usa proveedor, total de linea y stock correcto");
+            Check(compra.IdProveedor == 1 && compra.TotalCompra == 50m && compra.SaldoPendiente == 30m && producto.Stock == 5, "Compra usa proveedor, total de linea y stock correcto");
             Check(await db.pagosCompras.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.detalle_compras.SingleAsync()).subtotal == 50m, "Compra confirma pago, detalle y movimiento");
             var pagoService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.PagoCompra.PagoCompraService>();
             var exceso = false;
@@ -442,7 +442,7 @@ try
             compraDto.detalle_compra[0].precio = 50m;
             var revertida = false;
             try { await compras.CrearCompra(compraDto, 1); } catch (DbUpdateException) { revertida = true; db.ChangeTracker.Clear(); }
-            Check(revertida && await db.registroCompras.CountAsync() == 1 && await db.pagosCompras.CountAsync() == 2 && (await db.productos.AsNoTracking().SingleAsync()).stock == 5, "Fallo de movimiento revierte compra, pago y stock");
+            Check(revertida && await db.registroCompras.CountAsync() == 1 && await db.pagosCompras.CountAsync() == 2 && (await db.productos.AsNoTracking().SingleAsync()).Stock == 5, "Fallo de movimiento revierte compra, pago y stock");
             await db.Database.ExecuteSqlRawAsync("DELETE FROM pagos_compra");
             await db.Database.ExecuteSqlRawAsync("DELETE FROM detalle_compra");
             await db.Database.ExecuteSqlRawAsync("DELETE FROM registro_compras");
@@ -495,12 +495,12 @@ try
             try
             {
                 await scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Productos.ProductoActualizarService>()
-                    .ActualizarProducto(productoAntes.id_producto, new()
-                    { nombre = "Nombre revertido", codigo_barra = productoAntes.codigo_barra!, IdMarca = productoAntes.IdMarca, stock_minimo = 0 });
+                    .ActualizarProducto(productoAntes.IdProducto, new()
+                    { nombre = "Nombre revertido", codigo_barra = productoAntes.CodigoBarra!, IdMarca = productoAntes.IdMarca, stock_minimo = 0 });
             }
             catch (DbUpdateException) { falloEditarProducto = true; db.ChangeTracker.Clear(); }
             Check(falloCrearProducto && await db.productos.CountAsync() == 1, "Fallo de auditoria revierte creacion de producto y asociaciones");
-            Check(falloEditarProducto && (await db.productos.AsNoTracking().SingleAsync()).nombre == productoAntes.nombre,
+            Check(falloEditarProducto && (await db.productos.AsNoTracking().SingleAsync()).Nombre == productoAntes.Nombre,
                 "Fallo de auditoria revierte edicion de producto");
             var categoriasAntes = await db.categorias.CountAsync();
             var marcasAntes = await db.Marcas.CountAsync();

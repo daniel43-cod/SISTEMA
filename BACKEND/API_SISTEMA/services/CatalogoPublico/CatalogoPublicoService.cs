@@ -19,13 +19,13 @@ public sealed class CatalogoPublicoService(SistemaDbContext context)
             .Where(p => p.IdMarca == idMarca && p.Marca.Estado && p.Marca.Categoria.Estado &&
                 p.ProductoPresentaciones.Any(pp => pp.estado && pp.Presentacion.Estado == true &&
                     pp.unidades_equivalentes > 0 && pp.precio >= 0))
-            .OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
+            .OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
             .Skip((pagina - 1) * tamanoPagina).Take(tamanoPagina + 1)
             .Select(p => new ProductoPublicoDto
             {
-                IdProducto = p.id_producto,
-                Nombre = p.nombre,
-                UrlImagen = p.imagen,
+                IdProducto = p.IdProducto,
+                Nombre = p.Nombre,
+                UrlImagen = p.Imagen,
                 Presentaciones = p.ProductoPresentaciones
                     .Where(pp => pp.estado && pp.Presentacion.Estado == true &&
                         pp.unidades_equivalentes > 0 && pp.precio >= 0)
@@ -35,7 +35,7 @@ public sealed class CatalogoPublicoService(SistemaDbContext context)
                         IdProductoPresentacion = pp.id_producto_presentacion,
                         Nombre = pp.Presentacion.Descripcion ?? "Presentación",
                         Precio = pp.precio,
-                        Disponible = (pp.Producto.stock ?? 0) >= pp.unidades_equivalentes
+                        Disponible = (pp.Producto.Stock ?? 0) >= pp.unidades_equivalentes
                     }).ToList()
             }).ToListAsync(cancellationToken);
 

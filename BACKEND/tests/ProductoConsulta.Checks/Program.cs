@@ -76,9 +76,9 @@ using (var scope = app.Services.CreateScope())
     var marca = new Marca { IdMarca = 1, Nombre = "Marca A", Estado = true, Categoria = categoria };
     var unidad = new Presentacion { IdPresentacion = 1, Descripcion = "Unidad", Estado = true };
     var caja = new Presentacion { IdPresentacion = 2, Descripcion = "Caja", Estado = true };
-    var producto = new Productos { id_producto = 1, nombre = "Agua", codigo_barra = "001", Marca = marca, stock = 25, costo_unitario = 777m };
+    var producto = new Productos { IdProducto = 1, Nombre = "Agua", CodigoBarra = "001", Marca = marca, Stock = 25, CostoUnitario = 777m };
     db.AddRange(categoria, marca, unidad, caja, producto,
-        new Productos { id_producto = 2, nombre = "Agua 2", codigo_barra = "002", Marca = marca, stock = null },
+        new Productos { IdProducto = 2, Nombre = "Agua 2", CodigoBarra = "002", Marca = marca, Stock = null },
         new ProductoPresentacion { id_producto_presentacion = 1, Producto = producto, Presentacion = unidad, estado = true, unidades_equivalentes = 1, precio = 5 },
         new ProductoPresentacion { id_producto_presentacion = 2, Producto = producto, Presentacion = caja, estado = true, unidades_equivalentes = 12, precio = 50 },
         new ProductoPresentacion { id_producto_presentacion = 3, Producto = producto, Presentacion = caja, estado = false, unidades_equivalentes = 0, precio = 50 });

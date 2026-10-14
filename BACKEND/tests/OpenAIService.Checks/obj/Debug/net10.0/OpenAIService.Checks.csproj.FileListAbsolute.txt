@@ -13,3 +13,8 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\De
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.pdb
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\OpenAIService.Checks.genruntimeconfig.cache
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\OpenAIService.Checks\obj\Debug\net10.0\ref\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.pdb

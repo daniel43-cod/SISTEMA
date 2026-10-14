@@ -78,3 +78,15 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\ProductoCrear.Checks\bin\De
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\ProductoCrear.Checks\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\ProductoCrear.Checks\bin\Debug\net10.0\API_SISTEMA.dll
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\ProductoCrear.Checks\bin\Debug\net10.0\API_SISTEMA.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\API_SISTEMA.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\API_SISTEMA.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\appsettings.Development.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\appsettings.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\API_SISTEMA.staticwebassets.runtime.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\API_SISTEMA.staticwebassets.endpoints.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\API_SISTEMA.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\ProductoCrear.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\ProductoCrear.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\ProductoCrear.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\ProductoCrear.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\ProductoCrear.Checks\ProductoCrear.Checks.pdb

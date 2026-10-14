@@ -75,9 +75,9 @@ namespace API_SISTEMA.Services.Compras
             var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context, ct);
             var idsProductos = compraDto.detalle_compra.Select(d => d.id_producto).Distinct().ToList();
 
-            var productos = await _context.productos.Where(p =>idsProductos.Contains(p.id_producto)).ToListAsync(ct);
+            var productos = await _context.productos.Where(p =>idsProductos.Contains(p.IdProducto)).ToListAsync(ct);
 
-            var productosPorId = productos.ToDictionary(p => p.id_producto);
+            var productosPorId = productos.ToDictionary(p => p.IdProducto);
 
             decimal totalCompra = 0;
 
@@ -180,10 +180,10 @@ namespace API_SISTEMA.Services.Compras
 
                     _context.detalle_compras.Add(detalle);
 
-                    var stockNuevo = (long)(producto.stock ?? 0) + detalleDto.cantidad;
+                    var stockNuevo = (long)(producto.Stock ?? 0) + detalleDto.cantidad;
                     if (stockNuevo > int.MaxValue)
                         throw new CompraValidationException("La cantidad supera el stock maximo permitido.");
-                    producto.stock = (int)stockNuevo;
+                    producto.Stock = (int)stockNuevo;
                 }
 
                 await _context.SaveChangesAsync(ct);

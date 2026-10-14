@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using Microsoft.EntityFrameworkCore;
 using API_SISTEMA.Models;
 using API_SISTEMA.Dtos;
@@ -40,7 +40,7 @@ namespace API_SISTEMA.Services.Ventas
                         {
                             id_detalle_venta = d.id_detalle_venta,
                             id_producto = d.id_producto,
-                            producto = d.Producto.nombre,
+                            producto = d.Producto.Nombre,
                             cantidad = d.cantidad,
                             precio = d.precio,
                             descuento = d.descuento??0,

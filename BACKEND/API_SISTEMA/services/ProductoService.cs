@@ -22,20 +22,20 @@ namespace API_SISTEMA.Services
             var consulta = _context.productos.AsNoTracking().AsQueryable();
             var texto = filtro.Texto?.Trim();
             if (!string.IsNullOrEmpty(texto))
-                consulta = consulta.Where(p => p.nombre.Contains(texto) ||
-                    (p.codigo_barra != null && p.codigo_barra.Contains(texto)));
+                consulta = consulta.Where(p => p.Nombre.Contains(texto) ||
+                    (p.CodigoBarra != null && p.CodigoBarra.Contains(texto)));
             if (filtro.IdMarca.HasValue)
                 consulta = consulta.Where(p => p.IdMarca == filtro.IdMarca.Value);
             if (filtro.IdCategoria.HasValue)
                 consulta = consulta.Where(p => p.Marca.IdCategoria == filtro.IdCategoria.Value);
 
             var total = await consulta.CountAsync(cancellationToken);
-            var items = await consulta.OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
+            var items = await consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
                 .Skip((filtro.Pagina - 1) * filtro.TamanoPagina).Take(filtro.TamanoPagina)
                 .Select(p => new ProductoResumenDto
                 {
-                    IdProducto = p.id_producto, CodigoBarra = p.codigo_barra, Nombre = p.nombre,
-                    Imagen = p.imagen, StockUnidades = p.stock ?? 0, StockMinimo = p.stock_minimo ?? 0,
+                    IdProducto = p.IdProducto, CodigoBarra = p.CodigoBarra, Nombre = p.Nombre,
+                    Imagen = p.Imagen, StockUnidades = p.Stock ?? 0, StockMinimo = p.StockMinimo ?? 0,
                     IdMarca = p.IdMarca, Marca = p.Marca.Nombre, MarcaActiva = p.Marca.Estado,
                     IdCategoria = p.Marca.IdCategoria, Categoria = p.Marca.Categoria.nombreCategoria,
                     CategoriaActiva = p.Marca.Categoria.Estado
@@ -50,14 +50,14 @@ namespace API_SISTEMA.Services
             CancellationToken cancellationToken)
         {
             if (id <= 0) throw new ValidationException("El ID del producto debe ser mayor que cero.");
-            var detalle = await _context.productos.AsNoTracking().Where(p => p.id_producto == id)
+            var detalle = await _context.productos.AsNoTracking().Where(p => p.IdProducto == id)
                 .Select(p => new ProductoDetalleDto
                 {
-                    IdProducto = p.id_producto, CodigoBarra = p.codigo_barra, Nombre = p.nombre,
-                    Imagen = p.imagen, StockUnidades = p.stock ?? 0, StockMinimo = p.stock_minimo ?? 0,
+                    IdProducto = p.IdProducto, CodigoBarra = p.CodigoBarra, Nombre = p.Nombre,
+                    Imagen = p.Imagen, StockUnidades = p.Stock ?? 0, StockMinimo = p.StockMinimo ?? 0,
                     IdMarca = p.IdMarca, Marca = p.Marca.Nombre, MarcaActiva = p.Marca.Estado,
                     IdCategoria = p.Marca.IdCategoria, Categoria = p.Marca.Categoria.nombreCategoria,
-                    CategoriaActiva = p.Marca.Categoria.Estado, FechaCreacion = p.fecha_creacion
+                    CategoriaActiva = p.Marca.Categoria.Estado, FechaCreacion = p.FechaCreacion
                 }).SingleOrDefaultAsync(cancellationToken);
             if (detalle is null) return null;
 
@@ -107,20 +107,20 @@ namespace API_SISTEMA.Services
             var productos = await _context.producto_presentaciones
                 .Include(p => p.Producto)
                 .Where(p =>
-                    p.Producto.nombre.Contains(texto) ||
+                    p.Producto.Nombre.Contains(texto) ||
                     (p.Presentacion.Descripcion != null && p.Presentacion.Descripcion.Contains(texto)) ||
-                    p.Producto.codigo_barra.Contains(texto))
+                    p.Producto.CodigoBarra.Contains(texto))
                 .Select(p => new ProductoVentaBuscarDto
                 {
                     id_producto = p.id_producto,
                     id_producto_presentacion = p.id_producto_presentacion,
                     
-                    nombre_producto = p.Producto.nombre,
+                    nombre_producto = p.Producto.Nombre,
                     presentacion = p.Presentacion.Descripcion,
                     
                     unidades_equivalentes = p.unidades_equivalentes,
                     precio = p.precio,
-                    stock = p.Producto.stock??0
+                    stock = p.Producto.Stock??0
                 })
                 .Take(10)
                 .ToListAsync();

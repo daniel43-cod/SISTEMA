@@ -9,8 +9,8 @@ public sealed class ProductoBuscarAdminService(SistemaDbContext context)
 {
     public Task<List<ProductoSugerenciaDto>> ListarNombres(CancellationToken cancellationToken = default) =>
         context.productos.AsNoTracking()
-            .OrderBy(p => p.nombre).ThenBy(p => p.id_producto)
-            .Select(p => new ProductoSugerenciaDto { IdProducto = p.id_producto, Nombre = p.nombre })
+            .OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
+            .Select(p => new ProductoSugerenciaDto { IdProducto = p.IdProducto, Nombre = p.Nombre })
             .ToListAsync(cancellationToken);
 
     public Task<List<ProductoSugerenciaDto>> Buscar(BusquedaProductoAdminDto filtro,
@@ -22,15 +22,15 @@ public sealed class ProductoBuscarAdminService(SistemaDbContext context)
         if (!string.IsNullOrWhiteSpace(filtro.Nombre))
         {
             var nombre = filtro.Nombre.Trim();
-            consulta = consulta.Where(p => p.nombre.StartsWith(nombre));
+            consulta = consulta.Where(p => p.Nombre.StartsWith(nombre));
         }
         else
         {
             var codigo = filtro.CodigoBarra!.Trim();
-            consulta = consulta.Where(p => p.codigo_barra == codigo);
+            consulta = consulta.Where(p => p.CodigoBarra == codigo);
         }
-        return consulta.OrderBy(p => p.nombre).ThenBy(p => p.id_producto).Take(10)
-            .Select(p => new ProductoSugerenciaDto { IdProducto = p.id_producto, Nombre = p.nombre })
+        return consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto).Take(10)
+            .Select(p => new ProductoSugerenciaDto { IdProducto = p.IdProducto, Nombre = p.Nombre })
             .ToListAsync(cancellationToken);
     }
 }

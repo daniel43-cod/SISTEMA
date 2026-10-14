@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using API_SISTEMA.Dtos;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Models;
@@ -23,7 +23,7 @@ namespace API_SISTEMA.Services
                 .Select(dv => new ListarDetalleDto
                 {
                     id_producto = dv.id_producto,
-                    nombre_producto = dv.Producto.nombre,
+                    nombre_producto = dv.Producto.Nombre,
                     descuento = dv.descuento??0,
                     id_producto_presentacion = dv.id_producto_presentacion,
                     descripcion_resentacion = dv.producto_presentacion.Presentacion.Descripcion,

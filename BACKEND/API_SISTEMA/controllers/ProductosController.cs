@@ -198,8 +198,9 @@ namespace API_SISTEMA.Controllers
                 // No serializar navegaciones de EF ni devolver ciclos de entidades.
                 return StatusCode(StatusCodes.Status201Created, new
                 {
-                    id_producto = producto.id_producto, producto.codigo_barra, producto.nombre,
-                    producto.IdMarca, producto.stock_minimo, producto.imagen, producto.fecha_creacion,
+                    id_producto = producto.IdProducto, codigo_barra = producto.CodigoBarra, nombre = producto.Nombre,
+                    producto.IdMarca, stock_minimo = producto.StockMinimo, imagen = producto.Imagen,
+                    fecha_creacion = producto.FechaCreacion,
                     presentaciones = producto.ProductoPresentaciones.Select(p => new
                     {
                         p.id_producto_presentacion, id_presentacion = p.IdPresentacion,
@@ -239,7 +240,7 @@ namespace API_SISTEMA.Controllers
             return Ok(new
             {
                 mensaje = "Imagen subida correctamente",
-                imagen = producto.imagen
+                imagen = producto.Imagen
             });
             }
             catch

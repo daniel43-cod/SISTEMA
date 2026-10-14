@@ -104,3 +104,15 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\CatalogoPublico.Checks\obj\
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\CatalogoPublico.Checks\obj\Debug\net10.0\CatalogoPublico.Checks.pdb
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\CatalogoPublico.Checks\obj\Debug\net10.0\CatalogoPublico.Checks.genruntimeconfig.cache
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\CatalogoPublico.Checks\obj\Debug\net10.0\ref\CatalogoPublico.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\API_SISTEMA.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\API_SISTEMA.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\appsettings.Development.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\appsettings.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\API_SISTEMA.staticwebassets.runtime.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\API_SISTEMA.staticwebassets.endpoints.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\API_SISTEMA.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\CatalogoPublico.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\CatalogoPublico.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\CatalogoPublico.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\CatalogoPublico.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\CatalogoPublico.Checks\CatalogoPublico.Checks.pdb

@@ -63,11 +63,11 @@ public class ProductoCrearService
             if (!marcaValida) throw new ValidationException("La marca y su categoría deben existir y estar activas.");
             var codigo = dto.codigo_barra.Trim();
             var normalizado = codigo.ToUpperInvariant();
-            if (await _context.productos.AnyAsync(p => p.codigo_barra != null &&
-                p.codigo_barra.Trim().ToUpper() == normalizado, cancellationToken))
+            if (await _context.productos.AnyAsync(p => p.CodigoBarra != null &&
+                p.CodigoBarra.Trim().ToUpper() == normalizado, cancellationToken))
                 throw new ProductoDuplicadoException();
             var nombreNormalizado = dto.nombre.Trim().ToUpperInvariant();
-            if (await _context.productos.AnyAsync(p => p.nombre.Trim().ToUpper() == nombreNormalizado,
+            if (await _context.productos.AnyAsync(p => p.Nombre.Trim().ToUpper() == nombreNormalizado,
                 cancellationToken))
                 throw new ProductoDuplicadoException("Ya existe un producto con ese nombre.");
             var ids = dto.presentaciones.Select(p => p.id_presentacion).ToList();
@@ -77,9 +77,9 @@ public class ProductoCrearService
 
             var producto = new API_SISTEMA.Models.Productos
             {
-                codigo_barra = codigo, nombre = dto.nombre.Trim(), IdMarca = dto.IdMarca,
-                stock = 0, stock_minimo = dto.stock_minimo, imagen = url,
-                costo_unitario = null, fecha_creacion = DateTime.Now,
+                CodigoBarra = codigo, Nombre = dto.nombre.Trim(), IdMarca = dto.IdMarca,
+                Stock = 0, StockMinimo = dto.stock_minimo, Imagen = url,
+                PrecioPromedioCompra = 0m, CostoUnitario = null, FechaCreacion = DateTime.Now,
                 ProductoPresentaciones = dto.presentaciones.Select(p => new ProductoPresentacion
                 {
                     IdPresentacion = p.id_presentacion, unidades_equivalentes = p.unidades_equivalentes,

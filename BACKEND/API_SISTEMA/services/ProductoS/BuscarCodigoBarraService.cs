@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Productos;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,13 +25,13 @@ namespace API_SISTEMA.Services.Productos
 
             var producto = await _context.productos
                 .AsNoTracking()
-                .Where(p => p.codigo_barra == codigoBarra)
+                .Where(p => p.CodigoBarra == codigoBarra)
                 .Select(p => new BuscarCodigoBarraDto
                 {
-                    id_producto = p.id_producto,
-                    codigo_barra = p.codigo_barra,
-                    nombre_producto = p.nombre,
-                    stock = p.stock ?? 0,
+                    id_producto = p.IdProducto,
+                    codigo_barra = p.CodigoBarra,
+                    nombre_producto = p.Nombre,
+                    stock = p.Stock ?? 0,
 
                     presentaciones = p.ProductoPresentaciones
                         .Select(pr => new PresentacionCodigoBarraDto

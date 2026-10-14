@@ -6,11 +6,11 @@ public sealed class ProductoAuditoriaService(CatalogoAuditoriaService auditoria)
 {
     public static Dictionary<string, object?> Datos(API_SISTEMA.Models.Productos producto) => new()
     {
-        ["nombre"] = producto.nombre,
-        ["codigoBarra"] = producto.codigo_barra,
+        ["nombre"] = producto.Nombre,
+        ["codigoBarra"] = producto.CodigoBarra,
         ["idMarca"] = producto.IdMarca,
-        ["stockMinimo"] = producto.stock_minimo,
-        ["imagen"] = producto.imagen
+        ["stockMinimo"] = producto.StockMinimo,
+        ["imagen"] = producto.Imagen
     };
 
     public static Dictionary<string, object?> DatosPresentacion(ProductoPresentacion presentacion) => new()
@@ -24,7 +24,7 @@ public sealed class ProductoAuditoriaService(CatalogoAuditoriaService auditoria)
 
     public Task Registrar(API_SISTEMA.Models.Productos producto, Dictionary<string, object?>? anteriores, CancellationToken ct) =>
         auditoria.Agregar(anteriores is null ? "PRODUCTO_CREADO" : "PRODUCTO_EDITADO",
-            "productos", producto.id_producto, anteriores, Datos(producto), ct);
+            "productos", producto.IdProducto, anteriores, Datos(producto), ct);
 
     public Task RegistrarPresentacion(ProductoPresentacion presentacion,
         Dictionary<string, object?>? anteriores, CancellationToken ct) =>

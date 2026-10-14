@@ -1,0 +1,43 @@
+﻿
+Compilación correcta.
+    8 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:03.57
+
+Compilación correcta.
+    6 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:01.24
+
+Compilación correcta.
+    0 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:00.64
+C:\Program Files\dotnet\sdk\10.0.400\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: No se encuentra el archivo de recursos 'C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\project.assets.json'. Ejecute una restauración de paquetes de NuGet para generar el archivo. [C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\MarcaImagen.Checks.csproj]
+
+ERROR al compilar.
+    0 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:00.46
+
+Compilación correcta.
+    0 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:00.70
+
+Compilación correcta.
+    9 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:03.37
+
+Compilación correcta.
+    6 Advertencia(s)
+    0 Errores
+
+Tiempo transcurrido 00:00:01.25

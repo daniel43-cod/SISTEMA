@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
@@ -119,7 +119,7 @@ namespace API_SISTEMA.Services.Ventas
                     var productoActual =
                         await _context.productos
                             .FirstAsync(p =>
-                                p.id_producto ==
+                                p.IdProducto ==
                                 detalleActual.id_producto
                             );
 
@@ -127,8 +127,8 @@ namespace API_SISTEMA.Services.Ventas
                         detalleActual.cantidad *
                         presentacionActual.unidades_equivalentes;
 
-                    productoActual.stock =
-                        (productoActual.stock ?? 0) +
+                    productoActual.Stock =
+                        (productoActual.Stock ?? 0) +
                         unidadesDevueltas;
                 }
 
@@ -178,13 +178,13 @@ namespace API_SISTEMA.Services.Ventas
                         presentacion.unidades_equivalentes;
 
                     int stockDisponible =
-                        producto.stock ?? 0;
+                        producto.Stock ?? 0;
 
                     if (unidadesADescontar > stockDisponible)
                     {
                         throw new Exception(
                             $"Stock insuficiente para " +
-                            $"{producto.nombre}."
+                            $"{producto.Nombre}."
                         );
                     }
 
@@ -195,7 +195,7 @@ namespace API_SISTEMA.Services.Ventas
                     if (detalleDto.descuento > subtotalDetalle)
                     {
                         throw new Exception(
-                            $"El descuento de {producto.nombre} " +
+                            $"El descuento de {producto.Nombre} " +
                             "no puede superar el subtotal."
                         );
                     }
@@ -203,7 +203,7 @@ namespace API_SISTEMA.Services.Ventas
                     subtotal += subtotalDetalle;
                     descuentoTotal += detalleDto.descuento;
 
-                    decimal costoDetalle =detalleDto.cantidad *presentacion.unidades_equivalentes * (producto.costo_unitario ?? 0)  ;
+                    decimal costoDetalle = detalleDto.cantidad * presentacion.unidades_equivalentes * (producto.PrecioPromedioCompra ?? 0m);
 
                     decimal ventaDetalle =
                         subtotalDetalle -
@@ -212,7 +212,7 @@ namespace API_SISTEMA.Services.Ventas
                     gananciaTotal +=
                         ventaDetalle - costoDetalle;
 
-                    producto.stock =
+                    producto.Stock =
                         stockDisponible - unidadesADescontar;
                 }
 

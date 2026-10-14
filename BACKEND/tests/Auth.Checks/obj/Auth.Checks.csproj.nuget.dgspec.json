@@ -42,7 +42,7 @@
           ]
         },
         "restoreAuditProperties": {
-          "enableAudit": "true",
+          "enableAudit": "false",
           "auditLevel": "low",
           "auditMode": "all"
         },
@@ -89,7 +89,7 @@
             },
             "SixLabors.ImageSharp": {
               "target": "Package",
-              "version": "[3.1.12, )"
+              "version": "[4.1.3, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -575,7 +575,7 @@
           ]
         },
         "restoreAuditProperties": {
-          "enableAudit": "true",
+          "enableAudit": "false",
           "auditLevel": "low",
           "auditMode": "all"
         },

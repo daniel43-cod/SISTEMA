@@ -19,9 +19,9 @@ db.presentaciones.AddRange(
     new Presentacion { IdPresentacion = 2, Descripcion = "Caja", Estado = true },
     new Presentacion { IdPresentacion = 3, Descripcion = "Oculta", Estado = false });
 db.productos.AddRange(
-    new Productos { id_producto = 1, nombre = "Agua", IdMarca = 1, stock = 5 },
-    new Productos { id_producto = 2, nombre = "Jugo", IdMarca = 1, stock = 0 },
-    new Productos { id_producto = 3, nombre = "Sin presentaciones públicas", IdMarca = 1, stock = 20 });
+    new Productos { IdProducto = 1, Nombre = "Agua", IdMarca = 1, Stock = 5 },
+    new Productos { IdProducto = 2, Nombre = "Jugo", IdMarca = 1, Stock = 0 },
+    new Productos { IdProducto = 3, Nombre = "Sin presentaciones públicas", IdMarca = 1, Stock = 20 });
 db.producto_presentaciones.AddRange(
     new ProductoPresentacion { id_producto_presentacion = 1, id_producto = 1, IdPresentacion = 1, estado = true, unidades_equivalentes = 1, precio = 5 },
     new ProductoPresentacion { id_producto_presentacion = 2, id_producto = 1, IdPresentacion = 2, estado = true, unidades_equivalentes = 12, precio = 50 },

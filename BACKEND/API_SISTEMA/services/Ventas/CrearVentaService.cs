@@ -112,7 +112,7 @@ namespace API_SISTEMA.Services.Ventas
 
                     if (detalleDto.descuento < 0)throw new Exception("El descuento no puede ser negativo.");
 
-                    var producto = await _context.productos.FirstOrDefaultAsync(p =>p.id_producto == detalleDto.id_producto);
+                    var producto = await _context.productos.FirstOrDefaultAsync(p =>p.IdProducto == detalleDto.id_producto);
 
                     if (producto == null)throw new Exception("El producto no existe.");
 
@@ -124,16 +124,16 @@ namespace API_SISTEMA.Services.Ventas
                     {
                         throw new Exception(
                             $"La presentación no existe para " +
-                            $"{producto.nombre}."
+                            $"{producto.Nombre}."
                         );
                     }
 
                     int unidadesADescontar =detalleDto.cantidad * presentacion.unidades_equivalentes;
 
-                    if (producto.stock < unidadesADescontar)
+                    if (producto.Stock < unidadesADescontar)
                     {
                         throw new Exception(
-                            $"Stock insuficiente para {producto.nombre}."
+                            $"Stock insuficiente para {producto.Nombre}."
                         );
                     }
 
@@ -143,17 +143,17 @@ namespace API_SISTEMA.Services.Ventas
                     if (detalleDto.descuento > subtotalDetalle)
                     {
                         throw new Exception(
-                            $"El descuento de {producto.nombre} " +
+                            $"El descuento de {producto.Nombre} " +
                             $"no puede superar el subtotal."
                         );
                     }
 
                     decimal totalDetalle =subtotalDetalle - detalleDto.descuento;
-                    decimal costoUnitario =producto.costo_unitario ?? 0m;
+                    decimal costoUnitario = producto.PrecioPromedioCompra ?? 0m;
                     decimal costoDetalle =detalleDto.cantidad *presentacion.unidades_equivalentes *costoUnitario;
                     decimal gananciaDetalle = totalDetalle - costoDetalle;
 
-                    producto.stock -= unidadesADescontar;
+                    producto.Stock -= unidadesADescontar;
 
                     var detalleVenta = new DetalleVenta
                     {

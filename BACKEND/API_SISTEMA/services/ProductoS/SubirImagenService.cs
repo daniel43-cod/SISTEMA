@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using API_SISTEMA.Models;
 
 namespace API_SISTEMA.Services.Productos;
@@ -18,7 +18,7 @@ public class SubirImagenService
         var producto = await _context.productos.FindAsync(id);
         if (producto is null) return null;
         var ruta = await _imagenes.GuardarAsync(imagen, default);
-        producto.imagen = ruta;
+        producto.Imagen = ruta;
         // Ante un resultado incierto de SQL conservar el archivo evita referencias rotas.
         await _context.SaveChangesAsync();
         return producto;

@@ -1,0 +1,17 @@
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\MarcaImagen.Checks\MarcaImagen.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\MarcaImagen.Checks\MarcaImagen.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\MarcaImagen.Checks\MarcaImagen.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\MarcaImagen.Checks\MarcaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\MarcaImagen.Checks\MarcaImagen.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.csproj.AssemblyReference.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.AssemblyInfoInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.AssemblyInfo.cs
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.csproj.CoreCompileInputs.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.sourcelink.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaIma.B28CDEE7.Up2Date
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\refint\MarcaImagen.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\MarcaImagen.Checks.genruntimeconfig.cache
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\tests\MarcaImagen.Checks\obj\Debug\net10.0\ref\MarcaImagen.Checks.dll

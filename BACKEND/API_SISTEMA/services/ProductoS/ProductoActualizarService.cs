@@ -46,16 +46,16 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
         // Serializa comprobación y escritura, también con las altas de productos.
         await using var transaction = await context.Database.BeginTransactionAsync(
             IsolationLevel.Serializable, cancellationToken);
-        var producto = await context.productos.SingleOrDefaultAsync(p => p.id_producto == id, cancellationToken);
+        var producto = await context.productos.SingleOrDefaultAsync(p => p.IdProducto == id, cancellationToken);
         if (producto is null) return null;
         var anteriores = ProductoAuditoriaService.Datos(producto);
         var cambiosPresentaciones = new List<(API_SISTEMA.Models.ProductoPresentacion Entidad, Dictionary<string, object?>? Anteriores)>();
 
-        if (await context.productos.AnyAsync(p => p.id_producto != id && p.codigo_barra != null &&
-            p.codigo_barra.Trim().ToUpper() == codigoNormalizado, cancellationToken))
+        if (await context.productos.AnyAsync(p => p.IdProducto != id && p.CodigoBarra != null &&
+            p.CodigoBarra.Trim().ToUpper() == codigoNormalizado, cancellationToken))
             throw new ProductoDuplicadoException();
-        if (await context.productos.AnyAsync(p => p.id_producto != id &&
-            p.nombre.Trim().ToUpper() == nombreNormalizado, cancellationToken))
+        if (await context.productos.AnyAsync(p => p.IdProducto != id &&
+            p.Nombre.Trim().ToUpper() == nombreNormalizado, cancellationToken))
             throw new ProductoDuplicadoException("Ya existe un producto con ese nombre.");
 
         var marca = await context.Marcas.AsNoTracking().Where(m => m.IdMarca == dto.IdMarca &&
@@ -109,17 +109,17 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
             }
         }
 
-        producto.codigo_barra = codigo;
-        producto.nombre = nombre;
+        producto.CodigoBarra = codigo;
+        producto.Nombre = nombre;
         producto.IdMarca = marca.IdMarca;
-        producto.stock_minimo = dto.stock_minimo!.Value;
+        producto.StockMinimo = dto.stock_minimo!.Value;
         string? archivo = null;
         var commitIniciado = false;
         try
         {
             if (imagen != null) url = archivo = await imagenes.GuardarAsync(imagen, cancellationToken);
-            if (dto.QuitarImagen) producto.imagen = null;
-            else if (url != null) producto.imagen = url;
+            if (dto.QuitarImagen) producto.Imagen = null;
+            else if (url != null) producto.Imagen = url;
             await context.SaveChangesAsync(cancellationToken);
             await auditoria.Registrar(producto, anteriores, cancellationToken);
             foreach (var cambio in cambiosPresentaciones)
@@ -136,8 +136,8 @@ public sealed class ProductoActualizarService(SistemaDbContext context, Producto
         }
         return new ProductoResumenDto
         {
-            IdProducto = producto.id_producto, CodigoBarra = producto.codigo_barra, Nombre = producto.nombre,
-            Imagen = producto.imagen, StockUnidades = producto.stock ?? 0, StockMinimo = producto.stock_minimo ?? 0,
+            IdProducto = producto.IdProducto, CodigoBarra = producto.CodigoBarra, Nombre = producto.Nombre,
+            Imagen = producto.Imagen, StockUnidades = producto.Stock ?? 0, StockMinimo = producto.StockMinimo ?? 0,
             IdMarca = marca.IdMarca, Marca = marca.Nombre, MarcaActiva = true,
             IdCategoria = marca.IdCategoria, Categoria = marca.Categoria, CategoriaActiva = true
         };

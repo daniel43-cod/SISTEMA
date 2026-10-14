@@ -30,7 +30,7 @@ public class CompraService(SistemaDbContext context, MovimientoCajaService movim
             .OrderBy(d => d.id_detalle_compra).Select(d => new ListarDetalleCompraDto
             {
                 id_detalle_compra = d.id_detalle_compra, id_registro_compra = d.id_registro_compra,
-                subtotal = d.subtotal, id_producto = d.id_producto, nombre_producto = d.Productos.nombre,
+                subtotal = d.subtotal, id_producto = d.id_producto, nombre_producto = d.Productos.Nombre,
                 cantidad = d.cantidad, precio = d.precio
             }).ToListAsync(ct);
     }

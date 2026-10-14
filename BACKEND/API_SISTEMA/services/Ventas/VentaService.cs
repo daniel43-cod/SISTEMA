@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Catalogo;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Models;
@@ -73,10 +73,10 @@ namespace API_SISTEMA.Services.Ventas
                 .AsNoTracking()
                 .Select(p => new ProductoCatalogoDto
                 {
-                    id_producto = p.id_producto,
-                    nombre = p.nombre,
-                    imagen = p.imagen,
-                    stock = p.stock??0,
+                    id_producto = p.IdProducto,
+                    nombre = p.Nombre,
+                    imagen = p.Imagen,
+                    stock = p.Stock??0,
 
                     presentaciones = p.ProductoPresentaciones
                         .Where(pp =>
