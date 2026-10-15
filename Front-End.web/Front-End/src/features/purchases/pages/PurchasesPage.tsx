@@ -3,13 +3,15 @@ import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { requestJson } from '../../../shared/api/httpClient'
 import { parseCashSession } from '../../cash/api/cashApi'
-import { loadProductNames, filterProductNames } from '../../products/api/searchProducts'
+import { loadProductNames } from '../../products/api/searchProducts'
 import type { ProductSuggestion } from '../../products/api/searchProducts'
 import { createPurchase, listPurchases, listSuppliers } from '../api/purchasesApi'
 import { amountCents, buildPurchase } from '../utils/purchaseValidation'
+import { PurchaseProductRow } from '../components/PurchaseProductRow'
 import { PurchaseDetails } from '../components/PurchaseDetails'
 import type { CreatedPurchase, Purchase, PurchaseLine, Supplier } from '../types/purchase'
 import './PurchasesPage.css'
+import '../../../shared/ui/catalog.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 export function PurchasesPage() {
@@ -23,8 +25,7 @@ export function PurchasesPage() {
   const [revision, setRevision] = useState(0)
   const [page, setPage] = useState(1)
   const [supplier, setSupplier] = useState('')
-  const [query, setQuery] = useState('')
-  const [lines, setLines] = useState<PurchaseLine[]>([])
+  const [lines, setLines] = useState<PurchaseLine[]>([{ idProducto: 0, nombre: '', cantidad: '', total: '' }])
   const [note, setNote] = useState('')
   const [paid, setPaid] = useState('0')
   const [saving, setSaving] = useState(false)
@@ -32,6 +33,14 @@ export function PurchasesPage() {
   const [uncertain, setUncertain] = useState(false)
   const [result, setResult] = useState<CreatedPurchase | null>(null)
   const [selected, setSelected] = useState<Purchase | null>(null)
+  const [open, setOpen] = useState(false)
+  const editor = useRef<HTMLElement>(null)
+  const add = useRef<HTMLButtonElement>(null)
+  useEffect(() => { if (open) editor.current?.focus() }, [open])
+  function closeEditor() {
+    setOpen(false)
+    requestAnimationFrame(() => add.current?.focus())
+  }
   const busy = useRef(false)
   const unauthorized = useCallback(() => logout('La sesión ya no es válida.'), [logout])
   const token = session?.token
@@ -58,23 +67,20 @@ export function PurchasesPage() {
     return () => controller.abort()
   }, [token, page, revision, unauthorized])
   if (session?.user.role !== 'ADMINISTRADOR') return null
-  const suggestions = filterProductNames(products, query).filter(p => !lines.some(line => line.idProducto === p.idProducto))
   const totalCents = lines.reduce((sum, line) => sum + (amountCents(line.total) ?? 0), 0)
   const paymentCents = amountCents(paid) ?? 0
-  function editLine(id: number, field: 'cantidad' | 'total', value: string) {
-    setLines(current => current.map(line => line.idProducto === id ? { ...line, [field]: value } : line))
-  }
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy.current || uncertain || !cashOpen || loading || error || !token) return
     let payload
-    try { payload = buildPurchase(supplier, note, paid, lines) }
+    try { payload = buildPurchase(supplier, note, paid, lines.filter(line => line.idProducto > 0 || line.nombre.trim())) }
     catch (failure) { setFormError(failure instanceof Error ? failure.message : 'Revisa la compra.'); return }
     busy.current = true; setSaving(true); setFormError(''); setResult(null)
     try {
       const created = await createPurchase(token, payload)
-      setResult(created); setLines([]); setSupplier(''); setNote(''); setPaid('0'); setQuery('')
+      setResult(created); setLines([{ idProducto: 0, nombre: '', cantidad: '', total: '' }]); setSupplier(''); setNote(''); setPaid('0')
       setPage(1); setRevision(v => v + 1)
+      closeEditor()
     } catch (failure) {
       if (failure instanceof ApiError && failure.status === 401) unauthorized()
       else {
@@ -97,9 +103,12 @@ export function PurchasesPage() {
       <ul>{result.productos.map(p => <li key={p.idProducto}>{products.find(row => row.idProducto === p.idProducto)?.nombre ?? `Producto #${p.idProducto}`}
         : {p.stock} unidades · Costo promedio: {p.precioPromedioCompra.toFixed(6)}</li>)}</ul>
     </section>}
-    <section className="purchase-panel" aria-labelledby="new-purchase-title">
-      <h2 id="new-purchase-title">Registrar compra</h2>
-      <p>Ingresa las unidades recibidas y el total pagado por cada producto. Ejemplo: 10 bandejas de 6 botellas son 60 unidades.</p>
+    {open && <section ref={editor} tabIndex={-1} className="purchase-panel" aria-labelledby="new-purchase-title">
+      <div className="purchase-panel-heading">
+        <h2 id="new-purchase-title">Registrar compra</h2>
+        <button type="button" aria-label="Cerrar formulario" title="Cerrar formulario" disabled={saving}
+          onClick={closeEditor}>×</button>
+      </div>
       <form onSubmit={submit}>
         <fieldset disabled={saving || loading || !cashOpen || !!error || uncertain} className="purchase-form">
           <legend className="purchase-sr-only">Datos de la compra</legend>
@@ -111,41 +120,35 @@ export function PurchasesPage() {
             <label>Observación<input maxLength={100} value={note} onChange={e => setNote(e.target.value)} /></label>
           </div>
           {!loading && !suppliers.length && <p>No hay proveedores registrados. Registra un proveedor para continuar.</p>}
-          <label>Buscar producto<input type="search" value={query} maxLength={200}
-            placeholder="Escribe al menos 3 letras" onChange={e => setQuery(e.target.value)} /></label>
-          {suggestions.length > 0 && <ul className="purchase-suggestions">{suggestions.map(p => <li key={p.idProducto}>
-            <button type="button" disabled={lines.length >= 100} onClick={() => {
-              setLines(current => current.some(row => row.idProducto === p.idProducto) ? current
-                : [...current, { idProducto: p.idProducto, nombre: p.nombre, cantidad: '', total: '' }]); setQuery('')
-            }}>{p.nombre} <span>+ Agregar</span></button>
-          </li>)}</ul>}
-          {query.trim().length >= 3 && !suggestions.length && <p role="status">No hay productos nuevos que coincidan con la búsqueda.</p>}
-          {lines.length > 0 ? <div className="purchase-table-scroll"><table>
+          <div className="purchase-table-scroll"><table>
             <thead><tr><th>Producto</th><th>Unidades recibidas</th><th>Total de línea (Q)</th><th /></tr></thead>
-            <tbody>{lines.map(line => <tr key={line.idProducto}>
-              <td>{line.nombre}</td>
-              <td><input aria-label={`Unidades de ${line.nombre}`} inputMode="numeric" value={line.cantidad}
-                onChange={e => editLine(line.idProducto, 'cantidad', e.target.value)} required /></td>
-              <td><input aria-label={`Total de ${line.nombre}`} inputMode="decimal" value={line.total}
-                onChange={e => editLine(line.idProducto, 'total', e.target.value)} required /></td>
-              <td><button type="button" aria-label={`Quitar ${line.nombre}`}
-                onClick={() => setLines(current => current.filter(row => row.idProducto !== line.idProducto))}>Quitar</button></td>
-            </tr>)}</tbody>
-          </table></div> : <p>Agrega productos para registrar la compra.</p>}
+            <tbody>{lines.map((line, index) => <PurchaseProductRow key={index} line={line} products={products}
+              usedIds={lines.filter((_, position) => position !== index).map(row => row.idProducto)} autoFocus={index > 0}
+              onChange={updated => setLines(current => current.map((row, position) => position === index ? updated : row))}
+              onRemove={() => setLines(current => current.length === 1
+                ? [{ idProducto: 0, nombre: '', cantidad: '', total: '' }] : current.filter((_, position) => position !== index))}
+              onNext={() => {
+                if (index < lines.length - 1) {
+                  document.querySelectorAll<HTMLInputElement>('.purchase-product-cell input')[index + 1]?.focus()
+                } else if (lines.length < 100) {
+                  setLines(current => [...current, { idProducto: 0, nombre: '', cantidad: '', total: '' }])
+                }
+              }} />)}</tbody>
+          </table></div>
           <div className="purchase-summary">
             <p>Total <strong>{money.format(totalCents / 100)}</strong></p>
             <label>Pago inicial (Q)<input inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value)} required /></label>
             <p>Saldo pendiente <strong>{money.format(Math.max(0, totalCents - paymentCents) / 100)}</strong></p>
           </div>
-          <button className="purchase-primary" type="submit" disabled={!lines.length || !suppliers.length}>{saving ? 'Registrando…' : 'Registrar compra'}</button>
+          <button className="purchase-primary" type="submit" disabled={!lines.some(line => line.idProducto > 0) || !suppliers.length}>{saving ? 'Registrando…' : 'Registrar compra'}</button>
         </fieldset>
       </form>
       {formError && <p role="alert" className="purchase-error">{formError}</p>}
       {uncertain && <button type="button" onClick={() => { setUncertain(false); setFormError('') }}>
         Ya revisé el historial y la compra no se registró
       </button>}
-    </section>
-    <section className="purchase-panel" aria-labelledby="purchase-history-title">
+    </section>}
+    {(!open || uncertain) && <section className="purchase-panel" aria-labelledby="purchase-history-title">
       <h2 id="purchase-history-title">Historial de compras</h2>
       {loading ? <p role="status">Cargando compras…</p> : error ? <p>Actualiza para consultar el historial.</p>
         : !purchases.length ? <p>No hay compras en esta página.</p> : <div className="purchase-table-scroll"><table>
@@ -162,7 +165,11 @@ export function PurchasesPage() {
         <span>Página {page}</span><button type="button" disabled={loading || saving || !!error || purchases.length < 20}
           onClick={() => { setSelected(null); setPage(p => p + 1) }}>Siguiente</button>
       </nav>
-    </section>
+    </section>}
+    {!open && <button ref={add} type="button" className="catalog-add-button" aria-label="Registrar nueva compra"
+      title="Registrar nueva compra" onClick={() => { setSelected(null); setResult(null); setOpen(true) }}>
+      <span aria-hidden="true">+</span>
+    </button>}
     {selected && token && <PurchaseDetails key={selected.id_compra} purchase={selected} token={token}
       canPay={cashOpen && !loading && !error} onClose={() => setSelected(null)}
       onPaid={() => { setSelected(null); setRevision(v => v + 1) }} onUnauthorized={unauthorized} />}

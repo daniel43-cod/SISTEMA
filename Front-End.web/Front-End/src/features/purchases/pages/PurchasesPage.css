@@ -6,6 +6,9 @@
 .purchases-page button { min-height: 42px; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #334155; }
 .purchases-page button:disabled { opacity: .5; cursor: not-allowed; }
 .purchases-page button.purchase-primary { background: #1d4ed8; border-color: #1d4ed8; color: white; }
+.purchases-page button.catalog-add-button { border: 0; border-radius: 50%; background: var(--color-primary); color: white; padding: 0; }
+.purchases-page button.catalog-add-button:hover { background: var(--color-primary-hover, #1e40af); }
+.purchases-page { padding-bottom: 80px; }
 .purchase-form { display: grid; gap: 20px; padding: 0; border: 0; min-width: 0; }
 .purchase-fields { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; border: 0; padding: 0; margin: 16px 0; min-width: 0; }
 .purchase-fields label { flex: 1; min-width: min(100%, 220px); }
@@ -14,12 +17,22 @@
 .purchase-suggestions { list-style: none; margin: 0; padding: 0; border: 1px solid #e1e7ed; border-radius: 8px; overflow: hidden; }
 .purchase-suggestions button { display: flex; justify-content: space-between; gap: 16px; width: 100%; border: 0; border-radius: 0; text-align: left; }
 .purchase-suggestions button:hover { background: #eff6ff; }
+.purchase-suggestions button.is-active { background: #dbeafe; color: #1e40af; }
+.purchase-product-cell { min-width: 280px; }
+.purchases-page .purchase-product-cell > input { max-width: none; }
+.purchase-product-cell .purchase-suggestions { max-height: 240px; overflow-y: auto; margin-top: 6px; }
 .purchase-suggestions span { color: #1d4ed8; white-space: nowrap; }
 .purchase-table-scroll { overflow-x: auto; }
 .purchases-page table { width: 100%; border-collapse: collapse; text-align: left; }
 .purchases-page th, .purchases-page td { padding: 12px; border-bottom: 1px solid #e1e7ed; vertical-align: middle; }
 .purchases-page th { font-size: 13px; color: #475569; background: #f8fafc; }
 .purchases-page td input { min-width: 110px; max-width: 180px; }
+.purchase-form .purchase-table-scroll td { border-bottom: 0; }
+.purchase-form .purchase-table-scroll tbody tr + tr td { border-top: 1px solid #e1e7ed; }
+.purchase-form .purchase-table-scroll td input,
+.purchase-form .purchase-table-scroll td > button { border: 0; background: transparent; }
+.purchases-page button.purchase-remove-line { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 10px; color: #b96565; }
+.purchases-page button.purchase-remove-line:hover { background: #fdf2f2; color: #a34f4f; }
 .purchases-page td small { display: block; margin-top: 5px; color: #64748b; }
 .purchase-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; padding: 20px; background: #f8fafc; border-radius: 12px; }
 .purchase-summary p { margin: 0; }

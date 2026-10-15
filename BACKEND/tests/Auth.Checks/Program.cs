@@ -399,7 +399,11 @@ try
             var operacionCerrada = false;
             try { await compras.CrearCompra(compraDto, 1); } catch (CajaValidationException) { operacionCerrada = true; }
             Check(operacionCerrada, "Caja cerrada impide registrar compras");
+            Check((await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras()).Count == 0,
+                "Listado de compras vacío cuando no hay caja abierta");
             await cajaService.AbrirCaja(new() { id_caja = 1, monto_inicial = 50m }, 1);
+            Check((await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras()).Count == 0,
+                "Nueva sesión no muestra compras del turno anterior");
             var turnoNuevo = await db.sesioncaja.AsNoTracking().SingleAsync(s => s.fecha_cierre == null);
             var vacio = await resumenService.ConsultarResumen(turnoNuevo.id_sesion_caja);
             Check(vacio is not null && vacio.total_movimientos == 0 && vacio.movimientos.Count == 0 && vacio.total_entradas == 0 && vacio.total_salidas == 0 && vacio.saldo_esperado == 50m, "Resumen de sesion sin movimientos conserva monto inicial");
@@ -443,6 +447,9 @@ try
             { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 60m }] }, 1);
             Check(producto.Stock == 10 && producto.PrecioPromedioCompra == 11m,
                 "Nueva compra pondera inventario anterior y costo total recibido");
+            var comprasTurno = await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras();
+            Check(comprasTurno.Count == 1 && comprasTurno[0].id_compra == compraPromedio.IdCompra,
+                "Listado incluye compra sin pago del turno activo y excluye otros turnos");
             producto.Stock = 2; // Simula unidades restantes después de vender.
             await db.SaveChangesAsync();
             var compraRestante = await compras.CrearCompra(new()

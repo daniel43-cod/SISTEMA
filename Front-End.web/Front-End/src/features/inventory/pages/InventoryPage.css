@@ -1,0 +1,23 @@
+.inventory-page { display: flex; flex-direction: column; flex: 1; gap: 18px; min-width: 0; min-height: 0; overflow: hidden; padding: 22px; background: var(--color-surface); border: 1px solid #e2e8f0; border-radius: 16px; }
+.inventory-page > :not(.inventory-table-scroll) { flex-shrink: 0; }
+.inventory-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.inventory-search { position: relative; flex: 1; min-width: 0; }
+.inventory-toolbar button.refresh-button { flex-shrink: 0; border: 0; background: transparent; padding: 8px; }
+.inventory-suggestions { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 5; max-height: min(320px, 40dvh); overflow-y: auto; background: var(--color-surface); border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 20px #0f172a14; }
+.inventory-suggestions ul { list-style: none; padding: 0; margin: 0; }
+.inventory-suggestions p { padding: 12px; }
+.inventory-suggestions li button { width: 100%; text-align: left; border: 0; border-bottom: 1px solid #e2e8f0; border-radius: 0; color: inherit; overflow-wrap: anywhere; }
+.inventory-suggestions li button:hover { background: #f1f5f9; }
+.inventory-toolbar label { display: grid; gap: 8px; flex: 1 1 240px; font-size: .875rem; font-weight: 600; }
+.inventory-toolbar input { width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font: inherit; background: var(--color-surface); color: inherit; }
+.inventory-page button { min-height: 44px; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: var(--color-surface); color: var(--color-primary); font: inherit; cursor: pointer; }
+.inventory-page button:disabled { opacity: .5; cursor: default; }
+.inventory-table-scroll { flex: 1; min-height: 0; overflow: auto; }
+.inventory-page table { width: 100%; border-collapse: collapse; text-align: left; font-size: .9rem; }
+.inventory-page th { position: sticky; top: 0; z-index: 1; background: #f1f5f9; font-weight: 650; white-space: nowrap; }
+.inventory-page th, .inventory-page td { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+.inventory-page td { min-width: 120px; }
+.inventory-page .inventory-number { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.inventory-barcode { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.inventory-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: .875rem; }
+@media (max-width: 600px) { .inventory-page { padding: 16px; } .inventory-page th, .inventory-page td { padding: 12px; } }

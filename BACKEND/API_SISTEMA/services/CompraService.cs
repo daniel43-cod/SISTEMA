@@ -17,7 +17,12 @@ public class CompraService(SistemaDbContext context, MovimientoCajaService movim
     {
         if (pagina < 1 || pagina > 1000000 || tamanoPagina < 1 || tamanoPagina > 100)
             throw new CompraValidationException("Pagina o tamano de pagina fuera de rango.");
-        return await context.registroCompras.AsNoTracking().OrderByDescending(c => c.IdCompra)
+        var sesion = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(context, ct);
+        if (sesion is null) return new List<ListarComprasDto>();
+
+        return await context.registroCompras.AsNoTracking()
+            .Where(c => c.IdSesionCaja == sesion.id_sesion_caja)
+            .OrderByDescending(c => c.IdCompra)
             .Skip((pagina - 1) * tamanoPagina).Take(tamanoPagina).Select(c => new ListarComprasDto
             {
                 id_compra = c.IdCompra, id_usuario = c.IdUsuario, nombre_usuario = c.Usuario.nombre,

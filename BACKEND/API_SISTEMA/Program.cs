@@ -144,6 +144,7 @@ builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.ProductoAuditoriaServi
 builder.Services.AddScoped<ProductoCrearService>();
 builder.Services.AddScoped<ProductoActualizarService>();
 builder.Services.AddScoped<ProductoBuscarAdminService>();
+builder.Services.AddScoped<ProductoInventarioService>();
 builder.Services.AddScoped<ProductoImagenService>();
 builder.Services.AddScoped<SubirImagenService>();
 builder.Services.AddScoped<BuscarCodigoBarraService>();

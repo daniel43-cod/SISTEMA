@@ -176,3 +176,15 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-front-checks\A
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-front-checks\Auth.Checks.runtimeconfig.json
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-front-checks\Auth.Checks.dll
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-front-checks\Auth.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\API_SISTEMA.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\API_SISTEMA.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\appsettings.Development.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\appsettings.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\API_SISTEMA.staticwebassets.runtime.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\API_SISTEMA.staticwebassets.endpoints.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\API_SISTEMA.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\Auth.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\Auth.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\Auth.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\Auth.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\compras-turno-checks\Auth.Checks.pdb

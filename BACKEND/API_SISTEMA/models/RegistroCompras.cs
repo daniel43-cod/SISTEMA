@@ -20,6 +20,10 @@ namespace API_SISTEMA.Models
         [Column("id_usuario")]
         public int IdUsuario { get; set; }
 
+        // Sesión que originó la compra, incluso cuando no hay pago inicial.
+        [Column("id_sesion_caja")]
+        public int? IdSesionCaja { get; set; }
+
         [Required]
         [Column("id_estado_compra")]
         public int IdEstadoCompra { get; set; }

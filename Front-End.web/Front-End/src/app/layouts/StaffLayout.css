@@ -98,3 +98,18 @@
 .staff-shell-products .staff-content { display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%; box-sizing: border-box; margin: 0 auto; overflow: hidden; }
 .staff-shell-products .staff-page-heading { flex-shrink: 0; margin-bottom: 16px; }
 .staff-shell-products .staff-page-heading p:empty { display: none; }
+.staff-shell-inventory .staff-header { position: sticky; top: 0; z-index: 25; }
+.staff-shell-purchases .staff-header { position: sticky; top: 0; z-index: 25; }
+.staff-shell-inventory { height: 100dvh; min-height: 0; overflow: hidden; }
+.staff-shell-inventory .staff-workspace { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.staff-shell-inventory .staff-header { flex-shrink: 0; }
+.staff-shell-inventory .staff-content { display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%; box-sizing: border-box; margin: 0 auto; overflow: hidden; }
+.staff-inventory-heading { min-width: 0; flex: 1; }
+.staff-inventory-heading h1 { font-size: clamp(1.25rem, 2.6vw, 2.15rem); letter-spacing: -.04em; margin: 0; overflow-wrap: anywhere; }
+.staff-inventory-heading p { margin-top: 6px; color: var(--color-muted); font-size: .9rem; line-height: 1.5; }
+@media (max-width: 800px) {
+  .staff-shell-purchases .staff-header-brand { display: none; }
+  .staff-shell-inventory .staff-header-brand { display: none; }
+  .staff-shell-inventory .staff-header { height: auto; min-height: 80px; }
+  .staff-inventory-heading p { font-size: .75rem; }
+}

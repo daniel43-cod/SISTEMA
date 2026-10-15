@@ -1,6 +1,6 @@
 ﻿import type { StaffRole } from '../../features/auth/types/auth'
 
-export type StaffSection = 'inicio' | 'ventas' | 'caja' | 'pedidos' | 'productos' | 'compras' | 'gastos' | 'reportes' | 'configuracion'
+export type StaffSection = 'inicio' | 'ventas' | 'caja' | 'pedidos' | 'productos' | 'inventario' | 'compras' | 'gastos' | 'reportes' | 'configuracion'
 export type StaffNavigationItem = {
   id: StaffSection
   label: string
@@ -18,6 +18,7 @@ export const staffNavigation: readonly StaffNavigationItem[] = [
   { id: 'caja', label: 'Caja', group: 'Operación', description: 'Consulta y apertura de la caja compartida.', roles: admin },
   { id: 'pedidos', label: 'Pedidos', group: 'Operación', description: 'Preparación, entrega a domicilio y retiro en el negocio.', roles: staff },
   { id: 'productos', label: 'Productos', group: 'Inventario', description: '', roles: staff },
+  { id: 'inventario', label: 'Inventario', group: 'Inventario', description: 'Existencias y precio promedio de compra por producto.', roles: admin },
   { id: 'compras', label: 'Compras', group: 'Inventario', description: 'Registro de compras y seguimiento de pagos.', roles: admin },
   { id: 'gastos', label: 'Gastos', group: 'Administración', description: 'Registro y consulta de gastos del negocio.', roles: admin },
   { id: 'reportes', label: 'Reportes', group: 'Administración', description: 'Consulta de ventas, caja e inventario.', roles: admin },

@@ -141,6 +141,7 @@ namespace API_SISTEMA.Services.Compras
                 var compra = new RegistroCompras
                 {
                     IdUsuario = idUsuario,
+                    IdSesionCaja = sesionCaja.id_sesion_caja,
                     IdProveedor = compraDto.id_proveedor,
                     IdEstadoCompra = idEstadoCompra,
                     FechaIngreso = DateTime.Now,

@@ -1,4 +1,5 @@
 import { PurchasesPage } from '../../features/purchases/pages/PurchasesPage'
+import { InventoryPage } from '../../features/inventory/pages/InventoryPage'
 import { CashPage } from '../../features/cash/pages/CashPage'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
@@ -53,7 +54,7 @@ export function StaffLayout() {
   }
 
   return (
-    <div className={`staff-shell ${current.id === 'productos' ? 'staff-shell-products' : ''}`}>
+    <div className={`staff-shell ${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">
@@ -90,7 +91,10 @@ export function StaffLayout() {
             <img src={`${import.meta.env.BASE_URL}icono_principal.jpeg`} width="34" height="34" alt="" />
             <strong>Distribuidora San Antonio</strong>
           </div>
-          <div className="staff-header-section"><span className="staff-breadcrumb">Buenos días</span><strong>{current.label}</strong></div>
+          {current.id === 'inventario' || current.id === 'compras' ? <div className="staff-inventory-heading">
+            <h1>{current.label}</h1>
+            {current.id === 'inventario' && <p>{current.description}</p>}
+          </div> : <div className="staff-header-section"><span className="staff-breadcrumb">Buenos días</span><strong>{current.label}</strong></div>}
           <div className="staff-account" ref={accountRef}
             onBlur={event => {
               if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false)
@@ -118,12 +122,12 @@ export function StaffLayout() {
           </div>
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
-          <div className="staff-page-heading">
+          {current.id !== 'inventario' && current.id !== 'compras' && <div className="staff-page-heading">
             <div>{current.id !== 'inicio' && current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
               <h1>{current.id === 'inicio' ? `Bienvenido, ${session.user.name}` : current.label}</h1>
               {current.id !== 'inicio' && <p>{current.description}</p>}
             </div>
-          </div>
+          </div>}
           {current.id === 'inicio' ? <section aria-labelledby="staff-shortcuts-title">
             <h2 id="staff-shortcuts-title" className="staff-section-title">Accesos rápidos</h2>
             <div className="staff-shortcuts">
@@ -134,7 +138,7 @@ export function StaffLayout() {
                   <span className="staff-shortcut-action">Abrir sección <span aria-hidden="true">→</span></span>
                 </button>)}
             </div>
-          </section> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+          </section> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>

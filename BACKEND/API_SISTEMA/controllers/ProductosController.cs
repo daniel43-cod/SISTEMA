@@ -36,6 +36,39 @@ namespace API_SISTEMA.Controllers
 
 
         [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("inventario")]
+        [EnableRateLimiting("consulta-productos")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        [ProducesResponseType(typeof(ProductoInventarioPaginaDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ProductoInventarioPaginaDto>> ListarInventario(
+            [FromServices] ProductoInventarioService service,
+            [FromQuery, Range(1, 100000)] int pagina = 1,
+            [FromQuery, Range(1, 100)] int tamanoPagina = 25,
+            [FromQuery, StringLength(100)] string? texto = null,
+            [FromQuery, Range(1, int.MaxValue)] int? idMarca = null,
+            [FromQuery, Range(1, int.MaxValue)] int? idCategoria = null,
+            CancellationToken cancellationToken = default)
+        {
+            var filtro = new ProductoConsultaDto
+            {
+                Pagina = pagina, TamanoPagina = tamanoPagina, Texto = texto,
+                IdMarca = idMarca, IdCategoria = idCategoria
+            };
+            try { return Ok(await service.Listar(filtro, cancellationToken)); }
+            catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al listar inventario de productos. Referencia: {TraceId}", traceId);
+                return StatusCode(500, new { mensaje = "No se pudo consultar el inventario.", traceId });
+            }
+        }
+
+        [Authorize(Roles = Roles.Administrador)]
         [HttpGet("buscar-administracion")]
         [EnableRateLimiting("consulta-productos")]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
