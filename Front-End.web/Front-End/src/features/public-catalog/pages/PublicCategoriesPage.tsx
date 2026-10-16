@@ -1,3 +1,4 @@
+import { FloatingPublicAssistant } from '../components/FloatingPublicAssistant'
 import type { PublicCategory } from '../types/category'
 import type { PublicBrand } from '../types/brand'
 import { CatalogImage } from '../components/CatalogImage'
@@ -14,6 +15,7 @@ export function PublicCategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState<PublicCategory | null>(null)
   const [selectedBrand, setSelectedBrand] = useState<PublicBrand | null>(null)
   const cart = usePublicCart()
+  const [assistantOpen, setAssistantOpen] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const navigationStarted = useRef(false)
   useEffect(() => {
@@ -25,7 +27,7 @@ export function PublicCategoriesPage() {
     document.title = 'Catálogo | Sistema'
     return () => { document.title = previous }
   }, [])
-  return <div className="public-catalog">
+  return <div className={assistantOpen ? "public-catalog public-catalog-with-assistant" : "public-catalog"}>
     <a className="public-catalog-skip" href="#public-categories">Ir al catálogo</a>
     <header className="public-catalog-header">
       <a className="public-catalog-brand" href={`${import.meta.env.BASE_URL}catalogo`}>
@@ -80,6 +82,7 @@ export function PublicCategoriesPage() {
               </li>)}
             </ul>}
           </>}
+      <FloatingPublicAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
       <FloatingPublicCart items={cart.items} total={cart.total} count={cart.count} storageError={cart.storageError}
         setQuantity={cart.setQuantity} clear={cart.clear} />
     </main>

@@ -18,3 +18,8 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAISe
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.runtimeconfig.json
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.dll
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\pascal-checks\OpenAIService.Checks\OpenAIService.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-disponibilidad-checks\OpenAIService.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-disponibilidad-checks\OpenAIService.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-disponibilidad-checks\OpenAIService.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-disponibilidad-checks\OpenAIService.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-disponibilidad-checks\OpenAIService.Checks.pdb

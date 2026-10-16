@@ -49,6 +49,19 @@ Check(second is { HayMas: false } && second.Productos.Single().Nombre == "Jugo" 
 Check((await service.ListarProductosPorMarca(3))!.Productos.Count == 0, "Marca activa sin productos devuelve lista vacía");
 Check(await service.ListarProductosPorMarca(2) is null && await service.ListarProductosPorMarca(999) is null,
     "Marcas inactivas o inexistentes no disponibles");
+var catalogoIA = new API_SISTEMA.Services.IA.CatalogoIAService(db);
+using (var datosIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarProductos("Agua", default)))
+{
+    var opciones = datosIA.RootElement.GetProperty("productos").EnumerateArray().ToArray();
+    Check(opciones.Length == 2 && opciones[0].GetProperty("disponible").GetBoolean() &&
+        !opciones[1].GetProperty("disponible").GetBoolean(), "IA distingue unidad disponible de caja agotada");
+}
+(await db.productos.SingleAsync(p => p.IdProducto == 1)).Stock = 0;
+await db.SaveChangesAsync();
+using (var datosIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarProductos("Agua", default)))
+    Check(datosIA.RootElement.GetProperty("productos").EnumerateArray().All(p =>
+        !p.GetProperty("disponible").GetBoolean() && p.GetProperty("presentacionesDisponibles").GetInt32() == 0),
+        "IA recibe agotado en todas las presentaciones con stock cero");
 (await db.categorias.SingleAsync()).Estado = false;
 await db.SaveChangesAsync();
 Check(await service.ListarProductosPorMarca(1) is null, "Categoría inactiva bloquea productos de sus marcas");

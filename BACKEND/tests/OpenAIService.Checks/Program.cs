@@ -23,6 +23,7 @@ var service = Create(async (request, ct) =>
     Check(request.Headers.Authorization?.Parameter == "test-key");
     using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));
     Check(!body.RootElement.GetProperty("store").GetBoolean());
+    Check(body.RootElement.GetProperty("instructions").GetString()!.Contains("disponible=false"));
     if (++calls == 1) return Json(toolCall);
     Check(body.RootElement.GetProperty("input").EnumerateArray()
         .Any(x => x.TryGetProperty("type", out var t) && t.GetString() == "function_call_output" &&

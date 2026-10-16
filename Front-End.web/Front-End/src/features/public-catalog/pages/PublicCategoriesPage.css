@@ -141,3 +141,112 @@
 .public-cart-close { position: absolute; top: 8px; right: 10px; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #f0f6f3; color: #245f4e; }
 .public-cart-announcement { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .public-catalog-footer { padding-bottom: 96px; }
+.public-assistant-floating {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 76px);
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border: 0;
+  border-radius: 50%;
+  background: #1d4ed8;
+  color: white;
+  box-shadow: 0 6px 20px #182b3a35;
+}
+.public-assistant-floating:hover { background: #1e40af; }
+.public-assistant-dialog { width: min(420px, calc(100% - 24px)); max-height: 85dvh; padding: 0; border: 0; border-radius: 18px; color: #182b3a; background: white; }
+.public-assistant-dialog::backdrop { background: #10202db3; }
+.public-assistant-intro { position: relative; padding: 56px 24px 24px; }
+.public-assistant-intro h2 { font-size: 24px; margin-bottom: 16px; }
+.public-assistant-intro p { margin-top: 12px; line-height: 1.6; color: #475569; }
+.public-assistant-intro .public-cart-close { font-size: 26px; }
+.customer-login-form { margin-top: 20px; }
+.customer-login-form fieldset { display: grid; gap: 10px; border: 0; padding: 0; margin: 16px 0 0; min-width: 0; }
+.customer-login-form label { font-size: 14px; font-weight: 600; }
+.customer-login-form input { width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; border: 1px solid #94a3b8; border-radius: 8px; background: white; color: #182b3a; }
+.customer-login-form button, .customer-session button { min-height: 44px; padding: 10px 16px; margin-top: 10px; border: 0; border-radius: 8px; background: #1d4ed8; color: white; font: inherit; }
+.customer-login-form button:disabled { opacity: .6; cursor: wait; }
+.public-assistant-intro p.customer-login-error { color: #991b1b; padding: 12px; border-radius: 8px; background: #fef2f2; }
+.customer-session { margin-top: 20px; }
+.customer-session strong { display: block; margin-top: 8px; overflow-wrap: anywhere; }
+.public-assistant-dialog-chat { width: min(820px, calc(100% - 24px)); }
+.customer-chat { margin-top: 18px; }
+.customer-chat-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.customer-chat button { min-height: 40px; font: inherit; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #245f4e; margin-top: 0; }
+.customer-chat button:disabled { opacity: .5; cursor: not-allowed; }
+.customer-chat-list { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0; }
+.customer-chat-list button { min-width: 130px; max-width: 200px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.customer-chat-list button[aria-current="true"] { background: #eaf0ed; border-color: #245f4e; }
+.customer-chat-messages { height: min(42dvh, 380px); min-height: 180px; overflow-y: auto; overscroll-behavior: contain; padding: 12px; margin-top: 12px; background: #f5f7fa; border-radius: 12px; }
+.customer-chat-turn { display: grid; gap: 10px; margin-bottom: 14px; }
+.customer-chat-bubble { padding: 12px; border-radius: 12px; max-width: 90%; overflow-wrap: anywhere; white-space: pre-wrap; }
+.customer-chat-user { background: #dcf0e6; margin-left: auto; }
+.customer-chat-ai { background: white; margin-right: auto; }
+.customer-chat-bubble strong { margin-top: 0; font-size: 12px; }
+.public-assistant-intro .customer-chat-bubble p { margin-top: 6px; color: #182b3a; font-size: 14px; }
+.customer-chat-compose { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 12px; }
+.customer-chat-compose label { grid-column: 1 / -1; font-size: 14px; font-weight: 600; }
+.customer-chat-compose textarea { min-width: 0; resize: vertical; max-height: 180px; padding: 10px; border: 1px solid #94a3b8; border-radius: 8px; font: inherit; }
+.customer-chat-compose button { background: #1d4ed8; color: white; align-self: end; }
+.customer-chat-refresh { margin-top: 10px !important; }
+@media (max-width: 520px) {
+  .public-assistant-dialog-chat .public-assistant-intro { padding: 48px 12px 16px; }
+  .customer-chat-bubble { max-width: 96%; }
+}
+/* El asistente ocupa su propio espacio, sin bloquear el catálogo en escritorio. */
+.public-catalog { --assistant-panel-width: 360px; }
+.public-assistant-floating[hidden], .public-assistant-sidebar[hidden] { display: none; }
+.public-assistant-sidebar {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: var(--assistant-panel-width);
+  height: 100dvh;
+  background: #fff;
+  border-left: 1px solid #dce3e9;
+  box-shadow: -4px 0 18px #182b3a0a;
+  color: #182b3a;
+}
+.public-assistant-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; padding: 14px 16px; border-bottom: 1px solid #e1e7ed; }
+.public-assistant-sidebar-header h2 { margin: 0; font-size: 18px; }
+.public-assistant-close { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: #475569; font-size: 26px; }
+.public-assistant-close:hover { background: #f0f4f7; }
+.public-assistant-sidebar-body { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 12px; overflow: auto; overscroll-behavior: contain; }
+.public-assistant-sidebar .public-assistant-intro { padding: 4px; }
+.public-assistant-account { display: flex; flex-shrink: 0; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #e1e7ed; }
+.public-assistant-account span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: #64748b; }
+.public-assistant-account button { min-height: 36px; padding: 6px 10px; border: 0; border-radius: 8px; background: #f1f5f9; color: #475569; font: inherit; }
+.public-assistant-sidebar .customer-chat { display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 12px; }
+.public-assistant-sidebar .customer-chat-toolbar { flex-shrink: 0; }
+.public-assistant-sidebar .customer-chat-toolbar button { flex: 1; padding: 7px; font-size: 12px; }
+.public-assistant-sidebar .customer-chat-list { flex-shrink: 0; max-height: 96px; padding: 10px 0; }
+.public-assistant-sidebar .customer-chat-thread { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.public-assistant-sidebar .customer-chat-messages { flex: 1; height: auto; min-height: 140px; padding: 10px; }
+.public-assistant-sidebar .customer-chat-bubble p { margin: 6px 0 0; font-size: 14px; line-height: 1.55; }
+.public-assistant-sidebar .customer-chat-bubble strong { display: block; font-size: 12px; }
+.public-assistant-sidebar .customer-chat-compose { flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+.public-assistant-sidebar .customer-chat-compose textarea { max-height: 120px; }
+.public-assistant-sidebar .customer-chat-compose button { padding: 8px 10px; }
+.public-assistant-sidebar .customer-chat-refresh { flex-shrink: 0; align-self: flex-start; font-size: 12px; }
+.public-assistant-sidebar .customer-login-error { margin: 8px 0; padding: 10px; color: #991b1b; background: #fef2f2; border-radius: 8px; font-size: 13px; }
+@media (min-width: 901px) {
+  .public-catalog-with-assistant { margin-right: var(--assistant-panel-width); }
+  .public-catalog-with-assistant .public-cart-floating { right: calc(var(--assistant-panel-width) + 18px); }
+}
+@media (max-width: 900px) {
+  .public-assistant-sidebar { width: min(100%, 400px); }
+  .public-catalog-with-assistant .public-cart-floating { display: none; }
+}
+@media (max-width: 520px) {
+  .public-assistant-sidebar { width: 100%; }
+}
+.public-assistant-sidebar .customer-chat > .public-assistant-account { margin-bottom: 10px; gap: 4px; }
+.public-assistant-sidebar .customer-chat button.customer-chat-icon { display: grid; place-items: center; flex-shrink: 0; width: 32px; min-height: 36px; padding: 4px; border: 0; background: transparent; color: #475569; }
+.public-assistant-sidebar .customer-chat button.customer-chat-icon:hover { background: #f1f5f9; }
+.public-assistant-sidebar .customer-chat > .public-assistant-account > span { font-size: 12px; }
+.public-assistant-sidebar .customer-chat > .public-assistant-account > button:last-child { padding: 6px; font-size: 12px; }
