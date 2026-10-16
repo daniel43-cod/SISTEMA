@@ -135,6 +135,7 @@ builder.Services.AddScoped<API_SISTEMA.Services.Caja.CajaSaldoService>();
 builder.Services.AddScoped<CajaService>();
 builder.Services.AddScoped<PagoCompraService>();
 builder.Services.AddScoped<CrearGastosService>();
+builder.Services.AddScoped<GastoListarService>();
 builder.Services.AddScoped<AbonarSaldoVentaService>();
 builder.Services.AddScoped<MovimientoCajaService>();
 builder.Services.AddScoped<ListarMovimientoCajaService>();

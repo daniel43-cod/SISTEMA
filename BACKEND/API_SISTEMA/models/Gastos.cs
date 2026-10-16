@@ -9,10 +9,10 @@ namespace API_SISTEMA.Models
         public int id_gastos { get; set; }
         public int id_sesion_caja { get; set; }
         public int id_usuario { get; set; }
-        public string descripcion { get; set; }
-        public decimal? monto { get; set; }
+        public string descripcion { get; set; } = string.Empty;
+        public decimal monto { get; set; }
         public DateTime fecha { get; set; }
-        public string observacion { get; set; }
+        public string? observacion { get; set; }
 
         public SesionCaja sesionCaja { get; set; }
         public Usuario usuario { get; set; }

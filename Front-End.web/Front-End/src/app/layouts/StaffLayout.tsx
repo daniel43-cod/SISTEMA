@@ -1,3 +1,4 @@
+import { ExpensesPage } from '../../features/expenses/pages/ExpensesPage'
 import { PurchasesPage } from '../../features/purchases/pages/PurchasesPage'
 import { InventoryPage } from '../../features/inventory/pages/InventoryPage'
 import { CashPage } from '../../features/cash/pages/CashPage'
@@ -138,7 +139,7 @@ export function StaffLayout() {
                   <span className="staff-shortcut-action">Abrir sección <span aria-hidden="true">→</span></span>
                 </button>)}
             </div>
-          </section> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+          </section> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>

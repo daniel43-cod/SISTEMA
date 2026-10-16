@@ -188,7 +188,7 @@ export function CashPage() {
                     <tbody>{summary.movimientos.map(movement => {
                       const incoming = ['ENTRADA', 'INGRESO'].includes(movement.naturaleza.trim().toUpperCase())
                       const showDescription = movement.descripcion &&
-                        !/^(?:pago|abono)\s*(?:de\s+|a\s+)?(?:compras?|ventas?)\s*#/i.test(movement.descripcion.trim())
+                        !/^(?:(?:pago|abono)\s*(?:de\s+|a\s+)?(?:compras?|ventas?)\s*#|gasto\s+registrado\s*:)/i.test(movement.descripcion.trim())
                       return <tr key={movement.id_movimiento_caja}>
                         <td><strong>{movement.tipo_movimiento}</strong>
                           {showDescription && <small>{movement.descripcion}</small>}

@@ -15,14 +15,15 @@ namespace API_SISTEMA.Services.MovimientoCaja
 
 
         public async Task RegistrarMovimiento(int idSesionCaja,int idUsuario,int idTipoMovimiento,decimal monto, string descripcion,
-        int? idVenta = null,int? idCompra = null,int? idPagoVenta = null,int? idPagoCompra = null)
+        int? idVenta = null,int? idCompra = null,int? idPagoVenta = null,int? idPagoCompra = null,
+        CancellationToken cancellationToken = default)
         {
             // Todo movimiento requiere una transaccion y una sesion que siga abierta.
             if (_context.Database.CurrentTransaction is null)
                 throw new InvalidOperationException("El movimiento requiere una transaccion.");
             if (monto <= 0 || monto > 99999999.99m || decimal.Round(monto, 2) != monto)
                 throw new CajaValidationException("El monto del movimiento no es valido.");
-            var sesion = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context);
+            var sesion = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context, cancellationToken);
             if (sesion.id_sesion_caja != idSesionCaja)
                 throw new CajaValidationException("La sesion ya no esta abierta.");
 

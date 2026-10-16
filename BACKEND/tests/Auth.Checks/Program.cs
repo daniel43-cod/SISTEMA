@@ -33,6 +33,7 @@ builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<CompraService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Gastos.CrearGastosService>();
 builder.Services.AddScoped<API_SISTEMA.Services.MovimientoCaja.ListarMovimientoCajaService>();
 // Una misma regla de saldo para consultar y cerrar caja.
 builder.Services.AddScoped<API_SISTEMA.Services.Caja.CajaSaldoService>();
@@ -149,6 +150,8 @@ try
     Check((await client.PostAsJsonAsync("/api/Caja/abrir", new {})).StatusCode == HttpStatusCode.Unauthorized, "Caja bloquea apertura anonima");
     Check((await client.GetAsync("/api/Compra/listar")).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea consulta anonima");
     Check((await client.PostAsJsonAsync("/api/Compra/crear", new {})).StatusCode == HttpStatusCode.Unauthorized, "Compras bloquea escritura anonima");
+    Check((await client.PostAsJsonAsync("/api/Gastos/crear", new {})).StatusCode == HttpStatusCode.Unauthorized,
+        "Gastos bloquea escritura anónima");
     Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=1")).StatusCode == HttpStatusCode.Unauthorized, "Movimientos bloquea consulta anonima");
     var token = await Token(await Login("admin", "Password123"));
     using (var scope = app.Services.CreateScope())
@@ -161,6 +164,34 @@ try
     }
     var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    foreach (var gastoRoute in new[] { "/api/Gastos/crear", "/CrearGasto" })
+    {
+        var gastoResponse = await client.PostAsJsonAsync(gastoRoute,
+            new { descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
+        var gastoBody = await gastoResponse.Content.ReadAsStringAsync();
+        Check(gastoResponse.StatusCode == HttpStatusCode.BadRequest && gastoBody.Contains("No hay una caja abierta") &&
+            !gastoBody.Contains("detalle") && !gastoBody.Contains("Exception"),
+            "Gastos devuelve caja cerrada sin detalles internos: " + gastoRoute);
+    }
+    Check((await client.PostAsJsonAsync("/api/Gastos/crear",
+        new { descripcion = "Transporte", monto = "inválido", observacion = "Prueba" })).StatusCode == HttpStatusCode.BadRequest,
+        "Gastos rechaza JSON con monto inválido antes de ejecutar el servicio");
+    foreach (var payload in new object[]
+    {
+        new { descripcion = "   ", monto = 10m },
+        new { descripcion = new string('A', 301), monto = 10m },
+        new { descripcion = "Transporte", monto = 0m },
+        new { descripcion = "Transporte", monto = -1m },
+        new { descripcion = "Transporte", monto = 100000000m },
+        new { descripcion = "Transporte", monto = 1.001m },
+        new { descripcion = "Transporte", monto = 10m, observacion = new string('A', 501) }
+    })
+    {
+        var invalidExpense = await client.PostAsJsonAsync("/api/Gastos/crear", payload);
+        var invalidBody = await invalidExpense.Content.ReadAsStringAsync();
+        Check(invalidExpense.StatusCode == HttpStatusCode.BadRequest && invalidBody.Contains("errors"),
+            "DTO de gastos rechaza datos inválidos antes de consultar caja");
+    }
     Check((await client.GetAsync("/api/Compra/listar?tamanoPagina=101")).StatusCode == HttpStatusCode.BadRequest, "Listado de compras limita cantidad solicitada");
     Check((await client.PostAsJsonAsync("/api/Compra/crear", new { id_proveedor = 0, detalle_compra = new object[0] })).StatusCode == HttpStatusCode.BadRequest, "Endpoint valida DTO de compra");
     Check((await client.GetAsync("/api/Compra/detalle/999999")).StatusCode == HttpStatusCode.NotFound, "Detalle devuelve 404 para compra inexistente");
@@ -581,6 +612,49 @@ try
     var result = (Microsoft.AspNetCore.Mvc.ObjectResult)exceptionContext.Result!;
     var errorBody = JsonSerializer.Serialize(result.Value);
     Check(result.StatusCode == 500 && !errorBody.Contains("secret") && !errorBody.Contains("SQL"), "Error inesperado sin datos internos");
+    await using (var gastoDb = new SistemaDbContext(new DbContextOptionsBuilder<SistemaDbContext>()
+        .UseSqlite("Data Source=:memory:").Options))
+    {
+        // Base temporal sin tablas: provoca un fallo interno sin tocar la base del negocio.
+        var gastoService = new API_SISTEMA.Services.Gastos.CrearGastosService(gastoDb,
+            new API_SISTEMA.Services.MovimientoCaja.MovimientoCajaService(gastoDb));
+        foreach (var invalidGasto in new API_SISTEMA.Dtos.Gastos.IngresarGastoDto?[]
+        {
+            null,
+            new() { descripcion = "   ", monto = 1m },
+            new() { descripcion = new string('A', 301), monto = 1m },
+            new() { descripcion = "Transporte", monto = 0m },
+            new() { descripcion = "Transporte", monto = 1.001m },
+            new() { descripcion = "Transporte", monto = 100000000m },
+            new() { descripcion = "Transporte", monto = 1m, observacion = new string('A', 501) }
+        })
+        {
+            var invalid = false;
+            try { await gastoService.CrearGasto(invalidGasto!, 1); }
+            catch (System.ComponentModel.DataAnnotations.ValidationException) { invalid = true; }
+            Check(invalid, "Servicio de gastos valida antes de acceder a la base de datos");
+        }
+        using var gastoCancellation = new CancellationTokenSource();
+        gastoCancellation.Cancel();
+        var gastoCancelled = false;
+        try { await gastoService.CrearGasto(new() { descripcion = "Transporte", monto = 1m }, 1, gastoCancellation.Token); }
+        catch (OperationCanceledException) { gastoCancelled = true; }
+        Check(gastoCancelled, "Servicio de gastos respeta cancelación antes de guardar");
+        var gastoController = new GastosController(gastoService,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<GastosController>.Instance);
+        gastoController.ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks"))
+            }
+        };
+        var gastoError = (Microsoft.AspNetCore.Mvc.ObjectResult)await gastoController.CrearGasto(new()
+            { descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
+        var gastoJson = JsonSerializer.Serialize(gastoError.Value);
+        Check(gastoError.StatusCode == 500 && gastoJson.Contains("traceId") && !gastoJson.Contains("Exception") &&
+            !gastoJson.Contains("SQLite") && !gastoJson.Contains("detalle"), "Gastos oculta errores técnicos y devuelve 500");
+    }
     Console.WriteLine($"{passed} comprobaciones aprobadas.");
 }
 finally { await app.StopAsync(); }

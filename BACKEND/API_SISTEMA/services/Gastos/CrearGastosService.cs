@@ -1,10 +1,9 @@
 ﻿using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Gastos;
-using API_SISTEMA.Models;
 using API_SISTEMA.Services.MovimientoCaja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens.Experimental;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.Services.Gastos
 {
@@ -18,51 +17,42 @@ namespace API_SISTEMA.Services.Gastos
             _movimientoCajaService = movimientoCajaService;
         }
 
-        public async Task<int> CrearGasto(IngresarGastoDto gastoDto, int IdUsuario)
+        public async Task<int> CrearGasto(IngresarGastoDto gastoDto, int idUsuario,
+            CancellationToken cancellationToken = default)
         {
-            // Pago/gasto y movimiento se confirman antes de permitir el cierre.
-            await using var txCaja = await _context.Database.BeginTransactionAsync();
-            var turnoCompartido = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context);
-         var sesionCaja = turnoCompartido;
-            if (sesionCaja == null)
-            {
-                throw new Exception("No tienes una sesión de caja abierta.");
-            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (gastoDto is null) throw new ValidationException("Los datos del gasto son obligatorios.");
+            if (idUsuario <= 0) throw new ValidationException("El usuario no es válido.");
+            // También valida llamadas al servicio que no pasan por el controlador.
+            Validator.ValidateObject(gastoDto, new ValidationContext(gastoDto), validateAllProperties: true);
 
-            if(gastoDto.monto <= 0)
-            {
-                throw new Exception("El monto del gasto debe ser mayor a cero.");
-            }
-
-            if(gastoDto.descripcion == null || gastoDto.descripcion.Trim() == "")
-            {
-                throw new Exception("La descripción del gasto no puede estar vacía.");
-            }
-
-           
+            // Solo los datos válidos abren transacción y adquieren el bloqueo de caja.
+            await using var txCaja = await _context.Database.BeginTransactionAsync(cancellationToken);
+            var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context, cancellationToken);
             var gasto = new API_SISTEMA.Models.Gastos
             {
                 id_sesion_caja = sesionCaja.id_sesion_caja,
-                id_usuario = IdUsuario,
-                descripcion = gastoDto.descripcion,
+                id_usuario = idUsuario,
+                descripcion = gastoDto.descripcion.Trim(),
                 monto = gastoDto.monto,
-                observacion = gastoDto.observacion,
+                observacion = gastoDto.observacion?.Trim() ?? string.Empty,
                 fecha = DateTime.Now
             };
             _context.gastos.Add(gasto);
-            await _context.SaveChangesAsync();
 
             await _movimientoCajaService.RegistrarMovimiento(
               idSesionCaja: sesionCaja.id_sesion_caja,
-              idUsuario: IdUsuario,
+              idUsuario: idUsuario,
               idTipoMovimiento: TiposMovimientoCaja.Gasto,
-              monto: (decimal)gasto.monto,
+              monto: gastoDto.monto,
               descripcion: $"Gasto registrado: {gasto.descripcion}",
               idCompra: null,
-              idPagoCompra: null
+              idPagoCompra: null,
+              cancellationToken: cancellationToken
           );
-            await _context.SaveChangesAsync();
-            await txCaja.CommitAsync();
+            // Un solo guardado; si falla o se cancela, la transacción revierte ambos registros.
+            await _context.SaveChangesAsync(cancellationToken);
+            await txCaja.CommitAsync(cancellationToken);
             return gasto.id_gastos;
         }
     }

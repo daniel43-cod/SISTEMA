@@ -5,29 +5,78 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace API_SISTEMA.Controllers
 {
-    public class GastosController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class GastosController : ControllerBase
     {
         private readonly CrearGastosService _service;
-        public GastosController(CrearGastosService service)
+        private readonly ILogger<GastosController> _logger;
+        public GastosController(CrearGastosService service, ILogger<GastosController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
-        [Authorize(Roles =Roles.Administrador)]
-        [HttpPost("CrearGasto")]
-        public async Task<IActionResult> CrearGasto(IngresarGastoDto gastoDto)
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("listar")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        [ProducesResponseType(typeof(GastoPaginaDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<GastoPaginaDto>> ListarGastos(
+            [FromServices] GastoListarService service,
+            [FromQuery, Range(1, 100000)] int pagina = 1,
+            [FromQuery, Range(1, 100)] int tamanoPagina = 25,
+            CancellationToken cancellationToken = default)
         {
             try
             {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                return Ok(await service.Listar(pagina, tamanoPagina, cancellationToken));
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (CajaValidationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al listar gastos. Referencia: {TraceId}", traceId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    mensaje = "No se pudieron consultar los gastos. Inténtalo más tarde.",
+                    traceId
+                });
+            }
+        }
 
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
+        [Authorize(Roles =Roles.Administrador)]
+        [HttpPost("crear")]
+        [HttpPost("/CrearGasto")]
+        [Consumes("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CrearGasto([FromBody] IngresarGastoDto gastoDto,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var idUsuarioClaim =User.FindFirstValue(ClaimTypes.NameIdentifier)?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                if (!int.TryParse(idUsuarioClaim, out int idUsuario) || idUsuario <= 0)
                 {
                     return Unauthorized(new
                     {
@@ -37,7 +86,8 @@ namespace API_SISTEMA.Controllers
 
                 var idGasto = await _service.CrearGasto(
                     gastoDto,
-                    idUsuario
+                    idUsuario,
+                    cancellationToken
                 );
 
                 return Ok(new
@@ -46,13 +96,22 @@ namespace API_SISTEMA.Controllers
                     id_gasto = idGasto
                 });
             }
-            catch (Exception ex)
+            catch (ValidationException ex)
             {
-                return BadRequest(new
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (CajaValidationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var traceId = HttpContext.TraceIdentifier;
+                _logger.LogError(ex, "Error al registrar gasto. Referencia: {TraceId}", traceId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-
+                    mensaje = "No se pudo registrar el gasto. Inténtalo más tarde.",
+                    traceId
                 });
             }
         }
