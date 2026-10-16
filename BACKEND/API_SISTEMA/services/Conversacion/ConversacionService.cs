@@ -80,7 +80,8 @@ namespace API_SISTEMA.Services.Conversacion
             historial.Add(new TurnoIA("user", mensaje.MensajeRecibido));
             try
             {
-                mensaje.Respuesta = await _openAI.ResponderAsync(historial, _catalogo.BuscarProductos, cancellationToken);
+                mensaje.Respuesta = await _openAI.ResponderAsync(historial, _catalogo.BuscarProductos,
+                    cancellationToken, _catalogo.BuscarMarcasPorCategoria);
                 await _context.SaveChangesAsync(cancellationToken);
             }
             catch (OpenAIException ex)

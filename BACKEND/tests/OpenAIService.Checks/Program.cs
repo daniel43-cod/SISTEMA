@@ -38,6 +38,18 @@ var result = await service.ResponderAsync(history, (text, ct) =>
 });
 Check(result == "Tenemos Coca-Cola." && searches == 1 && calls == 2); passed++;
 
+var categoryCalls = 0;
+var categorySearches = 0;
+var categoryService = Create((request, ct) => Task.FromResult(++categoryCalls == 1
+    ? Json(toolCall.Replace("BuscarProductos", "BuscarMarcasPorCategoria").Replace("coca", "golosinas"))
+    : Json(success)));
+await categoryService.ResponderAsync(history, NoTools, buscarMarcasPorCategoria: (text, ct) =>
+{
+    Check(text == "golosinas"); categorySearches++;
+    return Task.FromResult("{\"categorias\":[{\"categoria\":\"Golosinas\",\"marcas\":[\"Marca A\"]}]}");
+});
+Check(categorySearches == 1 && categoryCalls == 2); passed++;
+
 async Task Error(OpenAIService sut, int expected)
 {
     try { await sut.ResponderAsync(history, NoTools); throw new Exception("Faltó excepción"); }

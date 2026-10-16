@@ -49,6 +49,14 @@ Check(await service.ListarMensajes(1, 999) is null, "Conversación inexistente n
 Check((await service.ListarMensajes(1, 1, 4))!.Single().IdMensaje == 1, "Cursor recupera mensajes anteriores");
 Check((await service.ListarMensajes(1, 4))!.Count == 0, "Conversación propia vacía");
 Console.WriteLine($"{count} comprobaciones aprobadas en total.");
+var eliminar = new ConversacionEliminarService(db);
+Check(!await eliminar.Eliminar(2, 1) && await db.Mensajes.AnyAsync(m => m.IdConversacion == 1),
+    "Borrar chat ajeno no elimina mensajes");
+Check(await eliminar.Eliminar(1, 1) && !await db.Conversaciones.AnyAsync(c => c.IdConversacion == 1) &&
+    !await db.Mensajes.AnyAsync(m => m.IdConversacion == 1), "Elimina chat propio y todos sus mensajes");
+Check(!await eliminar.Eliminar(1, 1), "Borrado repetido devuelve no encontrado");
+Check(await db.Mensajes.AnyAsync(m => m.IdConversacion == 3), "Conserva chats de otros clientes");
+Console.WriteLine($"{count} comprobaciones aprobadas en total.");
 
 sealed class ChatDbContext(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)
 {

@@ -57,3 +57,12 @@ export async function sendChat(token: string, text: string, conversationId: numb
     throw new ChatSendError('No se pudo interpretar la respuesta. Actualiza el historial antes de volver a enviar.', 0)
   return { idMensaje: data.idMensaje, idConversacion: data.idConversacion, respuesta: data.respuestaMensaje }
 }
+
+export async function deleteChat(token: string, conversationId: number) {
+  if (!Number.isSafeInteger(conversationId) || conversationId <= 0) throw new ApiError('La conversación no es válida.', 400)
+  try { await requestJson(`/Conversaciones/${conversationId}`, { method: 'DELETE', token }) }
+  catch (failure) {
+    if (failure instanceof ApiError && failure.status === 404) return
+    throw failure
+  }
+}

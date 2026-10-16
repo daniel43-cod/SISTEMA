@@ -107,6 +107,7 @@ builder.Services.AddScoped<RegistroCuentaClienteService>();
 builder.Services.AddScoped<InicioSesionService>();
 builder.Services.AddScoped<ConversacionService>();
 builder.Services.AddScoped<ConversacionListarService>();
+builder.Services.AddScoped<ConversacionEliminarService>();
 builder.Services.AddScoped<CatalogoIAService>();
 builder.Services.AddHttpClient<OpenAIService>(client => client.Timeout = TimeSpan.FromSeconds(65));
 builder.Services.AddScoped<ProductoService>();

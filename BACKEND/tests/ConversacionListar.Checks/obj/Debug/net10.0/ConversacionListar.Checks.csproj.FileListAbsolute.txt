@@ -46,3 +46,15 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-endpoint-restaura
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-endpoint-restaurado\ConversacionListar.Checks.runtimeconfig.json
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-endpoint-restaurado\ConversacionListar.Checks.dll
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-endpoint-restaurado\ConversacionListar.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\API_SISTEMA.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\API_SISTEMA.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\appsettings.Development.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\appsettings.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\API_SISTEMA.staticwebassets.runtime.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\API_SISTEMA.staticwebassets.endpoints.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\API_SISTEMA.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\ConversacionListar.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\ConversacionListar.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\ConversacionListar.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\ConversacionListar.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\chat-eliminar-checks\ConversacionListar.Checks.pdb

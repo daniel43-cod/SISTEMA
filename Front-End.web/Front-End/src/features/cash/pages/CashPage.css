@@ -40,3 +40,13 @@
 .cash-movement-info { min-width: 0; overflow-wrap: anywhere; }
 .cash-movement-info span { font-size: .85rem; color: var(--color-muted); }
 @media (max-width: 520px) { .cash-movement-list li { align-items: flex-start; gap: 10px; } .cash-movement-list li > div:last-child { font-size: .85rem; } }
+
+.cash-movement-table-scroll { max-height: 480px; overflow: auto; }
+.cash-movement-table { width: 100%; min-width: 600px; border-collapse: collapse; text-align: left; }
+.cash-movement-table th, .cash-movement-table td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; font-size: .875rem; }
+.cash-movement-table th { position: sticky; top: 0; background: #f8fafc; color: #475569; font-weight: 600; }
+.cash-movement-table td:first-child { min-width: 140px; overflow-wrap: anywhere; }
+.cash-movement-table td small { display: block; margin-top: 5px; color: #64748b; }
+.cash-movement-table td:nth-child(2) { overflow-wrap: anywhere; }
+.cash-movement-table td:nth-child(3) { min-width: 150px; }
+.cash-movement-table th:last-child, .cash-movement-table td:last-child { text-align: right; white-space: nowrap; }

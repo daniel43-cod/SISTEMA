@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ConversacionListar.Checks")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+03280db7a398a2758f8cba310ca090ce1d7679b2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d71e430d536e90cd6c26fc792da16ae18fb68566")]
 [assembly: System.Reflection.AssemblyProductAttribute("ConversacionListar.Checks")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ConversacionListar.Checks")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -14,6 +14,38 @@ namespace API_SISTEMA.Controllers;
 public sealed class ConversacionesController(ConversacionListarService service,
     ILogger<ConversacionesController> logger) : ControllerBase
 {
+    [HttpDelete("{idConversacion:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> EliminarChat([Range(1, int.MaxValue)] int idConversacion,
+        [FromServices] ConversacionEliminarService eliminarService, CancellationToken cancellationToken)
+    {
+        if (User.FindFirstValue("tipo_cuenta") != "cuenta_cliente") return Forbid();
+        var identificador = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        if (!int.TryParse(identificador, out var cuenta) || cuenta <= 0) return Unauthorized();
+        try
+        {
+            return await eliminarService.Eliminar(cuenta, idConversacion, cancellationToken)
+                ? NoContent() : NotFound();
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (ValidationException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return ValidationProblem(ModelState);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Error al eliminar conversación {IdConversacion}", idConversacion);
+            return Problem(statusCode: 500, title: "No se pudo eliminar la conversación.");
+        }
+    }
+
     [HttpGet("{idConversacion:int}/mensajes")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType(typeof(List<MensajeChatDto>), StatusCodes.Status200OK)]

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError } from '../../../shared/api/ApiError'
-import { ChatSendError, listChats, listMessages, sendChat } from '../api/customerChatApi'
+import { ChatSendError, deleteChat, listChats, listMessages, sendChat } from '../api/customerChatApi'
 import type { Chat, ChatMessage } from '../api/customerChatApi'
 
 function ChatThread({ token, conversationId, onConversation, onBusy, onUnauthorized, refreshVersion }: {
@@ -114,6 +114,8 @@ export function CustomerChat({ token, onUnauthorized, email }: { token: string; 
   const initial = useRef(true)
   const [ready, setReady] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [deleting, setDeleting] = useState<number | null>(null)
+  const deletingRef = useRef(false)
   const [messageRevision, setMessageRevision] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
@@ -138,11 +140,25 @@ export function CustomerChat({ token, onUnauthorized, email }: { token: string; 
     if (id > 0) setSelected(id)
     setNotice(message); setPage(1); setRevision(v => v + 1)
   }
+  async function removeChat(chat: Chat) {
+    if (sending || deletingRef.current) return
+    if (!window.confirm('¿Borrar esta conversación y todos sus mensajes? No podrás recuperarlos.')) return
+    deletingRef.current = true; setDeleting(chat.idConversacion); setError('')
+    try {
+      await deleteChat(token, chat.idConversacion)
+      setChats(current => current.filter(row => row.idConversacion !== chat.idConversacion))
+      if (selected === chat.idConversacion) setSelected(null)
+      setNotice('Conversación eliminada.'); setPage(1); setRevision(v => v + 1)
+    } catch (failure) {
+      if (failure instanceof ApiError && (failure.status === 401 || failure.status === 403)) onUnauthorized()
+      else setError(failure instanceof Error ? failure.message : 'No se pudo borrar el chat.')
+    } finally { deletingRef.current = false; setDeleting(null) }
+  }
   return <div className="customer-chat">
     <div className="public-assistant-account">
       <span title={email}>{email}</span>
       <button type="button" className="customer-chat-icon" title="Nuevo chat" aria-label="Nuevo chat"
-        disabled={sending} onClick={() => { setSelected(null); setNotice(''); setShowHistory(false) }}>
+        disabled={sending || deleting !== null} onClick={() => { setSelected(null); setNotice(''); setShowHistory(false) }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
           strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
@@ -154,25 +170,39 @@ export function CustomerChat({ token, onUnauthorized, email }: { token: string; 
           <path d="M20 7v5h-5M4 17v-5h5M6.1 7a7 7 0 0 1 11.5-1L20 9M4 15l2.4 3A7 7 0 0 0 18 17" />
         </svg>
       </button>
-      <button type="button" className="customer-chat-icon" title="Ver chats" aria-label="Ver chats"
-        aria-expanded={showHistory} disabled={sending} onClick={() => setShowHistory(value => !value)}>
+      <button type="button" className="customer-chat-icon" title="Historial" aria-label="Abrir historial" aria-controls="customer-chat-history"
+        aria-expanded={showHistory} disabled={sending || deleting !== null} onClick={() => setShowHistory(value => !value)}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M4 4h16v12H8l-4 4V4Z" /><path d="M8 8h8M8 12h5" />
+          <path d="M3 11a9 9 0 1 1 2.7 7M3 4v7h7" /><path d="M12 7v5l3 2" />
         </svg>
       </button>
-      <button type="button" disabled={sending} onClick={onUnauthorized}>Salir</button>
+      <button type="button" disabled={sending || deleting !== null} onClick={onUnauthorized}>Salir</button>
     </div>
     {loading && <p role="status">Cargando chats…</p>}
     {error && <p role="alert" className="customer-login-error">{error}</p>}
-    {showHistory && chats.length > 0 && <nav className="customer-chat-list" aria-label="Tus conversaciones">
-      {chats.map(chat => <button key={chat.idConversacion} type="button" disabled={sending}
-        aria-current={selected === chat.idConversacion ? 'true' : undefined}
-        onClick={() => { setSelected(chat.idConversacion); setNotice(''); setShowHistory(false) }}>{chat.contenido}</button>)}
-      {hasMore && <button type="button" disabled={sending || loading} onClick={() => setPage(v => v + 1)}>Más chats</button>}
+    {showHistory && <nav id="customer-chat-history" className="customer-chat-list customer-chat-history" aria-label="Historial de conversaciones">
+      {!loading && !chats.length && <p>No tenés conversaciones guardadas.</p>}
+      {chats.map(chat => <div key={chat.idConversacion} className="customer-chat-history-row">
+        <button type="button" className="customer-chat-history-title" disabled={sending || deleting !== null}
+          aria-current={selected === chat.idConversacion ? 'true' : undefined}
+          onClick={() => { setSelected(chat.idConversacion); setNotice(''); setShowHistory(false) }}>
+          {chat.contenido}
+        </button>
+        <button type="button" className="customer-chat-delete" title="Borrar chat"
+          aria-label={`Borrar chat: ${chat.contenido}`} disabled={sending || deleting !== null}
+          onClick={() => void removeChat(chat)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+          </svg>
+        </button>
+      </div>)}
+      {deleting !== null && <p role="status">Borrando conversación…</p>}
+      {hasMore && <button type="button" disabled={sending || loading || deleting !== null} onClick={() => setPage(v => v + 1)}>Más chats</button>}
     </nav>}
     {notice && <p role="status">{notice}</p>}
-    {ready && <ChatThread key={selected ?? 'new'} token={token} conversationId={selected}
-      onConversation={conversation} onBusy={setSending} onUnauthorized={onUnauthorized} refreshVersion={messageRevision} />}
+    {ready && <div className="customer-chat-thread-container" inert={deleting !== null}><ChatThread key={selected ?? 'new'} token={token} conversationId={selected}
+      onConversation={conversation} onBusy={setSending} onUnauthorized={onUnauthorized} refreshVersion={messageRevision} /></div>}
   </div>
 }

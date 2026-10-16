@@ -34,7 +34,7 @@ export function PublicProductsList({ idMarca, cartItems, setQuantity }: {
                   <strong>{presentation.nombre}</strong>
                   <span>{money.format(presentation.precio)}</span>
                 </div>
-                <small>{presentation.disponible ? 'Disponible' : 'Agotado'}</small></div>
+                <small className={presentation.disponible ? 'public-availability-available' : 'public-availability-unavailable'}>{presentation.disponible ? 'Disponible' : 'Agotado'}</small></div>
               <div className="public-quantity" role="group" aria-label={`Cantidad en carrito de ${label}`}>
                 <button type="button" aria-label={`Quitar uno: ${label}`} disabled={quantity === 0}
                   onClick={() => setQuantity(cartItem, quantity - 1)}>−</button>

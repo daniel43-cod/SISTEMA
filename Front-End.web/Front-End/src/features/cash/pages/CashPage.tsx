@@ -175,22 +175,36 @@ export function CashPage() {
                 <div><dt>Monto esperado</dt><dd>{money(summary.saldo_esperado)}</dd></div>
                 <div><dt>Total de movimientos</dt><dd>{summary.total_movimientos}</dd></div>
               </dl>
-              <p className="cash-hint">Totales de todo el turno al consultar. Mostrando {summary.movimientos.length} de {summary.total_movimientos} movimientos, del más reciente al más antiguo.</p>
               {summary.movimientos.length === 0 ? <p>Aún no hay movimientos en este turno.</p> :
-                <ul className="cash-movement-list">
-                  {summary.movimientos.map(movement => {
-                    const incoming = ['ENTRADA', 'INGRESO'].includes(movement.naturaleza.trim().toUpperCase())
-                    return <li key={movement.id_movimiento_caja}>
-                      <div className="cash-movement-info"><strong>{movement.tipo_movimiento}</strong>
-                        {movement.descripcion && <span>{movement.descripcion}</span>}
-                        <span>{movement.usuario} · {new Date(movement.fecha_movimiento).toLocaleString('es-GT')}</span>
-                      </div>
-                      <div className={incoming ? 'cash-incoming' : 'cash-outgoing'}>
-                        <span>{incoming ? 'Entrada' : 'Salida'}</span><strong>{incoming ? '+' : '−'}{money(movement.monto)}</strong>
-                      </div>
-                    </li>
-                  })}
-                </ul>}
+                <div className="cash-movement-table-scroll">
+                  <table className="cash-movement-table">
+                    <thead><tr>
+                      <th scope="col">Movimiento</th>
+                      <th scope="col">Encargado</th>
+                      <th scope="col">Fecha y hora</th>
+                      <th scope="col">Tipo</th>
+                      <th scope="col">Monto</th>
+                    </tr></thead>
+                    <tbody>{summary.movimientos.map(movement => {
+                      const incoming = ['ENTRADA', 'INGRESO'].includes(movement.naturaleza.trim().toUpperCase())
+                      const showDescription = movement.descripcion &&
+                        !/^(?:pago|abono)\s*(?:de\s+|a\s+)?(?:compras?|ventas?)\s*#/i.test(movement.descripcion.trim())
+                      return <tr key={movement.id_movimiento_caja}>
+                        <td><strong>{movement.tipo_movimiento}</strong>
+                          {showDescription && <small>{movement.descripcion}</small>}
+                        </td>
+                        <td>{movement.usuario}</td>
+                        <td><time dateTime={movement.fecha_movimiento}>
+                          {new Date(movement.fecha_movimiento).toLocaleString('es-GT')}
+                        </time></td>
+                        <td className={incoming ? 'cash-incoming' : 'cash-outgoing'}>{incoming ? 'Entrada' : 'Salida'}</td>
+                        <td className={incoming ? 'cash-incoming' : 'cash-outgoing'}>
+                          <strong>{incoming ? '+' : '−'}{money(movement.monto)}</strong>
+                        </td>
+                      </tr>
+                    })}</tbody>
+                  </table>
+                </div>}
             </>}
         </section>
         {!closing ? <Button className="cash-close-button" onClick={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}>Cerrar caja</Button> :

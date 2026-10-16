@@ -45,7 +45,8 @@ public sealed class OpenAIService
         // Recibe una funci?n del backend: toma el texto de b?squeda y un token, y devuelve el cat?logo en JSON.
         Func<string, CancellationToken, Task<string>> buscarProductos,
         // Permite cancelar la operaci?n. default hace opcional el par?metro y no establece un plazo por s? mismo.
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Func<string, CancellationToken, Task<string>>? buscarMarcasPorCategoria = null)
     {
         // Verifica los valores de configuraci?n antes de realizar llamadas al proveedor.
         ValidarConfiguracion();
@@ -89,6 +90,14 @@ public sealed class OpenAIService
                     // Estas indicaciones orientan al modelo; los permisos y l?mites reales se aplican en el backend.
                     instructions = """
                         Eres el asistente de atención al cliente de este negocio. Responde en español.
+                        Si preguntan qué tipos de golosinas, bebidas u otra categoría ofrecemos, consulta
+                        BuscarMarcasPorCategoria con solo el nombre de la categoría (por ejemplo, "golosinas").
+                        Responde con las marcas activas devueltas para esa categoría, no inventes productos.
+                        Si hay varias categorías coincidentes, distingue las marcas de cada una.
+                        Una lista de categorías vacía significa que no encontraste esa categoría;
+                        una categoría con marcas vacías significa que no tiene marcas activas registradas.
+                        No deduzcas existencias por encontrar una marca. Para stock consulta BuscarProductos.
+                        Los resultados de categorías y marcas tienen límites; no afirmes que son toda la oferta.
                         Para preguntas sobre productos, precios o disponibilidad consulta BuscarProductos
                         en este turno antes de afirmar disponibilidad o precio. No inventes datos ni uses
                         precios o existencias del historial como datos vigentes.
@@ -142,6 +151,18 @@ public sealed class OpenAIService
                                 // Declara el argumento texto como cadena. Su longitud se comprueba m?s abajo en C#.
                                 properties = new { texto = new { type = "string", description = "Nombre o parte del nombre a buscar, de 1 a 100 caracteres." } },
                                 // Exige el argumento texto y no admite propiedades adicionales en el esquema.
+                                required = new[] { "texto" }, additionalProperties = false
+                            }
+                        },
+                        new
+                        {
+                            type = "function", name = "BuscarMarcasPorCategoria",
+                            description = "Consulta categorías activas por nombre y devuelve sus marcas activas. Para preguntas como qué golosinas o bebidas ofrecen; no confirma stock.",
+                            strict = true,
+                            parameters = new
+                            {
+                                type = "object",
+                                properties = new { texto = new { type = "string", description = "Solo el nombre o parte de la categoría: golosinas, bebidas, limpieza. De 1 a 100 caracteres." } },
                                 required = new[] { "texto" }, additionalProperties = false
                             }
                         }
@@ -217,8 +238,9 @@ public sealed class OpenAIService
                 // Ejecuta las solicitudes de herramientas una por una, nunca en paralelo.
                 foreach (var call in calls)
                 {
-                    // Comprueba la lista permitida: este servicio solo acepta BuscarProductos.
-                    if (call.GetProperty("name").GetString() != "BuscarProductos")
+                    // Solo ejecutar las herramientas de lectura registradas.
+                    var nombreHerramienta = call.GetProperty("name").GetString();
+                    if (nombreHerramienta is not ("BuscarProductos" or "BuscarMarcasPorCategoria"))
                         throw new OpenAIException(502, "La IA solicitó una herramienta no permitida.");
                     // Los argumentos llegan como una cadena JSON: los interpreta. ! suprime el aviso de nulabilidad, no valida el valor.
                     using var args = JsonDocument.Parse(call.GetProperty("arguments").GetString()!);
@@ -228,7 +250,11 @@ public sealed class OpenAIService
                     if (string.IsNullOrWhiteSpace(texto) || texto.Length > 100)
                         throw new OpenAIException(502, "La IA solicitó una búsqueda inválida.");
                     // Ejecuta la funci?n del backend recibida como par?metro; CatalogoIAService consulta SQL y devuelve JSON.
-                    var resultado = await buscarProductos(texto, ct);
+                    var resultado = nombreHerramienta == "BuscarProductos"
+                        ? await buscarProductos(texto, ct)
+                        : buscarMarcasPorCategoria is not null
+                            ? await buscarMarcasPorCategoria(texto, ct)
+                            : throw new OpenAIException(503, "La consulta de categorías no está disponible.");
                     // A?ade el resultado de la herramienta al contexto que se enviar? en la siguiente ronda.
                     input.Add(new JsonObject
                     {

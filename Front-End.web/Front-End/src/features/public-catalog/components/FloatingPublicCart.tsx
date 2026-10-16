@@ -19,7 +19,7 @@ export function FloatingPublicCart(props: ComponentProps<typeof PublicCart>) {
   }, [open])
   return <>
     <button type="button" className="public-cart-floating"
-      aria-label={`Abrir carrito: ${props.count} artículos`}
+      aria-label={`Abrir carrito: ${props.count} artículos, total estimado ${props.total.toFixed(2)} quetzales`}
       aria-haspopup="dialog" aria-controls={dialogId} aria-expanded={open}
       onClick={() => setOpen(true)}>
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -28,9 +28,13 @@ export function FloatingPublicCart(props: ComponentProps<typeof PublicCart>) {
         <circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" />
       </svg>
       <span className="public-cart-badge" aria-hidden="true">{props.count > 99 ? '99+' : props.count}</span>
+      <span className="public-cart-floating-total" aria-hidden="true">
+        <small>Total estimado</small>
+        <strong>{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(props.total)}</strong>
+      </span>
     </button>
     <span className="public-cart-announcement" role="status" aria-live="polite" aria-atomic="true">
-      {props.count} artículos en el carrito.
+      {props.count} artículos en el carrito. Total estimado: {props.total.toFixed(2)} quetzales.
     </span>
     <dialog ref={dialogRef} id={dialogId} className="public-cart-dialog"
       aria-labelledby="public-cart-title" onCancel={() => setOpen(false)} onClose={() => setOpen(false)}

@@ -63,7 +63,15 @@ using (var datosIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.Buscar
         !p.GetProperty("disponible").GetBoolean() && p.GetProperty("presentacionesDisponibles").GetInt32() == 0),
         "IA recibe agotado en todas las presentaciones con stock cero");
 (await db.categorias.SingleAsync()).Estado = false;
+using (var marcasIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarMarcasPorCategoria("Bebidas", default)))
+{
+    var marcas = marcasIA.RootElement.GetProperty("categorias").EnumerateArray().Single().GetProperty("marcas");
+    Check(marcas.GetArrayLength() == 2 && marcas.EnumerateArray().All(m => m.GetString() != "Marca inactiva"),
+        "Consulta IA de categoría devuelve solo sus marcas activas");
+}
 await db.SaveChangesAsync();
+using (var marcasIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarMarcasPorCategoria("Bebidas", default)))
+    Check(marcasIA.RootElement.GetProperty("categorias").GetArrayLength() == 0, "Consulta IA excluye categoría inactiva");
 Check(await service.ListarProductosPorMarca(1) is null, "Categoría inactiva bloquea productos de sus marcas");
 try { await service.ListarProductosPorMarca(1, 0); throw new Exception("Aceptó página inválida"); }
 catch (ArgumentOutOfRangeException) { Check(true, "Página inválida rechazada"); }

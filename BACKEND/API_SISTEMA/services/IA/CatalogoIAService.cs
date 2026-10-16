@@ -7,6 +7,23 @@ namespace API_SISTEMA.Services.IA;
 // sealed impide heredar de esta clase. El constructor primario recibe el contexto
 public sealed class CatalogoIAService(SistemaDbContext context)
 {
+    public async Task<string> BuscarMarcasPorCategoria(string texto, CancellationToken ct)
+    {
+        var categorias = await context.categorias.AsNoTracking()
+            .Where(c => c.Estado && c.nombreCategoria.Contains(texto))
+            .OrderBy(c => c.nombreCategoria).ThenBy(c => c.IdCategoria).Take(10)
+            .Select(c => new
+            {
+                categoria = c.nombreCategoria,
+                marcas = context.Marcas.Where(m => m.IdCategoria == c.IdCategoria && m.Estado)
+                    .OrderBy(m => m.Nombre).ThenBy(m => m.IdMarca)
+                    .Select(m => m.Nombre).Take(20).ToList()
+            }).ToListAsync(ct);
+
+        // Las marcas describen la oferta de la categoría, no confirman stock de productos.
+        return JsonSerializer.Serialize(new { limiteCategorias = 10, limiteMarcas = 20, categorias });
+    }
+
     // Busca por texto y devuelve JSON. async/Task<string> permiten esperar la consulta
     // sin bloquear el hilo. ct permite solicitar la cancelación de la operación SQL.
     public async Task<string> BuscarProductos(string texto, CancellationToken ct)

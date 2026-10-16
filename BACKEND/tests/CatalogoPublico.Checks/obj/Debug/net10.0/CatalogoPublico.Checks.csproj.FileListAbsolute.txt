@@ -128,3 +128,15 @@ C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\catalogo-ia-stock-chec
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\catalogo-ia-stock-checks\CatalogoPublico.Checks.runtimeconfig.json
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\catalogo-ia-stock-checks\CatalogoPublico.Checks.dll
 C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\catalogo-ia-stock-checks\CatalogoPublico.Checks.pdb
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\API_SISTEMA.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\API_SISTEMA.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\appsettings.Development.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\appsettings.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\API_SISTEMA.staticwebassets.runtime.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\API_SISTEMA.staticwebassets.endpoints.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\API_SISTEMA.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\CatalogoPublico.Checks.exe
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\CatalogoPublico.Checks.deps.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\CatalogoPublico.Checks.runtimeconfig.json
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\CatalogoPublico.Checks.dll
+C:\Users\coy81\Desktop\SISTEMA\SISTEMA\BACKEND\.artifacts\ia-marcas-CatalogoPublico.Checks\CatalogoPublico.Checks.pdb
