@@ -14,7 +14,11 @@ public class CrearCuentaDto
     [Required, StringLength(50)]
     public required string usuario { get; set; }
     [EmailAddress, StringLength(254)]
-    public string? corre_electronico { get; set; }
+    public string? corre_electronico
+    {
+        get;
+        set => field = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
     [Required, StringLength(25)]
     public required string telefono { get; set; }
     [Required, MinLength(8), BCryptPassword]

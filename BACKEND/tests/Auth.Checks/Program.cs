@@ -31,6 +31,8 @@ builder.Logging.ClearProviders();
 builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioListarService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<CompraService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Gastos.CrearGastosService>();
@@ -70,7 +72,7 @@ builder.Services.Configure<JwtSettings>(o =>
     o.Key = key; o.Issuer = "checks"; o.Audience = "checks"; o.DurationInMinutes = 720;
 });
 builder.Services.AddControllers().AddApplicationPart(typeof(LoginController).Assembly);
-builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
+builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
@@ -294,11 +296,29 @@ try
             json.RootElement.GetProperty("fecha_Creacion").GetDateTime().Year == DateTime.Now.Year, "Estado y fecha definidos por servidor");
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
     {
-        Check((await client.PostAsJsonAsync(route, Account(phone: "3000", email: "otro@example.com"))).StatusCode == HttpStatusCode.BadRequest, "Usuario duplicado: " + route);
-        Check((await client.PostAsJsonAsync(route, Account(username: "otro", phone: "3000"))).StatusCode == HttpStatusCode.BadRequest, "Correo duplicado: " + route);
-        Check((await client.PostAsJsonAsync(route, Account(username: "otro", email: "otro@example.com"))).StatusCode == HttpStatusCode.BadRequest, "Teléfono duplicado: " + route);
+        Check((await client.PostAsJsonAsync(route, Account(phone: "3000", email: "otro@example.com"))).StatusCode == HttpStatusCode.Conflict, "Usuario duplicado: " + route);
+        Check((await client.PostAsJsonAsync(route, Account(username: "otro", phone: "3000"))).StatusCode == HttpStatusCode.Conflict, "Correo duplicado: " + route);
+        Check((await client.PostAsJsonAsync(route, Account(username: "otro", email: "otro@example.com"))).StatusCode == HttpStatusCode.Conflict, "Teléfono duplicado: " + route);
     }
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account("segundo", "3000", "segundo@example.com"))).IsSuccessStatusCode, "Alias de alta funcional");
+    Check((await client.PostAsJsonAsync("/api/Usuario", new {
+        id_rol = 2, nombre = "Sin", apellido = "Correo", usuario = "sin-correo-1", telefono = "4001", password = "Password123"
+    })).IsSuccessStatusCode, "Alta sin correo opcional");
+    Check((await client.PostAsJsonAsync("/api/Usuario", new {
+        id_rol = 2, nombre = "Sin", apellido = "Correo", usuario = "sin-correo-2", telefono = "4002", corre_electronico = "", password = "Password123"
+    })).IsSuccessStatusCode, "Segunda alta con correo vacío convertido a null");
+    Check((await client.PostAsJsonAsync("/api/Usuario", Account("telefono-invalido", "abc", "telefono@example.com"))).StatusCode == HttpStatusCode.BadRequest,
+        "Alta rechaza teléfono sin números");
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var nuevo = await db.usuarios.SingleAsync(u => u.usuario == "sin-correo-2");
+        Check(nuevo.correo is null && BCrypt.Net.BCrypt.Verify("Password123", nuevo.password), "Correo vacío normalizado y contraseña hasheada");
+        var evento = await db.AuditoriaEventos.Include(e => e.Detalles).SingleAsync(e => e.Accion == "USUARIO_CREADO" && e.IdRegistro == nuevo.id_usuario.ToString());
+        Check(evento.IdUsuario == 1 && evento.UsuarioResponsable == "admin", "Auditoría de alta identifica al administrador responsable");
+        var detalles = JsonSerializer.Serialize(evento.Detalles);
+        Check(!detalles.Contains("Password123") && !detalles.Contains(nuevo.password), "Auditoría de alta sin contraseña ni hash");
+    }
     var employeeToken = await Token(await Login("empleado", "Password123"));
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
     Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=1")).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede consultar resumen financiero");

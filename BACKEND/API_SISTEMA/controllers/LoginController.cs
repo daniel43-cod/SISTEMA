@@ -34,9 +34,10 @@ public class LoginController(LoginService loginService, UsuarioService usuarioSe
 
     [Authorize(Roles = Roles.Administrador)]
     [HttpPost("crear")]
-    public async Task<IActionResult> Crear(CrearCuentaDto dto)
+    [EnableRateLimiting("crear-usuarios")]
+    public async Task<IActionResult> Crear(CrearCuentaDto dto, CancellationToken cancellationToken)
     {
-        await usuarioService.CrearUsuario(dto);
+        await usuarioService.CrearUsuario(dto, cancellationToken);
         return Ok(new { mensaje = "Usuario creado correctamente." });
     }
 }
