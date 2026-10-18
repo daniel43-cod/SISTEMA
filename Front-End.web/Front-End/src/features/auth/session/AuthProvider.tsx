@@ -1,4 +1,5 @@
-﻿import { requestJson } from '../../../shared/api/httpClient'
+import { clearCatalogLookupCache } from '../../../shared/cache/catalogLookupCache'
+import { requestJson } from '../../../shared/api/httpClient'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AuthContext } from './AuthContext'
@@ -11,6 +12,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const currentSession = useRef<StaffSession | null>(null)
   const logout = useCallback((message = '') => {
     const previous = currentSession.current
+    clearCatalogLookupCache()
     currentSession.current = null
     if (!message && previous && previous.expiresAt > Date.now()) {
       void requestJson('/Login/cerrar-sesion', { method: 'POST', token: previous.token }).catch(() => {
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout('Tu sesión venció. Inicia sesión nuevamente.')
       return
     }
+    clearCatalogLookupCache()
     setNotice('')
     currentSession.current = next
     setSession(next)

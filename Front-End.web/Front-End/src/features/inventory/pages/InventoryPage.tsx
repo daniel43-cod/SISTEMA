@@ -1,3 +1,7 @@
+import { InventoryLookup } from '../components/InventoryLookup'
+import { loadCatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
+import type { CatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
+import { clearCatalogLookupCache } from '../../../shared/cache/catalogLookupCache'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -12,6 +16,13 @@ const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ
 
 export function InventoryPage() {
   const { session, logout } = useAuth()
+  const [categoryQuery, setCategoryQuery] = useState('')
+  const [brandQuery, setBrandQuery] = useState('')
+  const [categoryId, setCategoryId] = useState<number>()
+  const [brandId, setBrandId] = useState<number>()
+  const [lookups, setLookups] = useState<CatalogLookups>({ categories: [], brands: [] })
+  const [lookupLoading, setLookupLoading] = useState(true)
+  const [lookupError, setLookupError] = useState('')
   const [data, setData] = useState<InventoryPageData | null>(null)
   const [page, setPage] = useState(1)
   const [query, setQuery] = useState('')
@@ -27,9 +38,27 @@ export function InventoryPage() {
 
   useEffect(() => {
     if (!token || !allowed) return
+    let active = true
+    async function load() {
+      setLookupLoading(true); setLookupError('')
+      try {
+        const result = await loadCatalogLookups(token!)
+        if (active) setLookups(result)
+      } catch (failure) {
+        if (!active) return
+        if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
+        else setLookupError(failure instanceof Error ? failure.message : 'No se pudieron cargar categorías y marcas.')
+      } finally { if (active) setLookupLoading(false) }
+    }
+    void load()
+    return () => { active = false }
+  }, [token, allowed, revision, logout])
+
+  useEffect(() => {
+    if (!token || !allowed) return
     const controller = new AbortController()
     setLoading(true); setError(''); setData(null)
-    void listInventory(page, text, token, controller.signal).then(result => {
+    void listInventory(page, text, token, controller.signal, { idCategoria: categoryId, idMarca: brandId }).then(result => {
       if (!controller.signal.aborted) setData(result)
     }).catch(failure => {
       if (controller.signal.aborted) return
@@ -37,7 +66,14 @@ export function InventoryPage() {
       else setError(failure instanceof Error ? failure.message : 'No se pudo cargar el inventario.')
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [token, allowed, page, text, revision, logout])
+  }, [token, allowed, page, text, categoryId, brandId, revision, logout])
+
+  function activateSearch(mode: 'product' | 'category' | 'brand') {
+    setPage(1)
+    if (mode !== 'product') { setQuery(''); setText(''); setSuggestionsOpen(false) }
+    if (mode !== 'category') { setCategoryId(undefined); setCategoryQuery('') }
+    if (mode !== 'brand') { setBrandId(undefined); setBrandQuery('') }
+  }
 
   if (!allowed) return null
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 25))
@@ -46,14 +82,17 @@ export function InventoryPage() {
       <div className="inventory-search" onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setSuggestionsOpen(false)
       }}>
-      <label htmlFor="inventory-search" className="sr-only">Buscar producto por nombre</label>
+      <label htmlFor="inventory-search" >Producto</label>
         <input id="inventory-search" type="search" maxLength={100} value={query}
           placeholder="Buscar producto…" aria-expanded={suggestionsOpen && query.trim().length >= 3}
           aria-controls="inventory-suggestions" onFocus={() => setSuggestionsOpen(true)}
-          onKeyDown={event => { if (event.key === 'Escape') setSuggestionsOpen(false) }}
+          onKeyDown={event => {
+            if (event.key === 'Escape') setSuggestionsOpen(false)
+            if (event.key === 'Enter') { activateSearch('product'); setText(query.trim()); setPage(1); setSuggestionsOpen(false) }
+          }}
           onChange={event => {
             const value = event.target.value
-            setQuery(value); setSuggestionsOpen(true)
+            activateSearch('product'); setQuery(value); setSuggestionsOpen(true)
             if (!value.trim()) { setText(''); setPage(1) }
           }} />
       {suggestionsOpen && query.trim().length >= 3 && <div id="inventory-suggestions" className="inventory-suggestions">
@@ -61,13 +100,21 @@ export function InventoryPage() {
           : names.error ? <p role="alert">{names.error}</p>
           : suggestions.length ? <ul aria-label="Productos sugeridos">{suggestions.map(item => <li key={item.idProducto}>
             <button type="button" onClick={() => {
-              setQuery(item.nombre); setText(item.nombre); setPage(1); setSuggestionsOpen(false)
+              activateSearch('product'); setQuery(item.nombre); setText(item.nombre); setPage(1); setSuggestionsOpen(false)
             }}>{item.nombre}</button>
           </li>)}</ul> : <p role="status">No se encontraron productos.</p>}
       </div>}
       </div>
-      <RefreshButton loading={loading || names.loading} label="Actualizar inventario"
-        onClick={() => setRevision(value => value + 1)} />
+      <InventoryLookup label="Categoría" items={lookups.categories.map(item => ({ id: item.idCategoria, nombre: item.nombre }))}
+        query={categoryQuery} onQueryChange={value => { activateSearch('category'); setCategoryQuery(value) }}
+        selected={categoryId} loading={lookupLoading} error={lookupError}
+        onSelect={id => { setCategoryId(id); setPage(1) }} />
+      <InventoryLookup label="Marca" items={lookups.brands.map(item => ({ id: item.idMarca, nombre: item.nombre }))}
+        query={brandQuery} onQueryChange={value => { activateSearch('brand'); setBrandQuery(value) }}
+        selected={brandId} loading={lookupLoading} error={lookupError}
+        onSelect={id => { setBrandId(id); setPage(1) }} />
+      <RefreshButton loading={loading || names.loading || lookupLoading} label="Actualizar inventario"
+        onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} />
     </div>
     {loading ? <p role="status">Cargando inventario…</p> : error ? <div role="alert">
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>

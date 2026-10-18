@@ -1,4 +1,5 @@
-﻿import { requestJson } from '../../../shared/api/httpClient.ts'
+import { clearCatalogLookupCache } from '../../../shared/cache/catalogLookupCache.ts'
+import { requestJson } from '../../../shared/api/httpClient.ts'
 import { ApiError } from '../../../shared/api/ApiError.ts'
 import type { CreateBrandRequest, BrandResponse } from '../types/brand.ts'
 
@@ -40,6 +41,7 @@ async function saveBrand(data: CreateBrandRequest, token: string, signal?: Abort
     const result = await requestJson(id ? '/Marcas/' + id + (data.imagen ? '/con-imagen' : '') : data.imagen ? '/Marcas/con-imagen' : '/Marcas', {
       method: id ? 'PUT' : 'POST', body, token, signal, validationMessages: true,
     })
+    clearCatalogLookupCache()
     const row = result as Partial<BrandResponse> | null
     if (!row || !Number.isSafeInteger(row.idMarca) || row.idMarca! <= 0 ||
         typeof row.nombre !== 'string' || !row.nombre.trim() ||
@@ -81,6 +83,7 @@ export async function listBrands(token: string, signal?: AbortSignal, administra
 export async function changeBrandState(id: number, state: boolean, token: string, signal?: AbortSignal) {
   if (!Number.isSafeInteger(id) || id <= 0 || typeof state !== 'boolean') throw new ApiError('Estado o marca inválidos.', 400)
   const response = await requestJson(`/Marcas/${id}/estado`, { method: 'PATCH', body: { estado: state }, token, signal })
+  clearCatalogLookupCache()
   const row = response as Partial<BrandResponse> | null
   if (!row || row.idMarca !== id || row.estado !== state || typeof row.nombre !== 'string' || !row.nombre.trim() ||
       !Number.isSafeInteger(row.idCategoria) || row.idCategoria! <= 0 ||

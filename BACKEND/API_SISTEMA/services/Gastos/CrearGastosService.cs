@@ -17,8 +17,7 @@ namespace API_SISTEMA.Services.Gastos
             _movimientoCajaService = movimientoCajaService;
         }
 
-        public async Task<int> CrearGasto(IngresarGastoDto gastoDto, int idUsuario,
-            CancellationToken cancellationToken = default)
+        public async Task<int> CrearGasto(IngresarGastoDto gastoDto, int idUsuario,CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (gastoDto is null) throw new ValidationException("Los datos del gasto son obligatorios.");

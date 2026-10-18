@@ -1,4 +1,5 @@
-﻿import { requestJson } from '../../../shared/api/httpClient.ts'
+import { clearCatalogLookupCache } from '../../../shared/cache/catalogLookupCache.ts'
+import { requestJson } from '../../../shared/api/httpClient.ts'
 import { ApiError } from '../../../shared/api/ApiError.ts'
 import { parseCategory, validateCategoryName } from '../schemas/categorySchema.ts'
 import type { CreateCategoryRequest } from '../types/category.ts'
@@ -34,6 +35,7 @@ async function saveCategory(data: CreateCategoryRequest & { quitarImagen?: boole
   }
   try {
     const response = await requestJson('/Categoria' + (id ? '/' + id : '') + (data.imagen ? '/con-imagen' : ''), { method: id ? 'PUT' : 'POST', body, token, signal })
+    clearCatalogLookupCache()
     try { const result = parseCategory(response); if (id && result.idCategoria !== id) throw new Error(); return result }
     catch { throw new ApiError('No se pudo confirmar el registro.') }
   } catch (error) {
@@ -62,6 +64,7 @@ export async function listCategories(token: string, signal?: AbortSignal, admini
 export async function changeCategoryState(id: number, state: boolean, token: string, signal?: AbortSignal) {
   if (!Number.isSafeInteger(id) || id <= 0 || typeof state !== 'boolean') throw new ApiError('Estado o categoría inválidos.', 400)
   const response = await requestJson(`/Categoria/${id}/estado`, { method: 'PATCH', body: { estado: state }, token, signal })
+  clearCatalogLookupCache()
   try {
     const updated = parseCategory(response)
     if (updated.idCategoria !== id || updated.estado !== state) throw new Error()

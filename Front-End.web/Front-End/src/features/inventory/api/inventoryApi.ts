@@ -11,9 +11,11 @@ export type InventoryPageData = {
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
-export async function listInventory(page: number, text: string, token: string, signal: AbortSignal): Promise<InventoryPageData> {
+export async function listInventory(page: number, text: string, token: string, signal: AbortSignal, filters: { idCategoria?: number; idMarca?: number } = {}): Promise<InventoryPageData> {
   const params = new URLSearchParams({ pagina: String(page), tamanoPagina: '25' })
   if (text.trim()) params.set('texto', text.trim())
+  if (filters.idCategoria) params.set('idCategoria', String(filters.idCategoria))
+  if (filters.idMarca) params.set('idMarca', String(filters.idMarca))
   const result = await requestJson(`/Productos/inventario?${params}`, { token, signal })
   if (!record(result) || result.pagina !== page || result.tamanoPagina !== 25 ||
     !Number.isSafeInteger(result.total) || Number(result.total) < 0 || !Array.isArray(result.items) ||

@@ -21,3 +21,8 @@
 .inventory-barcode { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .inventory-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: .875rem; }
 @media (max-width: 600px) { .inventory-page { padding: 16px; } .inventory-page th, .inventory-page td { padding: 12px; } }
+
+.inventory-toolbar .inventory-search { flex: 1 1 200px; }
+.inventory-search > label { display: block; margin-bottom: 8px; }
+.inventory-suggestions li button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -3px; }
+@media (max-width: 600px) { .inventory-toolbar .inventory-search { flex-basis: 100%; } }
