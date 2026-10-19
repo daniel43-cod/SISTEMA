@@ -4,11 +4,10 @@ using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Caja;
 using API_SISTEMA.Models;
 using API_SISTEMA.Services.Auditoria;
-using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace API_SISTEMA.Services;
+namespace API_SISTEMA.Services.Caja;
 
 public class CajaService(SistemaDbContext context, CatalogoAuditoriaService auditoria, CajaSaldoService saldo)
 {

@@ -47,3 +47,29 @@ export async function createUser(token: string, body: NewUser): Promise<StaffUse
     throw failure
   }
 }
+
+export async function updateUser(token: string, id: number, body: Omit<NewUser, 'password'>): Promise<StaffUser> {
+  if (!Number.isSafeInteger(id) || id <= 0) throw new ApiError('Usuario inválido.', 400)
+  try {
+    const result = parseUser(await requestJson(`/Usuario/${id}`, { method: 'PUT', token, body, validationMessages: true }))
+    if (result.id_usuario !== id) throw new ApiError('No se pudo confirmar la edición del usuario.')
+    return result
+  } catch (failure) {
+    if (failure instanceof ApiError && failure.status === 409)
+      throw new ApiError('Otro usuario ya utiliza ese nombre de usuario, correo o teléfono.', 409)
+    if (failure instanceof ApiError && failure.status === 404)
+      throw new ApiError('El usuario ya no existe. Actualiza la lista.', 404)
+    throw failure
+  }
+}
+export async function changeUserState(token: string, id: number, estado: boolean): Promise<StaffUser> {
+  if (!Number.isSafeInteger(id) || id <= 0) throw new ApiError('Usuario inválido.', 400)
+  try {
+    const result = parseUser(await requestJson(`/Usuario/${id}/estado`, { method: 'PATCH', token, body: { estado }, validationMessages: true }))
+    if (result.id_usuario !== id || result.estado !== estado) throw new ApiError('No se pudo confirmar el cambio de estado.')
+    return result
+  } catch (failure) {
+    if (failure instanceof ApiError && failure.status === 404) throw new ApiError('El usuario ya no existe. Actualiza la lista.', 404)
+    throw failure
+  }
+}

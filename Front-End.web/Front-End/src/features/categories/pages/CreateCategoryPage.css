@@ -50,3 +50,18 @@
 .category-state-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .category-state-button:disabled { opacity: .6; cursor: default; }
 @media (max-width: 380px) { .category-list li { flex-wrap: wrap; } .category-row-actions { margin-left: auto; } }
+
+.category-table-scroll { width: 100%; overflow-x: auto; margin-top: 16px; }
+.category-table { width: 100%; border-collapse: collapse; text-align: left; }
+.category-table th, .category-table td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: .9rem; }
+.category-table th { background: #eff8ff; color: #075b96; font-size: .85rem; }
+.category-table th:not(:first-child), .category-table-action { width: 100px; text-align: center; }
+.category-table-name { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.category-table-name strong { overflow-wrap: anywhere; }
+.category-table-name .category-thumbnail { flex-shrink: 0; }
+@media (min-width: 801px) {
+  .staff-shell-products .category-list-card { width: 100%; max-width: none; }
+}
+@media (max-width: 600px) {
+  .category-table { min-width: 440px; }
+}

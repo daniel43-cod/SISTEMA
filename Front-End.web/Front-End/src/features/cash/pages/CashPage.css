@@ -1,4 +1,4 @@
-.cash-panel { width: 100%; max-width: 760px; padding: clamp(16px, 4vw, 28px); background: var(--color-surface); color: var(--color-text); border: 1px solid #e2e8f0; border-radius: 16px; display: grid; gap: 20px; }
+﻿.cash-panel { width: 100%; max-width: 760px; padding: clamp(16px, 4vw, 28px); background: var(--color-surface); color: var(--color-text); border: 1px solid #e2e8f0; border-radius: 16px; display: grid; gap: 20px; }
 .cash-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .cash-heading h2 { font-size: 1.2rem; }
 .cash-form, .cash-form fieldset { display: grid; gap: 20px; min-width: 0; }
@@ -50,3 +50,115 @@
 .cash-movement-table td:nth-child(2) { overflow-wrap: anywhere; }
 .cash-movement-table td:nth-child(3) { min-width: 150px; }
 .cash-movement-table th:last-child, .cash-movement-table td:last-child { text-align: right; white-space: nowrap; }
+/* Apertura del turno: tres datos destacados en una fila en escritorio. */
+.cash-panel { max-width: none; min-width: 0; }
+.cash-opening-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding: 12px 20px;
+  border: 1px solid #c4dff2;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 12px;
+  background: #eff8ff;
+}
+.cash-opening-summary > div { min-width: 0; }
+.cash-opening-summary dt { margin-bottom: 4px; }
+.cash-opening-summary dd { font-size: 1rem; line-height: 1.35; }
+.cash-opening-summary > div:first-child dd { font-size: 1.3rem; color: var(--color-primary); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .cash-opening-summary { grid-template-columns: 1fr; padding: 14px 18px; gap: 12px; }
+}
+
+.cash-heading-title { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.cash-heading-title h2 { order: -1; }
+
+.cash-session-header {
+  position: sticky;
+  top: 88px;
+  z-index: 10;
+  display: grid;
+  gap: 14px;
+  background: #ffffff;
+  padding: 18px 0;
+  border-bottom: 1px solid #c4dff2;
+}
+@media (max-width: 800px) {
+  .cash-session-header { top: 60px; }
+}
+@media (max-height: 600px) {
+  .cash-session-header { position: static; }
+}
+
+/* Datos de apertura inmediatamente debajo del título de Caja. */
+.staff-shell-cash .cash-session-header {
+  position: sticky;
+  padding-top: 0;
+  gap: 0;
+}
+.staff-shell-cash .cash-heading {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  z-index: 1;
+}
+.staff-shell-cash .cash-opening-summary {
+  padding-right: 64px;
+}
+
+/* En escritorio, apertura y resumen permanecen visibles; se desplaza la tabla. */
+@media (min-width: 801px) and (min-height: 701px) {
+  .staff-shell-cash { height: 100dvh; min-height: 0; overflow: hidden; }
+  .staff-shell-cash .staff-workspace { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .staff-shell-cash .staff-header { flex-shrink: 0; }
+  .staff-shell-cash .staff-content {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    margin-block: 0;
+    overflow: hidden;
+    padding-bottom: 20px;
+  }
+  .staff-shell-cash .cash-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .staff-shell-cash .cash-session-header { position: relative; top: auto; flex-shrink: 0; }
+  .staff-shell-cash .cash-movements {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 180px;
+    overflow: hidden;
+  }
+  .staff-shell-cash .cash-movements > h3,
+  .staff-shell-cash .cash-movements > .cash-summary { flex-shrink: 0; }
+  .staff-shell-cash .cash-movements > .cash-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-radius: 10px;
+  }
+  .staff-shell-cash .cash-movement-table-scroll { flex: 1; min-height: 0; max-height: none; overflow: auto; }
+  .staff-shell-cash .cash-close-button,
+  .staff-shell-cash .cash-form { flex-shrink: 0; }
+}
+
+.staff-shell-cash .cash-heading { gap: 8px; }
+.cash-panel .cash-heading .cash-close-button {
+  width: auto;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #b91c1c;
+  background: #ffffff;
+  color: #b91c1c;
+  font-size: .8rem;
+  box-shadow: none;
+}
+.cash-panel .cash-heading .cash-close-button:hover:not(:disabled) { background: #fef2f2; color: #991b1b; }
+.staff-shell-cash .cash-opening-summary { padding-right: 190px; }
+@media (max-width: 760px) {
+  .staff-shell-cash .cash-opening-summary { padding-right: 18px; padding-top: 54px; }
+  .cash-panel .cash-heading .cash-close-button { width: auto; }
+}

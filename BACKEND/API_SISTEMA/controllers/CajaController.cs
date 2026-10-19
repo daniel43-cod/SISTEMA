@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using API_SISTEMA.Dtos.Caja;
-using API_SISTEMA.Services;
+using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

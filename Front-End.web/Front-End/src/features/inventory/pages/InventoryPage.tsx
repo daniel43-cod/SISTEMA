@@ -1,3 +1,4 @@
+﻿import { createPortal } from 'react-dom'
 import { InventoryLookup } from '../components/InventoryLookup'
 import { loadCatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
 import type { CatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
@@ -77,8 +78,9 @@ export function InventoryPage() {
 
   if (!allowed) return null
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 25))
-  return <section className="inventory-page" aria-label="Consulta de inventario" aria-busy={loading}>
-    <div className="inventory-toolbar">
+  const headerTarget = document.getElementById('staff-inventory-search')
+  const toolbar = (
+<div className="inventory-toolbar">
       <div className="inventory-search" onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setSuggestionsOpen(false)
       }}>
@@ -116,6 +118,9 @@ export function InventoryPage() {
       <RefreshButton loading={loading || names.loading || lookupLoading} label="Actualizar inventario"
         onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} />
     </div>
+  )
+  return <section className="inventory-page" aria-label="Consulta de inventario" aria-busy={loading}>
+    {headerTarget ? createPortal(toolbar, headerTarget) : toolbar}
     {loading ? <p role="status">Cargando inventario…</p> : error ? <div role="alert">
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>
     </div> : data && <>

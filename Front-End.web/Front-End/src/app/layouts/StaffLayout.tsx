@@ -1,4 +1,4 @@
-import { UsersPage } from '../../features/users/pages/UsersPage'
+﻿import { UsersPage } from '../../features/users/pages/UsersPage'
 import { ExpensesPage } from '../../features/expenses/pages/ExpensesPage'
 import { PurchasesPage } from '../../features/purchases/pages/PurchasesPage'
 import { InventoryPage } from '../../features/inventory/pages/InventoryPage'
@@ -14,8 +14,9 @@ import './StaffLayout.css'
 
 export function StaffLayout() {
   const { session, logout } = useAuth()
-  const [selected, setSelected] = useState<StaffSection>('inicio')
+  const [selected, setSelected] = useState<StaffSection>('ventas')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cashOpen, setCashOpen] = useState<boolean | null>(null)
   const contentRef = useRef<HTMLElement>(null)
   const [accountOpen, setAccountOpen] = useState(false)
   const accountRef = useRef<HTMLDivElement>(null)
@@ -56,7 +57,7 @@ export function StaffLayout() {
   }
 
   return (
-    <div className={`staff-shell ${current.id === 'productos' ? 'staff-shell-products' : current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : ''}`}>
+    <div className={`staff-shell ${current.id === 'caja' ? 'staff-shell-cash ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">
@@ -89,14 +90,15 @@ export function StaffLayout() {
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="staff-header-brand">
-            <img src={`${import.meta.env.BASE_URL}icono_principal.jpeg`} width="34" height="34" alt="" />
-            <strong>Distribuidora San Antonio</strong>
+
+          <div className="staff-page-heading">
+            <div>{current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
+              <div className="staff-title-row"><h1>{current.label}</h1>{current.id === 'caja' && cashOpen === true && <span className="cash-status is-open" role="status"><span aria-hidden="true">●</span> Caja abierta</span>}</div>
+              {current.id !== 'caja' && current.id !== 'inventario' && <p>{current.description}</p>}
+            </div>
           </div>
-          {current.id === 'inventario' || current.id === 'compras' ? <div className="staff-inventory-heading">
-            <h1>{current.label}</h1>
-            {current.id === 'inventario' && <p>{current.description}</p>}
-          </div> : <div className="staff-header-section"><span className="staff-breadcrumb">Buenos días</span><strong>{current.label}</strong></div>}
+          <div id="staff-inventory-search" hidden={current.id !== 'inventario' || menuOpen} />
+          <div id="staff-product-search" hidden={current.id !== 'productos' || menuOpen} />
           <div className="staff-account" ref={accountRef}
             onBlur={event => {
               if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false)
@@ -124,27 +126,12 @@ export function StaffLayout() {
           </div>
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
-          {current.id !== 'inventario' && current.id !== 'compras' && <div className="staff-page-heading">
-            <div>{current.id !== 'inicio' && current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
-              <h1>{current.id === 'inicio' ? `Bienvenido, ${session.user.name}` : current.label}</h1>
-              {current.id !== 'inicio' && <p>{current.description}</p>}
-            </div>
-          </div>}
-          {current.id === 'inicio' ? <section aria-labelledby="staff-shortcuts-title">
-            <h2 id="staff-shortcuts-title" className="staff-section-title">Accesos rápidos</h2>
-            <div className="staff-shortcuts">
-              {items.filter(item => ['ventas', 'caja', 'reportes'].includes(item.id)).map(item =>
-                <button type="button" className="staff-shortcut" key={item.id} onClick={() => selectSection(item.id)}>
-                  <span className="staff-shortcut-icon"><NavigationIcon section={item.id} /></span>
-                  <strong>{item.label}</strong><span>{item.description}</span>
-                  <span className="staff-shortcut-action">Abrir sección <span aria-hidden="true">→</span></span>
-                </button>)}
-            </div>
-          </section> : current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+
+          {current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>
-            <button type="button" className="staff-text-link" onClick={() => selectSection('inicio')}>Volver al inicio</button>
+            <button type="button" className="staff-text-link" onClick={() => selectSection('ventas')}>Ir a ventas</button>
           </section>}
         </main>
       </div>

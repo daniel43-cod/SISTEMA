@@ -1,5 +1,6 @@
 using API_SISTEMA.Data;
 using API_SISTEMA.Services;
+using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Services.IA;
 using API_SISTEMA.Services.Conversacion;
 using API_SISTEMA.Services.CuentaCliente;
@@ -39,6 +40,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy<string, CompraRateLimitPolicy>("compras");
     options.AddPolicy<string, LoginRateLimitPolicy>("login-interno");
     options.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios");
+    options.AddPolicy<string, UsuarioCrearRateLimitPolicy>("estado-usuarios");
     options.AddPolicy<string, ProductoConsultaRateLimitPolicy>("consulta-productos");
 });
 
@@ -117,6 +119,8 @@ builder.Services.AddScoped<DetalleVentaService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioListarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioEditarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioEstadoService>();
 builder.Services.AddScoped<RolService>();
 builder.Services.AddScoped<RolPermisoService>();
 builder.Services.AddScoped<PermisoService>();

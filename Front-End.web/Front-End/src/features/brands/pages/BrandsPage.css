@@ -42,3 +42,17 @@
 .brand-state-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .brand-state-button:disabled { opacity: .6; cursor: default; }
 @media (max-width: 380px) { .brand-list li { flex-wrap: wrap; } .brand-list .brand-row-actions { margin-left: auto; } }
+
+.brand-table-scroll { width: 100%; overflow-x: auto; margin-top: 16px; }
+.brand-table { width: 100%; border-collapse: collapse; text-align: left; }
+.brand-table th, .brand-table td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: .9rem; overflow-wrap: anywhere; }
+.brand-table th { background: #eff8ff; color: #075b96; font-size: .85rem; }
+.brand-table th:first-child { width: 40%; }
+.brand-table th:nth-child(n+3), .brand-table .brand-table-action { width: 100px; text-align: center; }
+.brand-table .catalog-row-open { border-radius: 0; }
+@media (min-width: 801px) {
+  .staff-shell-products .brand-list-card { width: 100%; max-width: none; }
+}
+@media (max-width: 600px) {
+  .brand-table { min-width: 540px; }
+}

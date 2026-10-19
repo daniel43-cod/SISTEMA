@@ -8,6 +8,7 @@ using API_SISTEMA.Controllers;
 using API_SISTEMA.Data;
 using API_SISTEMA.Models;
 using API_SISTEMA.Services;
+using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Services.Productos;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,8 @@ builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioListarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioEditarService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioEstadoService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<CompraService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Gastos.CrearGastosService>();
@@ -72,7 +75,7 @@ builder.Services.Configure<JwtSettings>(o =>
     o.Key = key; o.Issuer = "checks"; o.Audience = "checks"; o.DurationInMinutes = 720;
 });
 builder.Services.AddControllers().AddApplicationPart(typeof(LoginController).Assembly);
-builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
+builder.Services.AddRateLimiter(o => { o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("estado-usuarios"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
@@ -319,6 +322,56 @@ try
         var detalles = JsonSerializer.Serialize(evento.Detalles);
         Check(!detalles.Contains("Password123") && !detalles.Contains(nuevo.password), "Auditoría de alta sin contraseña ni hash");
     }
+    int editId;
+    string originalHash;
+    DateTime originalDate;
+    using (var scope = app.Services.CreateScope())
+    {
+        var original = await scope.ServiceProvider.GetRequiredService<SistemaDbContext>().usuarios.AsNoTracking().SingleAsync(u => u.usuario == "segundo");
+        editId = original.id_usuario; originalHash = original.password; originalDate = original.fecha_Creacion;
+    }
+    object Edit(string username = "segundo-editado", string phone = "3000", int role = 2) => new {
+        id_rol = role, nombre = "Editado", apellido = "Prueba", usuario = username, telefono = phone, corre_electronico = (string?)null
+    };
+    client.DefaultRequestHeaders.Authorization = null;
+    Check((await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit())).StatusCode == HttpStatusCode.Unauthorized, "Edición anónima bloqueada");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    Check((await client.PutAsJsonAsync("/api/Usuario/0", Edit())).StatusCode == HttpStatusCode.BadRequest, "Edición rechaza ID inválido");
+    Check((await client.PutAsJsonAsync("/api/Usuario/2147483647", Edit())).StatusCode == HttpStatusCode.NotFound, "Edición de usuario inexistente devuelve 404");
+    Check((await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit(role: 3))).StatusCode == HttpStatusCode.BadRequest, "Edición rechaza rol cliente");
+    Check((await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit(username: "empleado"))).StatusCode == HttpStatusCode.Conflict, "Edición rechaza usuario duplicado");
+    Check((await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit(phone: "4002"))).StatusCode == HttpStatusCode.Conflict, "Edición rechaza teléfono duplicado");
+    var editResponse = await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit());
+    Check(editResponse.IsSuccessStatusCode && !(await editResponse.Content.ReadAsStringAsync()).Contains("password", StringComparison.OrdinalIgnoreCase), "Edición correcta sin exponer contraseña");
+    Check((await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit())).IsSuccessStatusCode, "Edición sin cambios permite conservar valores únicos propios");
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var updated = await db.usuarios.AsNoTracking().SingleAsync(u => u.id_usuario == editId);
+        Check(updated.correo is null && updated.password == originalHash && updated.fecha_Creacion == originalDate && updated.estado, "Edición conserva contraseña, fecha y estado; permite quitar correo");
+        var events = await db.AuditoriaEventos.Include(e => e.Detalles).Where(e => e.Accion == "USUARIO_EDITADO" && e.IdRegistro == editId.ToString()).ToListAsync();
+        Check(events.Count == 1 && events[0].IdUsuario == 1 && !JsonSerializer.Serialize(events[0].Detalles).Contains(originalHash), "Edición audita responsable sin hash ni eventos por guardar igual");
+    }
+    string oldUserToken;
+    using (var scope = app.Services.CreateScope())
+        oldUserToken = (await scope.ServiceProvider.GetRequiredService<LoginService>().Login(new API_SISTEMA.Dtos.Login.LoginDto { usuario = "segundo-editado", password = "Password123" }))!.token;
+    Check((await client.PatchAsJsonAsync("/api/Usuario/1/estado", new { estado = false })).StatusCode == HttpStatusCode.BadRequest, "Estado impide desactivar la propia cuenta");
+    Check((await client.PatchAsJsonAsync($"/api/Usuario/{editId}/estado", new { })).StatusCode == HttpStatusCode.BadRequest, "Estado faltante no se interpreta como false");
+    Check((await client.PatchAsJsonAsync("/api/Usuario/2147483647/estado", new { estado = false })).StatusCode == HttpStatusCode.NotFound, "Estado de usuario inexistente devuelve 404");
+    var stateResponse = await client.PatchAsJsonAsync($"/api/Usuario/{editId}/estado", new { estado = false });
+    Check(stateResponse.IsSuccessStatusCode, "Desactiva usuario: " + stateResponse.StatusCode + " " + await stateResponse.Content.ReadAsStringAsync());
+    using (var scope = app.Services.CreateScope())
+        Check(await scope.ServiceProvider.GetRequiredService<LoginService>().Login(new API_SISTEMA.Dtos.Login.LoginDto { usuario = "segundo-editado", password = "Password123" }) is null,
+            "Usuario desactivado no inicia sesión");
+    Check((await client.PatchAsJsonAsync($"/api/Usuario/{editId}/estado", new { estado = true })).IsSuccessStatusCode, "Reactiva usuario");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", oldUserToken);
+    Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Reactivar no rehabilita token revocado");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        Check(await db.AuditoriaEventos.CountAsync(e => e.IdRegistro == editId.ToString() && (e.Accion == "USUARIO_ACTIVADO" || e.Accion == "USUARIO_DESACTIVADO") && e.IdUsuario == 1) == 2, "Auditoría de estado identifica al administrador");
+    }
     var employeeToken = await Token(await Login("empleado", "Password123"));
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
     Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=1")).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede consultar resumen financiero");
@@ -326,6 +379,7 @@ try
     Check((await client.PostAsJsonAsync("/api/Caja/cerrar", new { id_sesion_caja = 1, monto_contado = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede cerrar caja");
     Check((await client.PostAsJsonAsync("/api/Compra/pago-compra", new { id_compra = 1, monto = 1 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede registrar pagos de compras");
     Check((await client.PostAsJsonAsync("/api/Login/crear", Account())).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede crear cuentas");
+    Check((await client.PutAsJsonAsync($"/api/Usuario/{editId}", Edit())).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede editar usuarios");
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
     await UpdateAdmin(u => u.estado = false);

@@ -14,7 +14,7 @@ export function CategoryList({ items, loading, error, reload, onEdit, editing, o
   items: CategoryResponse[]; loading: boolean; error: string; reload: () => void
   onEdit?: (item: CategoryResponse) => void; editing: boolean; onStateChange?: (item: CategoryResponse) => void; pending?: boolean
 }) {
-  return <section className="category-card" aria-labelledby="category-list-title" aria-busy={loading || pending}>
+  return <section className="category-card category-list-card" aria-labelledby="category-list-title" aria-busy={loading || pending}>
     <div className="catalog-list-heading">
       <h2 id="category-list-title">Categorías</h2>
       <RefreshButton onClick={reload} loading={loading || pending} label="Actualizar categorías" />
@@ -22,23 +22,22 @@ export function CategoryList({ items, loading, error, reload, onEdit, editing, o
     {loading && <p role="status">Cargando categorías…</p>}
     {error && <p className="category-error" role="alert">{error}</p>}
     {!loading && !error && !items.length && <p>No hay categorías para mostrar.</p>}
-    <ul className="category-list">
-      {items.map(item => <li key={item.idCategoria} className="catalog-clickable-row">
+    <div className="category-table-scroll"><table className="category-table"><thead><tr><th scope="col">Categorías</th><th scope="col">Editar</th><th scope="col">Estado</th></tr></thead><tbody>
+      {items.map(item => <tr key={item.idCategoria}><td className="catalog-clickable-row"><div className="category-table-name">
         <RowDetails name={item.nombre} type="categoría" fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]} image={item.urlImagen ?? null} disabled={editing || loading || pending} />
         <CategoryImage key={item.urlImagen ?? ''} url={item.urlImagen} />
-        <strong>{item.nombre}</strong>
-        <div className="category-row-actions">
+        <strong>{item.nombre}</strong></div></td>
+        <td className="category-table-action">
         {onEdit && <button type="button" className="category-list-action" disabled={!item.estado || editing || loading || pending}
-          aria-label={'Editar ' + item.nombre} onClick={() => onEdit(item)}>Editar</button>}
+          aria-label={'Editar ' + item.nombre} onClick={() => onEdit(item)}>Editar</button>}</td><td className="category-table-action">
         {onStateChange && <button type="button"
           className={`category-state-button ${item.estado ? 'category-state-active' : 'category-state-inactive'}`}
           disabled={editing || loading || pending} aria-pressed={item.estado}
           title={item.estado ? 'Desactivar categoría' : 'Activar categoría'}
           aria-label={`${item.estado ? 'Activo' : 'Inactivo'}: ${item.nombre}. ${item.estado ? 'Desactivar' : 'Activar'} categoría`}
           onClick={() => onStateChange(item)}>{item.estado ? 'Activo' : 'Inactivo'}</button>}
-        </div>
-      </li>)}
-    </ul>
+        </td></tr>)}
+    </tbody></table></div>
   </section>
 }
 

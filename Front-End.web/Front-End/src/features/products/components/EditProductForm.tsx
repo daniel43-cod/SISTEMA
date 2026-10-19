@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
 import { useBrands } from '../../brands/hooks/useBrands'
@@ -66,7 +66,7 @@ export function EditProductForm({ product, onSaved, onCancel, onPending, focusPr
       if (!controller.signal.aborted) { setPending(false); onPending(false) }
     }
   }
-  return <form className="product-form" onSubmit={save} aria-busy={pending}>
+  return <form className="product-form product-edit-form" onSubmit={save} aria-busy={pending}>
     <h3>Editar producto</h3>
     <fieldset className="product-fields" disabled={pending}>
       <label className="field">Nombre<input autoFocus={!focusPresentations} required maxLength={200} value={name} onChange={event => setName(event.target.value)} /></label>

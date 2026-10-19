@@ -12,7 +12,7 @@ public sealed class UsuarioCrearRateLimitPolicy : IRateLimiterPolicy<string>
         var seconds = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retry)
             ? Math.Max(1, (int)Math.Ceiling(retry.TotalSeconds)) : 60;
         context.HttpContext.Response.Headers.RetryAfter = seconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        await context.HttpContext.Response.WriteAsJsonAsync(new { mensaje = "Demasiadas solicitudes de creación de usuarios. Espera antes de reintentar." }, ct);
+        await context.HttpContext.Response.WriteAsJsonAsync(new { mensaje = "Demasiadas solicitudes de administración de usuarios. Espera antes de reintentar." }, ct);
     };
 
     public RateLimitPartition<string> GetPartition(HttpContext context) =>

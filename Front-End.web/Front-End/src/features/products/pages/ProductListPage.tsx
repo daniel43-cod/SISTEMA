@@ -1,4 +1,5 @@
-﻿import '../../../shared/ui/catalog-row.css'
+﻿import { createPortal } from 'react-dom'
+import '../../../shared/ui/catalog-row.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -27,7 +28,7 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
   const [detailError, setDetailError] = useState('')
   const [retryAt, setRetryAt] = useState(0)
   const [now, setNow] = useState(0)
-  const detailPanel = useRef<HTMLElement>(null)
+  const detailPanel = useRef<HTMLDialogElement>(null)
   const trigger = useRef<HTMLButtonElement | null>(null)
   const token = session?.user.role === 'ADMINISTRADOR' ? session.token : undefined
   const waiting = Math.max(0, Math.ceil((retryAt - now) / 1000))
@@ -89,7 +90,17 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
       .finally(() => { if (!controller.signal.aborted) setDetailLoading(false) })
     return () => controller.abort()
   }, [token, report, selected, revision])
-  useEffect(() => { if (selected !== null) detailPanel.current?.focus() }, [selected])
+  useEffect(() => {
+    if (selected === null) return
+    const dialog = detailPanel.current
+    dialog?.showModal()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      dialog?.close()
+      document.body.style.overflow = previousOverflow
+    }
+  }, [selected])
   if (!token) return null
   const busy = loading || waiting > 0 || editing || saving
   function closeDetail() {
@@ -109,37 +120,41 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
       {error && <p role="alert" className="product-error">{error}</p>}
       {data && !data.items.length && <p>No hay productos registrados.</p>}
       {data && <>
-        <ul className="product-list">
-          {data.items.map(product => <li key={product.idProducto} className="catalog-clickable-row">
-            <button className="catalog-row-open" type="button" disabled={busy} aria-label={`Ver detalles de ${product.nombre}`}
-              aria-expanded={selected === product.idProducto} aria-controls="product-detail" title='Ver detalles'
-              onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>
-              </button>
-            <div><strong>{product.nombre}</strong><span>Marca: {product.marca}</span></div>
-            <div className="product-list-actions">
-            <button className="Product-update-button" type="button" disabled={busy}
-              aria-label={`Editar ${product.nombre}`} title="Editar producto"
-              aria-controls="product-detail"
-              onClick={event => {
-                trigger.current = event.currentTarget
-                setNotice('')
-                if (selected !== product.idProducto) setDetail(null)
-                setSelected(product.idProducto)
-                setFocusPresentations(false); setEditing(true)
-              }}>Editar
-            </button>
-
-             
-            </div>
-          </li>)}
-        </ul>
+        <div className="product-table-scroll">
+          <table className="product-table">
+            <thead><tr><th scope="col">Producto</th><th scope="col">Marca</th><th scope="col">Estado</th><th scope="col">Editar</th></tr></thead>
+            <tbody>{data.items.map(product => <tr key={product.idProducto}>
+              <td><button className="product-name-button" type="button" disabled={busy}
+                aria-label={`Ver detalles de ${product.nombre}`} aria-expanded={selected === product.idProducto}
+                aria-controls="product-detail"
+                onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>{product.nombre}</button></td>
+              <td>{product.marca}</td>
+              <td><span className={`product-stock-status ${product.stockUnidades <= 0 ? 'is-empty' : product.stockUnidades <= product.stockMinimo ? 'is-low' : 'is-available'}`}>
+                {product.stockUnidades <= 0 ? 'Sin existencias' : product.stockUnidades <= product.stockMinimo ? 'Stock bajo' : 'Disponible'}
+              </span></td>
+              <td><button className="Product-update-button" type="button" disabled={busy}
+                aria-label={`Editar ${product.nombre}`} aria-controls="product-detail"
+                onClick={event => {
+                  trigger.current = event.currentTarget
+                  setNotice('')
+                  if (selected !== product.idProducto) setDetail(null)
+                  setSelected(product.idProducto)
+                  setFocusPresentations(false); setEditing(true)
+                }}>Editar</button></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
       </>}
     </section>
-    {selected !== null && <section id="product-detail" ref={detailPanel} tabIndex={-1} className="product-card"
+    {selected !== null && createPortal(<dialog id="product-detail" ref={detailPanel} tabIndex={-1} className="product-card product-detail-dialog"
       aria-labelledby="product-detail-title" aria-busy={detailLoading}
-      onKeyDown={event => { if (event.key === 'Escape') closeDetail() }}>
-      <div className="product-list-heading"><h2 id="product-detail-title">Detalles del producto</h2>
-        <button type="button" disabled={saving} onClick={closeDetail}>Cerrar detalles</button></div>
+      onCancel={event => { event.preventDefault(); closeDetail() }}>
+      <div className="product-detail-header"><h2 id="product-detail-title">Detalles del producto</h2>
+        <div className="product-detail-header-actions">{detail && !editing && (<button className="Product-update-button" type="button" disabled={detailLoading || waiting > 0 || saving}
+          aria-label={`Editar ${detail.nombre}`} title="Editar producto"
+          onClick={() => { setNotice(''); setFocusPresentations(false); setEditing(true) }}>Editar
+        </button>)}
+        <button type="button" className="product-detail-close" aria-label="Cerrar detalles" title="Cerrar detalles" disabled={saving} onClick={closeDetail}>×</button></div></div>
       {detailLoading && <p role="status">Cargando detalles…</p>}
       {detailError && <p role="alert" className="product-error">{detailError}</p>}
       {detailError && <button type="button" disabled={waiting > 0} onClick={() => setRevision(value => value + 1)}>Reintentar</button>}
@@ -148,34 +163,34 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
         onCancel={() => { setEditing(false); detailPanel.current?.focus() }}
         onSaved={() => { setEditing(false); setSaving(false); setNotice('Producto actualizado correctamente.'); onProductSaved?.(); setRevision(value => value + 1) }} />}
       {detail && !editing && <>
-                   <button className="Product-update-button" type="button" disabled={detailLoading || waiting > 0 || saving}
-          aria-label={`Editar ${detail.nombre}`} title="Editar producto"
-          onClick={() => { setNotice(''); setFocusPresentations(false); setEditing(true) }}>Editar
-        </button>
-        <h3>{detail.nombre}</h3>
-        <ProductDetailImage key={`${detail.idProducto}:${detail.imagen ?? ""}`} image={detail.imagen} name={detail.nombre} />
+        <div className="product-detail-overview"><div className="product-detail-info"><h3>{detail.nombre}</h3>
+
         <dl className="product-detail-fields">
           <div><dt>Marca</dt><dd>{detail.marca}{!detail.marcaActiva && ' (inactiva)'}</dd></div>
           <div><dt>Categoría</dt><dd>{detail.categoria}{!detail.categoriaActiva && ' (inactiva)'}</dd></div>
           <div><dt>Código de barras</dt><dd>{detail.codigoBarra || 'Sin código'}</dd></div>
           <div><dt>Existencia en unidades</dt><dd>{detail.stockUnidades}</dd></div>
           <div><dt>Existencia minima</dt><dd>{detail.stockMinimo}</dd></div>
-        </dl>
+        </dl></div><ProductDetailImage key={`${detail.idProducto}:${detail.imagen ?? ""}`} image={detail.imagen} name={detail.nombre} /></div>
                 <div className="product-list-heading">
           <h3>Presentaciones</h3>
-          <button type="button" disabled={detailLoading || saving || waiting > 0}
-            onClick={() => { setNotice(''); setFocusPresentations(true); setEditing(true) }}>Editar presentaciones</button>
+          
         </div>
         {!detail.presentaciones.length && <p>Este producto no tiene presentaciones.</p>}
-        <ul className="product-detail-presentations">
-          {detail.presentaciones.map(item => <li key={item.idProductoPresentacion}>
-            <strong>{item.descripcion || 'Sin descripción'}</strong>
-            <span>{item.unidadesEquivalentes} unidades · {money.format(item.precio)}</span>
-            <span>{item.activa && item.presentacionActiva ? 'Activa' : 'Inactiva'} · Disponibles: {item.presentacionesDisponibles}</span>
-          </li>)}
-        </ul>
+        {detail.presentaciones.length > 0 && <div className="product-presentations-table-scroll">
+          <table className="product-presentations-table">
+            <thead><tr><th scope="col">Presentación</th><th scope="col">Unidades</th><th scope="col">Precio</th><th scope="col">Disponibles</th><th scope="col">Estado</th></tr></thead>
+            <tbody>{detail.presentaciones.map(item => <tr key={item.idProductoPresentacion}>
+              <td><strong>{item.descripcion || 'Sin descripción'}</strong></td>
+              <td>{item.unidadesEquivalentes}</td>
+              <td>{money.format(item.precio)}</td>
+              <td>{item.presentacionesDisponibles}</td>
+              <td><span className={`product-stock-status ${item.activa && item.presentacionActiva ? 'is-available' : 'is-empty'}`}>{item.activa && item.presentacionActiva ? 'Activa' : 'Inactiva'}</span></td>
+            </tr>)}</tbody>
+          </table>
+        </div>}
       </>}
-    </section>}
+    </dialog>, document.body)}
   </div>
 }
 

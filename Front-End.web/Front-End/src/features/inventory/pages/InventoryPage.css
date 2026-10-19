@@ -26,3 +26,11 @@
 .inventory-search > label { display: block; margin-bottom: 8px; }
 .inventory-suggestions li button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -3px; }
 @media (max-width: 600px) { .inventory-toolbar .inventory-search { flex-basis: 100%; } }
+
+/* Encabezado consistente con la tabla de presentaciones del producto. */
+.inventory-page th {
+  background: #eff8ff;
+  color: #075b96;
+  font-weight: 700;
+  border-bottom: 1px solid #c4dff2;
+}

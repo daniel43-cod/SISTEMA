@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
 import { Input } from '../../../shared/ui/Input'
@@ -9,7 +9,7 @@ import { loadCash, loadCashSummary, openCash, closeCash, parseOpeningAmount } fr
 import type { AvailableCash, CashSession, CashClosing, CashSummary } from '../api/cashApi'
 import './CashPage.css'
 
-export function CashPage() {
+export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | null) => void }) {
   const { session } = useAuth()
   const [current, setCurrent] = useState<CashSession | null>(null)
   const [summary, setSummary] = useState<CashSummary | null>(null)
@@ -52,6 +52,10 @@ export function CashPage() {
     })
     return () => controller.abort()
   }, [token, isAdmin, version])
+
+  useEffect(() => {
+    onOpenChange?.(phase === 'ready' ? current !== null : null)
+  }, [current, phase, onOpenChange])
 
   const currentId = current?.id_sesion_caja
   useEffect(() => {
@@ -137,11 +141,21 @@ export function CashPage() {
   }
 
   if (!isAdmin) return <p>No tienes permiso para administrar la caja.</p>
-  return <section className="cash-panel" aria-labelledby="cash-title" aria-busy={phase === 'loading' || saving}>
+  return <section className="cash-panel" aria-label="Caja" aria-busy={phase === 'loading' || saving}>
+    <header className="cash-session-header">
     <div className="cash-heading">
-      <h2 id="cash-title">Sesión de caja</h2>
+
+      {current && phase === 'ready' && !closing && <Button className="cash-close-button" onClick={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}>Cerrar caja</Button>}
       <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }} />
     </div>
+    {current && phase === 'ready' && (
+        <dl className="cash-summary cash-opening-summary">
+          <div><dt>Monto inicial</dt><dd>{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(current.monto_inicial)}</dd></div>
+          <div><dt>Abierta por</dt><dd>{current.usuario_apertura}</dd></div>
+          <div><dt>Fecha de apertura</dt><dd>{new Date(current.fecha_apertura).toLocaleString('es-GT')}</dd></div>
+        </dl>
+    )}
+    </header>
     {notice && <p className="cash-success" role="status">{notice}</p>}
     {result && <section className="cash-closing-result" aria-labelledby="cash-result-title">
       <h3 id="cash-result-title">Resultado del cierre · turno {result.id_sesion_caja}</h3>
@@ -157,14 +171,7 @@ export function CashPage() {
     {phase === 'loading' ? <p role="status">Consultando caja…</p> : phase === 'error' ?
       <Button onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }}>Volver a consultar</Button> :
       current ? <>
-        <p className="cash-status is-open"><span aria-hidden="true">●</span> Caja abierta</p>
-        <dl className="cash-summary">
-          <div><dt>Caja</dt><dd>{available.find(item => item.idCaja === current.id_caja)?.nombre ?? 'Caja del turno actual'}</dd></div>
-          <div><dt>Monto inicial</dt><dd>{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(current.monto_inicial)}</dd></div>
-          <div><dt>Abierta por</dt><dd>{current.usuario_apertura}</dd></div>
-          <div><dt>Fecha de apertura</dt><dd>{new Date(current.fecha_apertura).toLocaleString('es-GT')}</dd></div>
-        </dl>
-        <p className="cash-hint">Esta caja está disponible para las operaciones del equipo.</p>
+
         <section className="cash-movements" aria-labelledby="cash-movements-title">
           <h3 id="cash-movements-title">Movimientos del turno</h3>
           {summaryError ? <p className="cash-error" role="alert">{summaryError} Usa actualizar para volver a consultar.</p> :
@@ -207,7 +214,7 @@ export function CashPage() {
                 </div>}
             </>}
         </section>
-        {!closing ? <Button className="cash-close-button" onClick={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}>Cerrar caja</Button> :
+        {closing &&
           <form className="cash-form cash-closing-form" onSubmit={reviewClosing}>
             <h3>Cierre del turno</h3>
             <p className="cash-hint">Cuenta el efectivo disponible. Al confirmar, se cerrará la caja para todo el equipo.</p>

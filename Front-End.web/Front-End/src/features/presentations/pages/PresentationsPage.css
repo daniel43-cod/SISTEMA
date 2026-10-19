@@ -33,3 +33,8 @@
 .presentation-state-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
 .presentation-state-button:disabled { opacity: .6; cursor: default; }
 
+
+@media (min-width: 801px) {
+  .staff-shell-products .presentations-page { width: 100%; }
+  .staff-shell-products .presentations-page > .presentation-card:not(.catalog-editor) { max-width: none; flex-basis: 100%; }
+}
