@@ -1,3 +1,4 @@
+﻿import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -36,7 +37,7 @@ export function PurchasesPage() {
   const [open, setOpen] = useState(false)
   const editor = useRef<HTMLElement>(null)
   const add = useRef<HTMLButtonElement>(null)
-  useEffect(() => { if (open) editor.current?.focus() }, [open])
+  useEffect(() => { if (open) { editor.current?.focus({ preventScroll: true }); editor.current?.scrollIntoView({ block: 'nearest' }) } }, [open])
   function closeEditor() {
     setOpen(false)
     requestAnimationFrame(() => add.current?.focus())
@@ -92,10 +93,10 @@ export function PurchasesPage() {
       }
     } finally { busy.current = false; setSaving(false) }
   }
-  return <div className="purchases-page">
+  return <div className={`purchases-page ${open ? 'purchases-page-editing' : ''}`}>
     <div className="purchase-toolbar"><p role="status">{loading ? 'Consultando caja y compras…'
       : error ? 'No se pudo verificar la caja.' : cashOpen ? 'Caja abierta' : 'Abre la caja para registrar compras o abonos.'}</p>
-      <button type="button" disabled={saving || loading} onClick={() => setRevision(v => v + 1)}>Actualizar</button></div>
+    </div>
     {error && <p role="alert" className="purchase-error">{error}</p>}
     {result && <section className="purchase-success" role="status">
       <h2>Compra #{result.id_compra} registrada</h2>
@@ -103,7 +104,7 @@ export function PurchasesPage() {
       <ul>{result.productos.map(p => <li key={p.idProducto}>{products.find(row => row.idProducto === p.idProducto)?.nombre ?? `Producto #${p.idProducto}`}
         : {p.stock} unidades · Costo promedio: {p.precioPromedioCompra.toFixed(6)}</li>)}</ul>
     </section>}
-    {open && <section ref={editor} tabIndex={-1} className="purchase-panel" aria-labelledby="new-purchase-title">
+    {open && <section ref={editor} tabIndex={-1} className="purchase-panel purchase-editor-panel" aria-labelledby="new-purchase-title">
       <div className="purchase-panel-heading">
         <h2 id="new-purchase-title">Registrar compra</h2>
         <button type="button" aria-label="Cerrar formulario" title="Cerrar formulario" disabled={saving}
@@ -135,12 +136,11 @@ export function PurchasesPage() {
                 }
               }} />)}</tbody>
           </table></div>
-          <div className="purchase-summary">
+          <div className="purchase-summary purchase-form-footer">
             <p>Total <strong>{money.format(totalCents / 100)}</strong></p>
             <label>Pago inicial (Q)<input inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value)} required /></label>
-            <p>Saldo pendiente <strong>{money.format(Math.max(0, totalCents - paymentCents) / 100)}</strong></p>
+            <p>Saldo pendiente <strong>{money.format(Math.max(0, totalCents - paymentCents) / 100)}</strong></p> <button className="purchase-primary" type="submit" disabled={!lines.some(line => line.idProducto > 0) || !suppliers.length}>{saving ? 'Registrando…' : 'Registrar compra'}</button>
           </div>
-          <button className="purchase-primary" type="submit" disabled={!lines.some(line => line.idProducto > 0) || !suppliers.length}>{saving ? 'Registrando…' : 'Registrar compra'}</button>
         </fieldset>
       </form>
       {formError && <p role="alert" className="purchase-error">{formError}</p>}
@@ -149,15 +149,17 @@ export function PurchasesPage() {
       </button>}
     </section>}
     {(!open || uncertain) && <section className="purchase-panel" aria-labelledby="purchase-history-title">
-      <h2 id="purchase-history-title">Historial de compras</h2>
+      <div className="purchase-panel-heading purchase-history-heading">
+        <h2 id="purchase-history-title">Historial de compras</h2>
+        <RefreshButton label="Actualizar historial de compras" loading={saving || loading} onClick={() => setRevision(v => v + 1)} />
+      </div>
       {loading ? <p role="status">Cargando compras…</p> : error ? <p>Actualiza para consultar el historial.</p>
         : !purchases.length ? <p>No hay compras en esta página.</p> : <div className="purchase-table-scroll"><table>
-          <thead><tr><th>Compra / Fecha</th><th>Proveedor</th><th>Total</th><th>Saldo</th><th>Estado</th><th /></tr></thead>
-          <tbody>{purchases.map(p => <tr key={p.id_compra}>
-            <td>#{p.id_compra}<small>{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</small></td>
+          <thead><tr><th scope="col">Distribuidor</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Fecha y hora</th></tr></thead>
+          <tbody>{purchases.map(p => <tr key={p.id_compra} className="purchase-history-row" tabIndex={saving ? -1 : 0} aria-label={`Ver compra de ${p.nombre_proveedor}`} onClick={() => { if (!saving) setSelected(p) }} onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(p) } }}>
             <td>{p.nombre_proveedor}</td><td>{money.format(p.total_compra)}</td>
-            <td>{money.format(p.saldo_pendiente)}</td><td>{p.descripcion_estado_compra}</td>
-            <td><button type="button" disabled={saving} onClick={() => setSelected(p)}>Ver detalle</button></td>
+            <td className={p.saldo_pendiente > 0 ? 'purchase-balance-pending' : undefined}>{money.format(p.saldo_pendiente)}</td><td>{p.descripcion_estado_compra}</td>
+            <td><time dateTime={p.fecha_ingreso}>{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</time></td>
           </tr>)}</tbody>
         </table></div>}
       <nav className="purchase-pagination" aria-label="Páginas de compras">

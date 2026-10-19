@@ -179,3 +179,9 @@
 #staff-inventory-search .inventory-suggestions button { min-height: 44px; padding: 10px 12px; background: #ffffff; color: #263747; cursor: pointer; }
 #staff-inventory-search .inventory-suggestions button:hover { background: #eff8ff; }
 .staff-shell-inventory .staff-content { padding-top: 8px; }
+
+/* Compras desplaza su contenido debajo de una cabecera separada. */
+.staff-shell-purchases { height: 100dvh; min-height: 0; overflow: hidden; }
+.staff-shell-purchases .staff-workspace { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.staff-shell-purchases .staff-header { position: relative; flex-shrink: 0; background: #ffffff; }
+.staff-shell-purchases .staff-content { flex: 1; min-height: 0; width: 100%; margin: 0 auto; overflow-y: auto; padding-top: 16px; }

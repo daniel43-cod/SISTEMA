@@ -1,4 +1,4 @@
-.purchases-page { display: grid; gap: 24px; max-width: 1200px; }
+﻿.purchases-page { display: grid; gap: 24px; max-width: 1200px; }
 .purchase-panel, .purchase-success { padding: 24px; border: 1px solid #e1e7ed; background: white; border-radius: 16px; }
 .purchase-panel h2, .purchase-success h2 { margin-bottom: 12px; font-size: 22px; }
 .purchase-panel p { line-height: 1.6; margin-bottom: 16px; color: #475569; }
@@ -43,3 +43,99 @@
 .purchase-success { border-color: #86c7a3; background: #f0fdf4; }
 .purchase-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 600px) { .purchase-panel, .purchase-success { padding: 16px; } .purchase-summary { padding: 16px; gap: 16px; } }
+
+.purchases-page td.purchase-balance-pending { color: #b45309; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.purchase-history-row { cursor: pointer; }
+.purchase-history-row:hover { background: #eff8ff; }
+.purchase-history-row:focus-visible { outline: 2px solid #075b96; outline-offset: -2px; background: #eff8ff; }
+.purchase-detail-dialog {
+  display: block;
+  width: min(850px, calc(100vw - 32px));
+  max-width: 850px;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 24px;
+  overflow-y: auto;
+  color: #263747;
+  box-shadow: 0 24px 80px #0f172a33;
+}
+.purchase-detail-dialog:not([open]) { display: none; }
+.purchase-detail-dialog::backdrop { background: #0f172a80; }
+
+.purchase-detail-dialog button.purchase-detail-close { min-width: 44px; min-height: 44px; padding: 6px; border: 1px solid #7c8fa1; border-radius: 8px; background: transparent; color: #075b96; font-size: 1.6rem; line-height: 1; }
+
+.purchase-detail-balance { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; margin-top: 20px; border: 1px solid #f3ce94; border-radius: 10px; background: #fff7ed; color: #9a3412; }
+.purchase-detail-balance span { font-size: .9rem; font-weight: 600; }
+.purchase-detail-balance strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.purchase-payment-form { margin-top: 18px; padding: 18px; background: #f8fafc; border: 1px solid #d7e2eb; border-radius: 12px; }
+.purchase-payment-form .purchase-fields { margin: 0; }
+.purchase-payment-form legend { padding-bottom: 14px; font-weight: 650; color: #075b96; }
+.purchase-payment-form input { border-color: #7c8fa1; }
+.purchase-payment-form input::placeholder { color: #64748b; font-weight: 400; font-size: .85rem; }
+
+.purchase-payment-form .purchase-payment-heading { width: 100%; line-height: 1.8; }
+.purchase-payment-balance { display: inline-block; margin-left: 16px; padding: 2px 10px; border-radius: 6px; background: #fff7ed; color: #9a3412; font-size: .9rem; }
+.purchase-payment-balance strong { font-size: 1.2rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+
+.purchase-detail-heading { flex-wrap: nowrap; gap: 12px; margin-bottom: 20px; }
+.purchase-detail-heading h2 { flex: 1; min-width: 0; margin-bottom: 0; overflow-wrap: anywhere; }
+.purchase-detail-reference { color: #526477; font-size: .8rem; white-space: nowrap; }
+@media (max-width: 480px) {
+  .purchase-detail-heading h2 { font-size: 1.15rem; }
+  .purchase-detail-reference { font-size: .75rem; }
+}
+
+.purchase-history-heading { margin-bottom: 16px; }
+.purchase-history-heading h2 { margin-bottom: 0; }
+.purchases-page .purchase-history-heading .refresh-button { padding: 8px; border: 0; background: transparent; color: var(--color-primary); }
+
+.purchase-form-footer {
+  position: sticky;
+  bottom: calc(-1 * clamp(24px, 4vw, 48px));
+  z-index: 10;
+  border: 1px solid #c4dff2;
+  background: #eff8ff;
+  box-shadow: 0 -6px 20px #0f172a14;
+}
+.purchase-form-footer .purchase-primary { margin-left: auto; align-self: center; }
+@media (max-width: 800px) {
+  .purchase-form-footer { bottom: -28px; gap: 12px 20px; padding: 14px; }
+  .purchase-form-footer label { max-width: 160px; }
+  .purchase-form-footer strong { font-size: 1.1rem; }
+}
+
+/* La barra inferior tiene su propio espacio; solo se desplazan las filas. */
+.staff-shell-purchases .staff-content:has(.purchases-page-editing) { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 16px; }
+.purchases-page-editing { display: flex; flex-direction: column; flex: 1; min-height: 0; padding-bottom: 0; gap: 12px; }
+.purchases-page-editing > .purchase-toolbar { flex-shrink: 0; }
+.purchase-editor-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.purchase-editor-panel > .purchase-panel-heading { flex-shrink: 0; }
+.purchase-editor-panel > form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.purchase-editor-panel .purchase-form { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 12px; }
+.purchase-editor-panel .purchase-fields { flex-shrink: 0; margin-block: 8px; }
+.purchase-editor-panel .purchase-table-scroll { flex: 1; min-height: 100px; overflow: auto; scroll-padding-block: 12px; padding-bottom: 12px; }
+.purchase-editor-panel .purchase-table-scroll input { scroll-margin-block: 16px; }
+.purchase-editor-panel .purchase-table-scroll th { position: sticky; top: 0; z-index: 2; }
+.purchase-editor-panel .purchase-form-footer { position: static; flex-shrink: 0; margin: 0; padding: 14px 20px; gap: 12px 24px; box-shadow: none; }
+.purchase-editor-panel > .purchase-error { flex-shrink: 0; max-height: 100px; overflow-y: auto; }
+@media (max-height: 600px), (max-width: 600px) {
+  .purchase-editor-panel { padding: 12px; }
+  .purchase-editor-panel .purchase-form-footer { padding: 10px; gap: 8px 12px; }
+  .purchase-editor-panel .purchase-form-footer strong { font-size: 1rem; }
+  .purchase-editor-panel .purchase-fields { gap: 8px; }
+}
+
+/* Filas compactas al registrar compras. */
+.purchase-editor-panel .purchase-table-scroll th { padding: 8px 10px; }
+.purchase-editor-panel .purchase-table-scroll td { padding: 3px 10px; }
+.purchase-editor-panel .purchase-table-scroll td input { min-height: 36px; padding: 6px 8px; font-size: .9rem; }
+.purchase-editor-panel button.purchase-remove-line { min-height: 36px; min-width: 36px; padding: 6px; }
+@media (pointer: coarse) {
+  .purchase-editor-panel .purchase-table-scroll td input,
+  .purchase-editor-panel button.purchase-remove-line { min-height: 44px; }
+}
+
+.purchase-floating-suggestions { position: fixed; z-index: 100; margin: 0; overflow-y: auto; background: #ffffff; box-shadow: 0 8px 24px #0f172a26; }
+.purchase-floating-suggestions button { min-height: 44px; padding: 10px 12px; background: #ffffff; color: #263747; font: inherit; cursor: pointer; }
+.purchase-floating-suggestions > li[role="status"] { padding: 12px; }

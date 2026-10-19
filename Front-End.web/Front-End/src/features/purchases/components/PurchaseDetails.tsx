@@ -1,3 +1,4 @@
+﻿import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../../shared/api/ApiError'
 import { getPurchaseDetails, payPurchase } from '../api/purchasesApi'
@@ -18,6 +19,15 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
   const [saving, setSaving] = useState(false)
   const [uncertain, setUncertain] = useState(false)
   const busy = useRef(false)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const dialog = dialogRef.current
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    dialog?.showModal()
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { dialog?.close(); document.body.style.overflow = overflow; trigger?.focus() }
+  }, [])
   useEffect(() => {
     const controller = new AbortController()
     async function load() {
@@ -52,10 +62,11 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
       }
     } finally { busy.current = false; setSaving(false) }
   }
-  return <section className="purchase-panel" aria-labelledby="purchase-detail-title">
-    <div className="purchase-panel-heading"><h2 id="purchase-detail-title">Compra #{purchase.id_compra}</h2>
-      <button type="button" disabled={saving} onClick={onClose}>Cerrar detalle</button></div>
-    <p>{purchase.nombre_proveedor} · Saldo: {money.format(purchase.saldo_pendiente)}</p>
+  return createPortal(<dialog ref={dialogRef} className="purchases-page purchase-panel purchase-detail-dialog" aria-labelledby="purchase-detail-title" onCancel={event => { event.preventDefault(); if (!busy.current) onClose() }}>
+    <div className="purchase-panel-heading purchase-detail-heading"><h2 id="purchase-detail-title">{purchase.nombre_proveedor}</h2>
+      <span className="purchase-detail-reference">Compra #{purchase.id_compra}</span>
+      <button type="button" className="purchase-detail-close" aria-label="Cerrar detalle" title="Cerrar detalle" disabled={saving} onClick={onClose}>×</button></div>
+
     {loading && <p role="status">Cargando detalle…</p>}
     {error && <p role="alert" className="purchase-error">{error}</p>}
     {!loading && !items.length && error && <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar detalle</button>}
@@ -64,13 +75,14 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
       <tbody>{items.map(row => <tr key={row.id_detalle_compra}><td>{row.nombre_producto}</td>
         <td>{row.cantidad}</td><td>{money.format(row.subtotal)}</td></tr>)}</tbody>
     </table></div>}
-    {purchase.saldo_pendiente > 0 && <form onSubmit={submit}>
+    {purchase.saldo_pendiente <= 0 && <div className="purchase-detail-balance"><span>Saldo pendiente</span><strong>{money.format(purchase.saldo_pendiente)}</strong></div>}
+    {purchase.saldo_pendiente > 0 && <form className="purchase-payment-form" onSubmit={submit}>
       <fieldset disabled={saving || !canPay || uncertain} className="purchase-fields">
-        <legend>Registrar abono</legend>
-        <label>Monto<input inputMode="decimal" value={payment} onChange={e => setPayment(e.target.value)} required /></label>
-        <label>Observación<input maxLength={100} value={note} onChange={e => setNote(e.target.value)} /></label>
+        <legend className="purchase-payment-heading">Registrar abono <span className="purchase-payment-balance">Saldo: <strong>{money.format(purchase.saldo_pendiente)}</strong></span></legend>
+        <label>Monto<input inputMode="decimal" placeholder="Ej. 250.00" value={payment} onChange={e => setPayment(e.target.value)} required /></label>
+        <label>Observación<input maxLength={100} placeholder="Ej. Abono en efectivo (opcional)" value={note} onChange={e => setNote(e.target.value)} /></label>
         <button className="purchase-primary" type="submit">{saving ? 'Guardando…' : 'Registrar abono'}</button>
       </fieldset>
     </form>}
-  </section>
+  </dialog>, document.body)
 }
