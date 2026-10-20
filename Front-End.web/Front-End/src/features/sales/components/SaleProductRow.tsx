@@ -45,8 +45,7 @@ export function SaleProductRow({ row, options, usedIds, token, disabled, autoFoc
     if (!expanded) return
     function position() {
       if (!input.current || !list.current) return
-      const rect = (barcodeProduct ? barcodeInput.current : input.current)?.getBoundingClientRect()
-      if (!rect) return
+      const rect = input.current?.getBoundingClientRect();
       const viewport = window.visualViewport
       const viewportTop = viewport?.offsetTop ?? 0
       const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight)
@@ -88,6 +87,7 @@ export function SaleProductRow({ row, options, usedIds, token, disabled, autoFoc
       if (!product.presentaciones.some(p => !usedIds.includes(p.id_producto_presentacion)))
         throw new Error('No hay presentaciones disponibles de ese producto para agregar en esta fila.')
       setBarcodeProduct(product); setActive(0); setOpen(true)
+      requestAnimationFrame(() => input.current?.focus())
     } catch (failure) {
       if (!controller.signal.aborted) setError(failure instanceof ApiError && failure.status === 400 ? 'Producto no disponible.'
         : failure instanceof ApiError && failure.status === 404 ? 'Código no encontrado. Busca por nombre o revisa el código.'
@@ -96,7 +96,30 @@ export function SaleProductRow({ row, options, usedIds, token, disabled, autoFoc
       if (request.current === controller) { request.current = null; setPending(false); onPending(false) }
     }
   }
-  return <tr>
+  return <tr className={`sale-line-row${row.selection && lineTotal !== null && !discountError ? ' sale-line-ready' : ''}`}
+    onKeyDownCapture={event => {
+      if (event.nativeEvent.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+          (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return
+      const field = event.target
+      if (!(field instanceof HTMLInputElement) && !(field instanceof HTMLButtonElement)) return
+      const currentRow = event.currentTarget
+      if (field.closest('tr') !== currentRow) return
+      const searchField = field === input.current || field === barcodeInput.current
+      if (searchField && (expanded || (field === input.current && !row.selection && matches.length > 0))) return
+      event.preventDefault()
+      event.stopPropagation()
+      const cellIndex = field.closest('td')?.cellIndex
+      if (cellIndex === undefined) return
+      let adjacent = event.key === 'ArrowDown' ? currentRow.nextElementSibling : currentRow.previousElementSibling
+      while (adjacent instanceof HTMLTableRowElement) {
+        const nextField = adjacent.cells[cellIndex]?.querySelector<HTMLInputElement | HTMLButtonElement>('input:not(:disabled), button:not(:disabled)')
+        if (nextField) {
+          nextField.focus()
+          return
+        }
+        adjacent = event.key === 'ArrowDown' ? adjacent.nextElementSibling : adjacent.previousElementSibling
+      }
+    }}>
     <td className="sale-barcode-cell"><input ref={barcodeInput} type="text" aria-label="Código de barras" autoComplete="off"
       value={row.barcode ?? ''} disabled={disabled} placeholder="Escanea o escribe el código"
       aria-describedby={error ? `${listId}-error` : undefined}
@@ -109,7 +132,7 @@ export function SaleProductRow({ row, options, usedIds, token, disabled, autoFoc
       onKeyDown={event => {
         if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
           event.preventDefault()
-          if (expanded) choose(matches[index])
+          if (expanded || !row.barcode?.trim() || row.selection) input.current?.focus()
           else void barcode()
         }
         if (event.key === 'Escape') { event.preventDefault(); setOpen(false) }

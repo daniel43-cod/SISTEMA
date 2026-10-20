@@ -6,10 +6,11 @@ import type { SaleCustomer, SaleCustomerDetail } from '../api/customersApi'
 type Props = {
   customers: SaleCustomer[]; token: string; disabled: boolean; value: string; formId?: string
   onSelect: (customer: SaleCustomerDetail | null) => void
+  onNext: () => void
   onNameChange: (value: string) => void; onPending: (pending: boolean) => void; onUnauthorized: () => void; onFailure: () => void
 }
 
-export function SaleCustomerPicker({ customers, token, disabled, value, formId, onSelect, onNameChange, onPending, onUnauthorized, onFailure }: Props) {
+export function SaleCustomerPicker({ customers, token, disabled, value, formId, onSelect, onNext, onNameChange, onPending, onUnauthorized, onFailure }: Props) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
   const [pending, setPending] = useState(false)
@@ -63,7 +64,11 @@ export function SaleCustomerPicker({ customers, token, disabled, value, formId, 
             event.preventDefault(); setOpen(true)
             if (matches.length) setActive(value => !open ? (event.key === 'ArrowDown' ? 0 : matches.length - 1) : (Math.min(value, matches.length - 1) + (event.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length)
           }
-          if (event.key === 'Enter') { event.preventDefault(); if (expanded) void choose(matches[index]) }
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            if (expanded) void choose(matches[index])
+            else if (!pending && !disabled) onNext()
+          }
         }} /></label>
     </div>
     {expanded && <ul ref={list} id={listId} role="listbox" className="sale-customer-options" aria-label="Clientes encontrados">

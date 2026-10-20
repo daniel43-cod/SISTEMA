@@ -1,8 +1,11 @@
 ﻿using API_SISTEMA.Services;
 using Microsoft.AspNetCore.Mvc;
+using API_SISTEMA.Utilidades;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API_SISTEMA.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     [Route("api/[controller]")]
     [ApiController]
     public class PermisoController : ControllerBase

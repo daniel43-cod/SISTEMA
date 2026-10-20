@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Ventas;
@@ -15,6 +15,13 @@ int passed = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception(name); passed++; Console.WriteLine("OK " + name); }
 void Reject(Action run, string name) { try { run(); } catch (ValidationException) { Check(true, name); return; } throw new Exception("No rechazado: " + name); }
 Productos Producto() => new() { IdProducto = 1, Nombre = "Prueba", Stock = 100, PrecioPromedioCompra = 100m };
+API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService Auditoria(SistemaDbContext db)
+{
+    var http = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+    http.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+        [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "1")], "checks"));
+    return new(db, new API_SISTEMA.Security.ContextoPeticion(new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = http }));
+}
 ProductoPresentacion Pr() => new() { id_producto_presentacion = 1, id_producto = 1, unidades_equivalentes = 1, precio = 120m };
 Reject(() => VentaReglas.Calcular(Producto(), Pr(), 1, 20m), "No vende al costo con descuento Q20");
 Reject(() => VentaReglas.Calcular(Producto(), Pr(), 1, 21m), "No vende debajo del costo");
@@ -130,7 +137,7 @@ await using (var db = new CheckDb(options)) {
     Check(await db.ventas.CountAsync() == 1 && await db.pagos.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.productos.SingleAsync()).Stock == 99, "Sin duplicar inventario, cobro ni movimiento");
     var precio = await db.producto_presentaciones.SingleAsync(); precio.precio = 130; await db.SaveChangesAsync();
     Check((await new DetalleVentaService(db).ListarDetalleVenta(venta.id_ventas)).Single().precio == 120m, "El detalle conserva el precio original");
-    var abono = new AbonarSaldoVentaService(db, new MovimientoCajaService(db));
+    var abono = new AbonarSaldoVentaService(db, new MovimientoCajaService(db), Auditoria(db));
     await abono.AbonarVenta(new() { id_venta = venta.id_ventas, monto = 51, observacion = "Prueba" }, 1);
     var pagada = await db.ventas.SingleAsync();
     Check(pagada.monto_pagado == 101 && pagada.saldo_pendiente == 0 && pagada.id_estado_venta == 1, "Abono actualiza monto pagado, saldo y estado");
@@ -162,6 +169,71 @@ await using (var db = new CheckDb(options)) {
 }
 var credito = await Sell(Dto());
 Check(credito.saldo_pendiente == credito.total && credito.monto_pagado == 0, "Crédito total permitido sin pago inicial");
+async Task Abonar(int idVenta, decimal monto)
+{
+    await using var db = new CheckDb(options);
+    await new AbonarSaldoVentaService(db, new MovimientoCajaService(db), Auditoria(db)).AbonarVenta(
+        new() { id_venta = idVenta, monto = monto, observacion = "Prueba abonos" }, 1);
+}
+foreach (var monto in new[] { 0m, -1m, 0.001m, credito.total + 1 })
+{
+    try { await Abonar(credito.id_ventas, monto); throw new Exception("Abono inválido aceptado"); }
+    catch (ValidationException) { Check(true, "Abono inválido rechazado: " + monto); }
+}
+try { await Abonar(venta.id_ventas, 1); throw new Exception("Abono a venta pagada aceptado"); }
+catch (ValidationException) { Check(true, "Venta liquidada rechaza nuevos abonos"); }
+try { await Abonar(int.MaxValue, 1); throw new Exception("Venta inexistente aceptada"); }
+catch (KeyNotFoundException) { Check(true, "Abono rechaza venta inexistente"); }
+await using (var db = new CheckDb(options))
+    await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER rechazo_abono BEFORE INSERT ON movimiento_caja BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END;");
+try { await Abonar(credito.id_ventas, 10); throw new Exception("Abono fallido aceptado"); }
+catch (DbUpdateException) { Check(true, "Fallo de movimiento rechaza abono"); }
+await using (var db = new CheckDb(options))
+{
+    var guardada = await db.ventas.SingleAsync(v => v.id_ventas == credito.id_ventas);
+    Check(!await db.pagos.AnyAsync(p => p.id_venta == credito.id_ventas) && guardada.monto_pagado == 0 && guardada.saldo_pendiente == credito.total,
+        "Fallo revierte pago y saldo del abono");
+    await db.Database.ExecuteSqlRawAsync("DROP TRIGGER rechazo_abono;");
+}
+await Abonar(credito.id_ventas, 10);
+await using (var db = new CheckDb(options))
+{
+    var guardada = await db.ventas.SingleAsync(v => v.id_ventas == credito.id_ventas);
+    var pago = await db.pagos.SingleAsync(p => p.id_venta == credito.id_ventas);
+    Check(guardada.monto_pagado == 10 && guardada.saldo_pendiente == credito.total - 10 && guardada.id_estado_venta == 2,
+        "Abono parcial mantiene venta pendiente");
+    Check(await db.movimientocaja.AnyAsync(m => m.id_pago_venta == pago.id_pago && m.id_venta == credito.id_ventas &&
+        m.id_tipo_movimiento == TiposMovimientoCaja.AbonoVenta && m.monto == 10 && m.id_usuario == 1), "Abono registra movimiento vinculado y responsable");
+    var evento = await db.AuditoriaEventos.Include(e => e.Detalles).SingleAsync(e => e.Entidad == "pagos" && e.IdRegistro == pago.id_pago.ToString());
+    Check(evento.Accion == "ABONO_VENTA_REGISTRADO" && evento.IdUsuario == 1 && evento.UsuarioResponsable == "prueba" &&
+        evento.Resultado == "EXITOSO" && !string.IsNullOrWhiteSpace(evento.TraceId), "Auditoria de abono identifica pago y responsable");
+    Check(evento.Detalles.Any(d => d.Campo == "id_venta" && d.ValorNuevo == credito.id_ventas.ToString()) &&
+        evento.Detalles.Any(d => d.Campo == "saldo_anterior") && evento.Detalles.Any(d => d.Campo == "saldo_nuevo") &&
+        evento.Detalles.Any(d => d.Campo == "monto" && d.ValorNuevo == "10"), "Auditoria conserva monto, venta y cambio de saldo");
+}
+await using (var db = new CheckDb(options))
+{
+    var tabla = db.Model.FindEntityType(typeof(AuditoriaEvento))!.GetTableName();
+    await db.Database.ExecuteSqlRawAsync($"CREATE TRIGGER rechazo_auditoria_abono BEFORE INSERT ON [{tabla}] BEGIN SELECT RAISE(ABORT, 'fallo auditoria'); END;");
+}
+try { await Abonar(credito.id_ventas, 1); throw new Exception("Abono sin auditoria aceptado"); }
+catch (DbUpdateException) { Check(true, "Fallo de auditoria rechaza abono"); }
+await using (var db = new CheckDb(options))
+{
+    var guardada = await db.ventas.SingleAsync(v => v.id_ventas == credito.id_ventas);
+    Check(guardada.monto_pagado == 10 && await db.pagos.CountAsync(p => p.id_venta == credito.id_ventas) == 1 &&
+        await db.movimientocaja.CountAsync(m => m.id_venta == credito.id_ventas) == 1 &&
+        await db.AuditoriaEventos.CountAsync(e => e.Accion == "ABONO_VENTA_REGISTRADO") == 2,
+        "Fallo de auditoria revierte pago, saldo y movimiento sin evento exitoso");
+    await db.Database.ExecuteSqlRawAsync("DROP TRIGGER rechazo_auditoria_abono;");
+}
+await Abonar(credito.id_ventas, credito.total - 10);
+await using (var db = new CheckDb(options))
+{
+    var guardada = await db.ventas.SingleAsync(v => v.id_ventas == credito.id_ventas);
+    Check(guardada.saldo_pendiente == 0 && guardada.monto_pagado == credito.total && guardada.id_estado_venta == 1,
+        "Abonos sucesivos liquidan la venta");
+}
 await using (var db = new CheckDb(options)) {
     var before = await db.ventas.CountAsync();
     var creation = new CrearVentaService(db, new MovimientoCajaService(db), new PermisoUsuarioService(db));
@@ -225,6 +297,32 @@ var errorCliente = new Microsoft.AspNetCore.Mvc.Filters.ExceptionContext(action,
 new ClienteExceptionFilter(Microsoft.Extensions.Logging.Abstractions.NullLogger<ClienteExceptionFilter>.Instance).OnException(errorCliente);
 var resultadoCliente = (Microsoft.AspNetCore.Mvc.ObjectResult)errorCliente.Result!;
 Check(resultadoCliente.StatusCode == 500 && !JsonSerializer.Serialize(resultadoCliente.Value).Contains("secret"), "Clientes no expone errores internos");
+// El listado se limita al turno abierto, sin mezclar sesiones del mismo día.
+await using (var db = new CheckDb(options))
+{
+    var listado = new VentaService(db);
+    var esperadas = await db.ventas.Where(v => v.id_sesion_caja == 1).Select(v => v.id_ventas).ToListAsync();
+    var inicial = await listado.ListarVentas(1);
+    Check(inicial.Select(v => v.id_ventas).Order().SequenceEqual(esperadas.Order()), "Listado incluye todas las ventas de caja abierta");
+    db.sesioncaja.Add(new SesionCaja { id_sesion_caja = 2, id_caja = 1, id_usuario_apertura = 1,
+        fecha_apertura = DateTime.Now.AddHours(-2), fecha_cierre = DateTime.Now.AddHours(-1),
+        monto_inicial = 0, observacion_apertura = "Turno cerrado del mismo día" });
+    var historica = new API_SISTEMA.Models.Ventas { id_sesion_caja = 2, id_cliente = 1, id_usuario = 1,
+        id_estado_venta = 2, total = 10, subtotal = 10, saldo_pendiente = 10, origen = "PRUEBA", fecha_venta = DateTime.Now };
+    db.ventas.Add(historica);
+    await db.SaveChangesAsync();
+    var actual = await listado.ListarVentas(1);
+    Check(actual.All(v => v.id_ventas != historica.id_ventas) && actual.Count == inicial.Count,
+        "Listado excluye ventas de caja cerrada del mismo día");
+    var primera = await listado.ListarVentas(1, new() { pagina = 1, tamanoPagina = 1 });
+    var segunda = await listado.ListarVentas(1, new() { pagina = 2, tamanoPagina = 1 });
+    Check(primera.Count == 1 && segunda.Count == 1 && primera[0].id_ventas != segunda[0].id_ventas,
+        "Listado pagina sin repetir ventas");
+    var caja = await db.sesioncaja.SingleAsync(c => c.id_sesion_caja == 1);
+    caja.fecha_cierre = DateTime.Now;
+    await db.SaveChangesAsync();
+    Check((await listado.ListarVentas(1)).Count == 0, "Sin caja abierta el listado queda vacío");
+}
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)
@@ -234,7 +332,16 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
         base.OnModelCreating(b);
         var keep = new HashSet<Type> { typeof(Usuario), typeof(Rol), typeof(RolPermiso), typeof(TablaPermiso), typeof(UsuarioPermiso),
             typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion), typeof(Cliente),
-            typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion) };
+            typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle) };
         foreach (var e in b.Model.GetEntityTypes().ToArray()) if (!keep.Contains(e.ClrType)) b.Ignore(e.ClrType);
+        var detalle = b.Entity<AuditoriaEventoDetalle>();
+        foreach (var constraint in detalle.Metadata.GetCheckConstraints().ToArray())
+            detalle.Metadata.RemoveCheckConstraint(constraint.Name);
+        detalle.Property(d => d.ValorAnterior).HasColumnType("TEXT");
+        detalle.Property(d => d.ValorNuevo).HasColumnType("TEXT");
+        var auditoria = b.Entity<AuditoriaEvento>();
+        foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
+            auditoria.Metadata.RemoveCheckConstraint(constraint.Name);
+        auditoria.Property(e => e.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 }

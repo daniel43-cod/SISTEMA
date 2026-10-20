@@ -10,7 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Ventas;
 
-public class AbonarSaldoVentaService(SistemaDbContext context, MovimientoCajaService movimientos)
+public class AbonarSaldoVentaService(SistemaDbContext context, MovimientoCajaService movimientos,
+    API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService auditoria)
 {
     public async Task<Pagos> AbonarVenta(AbonarSaldoVentaDto dto, int idUsuario, CancellationToken ct = default)
     {
@@ -31,6 +32,15 @@ public class AbonarSaldoVentaService(SistemaDbContext context, MovimientoCajaSer
         await context.SaveChangesAsync(ct);
         await movimientos.RegistrarMovimiento(caja.id_sesion_caja, idUsuario, TiposMovimientoCaja.AbonoVenta, dto.monto,
             $"Abono de venta #{venta.id_ventas}", idVenta: venta.id_ventas, idPagoVenta: pago.id_pago, cancellationToken: ct);
+        await auditoria.Agregar("ABONO_VENTA_REGISTRADO", "pagos", pago.id_pago, null,
+            new Dictionary<string, object?>
+            {
+                ["id_venta"] = venta.id_ventas, ["id_sesion_caja"] = caja.id_sesion_caja,
+                ["monto"] = pago.monto, ["metodo_pago"] = pago.metodo_pago,
+                ["monto_pagado_anterior"] = pagado, ["monto_pagado_nuevo"] = venta.monto_pagado,
+                ["saldo_anterior"] = saldo, ["saldo_nuevo"] = venta.saldo_pendiente,
+                ["id_estado_venta"] = venta.id_estado_venta
+            }, ct);
         await context.SaveChangesAsync(ct); await tx.CommitAsync(ct);
         return pago;
     }

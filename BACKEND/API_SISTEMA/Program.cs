@@ -96,7 +96,12 @@ builder.Services
                 .GetRequiredService<UsuarioTokenValidator>().ValidateAsync(context)
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 // agregue la clase conexion
 builder.Services.AddSingleton<ConexionDbContext>();
 //agregue el services del usuario

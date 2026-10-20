@@ -1,6 +1,4 @@
-﻿using API_SISTEMA.Models;
-using API_SISTEMA.Services;
-using Microsoft.AspNetCore.Http;
+﻿using API_SISTEMA.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.Controllers
@@ -24,22 +22,5 @@ namespace API_SISTEMA.Controllers
             return Ok(listar);
         }
 
-        //CREAR UN NUEVO ROL
-        [HttpPost]
-        public async Task<IActionResult> Crear(Rol rol)
-        {
-            
-
-            try
-            {
-                var NuevoRol = await _Service.CrearRol(rol);
-                return Ok(NuevoRol);
-
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { mensaje = ex.Message });
-            }
-        }
     }
 }

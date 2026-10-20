@@ -6,10 +6,12 @@ namespace API_SISTEMA.Services
     public class PermisoService
     {
         private readonly SistemaDbContext _context;
+        private readonly API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService _auditoria;
 
-        public PermisoService(SistemaDbContext context)
+        public PermisoService(SistemaDbContext context, API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService auditoria)
         {
             _context = context;
+            _auditoria = auditoria;
         }
 
         // Verifica si un usuario (a través de su rol) tiene un permiso específico
@@ -50,6 +52,8 @@ namespace API_SISTEMA.Services
             };
 
             _context.rol_Permisocs.Add(nuevo);
+            await _auditoria.Agregar("PERMISO_ASIGNADO", "rol_permiso", idRol, null,
+                new Dictionary<string, object?> { ["id_rol"] = idRol, ["id_permiso"] = idPermiso, ["asignado"] = true }, default);
             await _context.SaveChangesAsync();
         }
 
@@ -64,6 +68,8 @@ namespace API_SISTEMA.Services
             }
 
             _context.rol_Permisocs.Remove(existente);
+            await _auditoria.Agregar("PERMISO_RETIRADO", "rol_permiso", idRol, null,
+                new Dictionary<string, object?> { ["id_rol"] = idRol, ["id_permiso"] = idPermiso, ["asignado"] = false }, default);
             await _context.SaveChangesAsync();
         }
     }

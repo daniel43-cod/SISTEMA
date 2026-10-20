@@ -20,12 +20,6 @@ namespace API_SISTEMA.Services
         }
 
 
-        public async Task<Rol> CrearRol(Rol rol)
-        {
-            _context.rols.Add(rol);
-            await _context.SaveChangesAsync();
-            return rol;
-        }
 
 
     }

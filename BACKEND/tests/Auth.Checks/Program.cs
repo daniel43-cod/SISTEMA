@@ -32,6 +32,7 @@ builder.Logging.ClearProviders();
 builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new AuthDbContext(options));
 builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<PermisoService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioListarService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioEditarService>();
@@ -90,13 +91,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         OnTokenValidated = c => c.HttpContext.RequestServices.GetRequiredService<UsuarioTokenValidator>().ValidateAsync(c)
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(o => o.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 await using var app = builder.Build();
 app.UseRouting();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/checks/sin-atributo", () => "protegido");
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
@@ -111,6 +113,8 @@ using (var scope = app.Services.CreateScope())
         password = BCrypt.Net.BCrypt.HashPassword("Password123"), telefono = "1000", estado = true,
         fecha_Creacion = DateTime.Now
     });
+    db.tabla_Permisos.Add(new TablaPermiso { id_permiso = 1, nombre = "Vender", descripcion = "Ventas", estado = true });
+    db.rol_Permisocs.Add(new RolPermiso { id_rol = 2, id_permiso = 1 });
     await db.SaveChangesAsync();
 }
 
@@ -138,6 +142,17 @@ object Account(string username = "empleado", string phone = "2000", string email
         corre_electronico = email, password, id_rol = role,
         estado = false, fecha_Creacion = "2000-01-01T00:00:00"
     };
+async Task PermisosRechazados(HttpStatusCode status)
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+    var antes = await db.rol_Permisocs.AsNoTracking().Select(p => p.id_rol_permiso).ToListAsync();
+    Check((await client.GetAsync("/api/Permiso/rol/2")).StatusCode == status, "Consulta permisos rechazada " + status);
+    Check((await client.PostAsync("/api/Permiso/asignar?idRol=1&idPermiso=1", null)).StatusCode == status, "Asignar permiso rechazado " + status);
+    Check((await client.DeleteAsync("/api/Permiso/quitar?idRol=2&idPermiso=1")).StatusCode == status, "Quitar permiso rechazado " + status);
+    var despues = await db.rol_Permisocs.AsNoTracking().Select(p => p.id_rol_permiso).ToListAsync();
+    Check(antes.Order().SequenceEqual(despues.Order()), "Rechazo no altera permisos " + status);
+}
 async Task UpdateAdmin(Action<Usuario> change)
 {
     using var scope = app.Services.CreateScope();
@@ -148,6 +163,8 @@ async Task UpdateAdmin(Action<Usuario> change)
 
 try
 {
+    Check((await client.GetAsync("/checks/sin-atributo")).StatusCode == HttpStatusCode.Unauthorized, "Fallback bloquea omisiones");
+    await PermisosRechazados(HttpStatusCode.Unauthorized);
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Unauthorized, "Listado anónimo bloqueado");
     foreach (var route in new[] { "/api/Usuario", "/api/Login/crear" })
         Check((await client.PostAsJsonAsync(route, Account())).StatusCode == HttpStatusCode.Unauthorized, "Alta anónima bloqueada: " + route);
@@ -245,6 +262,7 @@ try
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
         new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(customer));
     Check((await client.GetAsync("/api/Usuario")).StatusCode == HttpStatusCode.Forbidden, "Cliente con mismo ID no hereda permisos internos");
+    await PermisosRechazados(HttpStatusCode.Forbidden);
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
     var badPassword = await Login("admin", "Wrong123");
@@ -375,6 +393,20 @@ try
     var employeeToken = await Token(await Login("empleado", "Password123"));
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", employeeToken);
     Check((await client.GetAsync("/api/MovimientoCaja/listar?idSesionCaja=1")).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede consultar resumen financiero");
+    await PermisosRechazados(HttpStatusCode.Forbidden);
+    using (var adminClient = new HttpClient { BaseAddress = client.BaseAddress })
+    {
+        adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        Check((await adminClient.GetAsync("/api/Permiso/rol/2")).IsSuccessStatusCode, "Administrador consulta permisos");
+        Check((await adminClient.PostAsync("/api/Permiso/asignar?idRol=1&idPermiso=1", null)).IsSuccessStatusCode, "Administrador asigna permiso");
+        Check((await adminClient.DeleteAsync("/api/Permiso/quitar?idRol=1&idPermiso=1")).IsSuccessStatusCode, "Administrador retira permiso");
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
+        var eventos = await db.AuditoriaEventos.Include(e => e.Detalles).Where(e => e.Entidad == "rol_permiso").ToListAsync();
+        Check(eventos.Count == 2 && eventos.All(e => e.IdUsuario == 1 && e.UsuarioResponsable == "admin" && e.Detalles.Any(d => d.Campo == "id_permiso")), "Auditoria identifica responsable y permiso");
+        Check(eventos.Any(e => e.Accion == "PERMISO_ASIGNADO") && eventos.Any(e => e.Accion == "PERMISO_RETIRADO"), "Auditoria distingue asignar y quitar");
+        Check(await db.rol_Permisocs.CountAsync() == 1 && !await db.rol_Permisocs.AnyAsync(p => p.id_rol == 1), "Cambios autorizados persisten");
+    }
     Check((await client.PostAsJsonAsync("/api/Caja/abrir", new { id_caja = 1, monto_inicial = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede abrir caja");
     Check((await client.PostAsJsonAsync("/api/Caja/cerrar", new { id_sesion_caja = 1, monto_contado = 0 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede cerrar caja");
     Check((await client.PostAsJsonAsync("/api/Compra/pago-compra", new { id_compra = 1, monto = 1 })).StatusCode == HttpStatusCode.Forbidden, "Vendedor no puede registrar pagos de compras");
@@ -739,7 +771,7 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(ProductoPresentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(API_SISTEMA.Models.Caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
+            if (entity.ClrType != typeof(RolPermiso) && entity.ClrType != typeof(TablaPermiso) && entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(ProductoPresentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(API_SISTEMA.Models.Caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
         // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.
@@ -752,6 +784,6 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
         foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
             auditoria.Metadata.RemoveCheckConstraint(constraint.Name);
         auditoria.Property(e => e.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
-        modelBuilder.Entity<Rol>().Ignore(r => r.RolPermisos);
+
     }
 }
