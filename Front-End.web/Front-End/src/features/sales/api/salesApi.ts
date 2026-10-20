@@ -21,7 +21,7 @@ export async function loadSaleProducts(token: string, signal?: AbortSignal): Pro
   throw new ApiError('El catálogo excede el límite de consulta.')
 }
 export async function loadSaleHistory(token: string, signal?: AbortSignal, page = 1): Promise<SaleHistory[]> {
-  const result = await requestJson(`/Venta/listar?pagina=${page}&tamanoPagina=100`, { token, signal })
+  const result = await requestJson(`/Venta/listar?pagina=${page}&tamanoPagina=50`, { token, signal })
   if (!Array.isArray(result) || !result.every(v => record(v) && id(v.id_ventas) && typeof v.cliente === 'string' && amount(v.total) &&
     amount(v.saldo_pendiente) && typeof v.estado === 'string' && typeof v.fecha_venta === 'string'))
     throw new ApiError('El historial de ventas no tiene el formato esperado.')

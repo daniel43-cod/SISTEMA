@@ -1,6 +1,6 @@
 ﻿import type { StaffRole } from '../../features/auth/types/auth'
 
-export type StaffSection = 'ventas' | 'caja' | 'pedidos' | 'productos' | 'inventario' | 'compras' | 'gastos' | 'usuarios' | 'reportes' | 'configuracion'
+export type StaffSection = 'ventas' | 'listado-ventas' | 'caja' | 'pedidos' | 'productos' | 'inventario' | 'compras' | 'gastos' | 'usuarios' | 'reportes' | 'configuracion'
 export type StaffNavigationItem = {
   id: StaffSection
   label: string
@@ -13,7 +13,8 @@ const staff: readonly StaffRole[] = ['ADMINISTRADOR', 'VENDEDOR']
 const admin: readonly StaffRole[] = ['ADMINISTRADOR']
 
 export const staffNavigation: readonly StaffNavigationItem[] = [
-  { id: 'ventas', label: 'Ventas', group: 'Operación', description: 'Nueva venta, historial y operaciones autorizadas.', roles: staff },
+  { id: 'ventas', label: 'Nueva venta', group: 'Operación', description: 'Registrar una venta.', roles: staff },
+  { id: 'listado-ventas', label: 'Ventas', group: 'Operación', description: 'Ventas registradas en la caja abierta.', roles: staff },
   { id: 'caja', label: 'Caja', group: 'Operación', description: 'Consulta y apertura de la caja compartida.', roles: admin },
   { id: 'pedidos', label: 'Pedidos', group: 'Operación', description: 'Preparación, entrega a domicilio y retiro en el negocio.', roles: staff },
   { id: 'productos', label: 'Productos', group: 'Inventario', description: '', roles: staff },

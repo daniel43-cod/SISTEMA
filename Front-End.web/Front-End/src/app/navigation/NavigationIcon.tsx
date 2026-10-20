@@ -2,6 +2,7 @@
 
 const paths: Record<StaffSection, string> = {
   inventario: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4',
+  'listado-ventas': 'M5 3h14v18l-3-2-4 2-4-2-3 2V3ZM8 8h8M8 12h8M8 16h4',
   ventas: 'M3 3h2l3 12h10l3-9H6M9 20h.01M18 20h.01',
   caja: 'M4 7h16v14H4zM7 3h10v4M8 11h8M8 16h2M14 16h2',
   pedidos: 'm3 7 9-4 9 4v10l-9 4-9-4V7Zm0 0 9 4 9-4M12 11v10M7 5l10 4',

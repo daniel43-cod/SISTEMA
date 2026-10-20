@@ -1,4 +1,5 @@
-﻿import { SalesPage } from '../../features/sales/pages/SalesPage'
+﻿import { SaleListPage } from '../../features/sales/pages/SaleListPage'
+import { SalesPage } from '../../features/sales/pages/SalesPage'
 import { UsersPage } from '../../features/users/pages/UsersPage'
 import { ExpensesPage } from '../../features/expenses/pages/ExpensesPage'
 import { PurchasesPage } from '../../features/purchases/pages/PurchasesPage'
@@ -128,7 +129,7 @@ export function StaffLayout() {
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
 
-          {current.id === 'ventas' ? <SalesPage key={session.user.id} /> : current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+          {current.id === 'listado-ventas' ? <SaleListPage key={session.user.id} /> : current.id === 'ventas' ? <SalesPage key={session.user.id} /> : current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>
