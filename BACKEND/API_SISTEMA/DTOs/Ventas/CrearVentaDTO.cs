@@ -2,6 +2,7 @@
 {
     public class CrearVentaDto
     {
+        public Guid id_operacion { get; set; }
         public int id_cliente { get; set; }
 
         public CrearClienteVentaDto? clienteNuevo { get; set; }

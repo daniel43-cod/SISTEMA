@@ -1,4 +1,5 @@
-﻿import { UsersPage } from '../../features/users/pages/UsersPage'
+﻿import { SalesPage } from '../../features/sales/pages/SalesPage'
+import { UsersPage } from '../../features/users/pages/UsersPage'
 import { ExpensesPage } from '../../features/expenses/pages/ExpensesPage'
 import { PurchasesPage } from '../../features/purchases/pages/PurchasesPage'
 import { InventoryPage } from '../../features/inventory/pages/InventoryPage'
@@ -57,7 +58,7 @@ export function StaffLayout() {
   }
 
   return (
-    <div className={`staff-shell ${current.id === 'caja' ? 'staff-shell-cash ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : ''}`}>
+    <div className={`staff-shell ${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">
@@ -91,12 +92,12 @@ export function StaffLayout() {
             </svg>
           </button>
 
-          <div className="staff-page-heading">
+          {current.id !== 'ventas' && <div className="staff-page-heading">
             <div>{current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
               <div className="staff-title-row"><h1>{current.label}</h1>{current.id === 'caja' && cashOpen === true && <span className="cash-status is-open" role="status"><span aria-hidden="true">●</span> Caja abierta</span>}</div>
               {current.id !== 'caja' && current.id !== 'inventario' && <p>{current.description}</p>}
             </div>
-          </div>
+          </div>}
           <div id="staff-inventory-search" hidden={current.id !== 'inventario' || menuOpen} />
           <div id="staff-product-search" hidden={current.id !== 'productos' || menuOpen} />
           <div className="staff-account" ref={accountRef}
@@ -127,7 +128,7 @@ export function StaffLayout() {
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
 
-          {current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+          {current.id === 'ventas' ? <SalesPage key={session.user.id} /> : current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
             <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>

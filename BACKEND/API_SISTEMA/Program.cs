@@ -1,4 +1,4 @@
-using API_SISTEMA.Data;
+﻿using API_SISTEMA.Data;
 using API_SISTEMA.Services;
 using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Services.IA;
@@ -38,6 +38,7 @@ builder.Services.AddRateLimiter(options =>
     // Protege apertura, cierre e historial contra solicitudes excesivas.
     options.AddPolicy<string, CajaRateLimitPolicy>("caja");
     options.AddPolicy<string, CompraRateLimitPolicy>("compras");
+    options.AddPolicy<string, VentaRateLimitPolicy>("ventas");
     options.AddPolicy<string, LoginRateLimitPolicy>("login-interno");
     options.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios");
     options.AddPolicy<string, UsuarioCrearRateLimitPolicy>("estado-usuarios");

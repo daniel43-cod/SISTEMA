@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ProductoConsulta.Checks")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0e84fefb788327178006ca29c1292e2a2e294129")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b28979c1198ab6ecd82f0a8511a1b37202e473ea")]
 [assembly: System.Reflection.AssemblyProductAttribute("ProductoConsulta.Checks")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ProductoConsulta.Checks")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

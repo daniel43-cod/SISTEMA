@@ -1,49 +1,24 @@
-﻿using API_SISTEMA.Models;
 using API_SISTEMA.Services;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace API_SISTEMA.Controllers
+namespace API_SISTEMA.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+[TypeFilter(typeof(ClienteExceptionFilter))]
+public class ClienteController(ClienteService service) : ControllerBase
 {
-        [Route("api/[controller]")]
-        [ApiController]
-        public class ClienteController : ControllerBase
-        {
+    [HttpGet("listar")]
+    public async Task<IActionResult> Listar(CancellationToken ct = default)
+        => Ok(await service.ListarClientes(ct));
 
-            private readonly ClienteService _Service;
-
-            public ClienteController(ClienteService service)
-            {
-                _Service = service;
-            }
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-
-        [HttpGet("listar")]
-        public async Task<IActionResult> listar()
-        {
-            var listar = await _Service.ListarCliente();
-            return Ok(listar);
-        }
-
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-
-        [HttpGet("buscar")]
-        public async Task<IActionResult> Buscar([FromQuery] string texto)
-        {
-            try
-            {
-                var clientes = await _Service.BuscarClientes(texto);
-                return Ok(clientes);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { mensaje = ex.Message });
-            }
-        }
-
-    }   
+    [HttpGet("{id:int:min(1)}")]
+    public async Task<IActionResult> Obtener(int id, CancellationToken ct = default)
+    {
+        var cliente = await service.ObtenerCliente(id, ct);
+        return cliente is null ? NotFound(new { mensaje = "El cliente no existe." }) : Ok(cliente);
+    }
 }

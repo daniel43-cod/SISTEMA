@@ -1,4 +1,4 @@
-using API_SISTEMA.Data;
+﻿using API_SISTEMA.Data;
 using API_SISTEMA.Dtos;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Models;
@@ -28,7 +28,7 @@ namespace API_SISTEMA.Services
                     id_producto_presentacion = dv.id_producto_presentacion,
                     descripcion_resentacion = dv.producto_presentacion.Presentacion.Descripcion,
                     cantidad = dv.cantidad,
-                    precio = dv.producto_presentacion.precio
+                    precio = dv.precio
                 })
                 .ToListAsync();
             return detalleVenta;

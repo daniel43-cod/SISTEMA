@@ -314,13 +314,13 @@ namespace API_SISTEMA.Controllers
       
         [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
         [HttpGet("codigo/{codigoBarra}")]
-        public async Task<IActionResult> BuscarPorCodigoBarra(string codigoBarra)
+        public async Task<IActionResult> BuscarPorCodigoBarra(string codigoBarra, CancellationToken cancellationToken = default)
         {
             try
             {
                 var productos =
                     await _productoService
-                        .BuscarPorCodigoBarra(codigoBarra);
+                        .BuscarPorCodigoBarra(codigoBarra, cancellationToken);
 
                 if (productos == null   )
                 {
@@ -333,12 +333,18 @@ namespace API_SISTEMA.Controllers
 
                 return Ok(productos);
             }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return StatusCode(499);
+            }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                  mensaje ="A ocurrido un error al buscar el producto, Intentalo mas tade o comunicate con el adminstrador"
-                });
+                _logger.LogError(ex, "Error al buscar producto por código de barras. TraceId: {TraceId}", HttpContext.TraceIdentifier);
+                return StatusCode(500, new { mensaje = "No se pudo consultar el producto. Inténtalo nuevamente.", traceId = HttpContext.TraceIdentifier });
             }
         }
 

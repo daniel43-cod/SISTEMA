@@ -1,0 +1,112 @@
+﻿.sales-page { --color-primary: var(--primary); --color-muted: var(--text-muted); color: var(--text); display: grid; gap: calc(var(--space) * 3); }
+.sales-card { min-width: 0; padding: calc(var(--space) * 3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.sales-heading { display: flex; justify-content: space-between; align-items: center; gap: calc(var(--space) * 2); }
+.sales-card h2 { margin: 0 0 calc(var(--space) * 2); font-size: 1.25rem; }
+.sales-fields { display: grid; gap: calc(var(--space) * 2); min-width: 0; padding: 0; margin: 0; border: 0; }
+.sales-page label { display: grid; gap: var(--space); min-width: 0; font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+.sales-page .sales-observation { display: none; }
+.sales-page input, .sales-page select { min-height: 44px; width: 100%; min-width: 0; padding: var(--space) calc(var(--space) * 2); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; }
+.sales-page button:not(.refresh-button) { min-height: 44px; padding: var(--space) calc(var(--space) * 2); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--primary); cursor: pointer; font: inherit; }
+.sales-page button:disabled { opacity: .55; cursor: not-allowed; }
+.sales-customer { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: calc(var(--space) * 2); }
+.sales-table-scroll { min-width: 0; overflow-x: auto; }
+.sales-page table { width: 100%; border-collapse: collapse; text-align: left; font-size: .9rem; }
+.sales-page th, .sales-page td { padding: var(--space) calc(var(--space) * 2); border-bottom: 1px solid var(--border); }
+.sales-page th { background: var(--surface-tint); color: var(--primary); white-space: nowrap; }
+.sales-page td input { min-width: 80px; max-width: 100px; }
+.sales-empty { text-align: center; padding: calc(var(--space) * 3); color: var(--text-muted); }
+.sales-checkout { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--space) * 2); padding: calc(var(--space) * 2); background: var(--surface-tint); border: 1px solid var(--border); border-radius: var(--radius); }
+.sales-checkout p { margin: 0; color: var(--text-muted); font-size: .85rem; }
+.sales-checkout strong { display: block; margin-top: var(--space); color: var(--primary); font-size: 1.4rem; }
+.sales-checkout label { max-width: 180px; }
+.sales-page button.sales-primary { margin-left: auto; background: var(--primary); border-color: var(--primary); color: var(--surface); font-weight: 650; }
+.sales-error, .sales-success { padding: calc(var(--space) * 2); border-radius: var(--radius); margin-bottom: calc(var(--space) * 2); line-height: 1.6; }
+.sales-error { background: color-mix(in srgb, var(--danger) 8%, var(--surface)); color: var(--danger); }
+.sales-success { background: color-mix(in srgb, var(--success) 8%, var(--surface)); color: var(--success); }
+@media (max-width: 600px) { .sales-card { padding: calc(var(--space) * 2); } .sales-page table { min-width: 600px; } .sales-page button.sales-primary { width: 100%; margin: 0; } }
+
+.sales-history-pagination { display: flex; justify-content: center; align-items: center; gap: calc(var(--space) * 2); }
+
+.sale-customer-picker { position: relative; min-width: 0; }
+.sale-customer-search { display: flex; align-items: end; gap: calc(var(--space) * 2); }
+.sale-customer-search > label { flex: 1; }
+.sale-customer-options { position: absolute; top: 100%; left: 0; right: 0; z-index: 8; max-height: 280px; overflow-y: auto; margin: var(--space) 0 0; padding: 0; list-style: none; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-card); }
+.sale-customer-options li { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--space) * 2); min-height: 44px; padding: var(--space) calc(var(--space) * 2); cursor: pointer; overflow-wrap: anywhere; }
+.sale-customer-options li[aria-selected="true"] { background: var(--surface-tint); color: var(--primary); box-shadow: inset 3px 0 var(--primary); }
+.sale-customer-options small { color: var(--text-muted); font-size: .75rem; white-space: nowrap; }
+.sale-customer-picker > p { margin: var(--space) 0 0; font-size: .85rem; }
+@media (max-width: 600px) { .sale-customer-search { flex-wrap: wrap; } .sale-customer-search > label { flex-basis: 100%; } }
+
+.sales-line-table th:nth-child(2) { width: 40%; }
+.sales-page .sale-barcode-cell input { min-width: 170px; max-width: none; }
+.sales-line-table th, .sales-line-table td { padding: var(--space) var(--space); }
+.sales-page .sale-product-cell input { min-width: 240px; max-width: none; width: 100%; }
+.sale-product-cell > small { display: block; margin-top: var(--space); font-size: .8rem; }
+.sales-page button.sale-remove-line { border: 0; color: var(--danger); font-size: 1.4rem; padding: var(--space); min-width: 44px; }
+.sale-product-options { position: fixed; z-index: 100; margin: 0; padding: 0; overflow-y: auto; list-style: none; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-card); color: var(--text); }
+.sale-product-options li { display: grid; gap: var(--space); padding: var(--space) calc(var(--space) * 2); min-height: 44px; cursor: pointer; overflow-wrap: anywhere; }
+.sale-product-options li strong { font-size: .9rem; }
+.sale-product-options li span { color: var(--text-muted); font-size: .8rem; }
+.sale-product-options li[aria-selected="true"] { background: var(--surface-tint); color: var(--primary); box-shadow: inset 3px 0 var(--primary); }
+
+.sale-discount-cell { min-width: 130px; }
+.sales-page .sale-discount-cell input { max-width: 130px; }
+.sales-page .sale-discount-cell input[aria-invalid="true"] { border-color: var(--danger); }
+.sale-discount-error { display: block; max-width: 180px; margin-top: var(--space); color: var(--danger); font-size: .75rem; }
+
+.sales-page button.sales-primary:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+/* Cliente y productos dentro de un único panel de venta. */
+.sales-customer-header { min-width: 0; margin: 0; padding: 0 0 20px; border: 0; border-bottom: 1px solid #e2e8f0; }
+
+/* El formulario se desplaza y el total permanece abajo del panel. */
+.staff-shell-sales { width: 100%; max-width: 100%; height: 100dvh; min-height: 0; overflow: hidden; }
+.staff-shell-sales .staff-workspace { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.staff-shell-sales .staff-header { flex-shrink: 0; }
+.staff-shell-sales .staff-content { display: flex; flex: 1; width: 100%; box-sizing: border-box; min-height: 0; overflow: hidden; }
+.staff-shell-sales .staff-content > .sales-page { flex: 1; min-width: 0; min-height: 0; display: flex; }
+.staff-shell-sales .sales-card { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.staff-shell-sales .sales-card > form { display: flex; flex: 1; min-width: 0; min-height: 0; }
+.staff-shell-sales .sales-fields { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.sales-entry { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: calc(var(--space) * 2); flex: 1; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; padding-right: 4px; }
+.sales-entry > .sales-table-scroll { max-width: 100%; overscroll-behavior-x: contain; }
+.sales-checkout { flex-shrink: 0; padding: 8px 16px; gap: 12px 20px; }
+.sales-checkout strong { margin-top: 2px; font-size: 1.2rem; }
+.sales-checkout label { gap: 4px; }
+.sales-checkout input { min-height: 36px; padding: 6px 12px; }
+.sales-page .sales-checkout button.sales-primary { min-height: 36px; padding: 6px 16px; }
+.sales-page .sales-view-customer { display: none; }
+.sales-page .sales-add-product { display: none; }
+.sales-mobile-summary { display: none; }
+
+@media (max-width: 800px) {
+  .sales-page .sales-add-product { display: inline-flex; align-items: center; justify-content: center; justify-self: start; min-height: 44px; font-size: .8rem; }
+  html:has(.staff-shell-sales), body:has(.staff-shell-sales) { overflow-x: hidden; overscroll-behavior-x: none; }
+  .sales-page .sales-customer-collapsed { display: none; }
+  .sales-page .sales-view-customer { display: inline-flex; align-items: center; justify-content: center; justify-self: start; }
+  .staff-shell-sales { grid-template-rows: minmax(0, 1fr); }
+  .staff-shell-sales .staff-content { padding: 8px 10px 10px; margin: 0; max-width: none; }
+  .staff-shell-sales .sales-card { padding: 12px; }
+  .sales-customer-header { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-bottom: 12px; }
+  .sales-customer-header > .sale-customer-picker,
+  .sales-customer-header > label:nth-last-child(-n + 2) { grid-column: 1 / -1; }
+  .sales-page input { font-size: 14px; min-height: 36px; padding: 6px 8px; }
+  .sales-page label { font-size: .75rem; gap: 4px; }
+  .sales-card h2 { font-size: 1.05rem; }
+  .sales-page table { font-size: .78rem; }
+  .sales-line-table th, .sales-line-table td { padding: 4px 6px; }
+  .sales-page .sale-remove-line { min-height: 36px; }
+  .sale-product-cell > small { font-size: .7rem; margin-top: 3px; }
+  .sales-mobile-summary { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; }
+  .sales-mobile-summary p { margin-left: auto; font-size: .8rem; color: var(--text-muted); }
+  .sales-mobile-summary strong { margin-left: 6px; font-size: 1.05rem; color: var(--primary); }
+  .sales-page .sales-view-customer { min-height: 36px; padding: 6px 10px; font-size: .8rem; }
+  .sales-checkout .sales-checkout-total { display: none; }
+  .sales-entry { scroll-padding-block: 12px; }
+  .sales-checkout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px; padding: 8px 10px; }
+  .sales-checkout p { min-width: 0; font-size: .75rem; }
+  .sales-checkout strong { font-size: 1rem; overflow-wrap: anywhere; }
+  .sales-checkout label { max-width: none; font-size: .75rem; }
+  .sales-checkout input { padding-inline: 8px; }
+  .sales-page .sales-checkout button.sales-primary { grid-column: 1 / -1; width: 100%; margin: 0; min-height: 44px; }
+}

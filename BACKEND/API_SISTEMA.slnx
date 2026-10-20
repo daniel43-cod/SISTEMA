@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/tests/">
+    <Project Path="tests/Auth.Checks/Auth.Checks.csproj" />
     <Project Path="tests/ProductoConsulta.Checks/ProductoConsulta.Checks.csproj" />
   </Folder>
   <Project Path="API_SISTEMA/API_SISTEMA.csproj" />

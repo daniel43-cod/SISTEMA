@@ -2,8 +2,10 @@
 {
     public class FiltrarVentasDto
     {
-        public DateTime desde { get; set;  } 
-        public DateTime hasta { get; set; }
+        public int pagina { get; set; } = 1;
+        public int tamanoPagina { get; set; } = 100;
+        public DateTime? desde { get; set;  }
+        public DateTime? hasta { get; set; }
 
     }
 }

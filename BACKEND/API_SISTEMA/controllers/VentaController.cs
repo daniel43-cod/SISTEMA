@@ -1,263 +1,56 @@
-﻿using API_SISTEMA.Data;
+﻿using System.Security.Claims;
 using API_SISTEMA.Dtos.Ventas;
-using API_SISTEMA.Models;
-using API_SISTEMA.Services;
 using API_SISTEMA.Services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
-namespace API_SISTEMA.Controllers
+namespace API_SISTEMA.Controllers;
+
+[Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
+[Route("api/[controller]")]
+[ApiController]
+[TypeFilter(typeof(VentaExceptionFilter))]
+[EnableRateLimiting("ventas")]
+[RequestSizeLimit(131072)]
+public class VentaController(VentaService consulta, AbonarSaldoVentaService abonos, CrearVentaService registro,
+    BuscarVentaService busqueda, ActualizarVentaService edicion) : ControllerBase
 {
-    [Authorize]
-    [Route("api/[controller]")]
-    [ApiController]
-    public class VentaController : ControllerBase
+    private int Usuario() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id > 0
+        ? id : throw new UnauthorizedAccessException("No se pudo identificar al usuario.");
+
+    [HttpGet("listar")]
+    public async Task<IActionResult> ListarVentas([FromQuery] FiltrarVentasDto filtro, CancellationToken ct = default)
+        => Ok(await consulta.ListarVentas(Usuario(), filtro, ct));
+
+    [HttpGet("catalogo")]
+    public async Task<IActionResult> ListarCatalogo(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
+        => Ok(await consulta.ListarCatalogo(pagina, tamanoPagina, ct));
+
+    [HttpPost("crear")]
+    public async Task<IActionResult> Crear([FromBody] CrearVentaDto dto, CancellationToken ct = default)
     {
-
-        private readonly VentaService _context;
-        private readonly CrearVentaService _crearVentaService;
-        private readonly AbonarSaldoVentaService _pagoService;
-        private readonly BuscarVentaService _buscarService;
-        private readonly ActualizarVentaService _modificarVentaService;
-        public VentaController(VentaService service, AbonarSaldoVentaService pago, CrearVentaService crearVenta, BuscarVentaService buscarService, ActualizarVentaService modificarVentaService)
-        {
-            _context = service;
-            _pagoService = pago;
-            _crearVentaService = crearVenta;
-            _buscarService = buscarService;
-            _modificarVentaService = modificarVentaService;
-        }
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpGet("listar")]
-        public async Task<IActionResult> ListarVentas([FromQuery] FiltrarVentasDto filtro)
-        {
-            try
-            {
-                var idUsuarioClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                var rol =
-                    User.FindFirstValue(ClaimTypes.Role);
-
-                if (string.IsNullOrWhiteSpace(rol))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar el rol del usuario."
-                    });
-                }
-
-                var listar = await _context.ListarVentas(idUsuario);
-
-                return Ok(listar);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = "Ocurrió un error al listar las ventas.",
-                    detalle = ex.Message
-                });
-            }
-        }
-
-        //catalogo
-        [Authorize(Roles =Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpGet("catalogo")]
-        public async Task<IActionResult> ListarCatalogo()
-        {
-            try
-            {
-                var catalogo = await _context.ListarCatalogo();
-
-                return Ok(catalogo);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje1 = "A ocurrido un error al cargar la imagen",
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
-
-        }
-
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpPost("AbonarVenta")]
-        public async Task<IActionResult> AbonarVenta( [FromBody] AbonarSaldoVentaDto dto)
-        {
-            try
-            {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                var pago = await _pagoService.AbonarVenta(dto,idUsuario);
-
-                return Ok(new
-                {
-                    mensaje = "Abono registrado correctamente.",
-                    id_pago = pago.id_pago,
-                    id_venta = pago.id_venta,
-                    monto = pago.monto,
-                    fecha_pago = pago.fecha_pago,
-                    id_sesion_caja = pago.id_sesion_caja
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
-        }
-
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpPost("crear")]
-        public async Task<IActionResult> Crear( [FromBody] CrearVentaDto ventaDto)
-        {
-            try
-            {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                    ?? User.FindFirstValue("sub");
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                var venta = await _crearVentaService.CrearVenta(
-                    ventaDto,
-                    idUsuario
-                );
-
-                return Ok(new
-                {
-                    mensaje = "Venta registrada correctamente.",
-                   
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
-        }
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpGet("caja-activa/cliente/{idCliente}")]
-        public async Task<IActionResult> BuscarVentasClienteCajaActiva(int idCliente)
-        {
-            try
-            {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                    ?? User.FindFirstValue("sub");
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                var ventas = await _buscarService
-                    .BuscarVentasClienteCajaActiva(
-                        idUsuario,
-                        idCliente
-                    );
-
-                return Ok(ventas);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message
-                });
-            }
-        }
-
-
-        [Authorize(Roles = Roles.Administrador + "," + Roles.Vendedor)]
-        [HttpPut("modificar/{idVenta}")]
-        public async Task<IActionResult> ModificarVenta(int idVenta, [FromBody] ModificarVentaDto dto)
-        {
-            try
-            {
-                var idUsuarioClaim =
-                    User.FindFirstValue(ClaimTypes.NameIdentifier)
-                    ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                    ?? User.FindFirstValue("sub");
-
-                if (!int.TryParse(idUsuarioClaim, out int idUsuario))
-                {
-                    return Unauthorized(new
-                    {
-                        mensaje = "No se pudo identificar al usuario autenticado."
-                    });
-                }
-
-                await _modificarVentaService.ModificarVenta(
-                    idVenta,
-                    dto,
-                    idUsuario
-                );
-
-                return Ok(new
-                {
-                    mensaje = "Venta modificada correctamente."
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    mensaje = ex.Message,
-                    detalle = ex.ToString()
-                });
-            }
-        }
-
+        var venta = await registro.CrearVenta(dto, Usuario(), ct);
+        return Ok(new { mensaje = "Venta registrada correctamente.", id_venta = venta.id_ventas, dto.id_operacion,
+            venta.subtotal, venta.descuento, venta.total, venta.monto_pagado, venta.saldo_pendiente, venta.fecha_venta });
     }
 
+    [HttpPost("AbonarVenta")]
+    public async Task<IActionResult> AbonarVenta([FromBody] AbonarSaldoVentaDto dto, CancellationToken ct = default)
+    {
+        var pago = await abonos.AbonarVenta(dto, Usuario(), ct);
+        return Ok(new { mensaje = "Abono registrado correctamente.", pago.id_pago, pago.id_venta, pago.monto, pago.fecha_pago, pago.id_sesion_caja });
+    }
 
+    [HttpGet("caja-activa/cliente/{idCliente:int:min(1)}")]
+    public async Task<IActionResult> BuscarVentasClienteCajaActiva(int idCliente)
+        => Ok(await busqueda.BuscarVentasClienteCajaActiva(Usuario(), idCliente));
+
+    [HttpPut("modificar/{idVenta:int:min(1)}")]
+    public async Task<IActionResult> ModificarVenta(int idVenta, [FromBody] ModificarVentaDto dto, CancellationToken ct = default)
+    {
+        await edicion.ModificarVenta(idVenta, dto, Usuario(), ct);
+        return Ok(new { mensaje = "Venta modificada correctamente." });
+    }
 }

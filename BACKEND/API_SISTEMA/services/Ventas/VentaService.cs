@@ -1,3 +1,4 @@
+﻿using System.ComponentModel.DataAnnotations;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Catalogo;
 using API_SISTEMA.Dtos.Ventas;
@@ -20,18 +21,20 @@ namespace API_SISTEMA.Services.Ventas
             
         }
 
-        public async Task<List<ListarVentasDto>> ListarVentas(int idUsuario)
+        public async Task<List<ListarVentasDto>> ListarVentas(int idUsuario, FiltrarVentasDto? filtro = null, CancellationToken ct = default)
         {
+            filtro ??= new FiltrarVentasDto();
+            if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
             var usuario = await _context.usuarios
-                .FirstOrDefaultAsync(u => u.id_usuario == idUsuario);
+                .FirstOrDefaultAsync(u => u.id_usuario == idUsuario, ct);
 
             if (usuario == null)
             {
-                throw new Exception("Usuario no encontrado.");
+                throw new UnauthorizedAccessException("Usuario no encontrado.");
             }
 
             // Consulta del turno compartido; el responsable de cada operacion se conserva.
-            var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context);
+            var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context, ct);
 
             if (sesionCaja == null)
             {
@@ -43,7 +46,9 @@ namespace API_SISTEMA.Services.Ventas
                 .Where(v =>
                     v.id_sesion_caja == sesionCaja.id_sesion_caja
                 )
-                .OrderByDescending(v => v.fecha_venta)
+                .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value))
+                .OrderByDescending(v => v.fecha_venta).ThenByDescending(v => v.id_ventas)
+                .Skip((filtro.pagina - 1) * filtro.tamanoPagina).Take(filtro.tamanoPagina)
                 .Select(v => new ListarVentasDto
                 {
                     id_ventas = v.id_ventas,
@@ -63,14 +68,17 @@ namespace API_SISTEMA.Services.Ventas
                     saldo_pendiente = v.saldo_pendiente,
                     observacion = v.observacion
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         //catalodo
-        public async Task<List<ProductoCatalogoDto>> ListarCatalogo()
+        public async Task<List<ProductoCatalogoDto>> ListarCatalogo(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
         {
+            if (pagina < 1 || pagina > 100000 || tamanoPagina < 1 || tamanoPagina > 100) throw new ValidationException("Paginación inválida.");
             var productos = await _context.productos
                 .AsNoTracking()
+                .Where(p => p.Marca.Estado && p.Marca.Categoria.Estado && p.PrecioPromedioCompra > 0)
+                .OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto).Skip((pagina - 1) * tamanoPagina).Take(tamanoPagina)
                 .Select(p => new ProductoCatalogoDto
                 {
                     id_producto = p.IdProducto,
@@ -80,8 +88,8 @@ namespace API_SISTEMA.Services.Ventas
 
                     presentaciones = p.ProductoPresentaciones
                         .Where(pp =>
-                            pp.unidades_equivalentes > 0 &&
-                            pp.precio > 0)
+                            pp.estado && pp.Presentacion.Estado == true && pp.unidades_equivalentes > 0 &&
+                            pp.precio > p.PrecioPromedioCompra * pp.unidades_equivalentes)
                         .OrderBy(pp => pp.unidades_equivalentes)
                         .Select(pp => new PresentacionCatalogoDto
                         {
@@ -97,20 +105,8 @@ namespace API_SISTEMA.Services.Ventas
                         })
                         .ToList()
                 })
-                .OrderBy(p => p.nombre)
-                .ToListAsync();
 
-            // Validación de máximo 5 presentaciones activas
-            var productoConDemasiadasPresentaciones =
-                productos.FirstOrDefault(p => p.presentaciones.Count > 5);
-
-            if (productoConDemasiadasPresentaciones != null)
-            {
-                throw new InvalidOperationException(
-                    $"El producto '{productoConDemasiadasPresentaciones.nombre}' " +
-                    "tiene más de 5 presentaciones registradas."
-                );
-            }
+                .ToListAsync(ct);
 
             return productos;
         }

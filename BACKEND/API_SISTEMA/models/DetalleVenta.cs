@@ -16,6 +16,7 @@ namespace API_SISTEMA.Models
         public decimal subtotal { get; set; }
         public int id_producto_presentacion { get; set; }
         public int unidades_descontadas { get; set; }
+        public decimal? costo_unitario_venta { get; set; }
         public decimal ganancia { get; set; }
 
         public ProductoPresentacion producto_presentacion { get; set; } = null!;

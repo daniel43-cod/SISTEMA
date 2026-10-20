@@ -37,6 +37,7 @@ namespace API_SISTEMA.Data
         public DbSet<SesionUsuario> SesionesUsuario { get; set; }
         public DbSet<AuditoriaEvento> AuditoriaEventos { get; set; }
         public DbSet<AuditoriaEventoDetalle> AuditoriaEventoDetalles { get; set; }
+        public DbSet<VentaOperacion> VentaOperaciones { get; set; }
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
@@ -83,6 +84,24 @@ namespace API_SISTEMA.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Ventas>().ToTable("ventas");
+            modelBuilder.Entity<VentaOperacion>().ToTable("venta_operacion");
+            modelBuilder.Entity<VentaOperacion>().HasKey(o => o.id_operacion);
+            modelBuilder.Entity<VentaOperacion>().Property(o => o.huella).HasMaxLength(64).IsUnicode(false);
+            modelBuilder.Entity<VentaOperacion>().HasOne(o => o.Venta).WithMany().HasForeignKey(o => o.id_venta).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<VentaOperacion>().HasIndex(o => o.id_venta).IsUnique();
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.costo_unitario_venta).HasPrecision(18, 6);
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.ganancia).HasPrecision(18, 6);
+            modelBuilder.Entity<Ventas>().Property(v => v.ganancia_total).HasPrecision(18, 6);
+            modelBuilder.Entity<Ventas>().Property(v => v.subtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<Ventas>().Property(v => v.descuento).HasPrecision(18, 2);
+            modelBuilder.Entity<Ventas>().Property(v => v.total).HasPrecision(18, 2);
+            modelBuilder.Entity<Ventas>().Property(v => v.monto_pagado).HasPrecision(18, 2);
+            modelBuilder.Entity<Ventas>().Property(v => v.saldo_pendiente).HasPrecision(18, 2);
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.precio).HasPrecision(18, 2);
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.descuento).HasPrecision(18, 2);
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.subtotal).HasPrecision(18, 2);
+            modelBuilder.Entity<Pagos>().Property(p => p.monto).HasPrecision(18, 2);
+            modelBuilder.Entity<Ventas>().HasIndex(v => new { v.id_sesion_caja, v.fecha_venta });
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<API_SISTEMA.Models.Productos>().ToTable("productos", tabla =>

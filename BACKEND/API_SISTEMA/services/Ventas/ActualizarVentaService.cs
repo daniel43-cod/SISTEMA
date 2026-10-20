@@ -1,356 +1,66 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Models;
+using API_SISTEMA.Services.Caja;
+using API_SISTEMA.Utilidades;
 using Microsoft.EntityFrameworkCore;
-namespace API_SISTEMA.Services.Ventas
+
+namespace API_SISTEMA.Services.Ventas;
+
+public class ActualizarVentaService(SistemaDbContext context)
 {
-    public class ActualizarVentaService
+    public async Task ModificarVenta(int idVenta, ModificarVentaDto dto, int idUsuario, CancellationToken ct = default)
     {
-        private readonly SistemaDbContext _context;
-
-        public ActualizarVentaService(SistemaDbContext context)
+        if (dto is null || dto.id_cliente <= 0 || dto.detalles is null || dto.detalles.Count == 0 ||
+            dto.detalles.Any(d => d is null || d.id_producto <= 0 || d.id_producto_presentacion <= 0 || d.cantidad <= 0))
+            throw new ValidationException("Revisa el cliente y agrega al menos una línea válida a la venta.");
+        if (dto.detalles.Select(d => d.id_producto_presentacion).Distinct().Count() != dto.detalles.Count)
+            throw new ValidationException("No repitas la misma presentación.");
+        foreach (var d in dto.detalles) VentaReglas.Monto(d.descuento);
+        VentaReglas.Texto(dto.observacion, 100, "la observación");
+        var permisos = new API_SISTEMA.Services.Permisos.PermisoUsuarioService(context);
+        if (!await permisos.TienePermiso(idUsuario, API_SISTEMA.Utilidades.Permisos.Vender)) throw new UnauthorizedAccessException("No tienes permiso para vender.");
+        await using var tx = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        await CajaSesionActual.ParaOperacion(context, ct);
+        var venta = await context.ventas.Include(v => v.DetalleVentas).SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct)
+            ?? throw new KeyNotFoundException("La venta no existe.");
+        if (!await context.cliente.AnyAsync(c => c.id_cliente == dto.id_cliente, ct)) throw new ValidationException("El cliente no existe.");
+        // Nunca reconstruir unidades históricas usando una presentación que pudo cambiar.
+        if (venta.DetalleVentas.Any(d => d.unidades_descontadas <= 0 || d.precio <= 0 || d.costo_unitario_venta is null))
+            throw new VentaConflictoException("Esta venta histórica no tiene el detalle original completo. Requiere revisión antes de modificarla.");
+        var ids = dto.detalles.Select(d => d.id_producto).Concat(venta.DetalleVentas.Select(d => d.id_producto)).Distinct().Order().ToArray();
+        var productos = await context.productos.Include(p => p.Marca).ThenInclude(m => m.Categoria)
+            .Where(p => ids.Contains(p.IdProducto)).OrderBy(p => p.IdProducto).ToDictionaryAsync(p => p.IdProducto, ct);
+        foreach (var anterior in venta.DetalleVentas)
         {
-            _context = context;
+            var p = productos[anterior.id_producto];
+            if (p.Stock is null) throw new ValidationException("El inventario requiere revisión.");
+            try { p.Stock = checked(p.Stock.Value + anterior.unidades_descontadas); }
+            catch (OverflowException) { throw new ValidationException("El inventario excede el límite permitido."); }
         }
-
-        public async Task ModificarVenta(int idVenta,ModificarVentaDto dto,int idUsuario)
+        var idsPr = dto.detalles.Select(d => d.id_producto_presentacion).ToArray();
+        var presentaciones = await context.producto_presentaciones.Include(p => p.Presentacion)
+            .Where(p => idsPr.Contains(p.id_producto_presentacion)).ToDictionaryAsync(p => p.id_producto_presentacion, ct);
+        var nuevos = new List<DetalleVenta>();
+        foreach (var d in dto.detalles)
         {
-            if (dto == null)
-                throw new Exception(
-                    "La información de la venta es obligatoria."
-                );
-
-            if (dto.detalles == null || dto.detalles.Count == 0)
-                throw new Exception(
-                    "La venta debe contener al menos un producto."
-                );
-
-            using var transaccion =
-                await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                var venta = await _context.ventas
-                    .Include(v => v.DetalleVentas)
-                    .FirstOrDefaultAsync(v =>
-                        v.id_ventas == idVenta
-                    );
-
-                if (venta == null)
-                    throw new Exception(
-                        "La venta no existe."
-                    );
-
-                // =====================================================
-                // 2. VALIDAR QUE NO ESTÉ CERTIFICADA
-                // =====================================================
-
-                // ADAPTAR al nombre real de tu entidad/propiedad FEL.
-                //
-                // Ejemplo:
-                //
-                // bool certificada = await _context.factura_fel
-                //     .AnyAsync(f =>
-                //         f.id_venta == idVenta &&
-                //         f.estado == "CERTIFICADA");
-                //
-                // if (certificada)
-                // {
-                //     throw new Exception(
-                //         "La venta ya fue certificada y no puede modificarse."
-                //     );
-                // }
-
-                // =====================================================
-                // 3. VALIDAR CLIENTE
-                // =====================================================
-
-                bool clienteExiste = await _context.cliente
-                    .AnyAsync(c =>
-                        c.id_cliente == dto.id_cliente
-                    );
-
-                if (!clienteExiste)
-                    throw new Exception(
-                        "El cliente indicado no existe."
-                    );
-
-                // =====================================================
-                // 4. OBTENER PRESENTACIONES NUEVAS
-                // =====================================================
-
-                var idsPresentaciones = dto.detalles
-                    .Select(d => d.id_producto_presentacion)
-                    .Distinct()
-                    .ToList();
-
-                var presentaciones = await _context.producto_presentaciones
-                    .Include(p => p.Producto)
-                    .Where(p =>
-                        idsPresentaciones.Contains(
-                            p.id_producto_presentacion
-                        ) && p.estado && p.Presentacion.Estado == true
-                    )
-                    .ToListAsync();
-
-                var presentacionesPorId = presentaciones
-                    .ToDictionary(
-                        p => p.id_producto_presentacion
-                    );
-
-                // =====================================================
-                // 5. DEVOLVER STOCK DE LA VENTA ACTUAL
-                // =====================================================
-
-                foreach (var detalleActual in venta.DetalleVentas)
-                {
-                    var presentacionActual =
-                        await _context.producto_presentaciones
-                            .FirstOrDefaultAsync(p =>
-                                p.id_producto_presentacion ==
-                                detalleActual.id_producto_presentacion
-                            );
-
-                    if (presentacionActual == null)
-                        throw new Exception(
-                            "No se encontró una presentación actual de la venta."
-                        );
-
-                    var productoActual =
-                        await _context.productos
-                            .FirstAsync(p =>
-                                p.IdProducto ==
-                                detalleActual.id_producto
-                            );
-
-                    int unidadesDevueltas =
-                        detalleActual.cantidad *
-                        presentacionActual.unidades_equivalentes;
-
-                    productoActual.Stock =
-                        (productoActual.Stock ?? 0) +
-                        unidadesDevueltas;
-                }
-
-                // =====================================================
-                // 6. VALIDAR NUEVOS DETALLES Y CALCULAR TOTALES
-                // =====================================================
-
-                decimal subtotal = 0;
-                decimal descuentoTotal = 0;
-                decimal impuestoTotal = 0;
-                decimal gananciaTotal = 0;
-
-                foreach (var detalleDto in dto.detalles)
-                {
-                    if (detalleDto.cantidad <= 0)
-                        throw new Exception(
-                            "La cantidad debe ser mayor a cero."
-                        );
-
-                    if (detalleDto.descuento < 0)
-                        throw new Exception(
-                            "El descuento no puede ser negativo."
-                        );
-
-                    if (!presentacionesPorId.TryGetValue(
-                            detalleDto.id_producto_presentacion,
-                            out var presentacion))
-                    {
-                        throw new Exception(
-                            $"La presentación " +
-                            $"{detalleDto.id_producto_presentacion} no existe."
-                        );
-                    }
-
-                    if (presentacion.id_producto !=
-                        detalleDto.id_producto)
-                    {
-                        throw new Exception(
-                            "La presentación no pertenece al producto indicado."
-                        );
-                    }
-
-                    var producto = presentacion.Producto;
-
-                    int unidadesADescontar =
-                        detalleDto.cantidad *
-                        presentacion.unidades_equivalentes;
-
-                    int stockDisponible =
-                        producto.Stock ?? 0;
-
-                    if (unidadesADescontar > stockDisponible)
-                    {
-                        throw new Exception(
-                            $"Stock insuficiente para " +
-                            $"{producto.Nombre}."
-                        );
-                    }
-
-                    decimal subtotalDetalle =
-                        detalleDto.cantidad *
-                        presentacion.precio;
-
-                    if (detalleDto.descuento > subtotalDetalle)
-                    {
-                        throw new Exception(
-                            $"El descuento de {producto.Nombre} " +
-                            "no puede superar el subtotal."
-                        );
-                    }
-
-                    subtotal += subtotalDetalle;
-                    descuentoTotal += detalleDto.descuento;
-
-                    decimal costoDetalle = detalleDto.cantidad * presentacion.unidades_equivalentes * (producto.PrecioPromedioCompra ?? 0m);
-
-                    decimal ventaDetalle =
-                        subtotalDetalle -
-                        detalleDto.descuento;
-
-                    gananciaTotal +=
-                        ventaDetalle - costoDetalle;
-
-                    producto.Stock =
-                        stockDisponible - unidadesADescontar;
-                }
-
-                decimal total =
-                    subtotal - descuentoTotal + impuestoTotal;
-
-                // =====================================================
-                // 7. CALCULAR CUÁNTO YA SE HA PAGADO
-                // =====================================================
-
-                decimal montoPagado = await _context.pagos
-                    .Where(p =>
-                        p.id_venta == idVenta
-                    )
-                    .SumAsync(p =>
-                        (decimal?)p.monto
-                    ) ?? 0;
-
-                // =====================================================
-                // 8. EVITAR QUE EL NUEVO TOTAL SEA MENOR
-                //    QUE LO YA PAGADO SIN RESOLVER DEVOLUCIÓN
-                // =====================================================
-
-                if (montoPagado > total)
-                {
-                    decimal excedente =
-                        montoPagado - total;
-
-                    throw new Exception(
-                        $"La venta ya tiene Q{montoPagado:N2} pagados, " +
-                        $"pero el nuevo total sería Q{total:N2}. " +
-                        $"Existe un excedente de Q{excedente:N2} " +
-                        "que debe resolverse antes de modificar la venta."
-                    );
-                }
-
-                decimal saldoPendiente =
-                    total - montoPagado;
-
-                // =====================================================
-                // 9. ACTUALIZAR CABECERA DE VENTA
-                // =====================================================
-
-                venta.id_cliente =
-                    dto.id_cliente;
-
-                venta.subtotal =
-                    subtotal;
-
-                venta.descuento =
-                    descuentoTotal;
-
-                venta.impuesto =
-                    impuestoTotal;
-
-                venta.total =
-                    total;
-
-                venta.monto_pagado =
-                    montoPagado;
-
-                venta.saldo_pendiente =
-                    saldoPendiente;
-
-                venta.ganancia_total =
-                    gananciaTotal;
-
-                venta.observacion =
-                    dto.observacion;
-
-                // Ajusta estos IDs a los estados reales de tu BD
-                venta.id_estado_venta =
-                    saldoPendiente == 0
-                        ? 1
-                        : 2;
-
-                // =====================================================
-                // 10. REEMPLAZAR DETALLES
-                // =====================================================
-
-                _context.detalle_Ventas.RemoveRange(
-                    venta.DetalleVentas
-                );
-
-                foreach (var detalleDto in dto.detalles)
-                {
-                    var presentacion =
-                        presentacionesPorId[
-                            detalleDto.id_producto_presentacion
-                        ];
-
-                    decimal subtotalDetalle =
-                        detalleDto.cantidad *
-                        presentacion.precio;    
-
-                    var nuevoDetalle = new DetalleVenta
-                    {
-                        id_venta =
-                            venta.id_ventas,
-
-                        id_producto =
-                            detalleDto.id_producto,
-
-                        id_producto_presentacion =
-                            detalleDto.id_producto_presentacion,
-
-                        cantidad =
-                            detalleDto.cantidad,
-
-                        precio =
-                            presentacion.precio,
-
-                        descuento =
-                            detalleDto.descuento,
-
-                        subtotal =
-                            subtotalDetalle -
-                            detalleDto.descuento
-                    };
-
-                    _context.detalle_Ventas.Add(
-                        nuevoDetalle
-                    );
-                }
-
-                // =====================================================
-                // 11. GUARDAR TODO
-                // =====================================================
-
-                await _context.SaveChangesAsync();
-
-                await transaccion.CommitAsync();
-            }
-            catch
-            {
-                await transaccion.RollbackAsync();
-                throw;
-            }
+            if (!productos.TryGetValue(d.id_producto, out var p) || !p.Marca.Estado || !p.Marca.Categoria.Estado ||
+                !presentaciones.TryGetValue(d.id_producto_presentacion, out var pr) || pr.id_producto != p.IdProducto || !pr.estado || pr.Presentacion.Estado != true)
+                throw new ValidationException("Producto, marca, categoría y presentación deben estar activos.");
+            nuevos.Add(VentaReglas.Calcular(p, pr, d.cantidad, d.descuento));
         }
+        var total = nuevos.Sum(d => d.subtotal);
+        var descuento = nuevos.Sum(d => d.descuento ?? 0m);
+        VentaReglas.Monto(total, false); VentaReglas.Monto(total + descuento);
+        var pagado = await context.pagos.Where(p => p.id_venta == idVenta).SumAsync(p => (decimal?)p.monto, ct) ?? 0m;
+        if (pagado > total) throw new VentaConflictoException("El nuevo total no puede ser menor a lo ya pagado.");
+        context.detalle_Ventas.RemoveRange(venta.DetalleVentas);
+        venta.DetalleVentas = nuevos;
+        venta.id_cliente = dto.id_cliente; venta.subtotal = total + descuento; venta.descuento = descuento;
+        venta.total = total; venta.ganancia_total = nuevos.Sum(d => d.ganancia); venta.monto_pagado = pagado;
+        venta.saldo_pendiente = total - pagado; venta.id_estado_venta = total == pagado ? 1 : 2; venta.observacion = dto.observacion?.Trim();
+        await context.SaveChangesAsync(ct); await tx.CommitAsync(ct);
     }
 }
