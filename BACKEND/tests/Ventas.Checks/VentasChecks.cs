@@ -303,6 +303,15 @@ await using (var db = new CheckDb(options))
     var listado = new VentaService(db);
     var esperadas = await db.ventas.Where(v => v.id_sesion_caja == 1).Select(v => v.id_ventas).ToListAsync();
     var inicial = await listado.ListarVentas(1);
+    Check(inicial.Count > 0 && inicial.All(v => v.ganancia_total is null), "Vendedor no recibe ganancia en el listado");
+    Check(!JsonSerializer.Serialize(inicial).Contains("ganancia_total"), "JSON del vendedor omite el campo de ganancia");
+    db.rols.Add(new Rol { id_rol = 2, nombre = Roles.Administrador, descripcion = "Admin", estado = true });
+    db.usuarios.Add(new Usuario { id_usuario = 2, id_rol = 2, nombre = "Admin", apellido = "Prueba", usuario = "admin", telefono = "456", estado = true });
+    await db.SaveChangesAsync();
+    var vistaAdmin = await listado.ListarVentas(2);
+    var ganancias = await db.ventas.Where(v => v.id_sesion_caja == 1).ToDictionaryAsync(v => v.id_ventas, v => v.ganancia_total);
+    Check(vistaAdmin.Count > 0 && vistaAdmin.All(v => v.ganancia_total == ganancias[v.id_ventas]), "Administrador recibe la ganancia guardada de cada venta");
+    Check(JsonSerializer.Serialize(vistaAdmin).Contains("ganancia_total"), "JSON del administrador incluye ganancia");
     Check(inicial.Select(v => v.id_ventas).Order().SequenceEqual(esperadas.Order()), "Listado incluye todas las ventas de caja abierta");
     db.sesioncaja.Add(new SesionCaja { id_sesion_caja = 2, id_caja = 1, id_usuario_apertura = 1,
         fecha_apertura = DateTime.Now.AddHours(-2), fecha_cierre = DateTime.Now.AddHours(-1),

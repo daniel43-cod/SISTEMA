@@ -26,12 +26,16 @@ namespace API_SISTEMA.Services.Ventas
             filtro ??= new FiltrarVentasDto();
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
             var usuario = await _context.usuarios
+                .AsNoTracking()
+                .Include(u => u.rol)
                 .FirstOrDefaultAsync(u => u.id_usuario == idUsuario, ct);
 
             if (usuario == null)
             {
                 throw new UnauthorizedAccessException("Usuario no encontrado.");
             }
+
+            var puedeVerGanancia = usuario.estado && usuario.rol is { estado: true, nombre: Roles.Administrador };
 
             // Consulta del turno compartido; el responsable de cada operacion se conserva.
             var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context, ct);
@@ -63,7 +67,7 @@ namespace API_SISTEMA.Services.Ventas
                     usuario = v.usuario.nombre,
                     estado = v.EstadoVenta.descripcion,
                     origen = v.origen,
-                    ganancia_total = v.ganancia_total,
+                    ganancia_total = puedeVerGanancia ? v.ganancia_total : (decimal?)null,
                     monto_pagado = v.monto_pagado,
                     saldo_pendiente = v.saldo_pendiente,
                     observacion = v.observacion

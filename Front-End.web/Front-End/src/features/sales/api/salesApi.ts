@@ -2,7 +2,7 @@ import { requestJson } from '../../../shared/api/httpClient'
 import { ApiError } from '../../../shared/api/ApiError'
 import type { SaleProduct } from '../utils/saleValidation'
 
-export type SaleHistory = { id_ventas: number; cliente: string; total: number; saldo_pendiente: number; estado: string; fecha_venta: string }
+export type SaleHistory = { id_ventas: number; cliente: string; total: number; ganancia_total?: number; saldo_pendiente: number; estado: string; fecha_venta: string }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 const id = (v: unknown) => Number.isSafeInteger(v) && Number(v) > 0
 const amount = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0
@@ -23,7 +23,7 @@ export async function loadSaleProducts(token: string, signal?: AbortSignal): Pro
 export async function loadSaleHistory(token: string, signal?: AbortSignal, page = 1): Promise<SaleHistory[]> {
   const result = await requestJson(`/Venta/listar?pagina=${page}&tamanoPagina=50`, { token, signal })
   if (!Array.isArray(result) || !result.every(v => record(v) && id(v.id_ventas) && typeof v.cliente === 'string' && amount(v.total) &&
-    amount(v.saldo_pendiente) && typeof v.estado === 'string' && typeof v.fecha_venta === 'string'))
+    amount(v.saldo_pendiente) && (v.ganancia_total === undefined || (typeof v.ganancia_total === 'number' && Number.isFinite(v.ganancia_total))) && typeof v.estado === 'string' && typeof v.fecha_venta === 'string'))
     throw new ApiError('El historial de ventas no tiene el formato esperado.')
   return result as SaleHistory[]
 }
@@ -43,4 +43,19 @@ export async function createSale(body: unknown, token: string) {
   if (!record(result) || !id(result.id_venta) || !amount(result.total) || !amount(result.saldo_pendiente))
     throw new ApiError('No se pudo confirmar la respuesta de la venta.', 200)
   return { id: Number(result.id_venta), total: Number(result.total), saldo: Number(result.saldo_pendiente) }
+}
+
+export type SaleDetail = { id_producto: number; nombre_producto: string; descripcion_resentacion: string; cantidad: number; precio: number; descuento: number }
+export async function loadSaleDetails(saleId: number, token: string, signal?: AbortSignal): Promise<SaleDetail[]> {
+  const result = await requestJson('/DetalleVenta_/listar/' + saleId, { token, signal })
+  if (!Array.isArray(result) || !result.every(v => record(v) && id(v.id_producto) && typeof v.nombre_producto === 'string' &&
+    typeof v.descripcion_resentacion === 'string' && id(v.cantidad) && amount(v.precio) && amount(v.descuento)))
+    throw new ApiError('El detalle de venta no tiene el formato esperado.')
+  return result as SaleDetail[]
+}
+export async function paySale(saleId: number, monto: number, observacion: string, token: string) {
+  const result = await requestJson('/Venta/AbonarVenta', { method: 'POST', token, validationMessages: true,
+    body: { id_venta: saleId, monto, observacion } })
+  if (!record(result) || !id(result.id_pago) || result.id_venta !== saleId || result.monto !== monto)
+    throw new ApiError('No se pudo confirmar la respuesta del abono.', 200)
 }
