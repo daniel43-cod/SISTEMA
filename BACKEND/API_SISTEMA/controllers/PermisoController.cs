@@ -18,7 +18,7 @@ namespace API_SISTEMA.Controllers
             _permisoService = permisoService;
         }
 
-        // Trae todos los permisos que tiene un rol (para mostrar checkboxes marcados en WPF)
+    
         [HttpGet("rol/{idRol}")]
         public async Task<IActionResult> ObtenerPermisosDeRol(int idRol)
         {
@@ -26,7 +26,7 @@ namespace API_SISTEMA.Controllers
             return Ok(permisos);
         }
 
-        // El admin marca una casilla -> se asigna el permiso
+    
         [HttpPost("asignar")]
         public async Task<IActionResult> Asignar(int idRol, int idPermiso)
         {
@@ -41,7 +41,6 @@ namespace API_SISTEMA.Controllers
             }
         }
 
-        // El admin desmarca una casilla -> se quita el permiso
         [HttpDelete("quitar")]
         public async Task<IActionResult> Quitar(int idRol, int idPermiso)
         {

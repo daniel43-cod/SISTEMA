@@ -25,10 +25,7 @@ namespace API_SISTEMA.Services.Ventas
         {
             filtro ??= new FiltrarVentasDto();
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
-            var usuario = await _context.usuarios
-                .AsNoTracking()
-                .Include(u => u.rol)
-                .FirstOrDefaultAsync(u => u.id_usuario == idUsuario, ct);
+            var usuario = await _context.usuarios.AsNoTracking().Include(u => u.rol).FirstOrDefaultAsync(u => u.id_usuario == idUsuario, ct);
 
             if (usuario == null)
             {
