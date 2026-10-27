@@ -49,43 +49,17 @@ public sealed class RegistrarPedidoCatalogoService(SistemaDbContext context)
         }
         var zona = await context.ZonasEntrega.AsNoTracking().SingleOrDefaultAsync(z => z.IdZonaEntrega == dto.IdZonaEntrega && z.Estado, ct)
             ?? throw new ValidationException("La zona de entrega no está disponible.");
-        var ids = dto.Detalles.Select(d => d.IdProductoPresentacion).ToArray();
-        var presentaciones = await context.producto_presentaciones.AsNoTracking()
-            .Include(p => p.Presentacion).Include(p => p.Producto).ThenInclude(p => p.Marca).ThenInclude(m => m.Categoria)
-            .Where(p => ids.Contains(p.id_producto_presentacion)).ToDictionaryAsync(p => p.id_producto_presentacion, ct);
-        var unidadesPorProducto = new Dictionary<int, long>();
         var pedido = new PedidoCatalogo
         {
             IdOperacion = dto.IdOperacion, NombreCliente = dto.NombreCliente.Trim(), Telefono = telefono,
             Direccion = dto.Direccion.Trim(), Referencias = dto.Referencias?.Trim(), Observacion = dto.Observacion?.Trim(),
             IdZonaEntrega = zona.IdZonaEntrega, Estado = EstadoPedidoCatalogo.Pendiente
         };
-        foreach (var linea in dto.Detalles)
-        {
-            if (!presentaciones.TryGetValue(linea.IdProductoPresentacion, out var pr) || !pr.estado ||
-                pr.Presentacion.Estado != true || !pr.Producto.Marca.Estado || !pr.Producto.Marca.Categoria.Estado || pr.unidades_equivalentes <= 0)
-                throw new ValidationException("Uno de los productos o sus presentaciones ya no está disponible.");
-            VentaReglas.Monto(pr.precio, false);
-            if (pr.Producto.PrecioPromedioCompra is not decimal costo || costo <= 0 || pr.precio <= costo * pr.unidades_equivalentes)
-                throw new ValidationException("Uno de los productos no tiene un precio de venta válido.");
-            var unidades = (long)linea.Cantidad * pr.unidades_equivalentes;
-            unidadesPorProducto.TryGetValue(pr.id_producto, out var acumuladas);
-            unidadesPorProducto[pr.id_producto] = acumuladas + unidades;
-            if (unidadesPorProducto[pr.id_producto] > (pr.Producto.Stock ?? 0))
-                throw new ValidationException("Existencias insuficientes para las cantidades solicitadas.");
-            var subtotal = pr.precio * linea.Cantidad;
-            VentaReglas.Monto(subtotal, false);
-            pedido.Total += subtotal;
-            pedido.Detalles.Add(new DetallePedidoCatalogo
-            {
-                IdProductoPresentacion = pr.id_producto_presentacion, Cantidad = linea.Cantidad,
-                NombreProducto = pr.Producto.Nombre, NombrePresentacion = pr.Presentacion.Descripcion,
-                PrecioUnitario = pr.precio
-            });
-        }
-        VentaReglas.Monto(pedido.Total, false);
-        if (pedido.Total <= zona.MinimoCompra)
-            throw new ValidationException($"El total debe ser mayor a Q{zona.MinimoCompra:0.00} para esta zona.");
+        var calculo = await CalcularDetallesPedido.Calcular(context,
+            dto.Detalles.Select(d => new EditarDetallePedidoCatalogoDto
+            { IdProductoPresentacion = d.IdProductoPresentacion, Cantidad = d.Cantidad }).ToList(), zona.MinimoCompra, ct);
+        pedido.Detalles = calculo.Detalles;
+        pedido.Total = calculo.Total;
         context.PedidosCatalogo.Add(pedido);
         await context.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);

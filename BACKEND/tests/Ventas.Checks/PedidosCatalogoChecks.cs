@@ -151,5 +151,129 @@ internal static class PedidosCatalogoChecks
         check(controller.GetMethod("Registrar")!.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true) &&
             controller.GetMethod("Zonas")!.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true),
             "Pedidos: registro y zonas conservan acceso público");
+        async Task Editar(params EditarDetallePedidoCatalogoDto[] lineas)
+        {
+            await using var db = new CheckDb(options);
+            var http = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+            http.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+                [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "2")], "checks"));
+            var peticion = new API_SISTEMA.Security.ContextoPeticion(new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = http });
+            await new EditarPedidoCatalogoService(db, peticion, new API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService(db, peticion))
+                .Editar(pedido.IdPedido, new EditarPedidoCatalogoDto { Detalles = lineas.ToList() });
+        }
+        await Editar(new EditarDetallePedidoCatalogoDto() { IdProductoPresentacion = 1, Cantidad = 3 });
+        await using (var db = new CheckDb(options))
+        {
+            var editado = await db.PedidosCatalogo.Include(p => p.Detalles).SingleAsync(p => p.IdPedido == pedido.IdPedido);
+            check(editado.Total == 390 && editado.Detalles.Single().Subtotal == 390,
+                "Edición: actualiza cantidad sin descuento recalculando subtotal y total");
+            check(editado.NombreCliente == pedido.NombreCliente && editado.Telefono == pedido.Telefono &&
+                editado.Direccion == pedido.Direccion && editado.IdZonaEntrega == pedido.IdZonaEntrega && editado.Estado == EstadoPedidoCatalogo.Pendiente,
+                "Edición: conserva cliente, teléfono, dirección, zona y estado");
+            check(await db.productos.Where(p => p.IdProducto == 1).Select(p => p.Stock).SingleAsync() == stock,
+                "Edición: no descuenta existencias");
+            var evento = await db.AuditoriaEventos.Include(e => e.Detalles).SingleAsync(e => e.Accion == "PEDIDO_CATALOGO_EDITADO");
+            check(evento.IdUsuario == 2 && evento.Detalles.Any(d => d.Campo == "detalles" && d.ValorAnterior != d.ValorNuevo),
+                "Edición: auditoría conserva responsable y cambios anteriores y nuevos");
+        }
+        await Editar(new EditarDetallePedidoCatalogoDto() { IdProductoPresentacion = 1, Cantidad = 3 });
+        check(await consulta.AuditoriaEventos.CountAsync(e => e.Accion == "PEDIDO_CATALOGO_EDITADO") == 1,
+            "Edición: repetir los mismos datos no duplica auditoría");
+        await Editar(new EditarDetallePedidoCatalogoDto() { IdProductoPresentacion = 1, Cantidad = 1 }, new() { IdProductoPresentacion = 200, Cantidad = 1 });
+        check((await listado.ObtenerDetalle(pedido.IdPedido))!.Detalles.Count == 2, "Edición: agrega presentaciones");
+        await Editar(new EditarDetallePedidoCatalogoDto() { IdProductoPresentacion = 200, Cantidad = 2 });
+        var reducido = (await listado.ObtenerDetalle(pedido.IdPedido))!;
+        check(reducido.Detalles.Count == 1 && reducido.Detalles[0].IdProductoPresentacion == 200 && reducido.Total == 500,
+            "Edición: quita presentaciones omitidas");
+        foreach (var lineas in new EditarDetallePedidoCatalogoDto[][]
+        {
+            [], [new() { IdProductoPresentacion = 1, Cantidad = 1 }],
+            [new() { IdProductoPresentacion = 1, Cantidad = int.MaxValue }],
+            [new() { IdProductoPresentacion = 1, Cantidad = 2 }, new() { IdProductoPresentacion = 1, Cantidad = 2 }]
+        })
+        {
+            try { await Editar(lineas); throw new Exception("Edición inválida aceptada"); }
+            catch (ValidationException) { check(true, "Edición: rechaza importes, mínimo, existencias o detalles inválidos"); }
+        }
+        await consulta.Database.ExecuteSqlRawAsync("CREATE TRIGGER rechazo_edicion_auditoria BEFORE INSERT ON auditoria_evento BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END;");
+        try { await Editar(new EditarDetallePedidoCatalogoDto() { IdProductoPresentacion = 1, Cantidad = 3 }); throw new Exception("Edición sin auditoría aceptada"); }
+        catch (DbUpdateException) { check(true, "Edición: fallo de auditoría rechaza cambios"); }
+        check((await listado.ObtenerDetalle(pedido.IdPedido))!.Total == 500 &&
+            (await listado.ObtenerDetalle(pedido.IdPedido))!.Detalles.Single().IdProductoPresentacion == 200,
+            "Edición: rollback conserva detalles y total");
+        await consulta.Database.ExecuteSqlRawAsync("DROP TRIGGER rechazo_edicion_auditoria;");
+        await consulta.PedidosCatalogo.Where(p => p.IdPedido == pedido.IdPedido)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estado, EstadoPedidoCatalogo.Cancelado));
+        try { await Editar(new EditarDetallePedidoCatalogoDto() { IdProductoPresentacion = 1, Cantidad = 3 }); throw new Exception("Pedido cancelado editado"); }
+        catch (PedidoCatalogoEdicionConflictoException) { check(true, "Edición: bloquea pedidos que no están pendientes"); }
+        try
+        {
+            System.Text.Json.JsonSerializer.Deserialize<EditarPedidoCatalogoDto>("{\"Telefono\":\"otro\",\"Detalles\":[]}");
+            throw new Exception("Datos del cliente aceptados");
+        }
+        catch (System.Text.Json.JsonException) { check(true, "Edición: DTO rechaza campos del cliente"); }
+        try
+        {
+            System.Text.Json.JsonSerializer.Deserialize<EditarPedidoCatalogoDto>(
+                "{\"Detalles\":[{\"IdProductoPresentacion\":1,\"Cantidad\":3,\"Descuento\":10}]}");
+            throw new Exception("Descuento aceptado antes de aprobar venta");
+        }
+        catch (System.Text.Json.JsonException) { check(true, "Edición: rechaza descuentos en pedidos pendientes"); }
+        await consulta.PedidosCatalogo.Where(p => p.IdPedido == pedido.IdPedido)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estado, EstadoPedidoCatalogo.Pendiente));
+        consulta.rol_Permisocs.Add(new RolPermiso { id_rol = 2, id_permiso = 1 });
+        await consulta.SaveChangesAsync();
+        async Task<object> Confirmar(ConfirmarVentaPedidoDto borrador)
+        {
+            await using var db = new CheckDb(options);
+            var http = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+            http.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+                [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "2")], "checks"));
+            var peticion = new API_SISTEMA.Security.ContextoPeticion(new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = http });
+            return await new ConfirmarVentaPedidoService(db, peticion,
+                new API_SISTEMA.Services.Ventas.CrearVentaService(db,
+                    new API_SISTEMA.Services.MovimientoCaja.MovimientoCajaService(db), new API_SISTEMA.Services.Permisos.PermisoUsuarioService(db)),
+                new API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService(db, peticion)).Confirmar(pedido.IdPedido, borrador);
+        }
+        var borrador = new ConfirmarVentaPedidoDto { IdOperacion = Guid.NewGuid(), TotalEsperado = 380, PagoInicial = 0,
+            Detalles = [new() { IdProductoPresentacion = 1, Cantidad = 3, Descuento = 10 }] };
+        try { await Confirmar(borrador); throw new Exception("Venta sin caja aceptada"); }
+        catch (API_SISTEMA.Utilidades.CajaValidationException) { check(true, "Confirmación: exige caja abierta"); }
+        await consulta.sesioncaja.Where(c => c.id_sesion_caja == 1).ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, (DateTime?)null));
+        try
+        {
+            await Confirmar(new() { IdOperacion = Guid.NewGuid(), TotalEsperado = 390, Detalles = borrador.Detalles });
+            throw new Exception("Total desactualizado aceptado");
+        }
+        catch (PedidoCatalogoEdicionConflictoException) { check(true, "Confirmación: detecta total y precios desactualizados"); }
+        var ventasAntes = await consulta.ventas.CountAsync();
+        var stockAntes = await consulta.productos.Where(p => p.IdProducto == 1).Select(p => p.Stock).SingleAsync();
+        await consulta.Database.ExecuteSqlRawAsync("CREATE TRIGGER rechazo_confirmacion BEFORE INSERT ON auditoria_evento BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END;");
+        try { await Confirmar(borrador); throw new Exception("Conversión sin auditoría aceptada"); }
+        catch (DbUpdateException) { check(true, "Confirmación: fallo de auditoría revierte operación"); }
+        check(await consulta.ventas.CountAsync() == ventasAntes &&
+            await consulta.productos.Where(p => p.IdProducto == 1).Select(p => p.Stock).SingleAsync() == stockAntes &&
+            !await consulta.PedidosCatalogo.AnyAsync(p => p.IdPedido == pedido.IdPedido && p.IdVenta != null),
+            "Confirmación: rollback conserva pedido, inventario y ventas");
+        await consulta.Database.ExecuteSqlRawAsync("DROP TRIGGER rechazo_confirmacion;");
+        await Confirmar(borrador);
+        await Confirmar(borrador);
+        var convertido = await consulta.PedidosCatalogo.AsNoTracking().Include(p => p.Detalles).SingleAsync(p => p.IdPedido == pedido.IdPedido);
+        var ventaConfirmada = await consulta.ventas.AsNoTracking().Include(v => v.DetalleVentas).SingleAsync(v => v.id_ventas == convertido.IdVenta);
+        check(convertido.Estado == EstadoPedidoCatalogo.ConvertidoAVenta && ventaConfirmada.id_usuario == 2 &&
+            ventaConfirmada.origen == "CATALOGO" && ventaConfirmada.total == 380 && ventaConfirmada.saldo_pendiente == 380 &&
+            ventaConfirmada.DetalleVentas.Single().descuento == 10, "Confirmación: registra venta, responsable y descuento");
+        check(convertido.Detalles.Single().IdProductoPresentacion == 200 && convertido.Total == 500,
+            "Confirmación: conserva el pedido original");
+        check(await consulta.ventas.CountAsync() == ventasAntes + 1 &&
+            await consulta.productos.Where(p => p.IdProducto == 1).Select(p => p.Stock).SingleAsync() == stockAntes - 3,
+            "Confirmación: reintento no duplica venta ni descuento de inventario");
+        check(!await consulta.pagos.AnyAsync(p => p.id_venta == ventaConfirmada.id_ventas), "Confirmación: sin pago inicial no registra cobro");
+        try
+        {
+            await Confirmar(new() { IdOperacion = Guid.NewGuid(), TotalEsperado = 380, Detalles = borrador.Detalles });
+            throw new Exception("Pedido convertido dos veces");
+        }
+        catch (PedidoCatalogoEdicionConflictoException) { check(true, "Confirmación: impide una segunda conversión"); }
     }
 }

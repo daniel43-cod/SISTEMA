@@ -39,6 +39,14 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
         403: 'No tienes permiso para realizar esta acción.',
         429: 'Demasiados intentos. Espera antes de volver a intentarlo.',
       }
+      if (response.status === 409) {
+        try {
+          const conflict = await response.json()
+          // Mensaje conocido por código; no exponer errores internos arbitrarios.
+          if (conflict?.codigo === 'CAJA_NO_ABIERTA')
+            messages[409] = 'Abre la caja para poder registrar o aprobar la venta.'
+        } catch { /* Un conflicto desconocido conserva el mensaje genérico. */ }
+      }
       if (response.status === 400 && options.validationMessages) {
         try {
           const validation = await response.json()

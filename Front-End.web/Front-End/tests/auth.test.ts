@@ -103,3 +103,19 @@ test('La duración la define el backend: admite sesiones superiores a 60 minutos
   assert.ok(parseStaffSession(sessionResponse({ token: tokenWithMinutes(120) })).expiresAt > Date.now())
 })
 
+
+test('Caja cerrada muestra instrucción al registrar o aprobar sin exponer texto del servidor', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json(
+    { codigo: 'CAJA_NO_ABIERTA', mensaje: 'Texto que no se debe copiar' }, { status: 409 }))
+  for (const route of ['/Venta/crear', '/pedidos-catalogo/1/confirmar-venta'])
+    await assert.rejects(requestJson(route, { method: 'POST', body: {} }),
+      (error: unknown) => error instanceof ApiError && error.status === 409 &&
+        error.message === 'Abre la caja para poder registrar o aprobar la venta.')
+})
+
+test('Conflictos desconocidos no exponen detalles internos', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json(
+    { codigo: 'DESCONOCIDO', mensaje: 'SQL password=secret' }, { status: 409 }))
+  await assert.rejects(requestJson('/Venta/crear', { method: 'POST', body: {} }),
+    (error: unknown) => error instanceof ApiError && error.status === 409 && !error.message.includes('secret'))
+})

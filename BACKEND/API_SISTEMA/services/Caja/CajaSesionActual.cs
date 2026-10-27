@@ -20,7 +20,8 @@ public static class CajaSesionActual
         // El bloqueo de escritura se conserva hasta confirmar la operacion o el cierre.
         if (context.Database.CurrentTransaction is null)
             throw new InvalidOperationException("La operacion de caja requiere una transaccion.");
-        var sesion = await Consultar(context, ct) ?? throw new CajaValidationException("No hay una caja abierta.");
+        var sesion = await Consultar(context, ct) ?? throw new CajaValidationException(
+            "Abre la caja para poder registrar o aprobar la venta.", "CAJA_NO_ABIERTA");
         var bloqueada = await context.sesioncaja.Where(s => s.id_sesion_caja == sesion.id_sesion_caja && s.fecha_cierre == null)
             .ExecuteUpdateAsync(set => set.SetProperty(s => s.monto_inicial, s => s.monto_inicial), ct);
         if (bloqueada != 1) throw new CajaValidationException("La caja fue cerrada. Actualiza antes de continuar.");

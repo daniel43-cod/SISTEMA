@@ -53,7 +53,9 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
             return await context.ventas.AsNoTracking().SingleAsync(v => v.id_ventas == op.id_venta, ct);
         }
         if (await Repetida() is { } anterior) return anterior;
-        await using var tx = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        // La conversión de un pedido conserva la transacción externa hasta vincularlo y auditarlo.
+        await using var tx = context.Database.CurrentTransaction is null
+            ? await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
         var caja = await CajaSesionActual.ParaOperacion(context, ct);
         // Dos solicitudes con la misma clave pueden haber llegado antes de adquirir el bloqueo del turno.
         if (await Repetida() is { } repetida) return repetida;
@@ -109,7 +111,7 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
                 $"Pago de venta #{venta.id_ventas}", idVenta: venta.id_ventas, idPagoVenta: registroPago.id_pago, cancellationToken: ct);
             await context.SaveChangesAsync(ct);
         }
-        await tx.CommitAsync(ct);
+        if (tx is not null) await tx.CommitAsync(ct);
         return venta;
     }
 }

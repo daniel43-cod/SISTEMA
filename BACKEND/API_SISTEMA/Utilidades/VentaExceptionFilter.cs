@@ -26,7 +26,7 @@ public sealed class VentaExceptionFilter(ILogger<VentaExceptionFilter> logger) :
         var mensaje = status is 400 or 403 or 404 || ex is CajaValidationException or VentaConflictoException ? ex.Message
             : status == 409 ? "Conflicto de datos. Consulta el resultado antes de reintentar con la misma clave de operación."
             : "No se pudo confirmar la operación. Consulta el resultado antes de reenviarla.";
-        context.Result = new ObjectResult(new { mensaje, traceId = context.HttpContext.TraceIdentifier }) { StatusCode = status };
+        context.Result = new ObjectResult(new { mensaje, codigo = (ex as CajaValidationException)?.Codigo, traceId = context.HttpContext.TraceIdentifier }) { StatusCode = status };
         context.ExceptionHandled = true;
     }
 }

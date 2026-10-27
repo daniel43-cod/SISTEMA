@@ -32,3 +32,9 @@ export async function getOrderDetail(token: string, orderId: number, signal?: Ab
     throw new ApiError('El detalle del pedido no tiene el formato esperado.')
   return v as OrderDetail
 }
+
+export async function confirmOrderSale(orderId: number, body: unknown, token: string) {
+  const v = await requestJson('/pedidos-catalogo/' + orderId + '/confirmar-venta', { method: 'POST', body, token, validationMessages: true })
+  if (!record(v) || !id(v.idVenta) || !amount(v.total) || !amount(v.saldoPendiente))
+    throw new ApiError('No se pudo confirmar la respuesta de la venta.', 200)
+}

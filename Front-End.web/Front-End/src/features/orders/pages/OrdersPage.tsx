@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { SalesPage } from '../../sales/pages/SalesPage'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -14,7 +15,7 @@ const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: '
 // SQL Server almacena fecha_utc; sus cadenas sin sufijo también deben interpretarse como UTC.
 const formatDate = (value: string) => date.format(new Date(/(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : value + 'Z'))
 
-function OrderDialog({ order, token, onClose, onExpired }: { order: OrderSummary; token: string; onClose: () => void; onExpired: () => void }) {
+function OrderDialog({ order, token, onClose, onExpired, onPrepare }: { order: OrderSummary; token: string; onClose: () => void; onExpired: () => void; onPrepare: (detail: OrderDetail) => void }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [detail, setDetail] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,6 +56,7 @@ function OrderDialog({ order, token, onClose, onExpired }: { order: OrderSummary
         </table></div>
         <dl className="sale-payment-summary sale-payment-totals"><div><dt>Total</dt><dd>{money.format(detail.total)}</dd></div>
           <div><dt>Estado</dt><dd><span className="sale-list-status">{detail.estado}</span></dd></div></dl>
+        {detail.estado === 'Pendiente' && <button type="button" onClick={() => onPrepare(detail)}>Preparar venta</button>}
       </>}
     </section>
   </dialog>, document.body)
@@ -64,6 +66,8 @@ export function OrdersPage() {
   const { session, logout } = useAuth()
   const token = session?.token
   const allowed = session?.user.role === 'ADMINISTRADOR'
+  const [prepared, setPrepared] = useState<OrderDetail | null>(null)
+  const [success, setSuccess] = useState('')
   const [page, setPage] = useState(1)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<OrderPage | null>(null)
@@ -86,8 +90,11 @@ export function OrdersPage() {
     return () => controller.abort()
   }, [token, allowed, page, revision, logout])
   if (!allowed || !token) return null
+  if (prepared) return <SalesPage key={prepared.idPedido} order={prepared}
+    onCancelOrder={() => setPrepared(null)} onOrderConfirmed={() => { setPrepared(null); setSuccess('Venta registrada correctamente.'); setRevision(v => v + 1) }} />
   return <section className="sales-page sale-list-page" aria-label="Pedidos pendientes del catálogo">
-    {selected && <OrderDialog key={selected.idPedido} order={selected} token={token} onClose={() => setSelected(null)} onExpired={logout} />}
+    {selected && <OrderDialog key={selected.idPedido} order={selected} token={token} onClose={() => setSelected(null)} onExpired={logout} onPrepare={detail => { setSelected(null); setSuccess(''); setPrepared(detail) }} />}
+    {success && <p role="status">{success}</p>}
     <div className="sales-card"><div className="sales-heading"><div><h2>Pendientes de aprobación</h2><p className="sale-list-description">50 pedidos por página · Más recientes primero</p></div>
       <RefreshButton label="Actualizar pedidos" loading={loading} onClick={() => { setPage(1); setRevision(v => v + 1) }} /></div>
       {loading ? <p role="status">Cargando pedidos…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : !data?.pedidos.length ?

@@ -15,6 +15,11 @@ public sealed class PedidoCatalogoExceptionFilter(ILogger<PedidoCatalogoExceptio
         var status = ex switch
         {
             ValidationException => 400,
+            UnauthorizedAccessException => 403,
+            KeyNotFoundException => 404,
+            PedidoCatalogoEdicionConflictoException => 409,
+            CajaValidationException => 409,
+            VentaConflictoException => 409,
             PedidoCatalogoConflictoException => 409,
             DbUpdateConcurrencyException => 409,
             OperationCanceledException when context.HttpContext.RequestAborted.IsCancellationRequested => 499,
@@ -22,11 +27,11 @@ public sealed class PedidoCatalogoExceptionFilter(ILogger<PedidoCatalogoExceptio
             _ => 500
         };
         if (status == 500) logger.LogError(ex, "Error en pedidos del catálogo. Referencia: {TraceId}", context.HttpContext.TraceIdentifier);
-        var mensaje = ex is ValidationException or PedidoCatalogoConflictoException ? ex.Message
+        var mensaje = ex is ValidationException or PedidoCatalogoConflictoException or PedidoCatalogoEdicionConflictoException or KeyNotFoundException or UnauthorizedAccessException or CajaValidationException or VentaConflictoException ? ex.Message
             : HttpMethods.IsGet(context.HttpContext.Request.Method)
                 ? "No se pudieron consultar los pedidos del catálogo. Intenta nuevamente más tarde."
                 : "No se pudo confirmar el pedido. Conserva la misma clave de operación al reintentar.";
-        context.Result = new ObjectResult(new { mensaje, traceId = context.HttpContext.TraceIdentifier }) { StatusCode = status };
+        context.Result = new ObjectResult(new { mensaje, codigo = (ex as CajaValidationException)?.Codigo, traceId = context.HttpContext.TraceIdentifier }) { StatusCode = status };
         context.ExceptionHandled = true;
     }
 }

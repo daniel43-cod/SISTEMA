@@ -2,7 +2,7 @@ import { requestJson } from '../../../shared/api/httpClient'
 import { ApiError } from '../../../shared/api/ApiError'
 import type { SaleProduct } from '../utils/saleValidation'
 
-export type SaleHistory = { id_ventas: number; cliente: string; total: number; ganancia_total?: number; saldo_pendiente: number; estado: string; fecha_venta: string }
+export type SaleHistory = { id_ventas: number; cliente: string; usuario: string; total: number; ganancia_total?: number; saldo_pendiente: number; estado: string; fecha_venta: string }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 const id = (v: unknown) => Number.isSafeInteger(v) && Number(v) > 0
 const amount = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0
@@ -22,7 +22,7 @@ export async function loadSaleProducts(token: string, signal?: AbortSignal): Pro
 }
 export async function loadSaleHistory(token: string, signal?: AbortSignal, page = 1): Promise<SaleHistory[]> {
   const result = await requestJson(`/Venta/listar?pagina=${page}&tamanoPagina=50`, { token, signal })
-  if (!Array.isArray(result) || !result.every(v => record(v) && id(v.id_ventas) && typeof v.cliente === 'string' && amount(v.total) &&
+  if (!Array.isArray(result) || !result.every(v => record(v) && id(v.id_ventas) && typeof v.cliente === 'string' && typeof v.usuario === 'string' && amount(v.total) &&
     amount(v.saldo_pendiente) && (v.ganancia_total === undefined || (typeof v.ganancia_total === 'number' && Number.isFinite(v.ganancia_total))) && typeof v.estado === 'string' && typeof v.fecha_venta === 'string'))
     throw new ApiError('El historial de ventas no tiene el formato esperado.')
   return result as SaleHistory[]

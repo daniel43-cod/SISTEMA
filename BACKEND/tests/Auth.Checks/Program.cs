@@ -76,7 +76,7 @@ builder.Services.Configure<JwtSettings>(o =>
     o.Key = key; o.Issuer = "checks"; o.Audience = "checks"; o.DurationInMinutes = 720;
 });
 builder.Services.AddControllers().AddApplicationPart(typeof(LoginController).Assembly);
-builder.Services.AddRateLimiter(o => { o.AddPolicy<string, ProductoConsultaRateLimitPolicy>("consulta-productos"); o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("estado-usuarios"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
+builder.Services.AddRateLimiter(o => { o.AddPolicy<string, VentaRateLimitPolicy>("ventas"); o.AddPolicy<string, ProductoConsultaRateLimitPolicy>("consulta-productos"); o.AddPolicy<string, PedidoCatalogoRateLimitPolicy>("registro-pedidos"); o.AddPolicy<string, LoginRateLimitPolicy>("login-interno"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios"); o.AddPolicy<string, UsuarioCrearRateLimitPolicy>("estado-usuarios"); o.AddPolicy<string, CompraRateLimitPolicy>("compras"); o.AddPolicy<string, CajaRateLimitPolicy>("caja"); });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
@@ -144,6 +144,10 @@ object Account(string username = "empleado", string phone = "2000", string email
     };
 async Task PermisosRechazados(HttpStatusCode status)
 {
+    Check((await client.PostAsJsonAsync("/api/pedidos-catalogo/1/confirmar-venta", new { })).StatusCode == status,
+        "Confirmación de pedido protegida: " + status);
+    Check((await client.PutAsJsonAsync("/api/pedidos-catalogo/1/detalles", new { detalles = new object[0] })).StatusCode == status,
+        "Edición de pedido protegida: " + status);
     Check((await client.GetAsync("/api/pedidos-catalogo/1/detalle")).StatusCode == status,
         "Detalle de pedido protegido: " + status);
     Check((await client.GetAsync("/api/pedidos-catalogo/pendientes")).StatusCode == status,

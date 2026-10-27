@@ -242,6 +242,19 @@ await using (var db = new CheckDb(options)) {
     catch (OperationCanceledException) { Check(await db.ventas.CountAsync() == before, "Cancelación no escribe venta"); }
 }
 var action = new Microsoft.AspNetCore.Mvc.ActionContext(new Microsoft.AspNetCore.Http.DefaultHttpContext(), new Microsoft.AspNetCore.Routing.RouteData(), new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
+foreach (var filtroCaja in new Microsoft.AspNetCore.Mvc.Filters.IExceptionFilter[]
+{
+    new VentaExceptionFilter(Microsoft.Extensions.Logging.Abstractions.NullLogger<VentaExceptionFilter>.Instance),
+    new PedidoCatalogoExceptionFilter(Microsoft.Extensions.Logging.Abstractions.NullLogger<PedidoCatalogoExceptionFilter>.Instance)
+})
+{
+    var errorCaja = new Microsoft.AspNetCore.Mvc.Filters.ExceptionContext(action, [])
+    { Exception = new CajaValidationException("Abre la caja para poder registrar o aprobar la venta.", "CAJA_NO_ABIERTA") };
+    filtroCaja.OnException(errorCaja);
+    var respuestaCaja = (Microsoft.AspNetCore.Mvc.ObjectResult)errorCaja.Result!;
+    Check(respuestaCaja.StatusCode == 409 && JsonSerializer.SerializeToElement(respuestaCaja.Value)
+        .GetProperty("codigo").GetString() == "CAJA_NO_ABIERTA", "Ventas y pedidos exponen código de caja cerrada");
+}
 var errorContext = new Microsoft.AspNetCore.Mvc.Filters.ExceptionContext(action, []) { Exception = new Exception("SQL password=secret stack") };
 new VentaExceptionFilter(Microsoft.Extensions.Logging.Abstractions.NullLogger<VentaExceptionFilter>.Instance).OnException(errorContext);
 var result = (Microsoft.AspNetCore.Mvc.ObjectResult)errorContext.Result!;

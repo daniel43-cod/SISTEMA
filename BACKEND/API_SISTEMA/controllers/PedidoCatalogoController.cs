@@ -42,4 +42,23 @@ public sealed class PedidoCatalogoController(RegistrarPedidoCatalogoService serv
         var pedido = await listado.ObtenerDetalle(idPedido, ct);
         return pedido is null ? NotFound(new { mensaje = "El pedido no existe." }) : Ok(pedido);
     }
+
+    [HttpPut("{idPedido:int}/detalles")]
+    [Authorize(Roles = Roles.Administrador)]
+    [EnableRateLimiting("registro-pedidos")]
+    [RequestSizeLimit(65536)]
+    public async Task<IActionResult> EditarDetalles(int idPedido, EditarPedidoCatalogoDto dto,
+        [FromServices] EditarPedidoCatalogoService edicion, CancellationToken ct = default)
+    {
+        await edicion.Editar(idPedido, dto, ct);
+        return Ok(new { mensaje = "Detalles del pedido actualizados correctamente." });
+    }
+
+    [HttpPost("{idPedido:int}/confirmar-venta")]
+    [Authorize(Roles = Roles.Administrador)]
+    [EnableRateLimiting("ventas")]
+    [RequestSizeLimit(65536)]
+    public async Task<IActionResult> ConfirmarVenta(int idPedido, ConfirmarVentaPedidoDto dto,
+        [FromServices] ConfirmarVentaPedidoService confirmacion, CancellationToken ct = default)
+        => Ok(await confirmacion.Confirmar(idPedido, dto, ct));
 }
