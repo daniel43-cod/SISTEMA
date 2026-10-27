@@ -50,6 +50,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<API_SISTEMA.Services.PedidosCatalogo.RegistrarPedidoCatalogoService>();
+builder.Services.AddScoped<API_SISTEMA.Services.PedidosCatalogo.ListarPedidosCatalogoService>();
 
 builder.Services.AddSwaggerGen(options =>
 {

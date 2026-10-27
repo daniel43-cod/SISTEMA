@@ -9,17 +9,37 @@ namespace API_SISTEMA.Controllers;
 
 [ApiController]
 [Route("api/pedidos-catalogo")]
-[AllowAnonymous]
 [TypeFilter(typeof(PedidoCatalogoExceptionFilter))]
 public sealed class PedidoCatalogoController(RegistrarPedidoCatalogoService service) : ControllerBase
 {
     [HttpGet("zonas")]
+    [AllowAnonymous]
     [EnableRateLimiting("consulta-productos")]
     public async Task<IActionResult> Zonas(CancellationToken ct) => Ok(await service.ListarZonas(ct));
 
     [HttpPost]
+    [AllowAnonymous]
     [RequestSizeLimit(65536)]
     [EnableRateLimiting("registro-pedidos")]
     public async Task<IActionResult> Registrar(RegistrarPedidoCatalogoDto dto, CancellationToken ct)
         => Ok(await service.Registrar(dto, ct));
+
+    [HttpGet("pendientes")]
+    [Authorize(Roles = Roles.Administrador)]
+    [EnableRateLimiting("consulta-productos")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Pendientes([FromServices] ListarPedidosCatalogoService listado,
+        [FromQuery] int pagina = 1, CancellationToken ct = default)
+        => Ok(await listado.ListarPendientes(pagina, ct));
+
+    [HttpGet("{idPedido:int}/detalle")]
+    [Authorize(Roles = Roles.Administrador)]
+    [EnableRateLimiting("consulta-productos")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Detalle(int idPedido, [FromServices] ListarPedidosCatalogoService listado,
+        CancellationToken ct = default)
+    {
+        var pedido = await listado.ObtenerDetalle(idPedido, ct);
+        return pedido is null ? NotFound(new { mensaje = "El pedido no existe." }) : Ok(pedido);
+    }
 }

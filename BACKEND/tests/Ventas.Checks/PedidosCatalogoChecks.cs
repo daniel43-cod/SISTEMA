@@ -79,5 +79,77 @@ internal static class PedidosCatalogoChecks
         check(await consulta.PedidosCatalogo.CountAsync() == 1 && await consulta.DetallesPedidoCatalogo.CountAsync() == 1,
             "Pedidos: transacción revierte cabecera cuando falla el detalle");
         await consulta.Database.ExecuteSqlRawAsync("DROP TRIGGER rechazo_detalle_pedido;");
+        var listado = new ListarPedidosCatalogoService(consulta);
+        var detalle = await listado.ObtenerDetalle(pedido.IdPedido);
+        check(detalle is not null && detalle.NombreCliente == dto.NombreCliente && detalle.Telefono == dto.Telefono &&
+            detalle.Direccion == dto.Direccion && detalle.ZonaEntrega == "Centro" && detalle.Estado == "Pendiente" &&
+            detalle.Total == 260 && detalle.Detalles.Count == 1 && detalle.Detalles[0].Cantidad == 2 &&
+            detalle.Detalles[0].PrecioUnitario == 130 && detalle.Detalles[0].Subtotal == 260,
+            "Detalle de pedido: devuelve cabecera y productos con importes guardados");
+        await consulta.producto_presentaciones.Where(p => p.id_producto_presentacion == 1)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.precio, 140));
+        check((await listado.ObtenerDetalle(pedido.IdPedido))!.Detalles[0].PrecioUnitario == 130,
+            "Detalle de pedido: conserva precio histórico aunque cambie catálogo");
+        await consulta.producto_presentaciones.Where(p => p.id_producto_presentacion == 1)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.precio, 130));
+        check(await listado.ObtenerDetalle(int.MaxValue) is null, "Detalle de pedido: inexistente devuelve null");
+        foreach (var id in new[] { 0, -1 })
+        {
+            try { await listado.ObtenerDetalle(id); throw new Exception("ID inválido aceptado"); }
+            catch (ValidationException) { check(true, "Detalle de pedido: valida identificador"); }
+        }
+        using (var cancel = new CancellationTokenSource())
+        {
+            cancel.Cancel();
+            try { await listado.ObtenerDetalle(pedido.IdPedido, cancel.Token); throw new Exception("Cancelación ignorada"); }
+            catch (OperationCanceledException) { check(true, "Detalle de pedido: respeta cancelación"); }
+        }
+        var controladorDetalle = new API_SISTEMA.Controllers.PedidoCatalogoController(new RegistrarPedidoCatalogoService(consulta));
+        check(await controladorDetalle.Detalle(int.MaxValue, listado) is Microsoft.AspNetCore.Mvc.NotFoundObjectResult,
+            "Detalle de pedido: endpoint devuelve 404 para inexistente");
+        var accionDetalle = typeof(API_SISTEMA.Controllers.PedidoCatalogoController).GetMethod("Detalle")!;
+        check(!accionDetalle.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true) &&
+            accionDetalle.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
+                .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles == API_SISTEMA.Utilidades.Roles.Administrador,
+            "Detalle de pedido: acceso exclusivo para administradores");
+        var inicial = await listado.ListarPendientes();
+        check(inicial.Pedidos.Count == 1 && inicial.Pedidos[0].ZonaEntrega == "Centro" &&
+            inicial.Pedidos[0].Telefono == "+50255551234" && inicial.Pedidos[0].Total == 260 && !inicial.HayMas,
+            "Pendientes: devuelve contacto, zona y total del pedido");
+        var fecha = DateTime.UtcNow.AddMinutes(1);
+        for (int i = 0; i < 51; i++)
+            consulta.PedidosCatalogo.Add(new PedidoCatalogo { IdOperacion = Guid.NewGuid(), NombreCliente = "Pedido " + i,
+                Telefono = "+50255551234", Direccion = "Prueba", IdZonaEntrega = 1, Total = 260, FechaUtc = fecha });
+        foreach (var estado in new[] { EstadoPedidoCatalogo.Aceptado, EstadoPedidoCatalogo.Rechazado, EstadoPedidoCatalogo.Cancelado })
+            consulta.PedidosCatalogo.Add(new PedidoCatalogo { IdOperacion = Guid.NewGuid(), NombreCliente = "Otro estado",
+                Telefono = "+50255551234", Direccion = "Prueba", IdZonaEntrega = 1, Total = 260, Estado = estado, FechaUtc = fecha.AddHours(1) });
+        await consulta.SaveChangesAsync();
+        consulta.ChangeTracker.Clear();
+        var primera = await listado.ListarPendientes();
+        var segunda = await listado.ListarPendientes(2);
+        check(primera.Pedidos.Count == 50 && primera.HayMas && primera.TamanoPagina == 50 &&
+            segunda.Pedidos.Count == 2 && !segunda.HayMas, "Pendientes: pagina de 50 y detecta última página");
+        check(primera.Pedidos.Concat(segunda.Pedidos).All(p => p.NombreCliente != "Otro estado") &&
+            primera.Pedidos.Select(p => p.IdPedido).Intersect(segunda.Pedidos.Select(p => p.IdPedido)).Count() == 0,
+            "Pendientes: excluye otros estados y no repite pedidos");
+        check(primera.Pedidos.Take(49).Zip(primera.Pedidos.Skip(1)).All(p => p.First.IdPedido > p.Second.IdPedido),
+            "Pendientes: orden estable por fecha e identificador descendentes");
+        check(!consulta.ChangeTracker.Entries<PedidoCatalogo>().Any(), "Pendientes: consulta sin tracking");
+        check((await listado.ListarPendientes(3)).Pedidos.Count == 0, "Pendientes: página vacía válida");
+        foreach (var pagina in new[] { 0, -1, 100001 })
+        {
+            try { await listado.ListarPendientes(pagina); throw new Exception("Página inválida aceptada"); }
+            catch (ValidationException) { check(true, "Pendientes: valida página"); }
+        }
+        var controller = typeof(API_SISTEMA.Controllers.PedidoCatalogoController);
+        var action = controller.GetMethod("Pendientes")!;
+        check(!controller.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true) &&
+            !action.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true) &&
+            action.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
+                .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles == API_SISTEMA.Utilidades.Roles.Administrador,
+            "Pendientes: autorización exclusiva de administrador sin AllowAnonymous heredado");
+        check(controller.GetMethod("Registrar")!.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true) &&
+            controller.GetMethod("Zonas")!.IsDefined(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true),
+            "Pedidos: registro y zonas conservan acceso público");
     }
 }
