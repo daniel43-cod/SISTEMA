@@ -332,6 +332,7 @@ await using (var db = new CheckDb(options))
     await db.SaveChangesAsync();
     Check((await listado.ListarVentas(1)).Count == 0, "Sin caja abierta el listado queda vacío");
 }
+await PedidosCatalogoChecks.Ejecutar(options, Check);
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)
@@ -339,7 +340,7 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
-        var keep = new HashSet<Type> { typeof(Usuario), typeof(Rol), typeof(RolPermiso), typeof(TablaPermiso), typeof(UsuarioPermiso),
+        var keep = new HashSet<Type> { typeof(ZonaEntrega), typeof(PedidoCatalogo), typeof(DetallePedidoCatalogo), typeof(Usuario), typeof(Rol), typeof(RolPermiso), typeof(TablaPermiso), typeof(UsuarioPermiso),
             typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion), typeof(Cliente),
             typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle) };
         foreach (var e in b.Model.GetEntityTypes().ToArray()) if (!keep.Contains(e.ClrType)) b.Ignore(e.ClrType);
@@ -352,5 +353,14 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
         foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
             auditoria.Metadata.RemoveCheckConstraint(constraint.Name);
         auditoria.Property(e => e.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        // Adaptación de expresiones específicas de SQL Server para la base temporal.
+        foreach (var type in new[] { typeof(ZonaEntrega), typeof(PedidoCatalogo), typeof(DetallePedidoCatalogo) })
+        {
+            var entity = b.Entity(type);
+            foreach (var constraint in entity.Metadata.GetCheckConstraints().ToArray())
+                entity.Metadata.RemoveCheckConstraint(constraint.Name);
+        }
+        b.Entity<PedidoCatalogo>().Property(p => p.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        b.Entity<DetallePedidoCatalogo>().Property(d => d.Subtotal).HasComputedColumnSql("cantidad * precio_unitario", stored: true);
     }
 }

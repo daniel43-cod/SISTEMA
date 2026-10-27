@@ -43,11 +43,13 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy<string, UsuarioCrearRateLimitPolicy>("crear-usuarios");
     options.AddPolicy<string, UsuarioCrearRateLimitPolicy>("estado-usuarios");
     options.AddPolicy<string, ProductoConsultaRateLimitPolicy>("consulta-productos");
+    options.AddPolicy<string, PedidoCatalogoRateLimitPolicy>("registro-pedidos");
 });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddScoped<API_SISTEMA.Services.PedidosCatalogo.RegistrarPedidoCatalogoService>();
 
 builder.Services.AddSwaggerGen(options =>
 {

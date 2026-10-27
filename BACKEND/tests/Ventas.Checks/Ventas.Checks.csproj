@@ -9,6 +9,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
   </ItemGroup>
-  <ItemGroup><Compile Include="VentasChecks.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="VentasChecks.cs" /><Compile Include="PedidosCatalogoChecks.cs" /></ItemGroup>
   <PropertyGroup><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
 </Project>
