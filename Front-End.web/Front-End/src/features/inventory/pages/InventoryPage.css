@@ -35,12 +35,21 @@
   border-bottom: 1px solid #c4dff2;
 }
 
-.inventory-value-summary { padding: 16px 20px; border: 1px solid #c4dff2; border-radius: 12px; background: #eff8ff; color: #075b96; }
-.inventory-value-summary > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.inventory-value-summary strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.inventory-value-summary { padding: 0; border: 0; background: transparent; color: #075b96; justify-self: start; }
+.inventory-value-summary > div { display: flex; align-items: center; justify-content: flex-start; gap: 8px; flex-wrap: wrap; }
+.inventory-value-summary > div > span { font-size: .85rem; color: var(--color-muted); }
+.inventory-value-summary strong { font-size: .9rem; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .inventory-value-summary small { display: block; margin-top: 6px; color: #475569; }
 
-.inventory-total-visibility { display: flex; align-items: center; gap: 10px; }
-.inventory-page .inventory-total-toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 8px; border: 0; background: transparent; color: inherit; }
+.inventory-total-visibility { display: flex; align-items: center; gap: 8px; padding: 2px 8px; border: 1px solid #c4dff2; border-radius: 8px; background: #eff8ff; }
+.inventory-page .inventory-total-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; min-height: 32px; padding: 4px; border: 0; background: transparent; color: inherit; }
 .inventory-page .inventory-total-toggle:hover { background: #dceefb; }
 .inventory-total-toggle:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+
+.inventory-results-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; padding-right: clamp(16px, 2vw, 32px); }
+.inventory-results-heading > p { margin: 0; }
+.inventory-results-heading .inventory-value-summary { margin-left: auto; }
+.inventory-results-heading + .inventory-table-scroll { margin-top: 0; }
+
+.inventory-pagination { justify-content: flex-end; margin-top: auto; padding-top: 16px; }
+.inventory-page .inventory-pagination button { border: 0; background: transparent; }

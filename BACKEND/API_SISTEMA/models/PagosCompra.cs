@@ -4,6 +4,7 @@ namespace API_SISTEMA.Models
 {
     public class PagosCompra
     {
+        public Guid? IdOperacion { get; set; }
         [Key]
         public int id_pagos_compra { get; set; }
         [Required]

@@ -1,4 +1,4 @@
-﻿import { RefreshButton } from '../../../shared/ui/RefreshButton'
+import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -95,7 +95,7 @@ export function PurchasesPage() {
   }
   return <div className={`purchases-page ${open ? 'purchases-page-editing' : ''}`}>
     <div className="purchase-toolbar"><p role="status">{loading ? 'Consultando caja y compras…'
-      : error ? 'No se pudo verificar la caja.' : cashOpen ? 'Caja abierta' : 'Abre la caja para registrar compras o abonos.'}</p>
+      : error ? 'No se pudo verificar la caja.' : cashOpen ? null : 'Abre la caja para registrar compras o abonos.'}</p>
     </div>
     {error && <p role="alert" className="purchase-error">{error}</p>}
     {result && <section className="purchase-success" role="status">
@@ -155,10 +155,10 @@ export function PurchasesPage() {
       </div>
       {loading ? <p role="status">Cargando compras…</p> : error ? <p>Actualiza para consultar el historial.</p>
         : !purchases.length ? <p>No hay compras en esta página.</p> : <div className="purchase-table-scroll"><table>
-          <thead><tr><th scope="col">Distribuidor</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Fecha y hora</th></tr></thead>
+          <thead><tr><th scope="col">Distribuidor</th><th scope="col">Usuario</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Fecha y hora</th></tr></thead>
           <tbody>{purchases.map(p => <tr key={p.id_compra} className="purchase-history-row" tabIndex={saving ? -1 : 0} aria-label={`Ver compra de ${p.nombre_proveedor}`} onClick={() => { if (!saving) setSelected(p) }} onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(p) } }}>
-            <td>{p.nombre_proveedor}</td><td>{money.format(p.total_compra)}</td>
-            <td className={p.saldo_pendiente > 0 ? 'purchase-balance-pending' : undefined}>{money.format(p.saldo_pendiente)}</td><td>{p.descripcion_estado_compra}</td>
+            <td>{p.nombre_proveedor}</td><td>{p.nombre_usuario}</td><td>{money.format(p.total_compra)}</td>
+            <td className={p.saldo_pendiente > 0 ? 'purchase-balance-pending' : undefined}>{money.format(p.saldo_pendiente)}</td><td>{p.saldo_pendiente > 0 ? 'Pendiente' : 'Cancelada'}</td>
             <td><time dateTime={p.fecha_ingreso}>{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</time></td>
           </tr>)}</tbody>
         </table></div>}

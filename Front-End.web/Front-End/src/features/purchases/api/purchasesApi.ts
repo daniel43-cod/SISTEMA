@@ -36,9 +36,20 @@ export async function createPurchase(token: string, body: CreatePurchase): Promi
     throw new ApiError('No se pudo confirmar la respuesta. Revisa el historial antes de registrar nuevamente.')
   return result as unknown as CreatedPurchase
 }
-export async function payPurchase(token: string, purchaseId: number, payment: number, note: string) {
+export async function payPurchase(token: string, purchaseId: number, payment: number, note: string, operationId: string) {
   const result = await requestJson('/Compra/pago-compra', { method: 'POST', token, validationMessages: true,
-    body: { id_compra: purchaseId, monto: payment, observacion: note.trim() || null } })
+    body: { idOperacion: operationId, id_compra: purchaseId, monto: payment, observacion: note.trim() || null } })
   if (!object(result) || !id(result.id_pago) || result.id_compra !== purchaseId || result.monto_pagado !== payment)
     throw new ApiError('No se pudo confirmar el abono. Revisa la compra antes de reintentar.')
+}
+
+export type PurchasePayment = { idPago: number; idCompra: number; fechaPago: string; monto: number | null; usuario: string; observacion: string | null }
+export async function getPurchasePayments(token: string, purchaseId: number, signal?: AbortSignal): Promise<PurchasePayment[]> {
+  const result = await requestJson('/Compra/' + purchaseId + '/pagos', { token, signal })
+  if (!Array.isArray(result) || !result.every(p => object(p) && id(p.idPago) && p.idCompra === purchaseId &&
+    typeof p.fechaPago === 'string' && !Number.isNaN(Date.parse(p.fechaPago)) &&
+    (p.monto === null || (typeof p.monto === 'number' && Number.isFinite(p.monto) && p.monto > 0)) &&
+    typeof p.usuario === 'string' && (p.observacion === null || typeof p.observacion === 'string')))
+    throw new ApiError('El historial de pagos no tiene el formato esperado.')
+  return result as PurchasePayment[]
 }

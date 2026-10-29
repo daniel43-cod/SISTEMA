@@ -19,7 +19,7 @@ export const staffNavigation: readonly StaffNavigationItem[] = [
   { id: 'pedidos', label: 'Pedidos', group: 'Operación', description: 'Pedidos pendientes del catálogo y sus datos de entrega.', roles: admin },
   { id: 'productos', label: 'Productos', group: 'Inventario', description: '', roles: staff },
   { id: 'inventario', label: 'Inventario', group: 'Inventario', description: 'Existencias y precio promedio de compra por producto.', roles: admin },
-  { id: 'compras', label: 'Compras', group: 'Inventario', description: 'Registro de compras y seguimiento de pagos.', roles: admin },
+  { id: 'compras', label: 'Compras', group: 'Inventario', description: '', roles: admin },
   { id: 'gastos', label: 'Gastos', group: 'Administración', description: 'Registro y consulta de gastos del negocio.', roles: admin },
   { id: 'usuarios', label: 'Usuarios', group: 'Administración', description: 'Consulta y creación de usuarios internos.', roles: admin },
   { id: 'reportes', label: 'Reportes', group: 'Administración', description: 'Consulta de ventas, caja e inventario.', roles: admin },

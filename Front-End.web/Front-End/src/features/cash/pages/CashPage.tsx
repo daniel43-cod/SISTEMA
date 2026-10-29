@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 ﻿import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
@@ -9,7 +10,7 @@ import { loadCash, loadCashSummary, openCash, closeCash, parseOpeningAmount } fr
 import type { AvailableCash, CashSession, CashClosing, CashSummary } from '../api/cashApi'
 import './CashPage.css'
 
-export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | null) => void }) {
+export function CashPage({ onOpenChange, headerTarget }: { onOpenChange?: (open: boolean | null) => void; headerTarget?: HTMLDivElement | null }) {
   const { session } = useAuth()
   const [current, setCurrent] = useState<CashSession | null>(null)
   const [summary, setSummary] = useState<CashSummary | null>(null)
@@ -29,6 +30,20 @@ export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | nul
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading')
   const [saving, setSaving] = useState(false)
   const [version, setVersion] = useState(0)
+  const closingDialog = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (!closing || phase !== 'ready' || !current) return
+    const dialog = closingDialog.current
+    const previousFocus = document.activeElement
+    const overflow = document.body.style.overflow
+    dialog?.showModal()
+    document.body.style.overflow = 'hidden'
+    return () => {
+      dialog?.close()
+      document.body.style.overflow = overflow
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus()
+    }
+  }, [closing, phase, current])
   const busy = useRef(false)
   const token = session?.token
   const isAdmin = session?.user.role === 'ADMINISTRADOR'
@@ -144,16 +159,24 @@ export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | nul
   return <section className="cash-panel" aria-label="Caja" aria-busy={phase === 'loading' || saving}>
     <header className="cash-session-header">
     <div className="cash-heading">
+      {current && phase === 'ready' && <h3 id="cash-movements-title">Movimientos del turno</h3>}
 
       {current && phase === 'ready' && !closing && <Button className="cash-close-button" onClick={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}>Cerrar caja</Button>}
       <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }} />
     </div>
     {current && phase === 'ready' && (
+headerTarget ? createPortal(
+        <dl className="cash-summary cash-opening-summary">
+          <div><dt>Monto inicial</dt><dd>{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(current.monto_inicial)}</dd></div>
+          <div><dt>Abierta por</dt><dd>{current.usuario_apertura}</dd></div>
+          <div><dt>Fecha de apertura</dt><dd>{new Date(current.fecha_apertura).toLocaleString('es-GT')}</dd></div>
+        </dl>, headerTarget) : (
         <dl className="cash-summary cash-opening-summary">
           <div><dt>Monto inicial</dt><dd>{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(current.monto_inicial)}</dd></div>
           <div><dt>Abierta por</dt><dd>{current.usuario_apertura}</dd></div>
           <div><dt>Fecha de apertura</dt><dd>{new Date(current.fecha_apertura).toLocaleString('es-GT')}</dd></div>
         </dl>
+)
     )}
     </header>
     {notice && <p className="cash-success" role="status">{notice}</p>}
@@ -167,21 +190,15 @@ export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | nul
         <div><dt>Fecha de cierre</dt><dd>{new Date(result.fecha_cierre).toLocaleString('es-GT')}</dd></div>
       </dl>
     </section>}
-    {error && <p className="cash-error" role="alert">{error}</p>}
+    {error && !closing && <p className="cash-error" role="alert">{error}</p>}
     {phase === 'loading' ? <p role="status">Consultando caja…</p> : phase === 'error' ?
       <Button onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }}>Volver a consultar</Button> :
       current ? <>
 
         <section className="cash-movements" aria-labelledby="cash-movements-title">
-          <h3 id="cash-movements-title">Movimientos del turno</h3>
           {summaryError ? <p className="cash-error" role="alert">{summaryError} Usa actualizar para volver a consultar.</p> :
             summary?.id_sesion_caja !== current.id_sesion_caja ? <p role="status">Consultando movimientos…</p> : <>
-              <dl className="cash-summary">
-                <div><dt>Entradas</dt><dd className="cash-incoming">{money(summary.total_entradas)}</dd></div>
-                <div><dt>Salidas</dt><dd className="cash-outgoing">{money(summary.total_salidas)}</dd></div>
-                <div><dt>Monto esperado</dt><dd>{money(summary.saldo_esperado)}</dd></div>
-                <div><dt>Total de movimientos</dt><dd>{summary.total_movimientos}</dd></div>
-              </dl>
+
               {summary.movimientos.length === 0 ? <p>Aún no hay movimientos en este turno.</p> :
                 <div className="cash-movement-table-scroll">
                   <table className="cash-movement-table">
@@ -212,11 +229,21 @@ export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | nul
                     })}</tbody>
                   </table>
                 </div>}
+              <dl className="cash-summary cash-movements-totals">
+                <div><dt>Entradas</dt><dd className="cash-incoming">{money(summary.total_entradas)}</dd></div>
+                <div><dt>Salidas</dt><dd className="cash-outgoing">{money(summary.total_salidas)}</dd></div>
+                <div><dt>Monto esperado</dt><dd>{money(summary.saldo_esperado)}</dd></div>
+                <div><dt>Total de movimientos</dt><dd>{summary.total_movimientos}</dd></div>
+              </dl>
             </>}
         </section>
-        {closing &&
+        {closing && createPortal(<dialog ref={closingDialog} className="cash-closing-dialog" aria-labelledby="cash-closing-title"
+          onCancel={event => { event.preventDefault(); if (!busy.current) { setClosing(false); setReview(null); setError('') } }}>
+          <button type="button" className="cash-dialog-close" aria-label="Cerrar formulario" disabled={saving}
+            onClick={() => { setClosing(false); setReview(null); setError('') }}>×</button>
           <form className="cash-form cash-closing-form" onSubmit={reviewClosing}>
-            <h3>Cierre del turno</h3>
+            <h3 id="cash-closing-title">Cierre del turno</h3>
+            {error && <p className="cash-error" role="alert">{error}</p>}
             <p className="cash-hint">Cuenta el efectivo disponible. Al confirmar, se cerrará la caja para todo el equipo.</p>
             <fieldset disabled={saving || review !== null}>
               <Input label="Efectivo contado (Q)" value={counted} required inputMode="decimal" maxLength={11}
@@ -237,7 +264,7 @@ export function CashPage({ onOpenChange }: { onOpenChange?: (open: boolean | nul
                 <Button className="cash-secondary" disabled={saving} onClick={() => setReview(null)}>Volver a editar</Button>
               </div>
             </div>}
-          </form>}
+          </form></dialog>, document.body)}
       </> : <>
         <p className="cash-status is-closed">Caja cerrada</p>
         {available.length === 0 ? <p>No hay cajas activas disponibles para abrir.</p> :

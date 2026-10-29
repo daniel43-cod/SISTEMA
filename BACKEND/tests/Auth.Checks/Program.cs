@@ -524,9 +524,26 @@ try
             Check(await db.pagosCompras.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.detalle_compras.SingleAsync()).subtotal == 50m, "Compra confirma pago, detalle y movimiento");
             var pagoService = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.PagoCompra.PagoCompraService>();
             var exceso = false;
-            try { await pagoService.AbonarCompra(new() { id_compra = compra.IdCompra, monto = 31m }, 1); } catch (CompraValidationException) { exceso = true; }
+            try { await pagoService.AbonarCompra(new() { IdOperacion = Guid.NewGuid(), id_compra = compra.IdCompra, monto = 31m }, 1); } catch (CompraValidationException) { exceso = true; }
             Check(exceso && await db.pagosCompras.CountAsync() == 1, "Abono mayor al saldo rechazado sin guardar pago");
-            await pagoService.AbonarCompra(new() { id_compra = compra.IdCompra, monto = 30m }, 1);
+            var dtoAbonoCompra = new API_SISTEMA.Dtos.Compras.AbonarSaldoCompraDto { IdOperacion = Guid.NewGuid(), id_compra = compra.IdCompra, monto = 30m };
+            var abonoCompra = await pagoService.AbonarCompra(dtoAbonoCompra, 1);
+            var repetidoCompra = await pagoService.AbonarCompra(dtoAbonoCompra, 1);
+            var historialPagosCompra = await pagoService.ListarPagos(compra.IdCompra, default);
+            Check(historialPagosCompra.Count == 2 && historialPagosCompra.All(p => p.IdCompra == compra.IdCompra) &&
+                historialPagosCompra.Sum(p => p.Monto) == 50m && historialPagosCompra.Any(p => p.IdPago == abonoCompra.id_pagos_compra),
+                "Historial de compra incluye pago inicial y abono sin filtrar por caja");
+            Check(repetidoCompra.id_pagos_compra == abonoCompra.id_pagos_compra && await db.pagosCompras.CountAsync() == 2, "Reintento de abono devuelve el pago sin duplicarlo");
+            dtoAbonoCompra.monto = 1m;
+            var conflictoAbono = false;
+            try { await pagoService.AbonarCompra(dtoAbonoCompra, 1); } catch (CompraOperacionConflictException) { conflictoAbono = true; }
+            Check(conflictoAbono, "Reutilizar clave de abono con otro monto produce conflicto");
+            var auditoriaAbonoCompra = await db.AuditoriaEventos.Include(a => a.Detalles)
+                .SingleAsync(a => a.Accion == "ABONO_COMPRA_REGISTRADO" && a.IdRegistro == abonoCompra.id_pagos_compra.ToString());
+            Check(auditoriaAbonoCompra.Entidad == "pagos_compra" && auditoriaAbonoCompra.IdUsuario == 1 &&
+                auditoriaAbonoCompra.Detalles.Any(d => d.Campo == "saldo_anterior" && decimal.Parse(d.ValorNuevo!, System.Globalization.CultureInfo.InvariantCulture) == 30m) &&
+                auditoriaAbonoCompra.Detalles.Any(d => d.Campo == "saldo_nuevo" && decimal.Parse(d.ValorNuevo!, System.Globalization.CultureInfo.InvariantCulture) == 0m),
+                "Abono de compra registra auditoría vinculada al pago y sus saldos");
             Check(compra.SaldoPendiente == 0 && compra.IdEstadoCompra == 1 && await db.movimientocaja.CountAsync() == 2, "Abono liquida compra y actualiza estado y caja");
             var precision = false;
             compraDto.detalle_compra[0].precio = 1.001m;

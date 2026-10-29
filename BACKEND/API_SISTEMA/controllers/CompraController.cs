@@ -133,5 +133,11 @@ namespace API_SISTEMA.Controllers
 
         }
 
+        [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("{idCompra:int}/pagos")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> ListarPagos(int idCompra, CancellationToken ct)
+            => Ok(await _pagoCompraService.ListarPagos(idCompra, ct));
+
     }
 }

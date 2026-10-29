@@ -162,3 +162,27 @@
   .staff-shell-cash .cash-opening-summary { padding-right: 18px; padding-top: 54px; }
   .cash-panel .cash-heading .cash-close-button { width: auto; }
 }
+
+.staff-shell-cash .cash-header-data { flex: 1; min-width: 0; }
+.staff-shell-cash .cash-header-data .cash-opening-summary { margin: 0; padding: 12px 18px; }
+
+.staff-shell-cash .cash-movements > .cash-movements-totals { margin-top: auto; margin-bottom: 0; }
+.staff-shell-cash .cash-movement-table-scroll + .cash-movements-totals { margin-top: 16px; }
+
+.staff-shell-cash .cash-session-header { border-bottom: 0; }
+.staff-shell-cash .cash-movements { border-top: 0; }
+
+.staff-shell-cash .cash-heading { position: static; display: flex; justify-content: flex-end; align-items: center; width: 100%; }
+.staff-shell-cash .cash-heading h3 { margin: 0 auto 0 0; font-size: 1rem; }
+
+.staff-shell-cash .cash-session-header { padding-bottom: 0; }
+.staff-shell-cash .cash-panel { gap: 12px; }
+.staff-shell-cash .cash-movements { padding-top: 0; }
+
+.cash-closing-dialog { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; max-height: calc(100dvh - 40px); overflow: auto; margin: auto; padding: 24px; border: 0; border-radius: 14px; background: #fff; color: #263747; }
+.cash-closing-dialog::backdrop { background: #0f172a80; }
+.cash-closing-dialog:not([open]) { display: none; }
+.cash-closing-dialog .cash-closing-form { border: 0; padding-top: 0; gap: 14px; }
+.cash-closing-dialog .cash-form fieldset { gap: 14px; }
+.cash-closing-dialog .cash-hint { margin: 0; font-size: .875rem; }
+.cash-closing-dialog .cash-dialog-close { display: block; margin: -8px -8px 0 auto; width: 32px; height: 32px; border: 0; background: transparent; font-size: 1.5rem; cursor: pointer; }

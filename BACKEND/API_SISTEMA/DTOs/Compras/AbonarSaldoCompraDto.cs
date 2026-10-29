@@ -3,6 +3,7 @@ namespace API_SISTEMA.Dtos.Compras
 {
     public class AbonarSaldoCompraDto
     {
+        public Guid IdOperacion { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "El valor debe ser mayor que cero.")]
         public int id_compra {  get; set; }
         [Range(typeof(decimal), "0.01", "99999999.99", ErrorMessage = "El monto est\u00e1 fuera del rango permitido.")]

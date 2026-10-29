@@ -1,3 +1,14 @@
 .orders-dialog .sales-card { border: 0; }
 .orders-contact dd { overflow-wrap: anywhere; white-space: pre-wrap; }
 .orders-dialog caption { text-align: left; padding: 1rem 0; color: var(--text-muted); }
+
+.orders-empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 48px 20px; text-align: center; }
+.orders-empty-state > svg { color: var(--text-muted, #64748b); }
+.orders-empty-state h3 { margin: 0; font-size: 1.15rem; }
+.orders-empty-state p { margin: 0; max-width: 440px; line-height: 1.6; }
+.orders-empty-state small { color: var(--text-muted, #64748b); }
+.sales-page .orders-empty-state .orders-copy-link { border: 0; background: transparent; color: var(--color-primary, #075b96); text-decoration: underline; padding: 8px; font-size: .9rem; }
+
+.staff-shell-orders .staff-content { width: 100%; max-width: none; margin: 0; padding: 0 10px 16px; box-sizing: border-box; }
+.staff-shell-orders .staff-header { min-height: 60px; padding-block: 8px; }
+.staff-shell-orders .staff-content > .sales-page > .sales-card { padding: clamp(18px, 2vw, 32px); }

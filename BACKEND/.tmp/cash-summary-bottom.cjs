@@ -1,0 +1,15 @@
+const fs=require('fs');
+const root='C:/Users/coy81/Desktop/SISTEMA/SISTEMA/Front-End.web/Front-End/src/features/cash/pages/';
+const path=root+'CashPage.tsx';
+let s=fs.readFileSync(path,'utf8');
+const anchor=s.indexOf('<h3 id="cash-movements-title">');
+const start=s.indexOf('              <dl className="cash-summary">',anchor);
+const end=s.indexOf('</dl>',start)+5;
+if(start<0||end<5)throw Error('Summary missing');
+const block=s.slice(start,end).replace('className="cash-summary"','className="cash-summary cash-movements-totals"');
+s=s.slice(0,start)+s.slice(end);
+const insert=s.indexOf('            </>}',start);
+if(insert<0)throw Error('End missing');
+s=s.slice(0,insert)+block+'\n'+s.slice(insert);
+fs.writeFileSync(path,s);
+fs.appendFileSync(root+'CashPage.css','\n.staff-shell-cash .cash-movements > .cash-movements-totals { margin-top: auto; margin-bottom: 0; }\n.staff-shell-cash .cash-movement-table-scroll + .cash-movements-totals { margin-top: 16px; }\n');

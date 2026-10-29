@@ -139,3 +139,11 @@
 .purchase-floating-suggestions { position: fixed; z-index: 100; margin: 0; overflow-y: auto; background: #ffffff; box-shadow: 0 8px 24px #0f172a26; }
 .purchase-floating-suggestions button { min-height: 44px; padding: 10px 12px; background: #ffffff; color: #263747; font: inherit; cursor: pointer; }
 .purchase-floating-suggestions > li[role="status"] { padding: 12px; }
+
+.purchase-payment-actions { display: flex; align-items: center; gap: 12px; margin: 8px 0 16px; }
+.purchase-payment-status { padding: 6px 10px; border-radius: 12px; font-size: .875rem; }
+.purchase-payment-status.is-paid { background: #dcfce7; color: #166534; }
+.purchase-payment-status.is-pending { background: #ffedd5; color: #9a3412; }
+.purchase-payments-dialog { width: min(800px, calc(100vw - 32px)); }
+.purchase-payments-history h3 { margin: 12px 0; font-size: 1rem; }
+.purchase-payments-history .purchase-table-scroll { max-height: 32dvh; overflow: auto; }

@@ -9,7 +9,11 @@ public sealed class CompraExceptionFilter(ILogger<CompraExceptionFilter> logger)
 {
     public void OnException(ExceptionContext context)
     {
-        if (context.Exception is CompraValidationException validation)
+        if (context.Exception is CompraOperacionConflictException conflicto)
+        {
+            context.Result = new ConflictObjectResult(new { mensaje = conflicto.Message });
+        }
+        else if (context.Exception is CompraValidationException validation)
         {
             context.Result = new BadRequestObjectResult(new { mensaje = validation.Message });
         }

@@ -68,6 +68,16 @@ export function OrdersPage() {
   const allowed = session?.user.role === 'ADMINISTRADOR'
   const [prepared, setPrepared] = useState<OrderDetail | null>(null)
   const [success, setSuccess] = useState('')
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [copyStatus, setCopyStatus] = useState('')
+  async function copyCatalogLink() {
+    try {
+      await navigator.clipboard.writeText(new URL(import.meta.env.BASE_URL + 'catalogo', window.location.origin).href)
+      setCopyStatus('Enlace copiado.')
+    } catch {
+      setCopyStatus('No se pudo copiar el enlace. Abre el catálogo y copia la dirección del navegador.')
+    }
+  }
   const [page, setPage] = useState(1)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<OrderPage | null>(null)
@@ -81,7 +91,7 @@ export function OrdersPage() {
     void listPendingOrders(token, page, controller.signal).then(v => {
       if (controller.signal.aborted) return
       if (v.pedidos.length === 0 && page > 1) setPage(1)
-      else setData(v)
+      else { setData(v); setUpdatedAt(new Date()); setCopyStatus('') }
     }).catch(failure => {
       if (controller.signal.aborted) return
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
@@ -95,18 +105,27 @@ export function OrdersPage() {
   return <section className="sales-page sale-list-page" aria-label="Pedidos pendientes del catálogo">
     {selected && <OrderDialog key={selected.idPedido} order={selected} token={token} onClose={() => setSelected(null)} onExpired={logout} onPrepare={detail => { setSelected(null); setSuccess(''); setPrepared(detail) }} />}
     {success && <p role="status">{success}</p>}
-    <div className="sales-card"><div className="sales-heading"><div><h2>Pendientes de aprobación</h2><p className="sale-list-description">50 pedidos por página · Más recientes primero</p></div>
+    <div className="sales-card"><div className="sales-heading"><div><h2>Pendientes de aprobación</h2><p className="sale-list-description">{loading ? 'Consultando pendientes…' : error ? 'No se pudieron consultar los pendientes' : data ? (data.hayMas ? 'Más de ' : '') + ((data.pagina - 1) * data.tamanoPagina + data.pedidos.length) + (data.pagina === 1 && data.pedidos.length === 1 && !data.hayMas ? ' pendiente' : ' pendientes') : '0 pendientes'}</p></div>
       <RefreshButton label="Actualizar pedidos" loading={loading} onClick={() => { setPage(1); setRevision(v => v + 1) }} /></div>
       {loading ? <p role="status">Cargando pedidos…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : !data?.pedidos.length ?
-        <p role="status">No hay pedidos pendientes de aprobación.</p> : <div className="sales-table-scroll" role="region" aria-label="Listado de pedidos" tabIndex={0}>
+        <div className="orders-empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m4 4-3 10v6h22v-6L20 4Z" /><path d="M1 14h6l2 3h6l2-3h6" />
+          </svg>
+          <h3>Todo al día</h3>
+          <p>No hay pedidos esperando aprobación. Los nuevos pedidos del catálogo aparecerán aquí.</p>
+          {updatedAt && <small>Última actualización: <time dateTime={updatedAt.toISOString()}>{updatedAt.toLocaleTimeString('es-GT', { hour: 'numeric', minute: '2-digit' })}</time></small>}
+          <button type="button" className="orders-copy-link" onClick={() => void copyCatalogLink()}>Copiar enlace del catálogo</button>
+          {copyStatus && <p role="status">{copyStatus}</p>}
+        </div> : <div className="sales-table-scroll" role="region" aria-label="Listado de pedidos" tabIndex={0}>
           <table><caption>Selecciona un pedido para consultar sus productos y datos de entrega.</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Cliente</th><th scope="col">Teléfono</th><th scope="col">Zona</th><th scope="col" className="sale-list-money">Total</th><th scope="col">Estado</th></tr></thead>
             <tbody>{data.pedidos.map(order => <tr key={order.idPedido} className="sale-list-row" tabIndex={0} aria-label={'Consultar pedido de ' + order.nombreCliente}
               aria-haspopup="dialog" onClick={() => setSelected(order)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(order) } }}>
               <td className="sale-list-nowrap">{formatDate(order.fechaUtc)}</td><td>{order.nombreCliente}</td><td>{order.telefono}</td><td>{order.zonaEntrega}</td><td className="sale-list-money">{money.format(order.total)}</td><td><span className="sale-list-status">{order.estado}</span></td>
             </tr>)}</tbody></table>
         </div>}
-      <nav className="sales-history-pagination" aria-label="Páginas de pedidos"><button type="button" disabled={loading || page === 1} onClick={() => setPage(v => v - 1)}>Anterior</button>
-        <span role="status">Página {page}</span><button type="button" disabled={loading || !!error || !data?.hayMas} onClick={() => setPage(v => v + 1)}>Siguiente</button></nav>
+      {!loading && !error && !!data?.pedidos.length && (page > 1 || data.hayMas) && <nav className="sales-history-pagination" aria-label="Páginas de pedidos"><button type="button" disabled={loading || page === 1} onClick={() => setPage(v => v - 1)}>Anterior</button>
+        <span role="status">Página {page}</span><button type="button" disabled={loading || !!error || !data?.hayMas} onClick={() => setPage(v => v + 1)}>Siguiente</button></nav>}
     </div>
   </section>
 }

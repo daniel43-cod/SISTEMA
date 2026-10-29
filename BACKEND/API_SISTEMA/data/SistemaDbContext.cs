@@ -166,6 +166,9 @@ namespace API_SISTEMA.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<PagosCompra>().ToTable("pagos_compra");
+            modelBuilder.Entity<PagosCompra>().Property(p => p.IdOperacion).HasColumnName("id_operacion");
+            modelBuilder.Entity<PagosCompra>().HasIndex(p => p.IdOperacion).IsUnique()
+                .HasDatabaseName("UX_pagos_compra_id_operacion").HasFilter("[id_operacion] IS NOT NULL");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<API_SISTEMA.Models.Caja>().ToTable("caja");

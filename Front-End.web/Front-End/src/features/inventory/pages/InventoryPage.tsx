@@ -126,6 +126,8 @@ export function InventoryPage() {
     {loading ? <p role="status">Cargando inventario…</p> : error ? <div role="alert">
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>
     </div> : data && <>
+      <div className="inventory-results-heading">
+        <p role="status">{data.total} productos{text ? ' encontrados' : ' en inventario'}</p>
       <div className="inventory-value-summary" role="status">
         <div><span>{text || categoryId || brandId ? 'Valor del inventario filtrado' : 'Valor total del inventario'}</span>
           <div className="inventory-total-visibility">
@@ -144,7 +146,7 @@ export function InventoryPage() {
           </div>
         </div>
       </div>
-      <p role="status">{data.total} productos{text ? ' encontrados' : ' en inventario'}</p>
+      </div>
       {data.items.length ? <div className="inventory-table-scroll" role="region" aria-label="Tabla de inventario" tabIndex={0}>
         <table>
           <caption className="sr-only">Existencias, costo promedio y valor del inventario por producto</caption>
@@ -158,11 +160,11 @@ export function InventoryPage() {
           </tr>)}</tbody>
         </table>
       </div> : <p>No hay productos{ text ? ' que coincidan con la búsqueda' : ' en esta página'}.</p>}
-      <nav className="inventory-pagination" aria-label="Páginas de inventario">
-        <button type="button" disabled={page <= 1} onClick={() => setPage(value => value - 1)}>Anterior</button>
+      {pages > 1 && <nav className="inventory-pagination" aria-label="Páginas de inventario">
+        <button type="button" disabled={page <= 1} onClick={() => setPage(value => value - 1)} aria-label="Página anterior" title="Página anterior"><span aria-hidden="true">←</span></button>
         <span>Página {page} de {pages}</span>
-        <button type="button" disabled={page >= pages || page >= 100000} onClick={() => setPage(value => value + 1)}>Siguiente</button>
-      </nav>
+        <button type="button" disabled={page >= pages || page >= 100000} onClick={() => setPage(value => value + 1)} aria-label="Página siguiente" title="Página siguiente"><span aria-hidden="true">→</span></button>
+      </nav>}
     </>}
   </section>
 }
