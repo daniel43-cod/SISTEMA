@@ -27,3 +27,9 @@
 
 .sale-payment-client-label { display: block; margin-bottom: .35rem; font-size: .85rem; font-weight: 500; color: var(--text-muted); }
 .sale-payment-totals { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+.sale-list-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin: 12px 0 20px; }
+.sale-list-filters label { width: min(100%, 360px); }
+
+.sale-list-page .sales-heading .sale-list-filters { flex: 1; margin: 0; }
+.sale-list-page .sales-heading { margin-bottom: 16px; }

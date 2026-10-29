@@ -21,7 +21,11 @@ namespace API_SISTEMA.Services.Ventas
             
         }
 
-        public async Task<List<ListarVentasDto>> ListarVentas(int idUsuario, FiltrarVentasDto? filtro = null, CancellationToken ct = default)
+        public Task<List<ListarVentasDto>> ListarVentas(int idUsuario, FiltrarVentasDto? filtro = null, CancellationToken ct = default)
+            => ConsultarVentas(idUsuario, filtro, null, ct);
+
+        internal async Task<List<ListarVentasDto>> ConsultarVentas(int idUsuario, FiltrarVentasDto? filtro,
+            int? idUsuarioFiltro, CancellationToken ct)
         {
             filtro ??= new FiltrarVentasDto();
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
@@ -47,6 +51,7 @@ namespace API_SISTEMA.Services.Ventas
                 .Where(v =>
                     v.id_sesion_caja == sesionCaja.id_sesion_caja
                 )
+                .Where(v => !idUsuarioFiltro.HasValue || v.id_usuario == idUsuarioFiltro.Value)
                 .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value))
                 .OrderByDescending(v => v.fecha_venta).ThenByDescending(v => v.id_ventas)
                 .Skip((filtro.pagina - 1) * filtro.tamanoPagina).Take(filtro.tamanoPagina)

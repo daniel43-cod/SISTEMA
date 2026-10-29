@@ -28,6 +28,12 @@ public class VentaController(VentaService consulta, AbonarSaldoVentaService abon
     public async Task<IActionResult> ListarCatalogo(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
         => Ok(await consulta.ListarCatalogo(pagina, tamanoPagina, ct));
 
+    [HttpGet("caja-activa/usuario/{idUsuario:int}")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> FiltrarPorUsuario(int idUsuario, [FromQuery] FiltrarVentasDto filtro,
+        [FromServices] FiltrarVentasUsuarioService servicio, CancellationToken ct = default)
+        => Ok(await servicio.Listar(Usuario(), idUsuario, filtro, ct));
+
     [HttpPost("crear")]
     public async Task<IActionResult> Crear([FromBody] CrearVentaDto dto, CancellationToken ct = default)
     {

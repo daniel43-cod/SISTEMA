@@ -38,7 +38,7 @@ export function PublicCategoriesPage() {
     </header>
     <main id="public-categories" className="public-catalog-main">
       <div className={selectedCategory ? 'public-catalog-heading public-catalog-heading-sticky' : 'public-catalog-heading'}>
-
+        <p className="public-catalog-eyebrow">EXPLORA NUESTROS PRODUCTOS</p>
         <div className="public-catalog-title-row">
           {selectedCategory && <button type="button" className="public-catalog-back-icon"
             aria-label={selectedBrand ? 'Volver a las marcas' : 'Volver a las categorías'}

@@ -126,6 +126,7 @@ builder.Services.AddScoped<CatalogoIAService>();
 builder.Services.AddHttpClient<OpenAIService>(client => client.Timeout = TimeSpan.FromSeconds(65));
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<VentaService>();
+builder.Services.AddScoped<FiltrarVentasUsuarioService>();
 builder.Services.AddScoped<DetalleVentaService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();

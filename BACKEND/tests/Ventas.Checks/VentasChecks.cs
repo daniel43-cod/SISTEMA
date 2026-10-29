@@ -341,9 +341,33 @@ await using (var db = new CheckDb(options))
     Check(primera.Count == 1 && segunda.Count == 1 && primera[0].id_ventas != segunda[0].id_ventas,
         "Listado pagina sin repetir ventas");
     var caja = await db.sesioncaja.SingleAsync(c => c.id_sesion_caja == 1);
+    var otraVenta = new API_SISTEMA.Models.Ventas { id_sesion_caja = 1, id_cliente = 1, id_usuario = 2,
+        id_estado_venta = 2, total = 25, subtotal = 25, saldo_pendiente = 25, origen = "PRUEBA", fecha_venta = DateTime.Now };
+    db.ventas.Add(otraVenta); await db.SaveChangesAsync();
+    var filtroUsuario = new FiltrarVentasUsuarioService(db, listado);
+    var delVendedor = await filtroUsuario.Listar(2, 1);
+    Check(delVendedor.Count > 0 && delVendedor.All(v => v.id_usuario == 1 && v.id_ventas != historica.id_ventas) &&
+        delVendedor.All(v => v.ganancia_total.HasValue), "Filtro usuario: admin consulta solo responsable y caja activa con ganancias");
+    var delAdmin = await filtroUsuario.Listar(2, 2);
+    Check(delAdmin.Count == 1 && delAdmin[0].id_ventas == otraVenta.id_ventas, "Filtro usuario: excluye ventas de otros responsables");
+    var propias = await filtroUsuario.Listar(1, 1);
+    Check(propias.Count == delVendedor.Count && propias.All(v => v.ganancia_total is null), "Filtro usuario: vendedor consulta propias sin ganancias");
+    try { await filtroUsuario.Listar(1, 2); throw new Exception("Vendedor consultó ventas ajenas"); }
+    catch (UnauthorizedAccessException) { Check(true, "Filtro usuario: bloquea vendedor consultando otro usuario"); }
+    try { await filtroUsuario.Listar(2, int.MaxValue); throw new Exception("Usuario inexistente aceptado"); }
+    catch (KeyNotFoundException) { Check(true, "Filtro usuario: usuario inexistente devuelve no encontrado"); }
+    try { await filtroUsuario.Listar(2, 0); throw new Exception("ID inválido aceptado"); }
+    catch (ValidationException) { Check(true, "Filtro usuario: valida identificador"); }
+    var paginaUsuario1 = await filtroUsuario.Listar(2, 1, new() { pagina = 1, tamanoPagina = 1 });
+    var paginaUsuario2 = await filtroUsuario.Listar(2, 1, new() { pagina = 2, tamanoPagina = 1 });
+    Check(paginaUsuario1.Count == 1 && paginaUsuario2.Count == 1 && paginaUsuario1[0].id_ventas != paginaUsuario2[0].id_ventas,
+        "Filtro usuario: pagina después de filtrar");
+    Check((await filtroUsuario.Listar(2, 1, new() { desde = DateTime.Now.AddYears(1) })).Count == 0,
+        "Filtro usuario: conserva filtros de fecha");
     caja.fecha_cierre = DateTime.Now;
     await db.SaveChangesAsync();
     Check((await listado.ListarVentas(1)).Count == 0, "Sin caja abierta el listado queda vacío");
+    Check((await filtroUsuario.Listar(2, 1)).Count == 0, "Filtro usuario: sin caja abierta devuelve lista vacía");
 }
 await using (var db = new CheckDb(options))
 {

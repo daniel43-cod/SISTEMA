@@ -144,6 +144,9 @@ object Account(string username = "empleado", string phone = "2000", string email
     };
 async Task PermisosRechazados(HttpStatusCode status)
 {
+    if (status == HttpStatusCode.Unauthorized)
+        Check((await client.GetAsync("/api/Venta/caja-activa/usuario/1")).StatusCode == status,
+            "Filtro de ventas por usuario exige autenticación");
     Check((await client.PostAsJsonAsync("/api/pedidos-catalogo/1/confirmar-venta", new { })).StatusCode == status,
         "Confirmación de pedido protegida: " + status);
     Check((await client.PutAsJsonAsync("/api/pedidos-catalogo/1/detalles", new { detalles = new object[0] })).StatusCode == status,
@@ -199,7 +202,7 @@ try
         var gastoResponse = await client.PostAsJsonAsync(gastoRoute,
             new { descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
         var gastoBody = await gastoResponse.Content.ReadAsStringAsync();
-        Check(gastoResponse.StatusCode == HttpStatusCode.BadRequest && gastoBody.Contains("No hay una caja abierta") &&
+        Check(gastoResponse.StatusCode == HttpStatusCode.BadRequest && gastoBody.Contains("Abre la caja") &&
             !gastoBody.Contains("detalle") && !gastoBody.Contains("Exception"),
             "Gastos devuelve caja cerrada sin detalles internos: " + gastoRoute);
     }
