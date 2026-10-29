@@ -1,4 +1,4 @@
-﻿import { createPortal } from 'react-dom'
+import { createPortal } from 'react-dom'
 import { InventoryLookup } from '../components/InventoryLookup'
 import { loadCatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
 import type { CatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
@@ -13,10 +13,12 @@ import { listInventory } from '../api/inventoryApi'
 import type { InventoryPageData } from '../api/inventoryApi'
 import './InventoryPage.css'
 
+const totalMoney = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', maximumFractionDigits: 6 })
 
 export function InventoryPage() {
   const { session, logout } = useAuth()
+  const [totalVisible, setTotalVisible] = useState(false)
   const [categoryQuery, setCategoryQuery] = useState('')
   const [brandQuery, setBrandQuery] = useState('')
   const [categoryId, setCategoryId] = useState<number>()
@@ -84,7 +86,7 @@ export function InventoryPage() {
       <div className="inventory-search" onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setSuggestionsOpen(false)
       }}>
-      <label htmlFor="inventory-search" >Producto</label>
+      <label htmlFor="inventory-search">Producto</label>
         <input id="inventory-search" type="search" maxLength={100} value={query}
           placeholder="Buscar producto…" aria-expanded={suggestionsOpen && query.trim().length >= 3}
           aria-controls="inventory-suggestions" onFocus={() => setSuggestionsOpen(true)}
@@ -124,16 +126,35 @@ export function InventoryPage() {
     {loading ? <p role="status">Cargando inventario…</p> : error ? <div role="alert">
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>
     </div> : data && <>
+      <div className="inventory-value-summary" role="status">
+        <div><span>{text || categoryId || brandId ? 'Valor del inventario filtrado' : 'Valor total del inventario'}</span>
+          <div className="inventory-total-visibility">
+            <strong id="inventory-total" aria-label={totalVisible ? undefined : 'Total oculto'}>
+              {totalVisible ? (typeof data.valorInventarioTotal === 'number' && Number.isFinite(data.valorInventarioTotal) ? totalMoney.format(data.valorInventarioTotal) : 'No disponible') : 'Q ••••••'}
+            </strong>
+            <button type="button" className="inventory-total-toggle" onClick={() => setTotalVisible(value => !value)}
+              aria-label={totalVisible ? 'Ocultar total del inventario' : 'Mostrar total del inventario'}
+              title={totalVisible ? 'Ocultar total' : 'Mostrar total'} aria-pressed={totalVisible} aria-controls="inventory-total">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {!totalVisible && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
       <p role="status">{data.total} productos{text ? ' encontrados' : ' en inventario'}</p>
       {data.items.length ? <div className="inventory-table-scroll" role="region" aria-label="Tabla de inventario" tabIndex={0}>
         <table>
-          <caption className="sr-only">Existencias y precio promedio de compra por producto</caption>
+          <caption className="sr-only">Existencias, costo promedio y valor del inventario por producto</caption>
           <thead><tr><th scope="col">Código de barras</th><th scope="col">Producto</th><th scope="col">Marca</th>
-            <th scope="col" className="inventory-number">Existencia</th><th scope="col" className="inventory-number">Precio Costo</th></tr></thead>
+            <th scope="col" className="inventory-number">Existencia</th><th scope="col" className="inventory-number">Precio Costo</th><th scope="col" className="inventory-number">Costo</th></tr></thead>
           <tbody>{data.items.map(item => <tr key={item.idProducto}>
             <td className="inventory-barcode">{item.codigoBarra || 'Sin código'}</td><td>{item.nombre}</td><td>{item.marca}</td>
             <td className="inventory-number">{item.stock.toLocaleString('es-GT')}</td>
             <td className="inventory-number">{item.precioPromedioCompra === null ? 'Sin registro' : money.format(item.precioPromedioCompra)}</td>
+            <td className="inventory-number">{item.valorInventario === null ? 'Sin costo' : typeof item.valorInventario === 'number' && Number.isFinite(item.valorInventario) ? money.format(item.valorInventario) : 'No disponible'}</td>
           </tr>)}</tbody>
         </table>
       </div> : <p>No hay productos{ text ? ' que coincidan con la búsqueda' : ' en esta página'}.</p>}

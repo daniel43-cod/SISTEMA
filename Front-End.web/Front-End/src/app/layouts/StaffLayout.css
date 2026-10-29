@@ -1,4 +1,4 @@
-﻿.staff-shell { --color-primary: #075b96; --color-primary-hover: #064a7b; --color-background: #ffffff; --color-surface: #ffffff; --color-text: #263747; --color-muted: #526477; --color-border: #7c8fa1; --staff-accent-soft: #d5edfd; --staff-divider: #c4dff2; color: var(--color-text); background: var(--color-background); min-height: 100svh; display: grid; grid-template-columns: 264px minmax(0, 1fr); }
+.staff-shell { --color-primary: #075b96; --color-primary-hover: #064a7b; --color-background: #ffffff; --color-surface: #ffffff; --color-text: #263747; --color-muted: #526477; --color-border: #7c8fa1; --staff-accent-soft: #d5edfd; --staff-divider: #c4dff2; color: var(--color-text); background: var(--color-background); min-height: 100svh; display: grid; grid-template-columns: 264px minmax(0, 1fr); }
 .staff-sidebar { position: sticky; top: 0; height: 100svh; background: linear-gradient(160deg, #0769ad, #07558e); color: #ffffff; border-right: 1px solid #07558e; display: flex; flex-direction: column; }
 .staff-brand { display: flex; align-items: center; gap: 12px; padding: 28px 22px; border-bottom: 1px solid #ffffff33; }
 .staff-brand img { flex-shrink: 0; object-fit: contain; border-radius: 10px; }
@@ -172,8 +172,8 @@
   .staff-sidebar { z-index: 40; }
 }
 
-.staff-shell-inventory .staff-header { flex-wrap: wrap; background: #ffffff; }
-#staff-inventory-search { order: 3; flex: 1 0 100%; min-width: 0; }
+.staff-shell-inventory .staff-header { flex-wrap: nowrap; background: #ffffff; }
+#staff-inventory-search { order: 0; flex: 1 1 auto; min-width: 0; }
 #staff-inventory-search[hidden] { display: none; }
 #staff-inventory-search .inventory-toolbar { width: 100%; }
 #staff-inventory-search .inventory-suggestions button { min-height: 44px; padding: 10px 12px; background: #ffffff; color: #263747; cursor: pointer; }
@@ -188,3 +188,8 @@
 
 .staff-shell-sales .staff-header { min-height: 44px; padding-block: 0; background: #ffffff; }
 .staff-shell-sales .staff-content { padding-top: 0; }
+
+@media (max-width: 800px) {
+  .staff-shell-inventory .staff-header { flex-wrap: wrap; }
+  #staff-inventory-search { order: 3; flex: 1 0 100%; }
+}

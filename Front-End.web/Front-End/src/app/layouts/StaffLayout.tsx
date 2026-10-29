@@ -1,4 +1,4 @@
-﻿import { OrdersPage } from '../../features/orders/pages/OrdersPage'
+import { OrdersPage } from '../../features/orders/pages/OrdersPage'
 import { SaleListPage } from '../../features/sales/pages/SaleListPage'
 import { SalesPage } from '../../features/sales/pages/SalesPage'
 import { UsersPage } from '../../features/users/pages/UsersPage'
@@ -94,10 +94,10 @@ export function StaffLayout() {
             </svg>
           </button>
 
-          {current.id !== 'ventas' && <div className="staff-page-heading">
+          {current.id !== 'ventas' && current.id !== 'inventario' && <div className="staff-page-heading">
             <div>{current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
               <div className="staff-title-row"><h1>{current.label}</h1>{current.id === 'caja' && cashOpen === true && <span className="cash-status is-open" role="status"><span aria-hidden="true">●</span> Caja abierta</span>}</div>
-              {current.id !== 'caja' && current.id !== 'inventario' && <p>{current.description}</p>}
+              {current.id !== 'caja' && <p>{current.description}</p>}
             </div>
           </div>}
           <div id="staff-inventory-search" hidden={current.id !== 'inventario' || menuOpen} />

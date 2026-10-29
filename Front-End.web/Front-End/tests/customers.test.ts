@@ -53,3 +53,32 @@ test('Una consulta cancelada propaga la cancelación sin entregar datos', async 
   controller.abort()
   await assert.rejects(pending)
 })
+
+
+import { registerCustomer } from '../src/features/customer-auth/api/customerRegistrationApi.ts'
+import { validateCustomerRegistration } from '../src/features/customer-auth/schemas/customerRegistration.ts'
+
+test('Registro de cliente valida correo, complejidad, confirmación y límite UTF-8', () => {
+  assert.equal(validateCustomerRegistration('ana@example.com', 'Password123', 'Password123'), null)
+  assert.ok(validateCustomerRegistration('invalido', 'Password123', 'Password123'))
+  for (const password of ['123', 'password123', 'PASSWORD123', 'Password', 'Aa1' + 'á'.repeat(35)])
+    assert.ok(validateCustomerRegistration('ana@example.com', password, password))
+  assert.ok(validateCustomerRegistration('ana@example.com', 'Password123', 'Otra1234'))
+})
+
+test('Registro envía únicamente correo y contraseña sin iniciar sesión ni enviar token', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/CuentaCliente/registro')
+    assert.equal(options.method, 'POST')
+    assert.deepEqual(JSON.parse(options.body as string), { correoElectronico: 'ana@example.com', password: 'Password123' })
+    assert.equal((options.headers as Record<string, string>).Authorization, undefined)
+    return Response.json({ idCuentaCliente: 1, correoElectronico: 'ana@example.com' }, { status: 201 })
+  })
+  await registerCustomer(' Ana@example.com ', 'Password123', 'Password123')
+})
+
+test('Registro con correo existente indica iniciar sesión sin exponer detalles internos', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ detail: 'SQL secreto' }, { status: 409 }))
+  await assert.rejects(registerCustomer('ana@example.com', 'Password123', 'Password123'),
+    (error: unknown) => error instanceof ApiError && error.status === 409 && error.message.includes('Inicia sesión') && !error.message.includes('SQL'))
+})

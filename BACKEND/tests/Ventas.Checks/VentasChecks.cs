@@ -345,6 +345,30 @@ await using (var db = new CheckDb(options))
     await db.SaveChangesAsync();
     Check((await listado.ListarVentas(1)).Count == 0, "Sin caja abierta el listado queda vacío");
 }
+await using (var db = new CheckDb(options))
+{
+    var inventario = new API_SISTEMA.Services.Productos.ProductoInventarioService(db);
+    var productos = await db.productos.AsNoTracking().ToListAsync();
+    var esperado = productos.Where(p => p.PrecioPromedioCompra > 0).Sum(p => (p.Stock ?? 0) * p.PrecioPromedioCompra!.Value);
+    var primera = await inventario.Listar(new() { Pagina = 1, TamanoPagina = 1 });
+    var segunda = await inventario.Listar(new() { Pagina = 2, TamanoPagina = 1 });
+    Check(primera.Items.Count == 1 && primera.Total == productos.Count && primera.ValorInventarioTotal == esperado,
+        "Inventario: suma todos los productos antes de paginar");
+    Check(segunda.ValorInventarioTotal == primera.ValorInventarioTotal, "Inventario: total independiente de página");
+    var filtrado = await inventario.Listar(new() { Texto = "Prueba", TamanoPagina = 1 });
+    Check(filtrado.ValorInventarioTotal == productos.Where(p => p.Nombre.Contains("Prueba") && p.PrecioPromedioCompra > 0)
+        .Sum(p => (p.Stock ?? 0) * p.PrecioPromedioCompra!.Value), "Inventario: suma respeta filtros");
+    var vacio = await inventario.Listar(new() { Texto = "NO_EXISTE_INVENTARIO" });
+    Check(vacio.Total == 0 && vacio.ValorInventarioTotal == 0 && vacio.ProductosSinCosto == 0,
+        "Inventario: consulta vacía devuelve cero");
+    var producto = productos.First(p => p.IdProducto == 2);
+    await db.productos.Where(p => p.IdProducto == 2).ExecuteUpdateAsync(s => s.SetProperty(p => p.PrecioPromedioCompra, (decimal?)null));
+    var sinCosto = await inventario.Listar(new() { TamanoPagina = 1 });
+    Check(sinCosto.ValorInventarioTotal == esperado - (producto.Stock ?? 0) * producto.PrecioPromedioCompra!.Value &&
+        sinCosto.ProductosSinCosto == productos.Count(p => !p.PrecioPromedioCompra.HasValue || p.PrecioPromedioCompra <= 0) + 1,
+        "Inventario: excluye costos desconocidos e informa su cantidad");
+    await db.productos.Where(p => p.IdProducto == 2).ExecuteUpdateAsync(s => s.SetProperty(p => p.PrecioPromedioCompra, producto.PrecioPromedioCompra));
+}
 await PedidosCatalogoChecks.Ejecutar(options, Check);
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
 

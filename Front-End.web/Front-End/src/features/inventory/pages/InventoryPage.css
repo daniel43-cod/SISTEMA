@@ -34,3 +34,13 @@
   font-weight: 700;
   border-bottom: 1px solid #c4dff2;
 }
+
+.inventory-value-summary { padding: 16px 20px; border: 1px solid #c4dff2; border-radius: 12px; background: #eff8ff; color: #075b96; }
+.inventory-value-summary > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.inventory-value-summary strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.inventory-value-summary small { display: block; margin-top: 6px; color: #475569; }
+
+.inventory-total-visibility { display: flex; align-items: center; gap: 10px; }
+.inventory-page .inventory-total-toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 8px; border: 0; background: transparent; color: inherit; }
+.inventory-page .inventory-total-toggle:hover { background: #dceefb; }
+.inventory-total-toggle:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }

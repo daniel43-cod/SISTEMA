@@ -23,7 +23,14 @@ public sealed class ProductoInventarioService(SistemaDbContext context)
         if (filtro.IdCategoria.HasValue)
             consulta = consulta.Where(p => p.Marca.IdCategoria == filtro.IdCategoria.Value);
 
-        var total = await consulta.CountAsync(cancellationToken);
+        // Resume todos los productos filtrados, antes de Skip/Take.
+        var resumen = await consulta.GroupBy(_ => 1).Select(g => new
+        {
+            Total = g.Count(),
+            ProductosSinCosto = g.Count(p => !p.PrecioPromedioCompra.HasValue || p.PrecioPromedioCompra <= 0),
+            ValorInventarioTotal = g.Sum(p => p.PrecioPromedioCompra > 0
+                ? (p.Stock ?? 0) * p.PrecioPromedioCompra : 0m) ?? 0m
+        }).SingleOrDefaultAsync(cancellationToken);
         var items = await consulta.OrderBy(p => p.Nombre).ThenBy(p => p.IdProducto)
             .Skip((filtro.Pagina - 1) * filtro.TamanoPagina).Take(filtro.TamanoPagina)
             .Select(p => new ProductoInventarioDto
@@ -31,16 +38,20 @@ public sealed class ProductoInventarioService(SistemaDbContext context)
                 IdProducto = p.IdProducto,
                 Nombre = p.Nombre,
                 PrecioPromedioCompra = p.PrecioPromedioCompra,
+                ValorInventario = p.PrecioPromedioCompra > 0 ? (p.Stock ?? 0) * p.PrecioPromedioCompra: null,
                 Stock = p.Stock ?? 0,
                 CodigoBarra = p.CodigoBarra,
                 IdMarca = p.IdMarca,
-                Marca = p.Marca.Nombre
+                Marca = p.Marca.Nombre,
+               
             }).ToListAsync(cancellationToken);
 
         return new ProductoInventarioPaginaDto
         {
             Pagina = filtro.Pagina, TamanoPagina = filtro.TamanoPagina,
-            Total = total, Items = items
+            Total = resumen?.Total ?? 0, Items = items,
+            ValorInventarioTotal = resumen?.ValorInventarioTotal ?? 0m,
+            ProductosSinCosto = resumen?.ProductosSinCosto ?? 0
         };
     }
 }

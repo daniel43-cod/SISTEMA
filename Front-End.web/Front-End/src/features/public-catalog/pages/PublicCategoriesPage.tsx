@@ -32,13 +32,13 @@ export function PublicCategoriesPage() {
     <header className="public-catalog-header">
       <a className="public-catalog-brand" href={`${import.meta.env.BASE_URL}catalogo`}>
         <img src={`${import.meta.env.BASE_URL}icono_principal.jpeg`} alt="" width="44" height="44" />
-        <span>Distrbuidora San Antonio<small>CATÁLOGO</small></span>
+        <span>Distribuidora San Antonio<small>CATÁLOGO</small></span>
       </a>
 
     </header>
     <main id="public-categories" className="public-catalog-main">
       <div className={selectedCategory ? 'public-catalog-heading public-catalog-heading-sticky' : 'public-catalog-heading'}>
-        <p className="public-catalog-eyebrow">EXPLORA NUESTROS PRODUCTOS</p>
+
         <div className="public-catalog-title-row">
           {selectedCategory && <button type="button" className="public-catalog-back-icon"
             aria-label={selectedBrand ? 'Volver a las marcas' : 'Volver a las categorías'}
