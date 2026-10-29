@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
+import { loadSaleSummary } from '../api/saleSummaryApi'
 import { loadSaleHistory } from '../api/salesApi'
 import type { SaleHistory } from '../api/salesApi'
 import './SalesPage.css'
@@ -31,6 +32,8 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
   const [pageSize, setPageSize] = useState(50)
   const [revision, setRevision] = useState(0)
   const [rows, setRows] = useState<SaleHistory[]>([])
+  const [profitTotal, setProfitTotal] = useState<number | null>(null)
+  const [profitVisible, setProfitVisible] = useState(false)
   const [hasNext, setHasNext] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -52,9 +55,16 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
   useEffect(() => {
     if (!token) return
     const controller = new AbortController()
-    setLoading(true); setError(''); setRows([]); setHasNext(false)
+    setLoading(true); setError(''); setRows([]); setHasNext(false); setProfitTotal(null)
     async function load() {
       try {
+        if (isAdmin) {
+          const summary = await loadSaleSummary(token!, page, pageSize, range, userId ? Number(userId) : undefined, controller.signal)
+          if (controller.signal.aborted) return
+          if (summary.items.length === 0 && page > 1) { setPage(1); return }
+          setRows(summary.items); setHasNext(summary.hayMas); setProfitTotal(summary.gananciaTotal)
+          return
+        }
         const result = await loadSaleHistory(token!, controller.signal, page, isAdmin ? range : undefined, isAdmin && userId ? Number(userId) : undefined, pageSize)
         // La API devuelve un arreglo sin total; consultar la siguiente página evita
         // habilitar Siguiente cuando la última página tiene exactamente el tamaño de página.
@@ -84,7 +94,18 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
         <label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={event => {
           setUserId(event.target.value); setPage(1); setSelected(null); setSuccess('')
         }}><option value="">Todos</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
-        <div className="sale-date-actions"><RefreshButton label="Actualizar ventas" loading={loading || saving} onClick={() => { setPage(1); setRevision(v => v + 1) }} />
+        <div className="sale-date-actions"><div className="sale-profit-summary"><span>Ganancia total</span><div className="sale-profit-card">
+        <div><strong aria-label={profitVisible ? undefined : 'Ganancia oculta'}>
+          {profitVisible ? (profitTotal === null ? '—' : money.format(profitTotal)) : 'Q ••••••'}
+        </strong>
+        <button type="button" className="sale-profit-toggle" aria-label={profitVisible ? 'Ocultar ganancia total' : 'Mostrar ganancia total'}
+          title={profitVisible ? 'Ocultar ganancia' : 'Mostrar ganancia'} aria-pressed={profitVisible} onClick={() => setProfitVisible(v => !v)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+            {!profitVisible && <path d="m3 3 18 18" />}
+          </svg>
+        </button></div>
+      </div></div><RefreshButton label="Actualizar ventas" loading={loading || saving} onClick={() => { setPage(1); setRevision(v => v + 1) }} />
         <label className="sale-filter-date">Fecha<input type="date" value={selectedDate} min={dateLimits.desde} max={dateLimits.hasta} disabled={saving} onChange={event => {
           const day = event.target.value
           if (day && (day < dateLimits.desde || day > dateLimits.hasta)) return

@@ -364,10 +364,25 @@ await using (var db = new CheckDb(options))
         "Filtro usuario: pagina después de filtrar");
     Check((await filtroUsuario.Listar(2, 1, new() { desde = DateTime.Now.AddYears(1) })).Count == 0,
         "Filtro usuario: conserva filtros de fecha");
+    var servicioResumen = new ResumenVentasService(db, listado, new HistorialVentasFechaService(db, listado));
+    var esperadoGanancia = await db.ventas.Where(v => v.id_sesion_caja == 1).SumAsync(v => v.ganancia_total);
+    var resumenPagina1 = await servicioResumen.Consultar(2, new() { TamanoPagina = 1 });
+    var resumenPagina2 = await servicioResumen.Consultar(2, new() { TamanoPagina = 1, Pagina = 2 });
+    Check(resumenPagina1.Items.Count == 1 && resumenPagina1.GananciaTotal == esperadoGanancia && resumenPagina1.HayMas &&
+        resumenPagina2.GananciaTotal == esperadoGanancia, "Resumen: suma ganancias de toda la caja antes de paginar");
+    var resumenUsuario = await servicioResumen.Consultar(2, new() { IdUsuario = 1, TamanoPagina = 1 });
+    Check(resumenUsuario.GananciaTotal == await db.ventas.Where(v => v.id_sesion_caja == 1 && v.id_usuario == 1).SumAsync(v => v.ganancia_total),
+        "Resumen: ganancia respeta usuario en caja activa");
+    try { await servicioResumen.Consultar(1, new()); throw new Exception("Vendedor recibió ganancias"); }
+    catch (UnauthorizedAccessException) { Check(true, "Resumen: solo administrador puede consultar ganancias"); }
+    var resumenVendedor = new VentasResumenPaginaDto { Items = propias };
+    Check(!JsonSerializer.Serialize(resumenVendedor).Contains("GananciaTotal") && resumenVendedor.Items.All(v => v.ganancia_total is null),
+        "Resumen: JSON del vendedor omite ganancia agregada e individual");
     caja.fecha_cierre = DateTime.Now;
     await db.SaveChangesAsync();
     Check((await listado.ListarVentas(1)).Count == 0, "Sin caja abierta el listado queda vacío");
     Check((await filtroUsuario.Listar(2, 1)).Count == 0, "Filtro usuario: sin caja abierta devuelve lista vacía");
+    Check((await servicioResumen.Consultar(2, new())).GananciaTotal == 0, "Resumen: caja cerrada devuelve ganancia cero");
     var historialFechas = new HistorialVentasFechaService(db, listado);
     var inicioDia = new DateTime(2020, 5, 10);
     API_SISTEMA.Models.Ventas VentaFecha(DateTime fecha, int sesion) => new()
@@ -396,6 +411,12 @@ await using (var db = new CheckDb(options))
     Check(fechaVendedor.Count == 2 && fechaVendedor.All(v => v.id_usuario == 1),
         "Historial: el usuario no incluye sus ventas de otros días");
     Check((await historialFechas.Listar(2, filtroDia)).Count == 3, "Historial: sin usuario seleccionado muestra todos los del día");
+    inicio.ganancia_total = 4; finalDia.ganancia_total = 6; fechaOtroUsuario.ganancia_total = 8;
+    await db.SaveChangesAsync();
+    var resumenDia = await servicioResumen.Consultar(2, new() { Desde = filtroDia.Desde, Hasta = filtroDia.Hasta, TamanoPagina = 1 });
+    var resumenDiaUsuario = await servicioResumen.Consultar(2, new() { Desde = filtroDia.Desde, Hasta = filtroDia.Hasta, IdUsuario = 1, TamanoPagina = 1 });
+    Check(resumenDia.GananciaTotal == 18 && resumenDia.TotalRegistros == 3 && resumenDia.Items.Count == 1 && resumenDiaUsuario.GananciaTotal == 10,
+        "Resumen: suma por día y usuario entre sesiones cerradas sin limitarse a la página");
     try { await historialFechas.Listar(2, new() { IdUsuario = int.MaxValue }); throw new Exception("Usuario desconocido aceptado"); }
     catch (KeyNotFoundException) { Check(true, "Historial: valida usuario del filtro combinado"); }
     var hoyGt = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "America/Guatemala"));
@@ -436,6 +457,33 @@ await using (var db = new CheckDb(options))
     await db.productos.Where(p => p.IdProducto == 2).ExecuteUpdateAsync(s => s.SetProperty(p => p.PrecioPromedioCompra, producto.PrecioPromedioCompra));
 }
 await PedidosCatalogoChecks.Ejecutar(options, Check);
+await using (var db = new CheckDb(options))
+{
+    var servicioPagos = new PagoService(db);
+    var idsOriginales = await db.pagos.Where(p => p.id_venta == venta.id_ventas).OrderBy(p => p.id_pago)
+        .Select(p => p.id_pago).ToListAsync();
+    await db.pagos.Where(p => p.id_pago == idsOriginales[0])
+        .ExecuteUpdateAsync(s => s.SetProperty(p => p.id_sesion_caja, 2));
+    await db.sesioncaja.Where(c => c.fecha_cierre == null)
+        .ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, (DateTime?)DateTime.Now));
+    var historialPagos = await servicioPagos.ListarPorVenta(venta.id_ventas);
+    Check(historialPagos.Count == 2 && historialPagos.Sum(p => p.Monto) == 101 &&
+        historialPagos.Select(p => p.IdSesionCaja).Distinct().Count() == 2,
+        "Historial de pagos: incluye pago inicial y abono de dos sesiones sin caja abierta");
+    Check(historialPagos.All(p => p.IdVenta == venta.id_ventas && p.IdUsuario == 1 && p.Usuario == "Usuario Prueba" && p.MetodoPago == "EFECTIVO"),
+        "Historial de pagos: solo la venta solicitada, con responsable y método");
+    Check(historialPagos.Select(p => p.IdPago).Order().SequenceEqual(idsOriginales.Order()), "Historial de pagos: no omite ni duplica pagos");
+    Check(historialPagos.Zip(historialPagos.Skip(1)).All(p => p.First.FechaPago > p.Second.FechaPago ||
+        (p.First.FechaPago == p.Second.FechaPago && p.First.IdPago > p.Second.IdPago)), "Historial de pagos: orden estable más recientes primero");
+    Check((await servicioPagos.ListarPorVenta(ventaExtensa.id_ventas)).Count == 0, "Historial de pagos: venta sin pagos devuelve lista vacía");
+    try { await servicioPagos.ListarPorVenta(int.MaxValue); throw new Exception("Venta inexistente aceptada"); }
+    catch (KeyNotFoundException) { Check(true, "Historial de pagos: venta inexistente devuelve no encontrado"); }
+    try { await servicioPagos.ListarPorVenta(0); throw new Exception("ID inválido aceptado"); }
+    catch (ValidationException) { Check(true, "Historial de pagos: valida identificador"); }
+    using var cancelPagos = new CancellationTokenSource(); cancelPagos.Cancel();
+    try { await servicioPagos.ListarPorVenta(venta.id_ventas, cancelPagos.Token); throw new Exception("Cancelación ignorada"); }
+    catch (OperationCanceledException) { Check(true, "Historial de pagos: respeta cancelación"); }
+}
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)

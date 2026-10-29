@@ -100,3 +100,17 @@
 
 .sale-detail-payment-action { display: inline-flex; align-items: center; gap: 12px; }
 .sale-abono-dialog { width: min(520px, calc(100vw - 32px)); }
+
+.sale-abono-dialog { width: min(850px, calc(100vw - 32px)); }
+.sale-payments-history { margin-top: 16px; }
+.sale-payments-history h3 { font-size: 1rem; margin: 0 0 12px; }
+.sale-payments-history .sales-table-scroll { max-height: 38dvh; overflow: auto; }
+.sale-payments-history th { position: sticky; top: 0; z-index: 1; }
+
+.sale-profit-summary { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sale-profit-summary > span { font-size: .85rem; color: var(--text-muted); white-space: nowrap; }
+.sale-profit-card { padding: 2px 8px; border: 1px solid var(--border); border-radius: 8px; background: #eff8ff; }
+.sale-profit-card > div { display: flex; align-items: center; gap: 8px; }
+.sale-profit-card strong { font-size: .9rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sale-list-view button.sale-profit-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; min-height: 32px; padding: 4px; border: 0; background: transparent; }
+@media (max-width: 1100px) { .sale-list-view .sale-date-filters { flex-wrap: wrap; } .sale-date-actions { flex-wrap: wrap; } }

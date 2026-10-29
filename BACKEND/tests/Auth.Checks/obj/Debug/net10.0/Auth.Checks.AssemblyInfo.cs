@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Auth.Checks")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+52b98c2afbd9c6ace5d036335d3f3d97380bfbb8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ac627ba3097d42cb58f7ca2521bb08195754836")]
 [assembly: System.Reflection.AssemblyProductAttribute("Auth.Checks")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Auth.Checks")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -9,6 +9,9 @@ namespace API_SISTEMA.Services.Ventas;
 public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaService ventas)
 {
     public async Task<List<ListarVentasDto>> Listar(int idUsuario, HistorialVentasFechaDto filtro, CancellationToken ct = default)
+        => (await ListarPagina(idUsuario, filtro, ct)).Items;
+
+    public async Task<VentasResumenPaginaDto> ListarPagina(int idUsuario, HistorialVentasFechaDto filtro, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(filtro);
         Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
@@ -26,7 +29,7 @@ public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaS
         if (desde > hasta || hasta == DateOnly.MaxValue)
             throw new ValidationException("El rango de fechas no es válido.");
         // fecha_venta almacena la hora local del negocio. No utilizar fecha de apertura/cierre.
-        return await ventas.ConsultarVentas(idUsuario, new FiltrarVentasDto
+        return await ventas.ConsultarPagina(idUsuario, new FiltrarVentasDto
         {
             pagina = filtro.Pagina, tamanoPagina = filtro.TamanoPagina,
             desde = desde.ToDateTime(TimeOnly.MinValue)

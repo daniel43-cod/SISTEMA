@@ -26,6 +26,10 @@ namespace API_SISTEMA.Services.Ventas
 
         internal async Task<List<ListarVentasDto>> ConsultarVentas(int idUsuario, FiltrarVentasDto? filtro,
             int? idUsuarioFiltro, CancellationToken ct, bool soloCajaActiva = true, DateTime? hastaExclusiva = null)
+            => (await ConsultarPagina(idUsuario, filtro, idUsuarioFiltro, ct, soloCajaActiva, hastaExclusiva)).Items;
+
+        internal async Task<VentasResumenPaginaDto> ConsultarPagina(int idUsuario, FiltrarVentasDto? filtro,
+            int? idUsuarioFiltro, CancellationToken ct, bool soloCajaActiva = true, DateTime? hastaExclusiva = null)
         {
             filtro ??= new FiltrarVentasDto();
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
@@ -43,18 +47,23 @@ namespace API_SISTEMA.Services.Ventas
             if (soloCajaActiva)
             {
                 var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context, ct);
-                if (sesionCaja == null) return new List<ListarVentasDto>();
+                if (sesionCaja == null) return new VentasResumenPaginaDto
+                { Pagina = filtro.pagina, TamanoPagina = filtro.tamanoPagina, GananciaTotal = puedeVerGanancia ? 0m : null };
                 idSesionCaja = sesionCaja.id_sesion_caja;
             }
 
-            return await _context.ventas
+            var consulta = _context.ventas
                 .AsNoTracking()
                 .Where(v =>
                     !soloCajaActiva || v.id_sesion_caja == idSesionCaja
                 )
                 .Where(v => !idUsuarioFiltro.HasValue || v.id_usuario == idUsuarioFiltro.Value)
                 .Where(v => !hastaExclusiva.HasValue || v.fecha_venta < hastaExclusiva.Value)
-                .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value))
+                .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value));
+            var total = await consulta.CountAsync(ct);
+            decimal? ganancia = puedeVerGanancia
+                ? await consulta.SumAsync(v => (decimal?)v.ganancia_total, ct) ?? 0m : null;
+            var items = await consulta
                 .OrderByDescending(v => v.fecha_venta).ThenByDescending(v => v.id_ventas)
                 .Skip((filtro.pagina - 1) * filtro.tamanoPagina).Take(filtro.tamanoPagina)
                 .Select(v => new ListarVentasDto
@@ -77,6 +86,11 @@ namespace API_SISTEMA.Services.Ventas
                     observacion = v.observacion
                 })
                 .ToListAsync(ct);
+            return new VentasResumenPaginaDto
+            {
+                Pagina = filtro.pagina, TamanoPagina = filtro.tamanoPagina, TotalRegistros = total,
+                HayMas = (long)filtro.pagina * filtro.tamanoPagina < total, GananciaTotal = ganancia, Items = items
+            };
         }
 
         //catalodo

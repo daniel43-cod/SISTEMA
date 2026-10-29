@@ -144,8 +144,11 @@ object Account(string username = "empleado", string phone = "2000", string email
     };
 async Task PermisosRechazados(HttpStatusCode status)
 {
+    Check((await client.GetAsync("/api/Venta/resumen")).StatusCode == status, "Resumen de ganancias protegido: " + status);
     Check((await client.GetAsync("/api/Venta/historial")).StatusCode == status,
         "Historial de ventas protegido: " + status);
+    if (status == HttpStatusCode.Unauthorized)
+        Check((await client.GetAsync("/api/Pagos/venta/1")).StatusCode == status, "Historial de pagos exige autenticación");
     if (status == HttpStatusCode.Unauthorized)
         Check((await client.GetAsync("/api/Venta/caja-activa/usuario/1")).StatusCode == status,
             "Filtro de ventas por usuario exige autenticación");

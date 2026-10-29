@@ -105,3 +105,39 @@ test('El tamaño seleccionado se envía en todos los modos del listado de ventas
       assert.equal(new URL(url, 'https://example.test').searchParams.get('tamanoPagina'), String(size))
   }
 })
+
+
+import { loadSalePayments } from '../src/features/sales/api/salePaymentsApi.ts'
+test('Historial de pagos consulta por venta con token sin limitar la sesión', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Pagos/venta/12')
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer test')
+    return Response.json([{ idPago: 1, idVenta: 12, fechaPago: '2026-10-29T10:30:00', monto: 50, metodoPago: 'EFECTIVO', observacion: null, usuario: 'Ana', idSesionCaja: 99 }])
+  })
+  assert.equal((await loadSalePayments(12, 'test'))[0].monto, 50)
+})
+test('Historial de pagos admite venta sin pagos', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json([]))
+  assert.deepEqual(await loadSalePayments(12, 'test'), [])
+})
+test('Historial rechaza pagos que pertenecen a otra venta', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json([{ idPago: 1, idVenta: 13, fechaPago: '2026-10-29T10:30:00', monto: 50, metodoPago: 'EFECTIVO', observacion: null, usuario: 'Ana' }]))
+  await assert.rejects(loadSalePayments(12, 'test'))
+})
+
+import { loadSaleSummary } from '../src/features/sales/api/saleSummaryApi.ts'
+test('Resumen de ganancias usa el total del backend y conserva todos los filtros', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string) => {
+    const parsed = new URL(url, 'https://example.test')
+    assert.equal(parsed.pathname, '/api/Venta/resumen')
+    assert.equal(parsed.searchParams.get('idUsuario'), '2')
+    assert.equal(parsed.searchParams.get('desde'), '2026-10-23')
+    return Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false, gananciaTotal: 123.45, items: [] })
+  })
+  const summary = await loadSaleSummary('token', 1, 10, { desde: '2026-10-23', hasta: '2026-10-23' }, 2)
+  assert.equal(summary.gananciaTotal, 123.45)
+})
+test('Resumen rechaza una respuesta sin ganancia para evitar importes inválidos', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false, items: [] }))
+  await assert.rejects(loadSaleSummary('token', 1, 10))
+})

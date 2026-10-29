@@ -1,7 +1,7 @@
-import { saleHistoryQuery } from '../utils/saleHistoryQuery'
-import { requestJson } from '../../../shared/api/httpClient'
-import { ApiError } from '../../../shared/api/ApiError'
-import type { SaleProduct } from '../utils/saleValidation'
+import { saleHistoryQuery } from '../utils/saleHistoryQuery.ts'
+import { requestJson } from '../../../shared/api/httpClient.ts'
+import { ApiError } from '../../../shared/api/ApiError.ts'
+import type { SaleProduct } from '../utils/saleValidation.ts'
 
 export type SaleHistory = { id_ventas: number; cliente: string; usuario: string; subtotal: number; descuento: number | null; total: number; ganancia_total?: number; saldo_pendiente: number; estado: string; fecha_venta: string }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null

@@ -1,3 +1,4 @@
+import { SalePaymentsHistory } from '../components/SalePaymentsHistory'
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
@@ -13,6 +14,7 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   const dialog = useRef<HTMLDialogElement>(null)
   const paymentDialog = useRef<HTMLDialogElement>(null)
   const paymentButton = useRef<HTMLButtonElement>(null)
+  const paymentHeading = useRef<HTMLHeadingElement>(null)
   const paymentAmount = useRef<HTMLInputElement>(null)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -59,9 +61,9 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   useEffect(() => {
     if (!paymentOpen) return
     const panel = paymentDialog.current
-    panel?.showModal(); paymentAmount.current?.focus()
+    panel?.showModal(); if (sale.saldo_pendiente > 0) paymentAmount.current?.focus(); else paymentHeading.current?.focus()
     return () => { panel?.close(); paymentButton.current?.focus() }
-  }, [paymentOpen])
+  }, [paymentOpen, sale.saldo_pendiente])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -99,8 +101,8 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
         new Intl.DateTimeFormat('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(sale.fecha_venta)) + ' · ' +
         new Intl.DateTimeFormat('es-GT', { hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(sale.fecha_venta))}</span>
         <span className="sale-detail-payment-action"><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
-          {sale.saldo_pendiente > 0 && <button ref={paymentButton} type="button" disabled={saving || loading || !!detailError}
-            onClick={() => setPaymentOpen(true)} aria-haspopup="dialog">Abonar</button>}
+          <button ref={paymentButton} type="button" disabled={saving}
+            onClick={() => setPaymentOpen(true)} aria-haspopup="dialog">{sale.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'}</button>
         </span></p>
     </header>
     {loading ? <p role="status">Cargando detalle…</p> : detailError ? <div role="alert"><p>{detailError}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar detalle</button></div> :
@@ -120,11 +122,12 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   {paymentOpen && <dialog ref={paymentDialog} className="sales-page sale-list-page sale-payment-dialog sale-abono-dialog"
     aria-labelledby="sale-abono-title" onCancel={event => { event.preventDefault(); if (!busy.current) setPaymentOpen(false) }}>
     <section className="sales-card sale-payment">
-      <div className="sale-detail-title-row"><h2 id="sale-abono-title">Abonar · {sale.cliente}</h2>
-        <button type="button" className="sale-detail-close" disabled={saving} onClick={() => setPaymentOpen(false)} aria-label="Cerrar formulario de abono">×</button>
+      <div className="sale-detail-title-row"><h2 id="sale-abono-title" ref={paymentHeading} tabIndex={-1}>{sale.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'} · {sale.cliente}</h2>
+        <button type="button" className="sale-detail-close" disabled={saving} onClick={() => setPaymentOpen(false)} aria-label="Cerrar pagos">×</button>
       </div>
       <p>Saldo pendiente: <strong>{money.format(sale.saldo_pendiente)}</strong></p>
-    <form onSubmit={submit}>
+    <SalePaymentsHistory saleId={sale.id_ventas} />
+    {sale.saldo_pendiente > 0 && <form onSubmit={submit}>
       <fieldset className="sales-fields" disabled={saving || uncertain || loading || !!detailError}>
         <legend>Registrar abono en efectivo</legend><div className="sale-payment-fields">
           <label>Monto (Q)<input ref={paymentAmount} inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} required maxLength={12} placeholder="0.00" /></label>
@@ -133,7 +136,7 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
       </fieldset>
       {error && <p role="alert">{error}</p>}
       {uncertain && <button type="button" onClick={onClose}>Cerrar y actualizar listado</button>}
-    </form>
+    </form>}
     </section>
   </dialog>}
   </>, document.body)
