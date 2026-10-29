@@ -28,6 +28,13 @@ public class VentaController(VentaService consulta, AbonarSaldoVentaService abon
     public async Task<IActionResult> ListarCatalogo(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
         => Ok(await consulta.ListarCatalogo(pagina, tamanoPagina, ct));
 
+    [HttpGet("historial")]
+    [Authorize(Roles = Roles.Administrador)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Historial([FromQuery] HistorialVentasFechaDto filtro,
+        [FromServices] HistorialVentasFechaService historial, CancellationToken ct = default)
+        => Ok(await historial.Listar(Usuario(), filtro, ct));
+
     [HttpGet("caja-activa/usuario/{idUsuario:int}")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> FiltrarPorUsuario(int idUsuario, [FromQuery] FiltrarVentasDto filtro,

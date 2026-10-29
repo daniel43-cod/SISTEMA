@@ -1,4 +1,4 @@
-﻿import type { StaffRole } from '../../features/auth/types/auth'
+import type { StaffRole } from '../../features/auth/types/auth'
 
 export type StaffSection = 'ventas' | 'listado-ventas' | 'caja' | 'pedidos' | 'productos' | 'inventario' | 'compras' | 'gastos' | 'usuarios' | 'reportes' | 'configuracion'
 export type StaffNavigationItem = {
@@ -14,7 +14,7 @@ const admin: readonly StaffRole[] = ['ADMINISTRADOR']
 
 export const staffNavigation: readonly StaffNavigationItem[] = [
   { id: 'ventas', label: 'Nueva venta', group: 'Operación', description: 'Registrar una venta.', roles: staff },
-  { id: 'listado-ventas', label: 'Ventas', group: 'Operación', description: 'Ventas registradas en la caja abierta.', roles: staff },
+  { id: 'listado-ventas', label: 'Ventas', group: 'Operación', description: '', roles: staff },
   { id: 'caja', label: 'Caja', group: 'Operación', description: 'Consulta y apertura de la caja compartida.', roles: admin },
   { id: 'pedidos', label: 'Pedidos', group: 'Operación', description: 'Pedidos pendientes del catálogo y sus datos de entrega.', roles: admin },
   { id: 'productos', label: 'Productos', group: 'Inventario', description: '', roles: staff },

@@ -193,3 +193,18 @@
   .staff-shell-inventory .staff-header { flex-wrap: wrap; }
   #staff-inventory-search { order: 3; flex: 1 0 100%; }
 }
+.staff-shell-sale-list .staff-workspace { display: flex; flex-direction: column; min-height: 100dvh; }
+.staff-shell-sale-list .staff-header { flex-shrink: 0; }
+.staff-shell-sale-list .staff-content { flex: 1; display: flex; width: 100%; }
+
+/* Listado de ventas: el panel ocupa el espacio disponible y solo desplaza sus filas. */
+.staff-shell-sale-list { height: 100dvh; min-height: 0; overflow: hidden; }
+.staff-shell-sale-list .staff-workspace { height: 100%; min-height: 0; overflow: hidden; }
+.staff-shell-sale-list .staff-header { min-height: 60px; padding-block: 8px; }
+.staff-shell-sale-list .staff-content { min-height: 0; max-width: none; margin: 0; padding: clamp(28px, 5vh, 56px) clamp(24px, 3.6vw, 58px) 16px; overflow: hidden; }
+.staff-shell-sale-list .staff-header { padding-right: calc(clamp(16px, 2vw, 32px) + var(--space) * 3); }
+.staff-shell-sale-list .staff-account { margin-left: auto; }
+
+@media (min-width: 801px) { .staff-shell-sale-list .staff-header { display: none; } }
+
+@media (max-width: 800px) { .staff-shell-sale-list .staff-content { padding: 16px; } }

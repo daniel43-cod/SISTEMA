@@ -11,6 +11,10 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   const { session, logout } = useAuth()
   const token = session?.token
   const dialog = useRef<HTMLDialogElement>(null)
+  const paymentDialog = useRef<HTMLDialogElement>(null)
+  const paymentButton = useRef<HTMLButtonElement>(null)
+  const paymentAmount = useRef<HTMLInputElement>(null)
+  const [paymentOpen, setPaymentOpen] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const busy = useRef(false)
   const alive = useRef(true)
@@ -52,6 +56,13 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
     return () => controller.abort()
   }, [sale.id_ventas, token, logout, revision])
 
+  useEffect(() => {
+    if (!paymentOpen) return
+    const panel = paymentDialog.current
+    panel?.showModal(); paymentAmount.current?.focus()
+    return () => { panel?.close(); paymentButton.current?.focus() }
+  }, [paymentOpen])
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token || busy.current || uncertain) return
@@ -75,31 +86,55 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
       }
     } finally { busy.current = false; onSaving(false); if (alive.current) setSaving(false) }
   }
-  return createPortal(<dialog ref={dialog} className="sales-page sale-list-page sale-payment-dialog" aria-labelledby="sale-payment-title"
+  return createPortal(<><dialog ref={dialog} className="sales-page sale-list-page sale-payment-dialog" aria-labelledby="sale-payment-title"
     onCancel={event => { event.preventDefault(); if (!busy.current) onClose() }}>
     <section className="sales-card sale-payment">
-    <div className="sales-heading"><h2 id="sale-payment-title" ref={heading} tabIndex={-1}><span className="sale-payment-client-label">Cliente</span>{sale.cliente}</h2>
-      <button type="button" disabled={saving} onClick={onClose}>Cerrar</button></div>
+    <header className="sale-detail-header">
+      <div className="sale-detail-title-row">
+        <h2 id="sale-payment-title" ref={heading} tabIndex={-1}>Cliente: {sale.cliente}</h2>
+        
+        <button type="button" className="sale-detail-close" disabled={saving} onClick={onClose} aria-label="Cerrar detalle de venta" title="Cerrar">×</button>
+      </div>
+      <p className="sale-detail-metadata"><span>Usuario: <strong>{sale.usuario}</strong></span><span>{Number.isNaN(Date.parse(sale.fecha_venta)) ? 'Fecha no disponible' :
+        new Intl.DateTimeFormat('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(sale.fecha_venta)) + ' · ' +
+        new Intl.DateTimeFormat('es-GT', { hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(sale.fecha_venta))}</span>
+        <span className="sale-detail-payment-action"><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
+          {sale.saldo_pendiente > 0 && <button ref={paymentButton} type="button" disabled={saving || loading || !!detailError}
+            onClick={() => setPaymentOpen(true)} aria-haspopup="dialog">Abonar</button>}
+        </span></p>
+    </header>
     {loading ? <p role="status">Cargando detalle…</p> : detailError ? <div role="alert"><p>{detailError}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar detalle</button></div> :
-      <div className="sales-table-scroll"><table><caption>Productos de la venta</caption><thead><tr><th scope="col">Producto</th><th scope="col">Presentación</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Descuento</th><th scope="col">Subtotal</th></tr></thead>
+      <div className="sales-table-scroll"><table><caption className="sr-only">Productos de la venta</caption><thead><tr><th scope="col">Producto</th><th scope="col">Presentación</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Descuento</th><th scope="col">Subtotal</th></tr></thead>
         <tbody>{details.map((detail, index) => <tr key={index}><td>{detail.nombre_producto}</td><td>{detail.descripcion_resentacion}</td><td>{detail.cantidad}</td>
           <td>{money.format(detail.precio)}</td><td>{money.format(detail.descuento)}</td><td>{money.format((Math.round(detail.precio * 100) * detail.cantidad - Math.round(detail.descuento * 100)) / 100)}</td></tr>)}</tbody></table></div>}
-    <dl className="sale-payment-summary sale-payment-totals">
-      <div><dt>Total</dt><dd>{money.format(sale.total)}</dd></div>
-      {session?.user.role === 'ADMINISTRADOR' && <div><dt>Ganancia</dt><dd>{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</dd></div>}
+    <dl className="sale-receipt-totals">
+      <div><dt>Subtotal</dt><dd>{money.format(sale.subtotal)}</dd></div>
+      <div><dt>Descuento</dt><dd>− {money.format(sale.descuento ?? 0)}</dd></div>
+      <div className="sale-receipt-grand-total"><dt>Total</dt><dd>{money.format(sale.total)}</dd></div>
       <div><dt>Saldo pendiente</dt><dd>{money.format(sale.saldo_pendiente)}</dd></div>
-      <div><dt>Estado</dt><dd><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.estado}</span></dd></div>
+      {session?.user.role === 'ADMINISTRADOR' && <div className="sale-receipt-profit"><dt>Ganancia</dt><dd>{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</dd></div>}
     </dl>
-    {sale.saldo_pendiente > 0 ? <form onSubmit={submit}>
+
+    </section>
+  </dialog>
+  {paymentOpen && <dialog ref={paymentDialog} className="sales-page sale-list-page sale-payment-dialog sale-abono-dialog"
+    aria-labelledby="sale-abono-title" onCancel={event => { event.preventDefault(); if (!busy.current) setPaymentOpen(false) }}>
+    <section className="sales-card sale-payment">
+      <div className="sale-detail-title-row"><h2 id="sale-abono-title">Abonar · {sale.cliente}</h2>
+        <button type="button" className="sale-detail-close" disabled={saving} onClick={() => setPaymentOpen(false)} aria-label="Cerrar formulario de abono">×</button>
+      </div>
+      <p>Saldo pendiente: <strong>{money.format(sale.saldo_pendiente)}</strong></p>
+    <form onSubmit={submit}>
       <fieldset className="sales-fields" disabled={saving || uncertain || loading || !!detailError}>
         <legend>Registrar abono en efectivo</legend><div className="sale-payment-fields">
-          <label>Monto (Q)<input inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} required maxLength={12} placeholder="0.00" /></label>
+          <label>Monto (Q)<input ref={paymentAmount} inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} required maxLength={12} placeholder="0.00" /></label>
           <label>Observación<input value={note} onChange={event => setNote(event.target.value)} maxLength={100} /></label>
         </div><button type="submit">{saving ? 'Registrando abono…' : 'Registrar abono'}</button>
       </fieldset>
       {error && <p role="alert">{error}</p>}
       {uncertain && <button type="button" onClick={onClose}>Cerrar y actualizar listado</button>}
-    </form> : <p role="status">Esta venta está pagada; no admite nuevos abonos.</p>}
+    </form>
     </section>
-  </dialog>, document.body)
+  </dialog>}
+  </>, document.body)
 }

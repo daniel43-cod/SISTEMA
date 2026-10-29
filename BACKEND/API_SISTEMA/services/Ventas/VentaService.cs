@@ -25,7 +25,7 @@ namespace API_SISTEMA.Services.Ventas
             => ConsultarVentas(idUsuario, filtro, null, ct);
 
         internal async Task<List<ListarVentasDto>> ConsultarVentas(int idUsuario, FiltrarVentasDto? filtro,
-            int? idUsuarioFiltro, CancellationToken ct)
+            int? idUsuarioFiltro, CancellationToken ct, bool soloCajaActiva = true, DateTime? hastaExclusiva = null)
         {
             filtro ??= new FiltrarVentasDto();
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
@@ -39,19 +39,21 @@ namespace API_SISTEMA.Services.Ventas
             var puedeVerGanancia = usuario.estado && usuario.rol is { estado: true, nombre: Roles.Administrador };
 
             // Consulta del turno compartido; el responsable de cada operacion se conserva.
-            var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context, ct);
-
-            if (sesionCaja == null)
+            int? idSesionCaja = null;
+            if (soloCajaActiva)
             {
-                return new List<ListarVentasDto>();
+                var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context, ct);
+                if (sesionCaja == null) return new List<ListarVentasDto>();
+                idSesionCaja = sesionCaja.id_sesion_caja;
             }
 
             return await _context.ventas
                 .AsNoTracking()
                 .Where(v =>
-                    v.id_sesion_caja == sesionCaja.id_sesion_caja
+                    !soloCajaActiva || v.id_sesion_caja == idSesionCaja
                 )
                 .Where(v => !idUsuarioFiltro.HasValue || v.id_usuario == idUsuarioFiltro.Value)
+                .Where(v => !hastaExclusiva.HasValue || v.fecha_venta < hastaExclusiva.Value)
                 .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value))
                 .OrderByDescending(v => v.fecha_venta).ThenByDescending(v => v.id_ventas)
                 .Skip((filtro.pagina - 1) * filtro.tamanoPagina).Take(filtro.tamanoPagina)

@@ -79,3 +79,29 @@ test('Un descuento no puede igualar o superar el importe de la línea', () => {
   for (const discount of ['3.35', '3.36'])
     assert.throws(() => saleTotals([{ product, presentation: unit, quantity: '1', discount }]), /descuento/)
 })
+
+
+import { lastSevenSaleDays } from '../src/features/sales/utils/saleDateRange.ts'
+test('Últimos 7 días incluye hoy y seis días anteriores según Guatemala', () => {
+  assert.deepEqual(lastSevenSaleDays(new Date('2026-10-29T18:00:00Z')), { desde: '2026-10-23', hasta: '2026-10-29' })
+  assert.deepEqual(lastSevenSaleDays(new Date('2026-11-01T02:00:00Z')), { desde: '2026-10-25', hasta: '2026-10-31' })
+})
+
+
+import { saleHistoryQuery } from '../src/features/sales/utils/saleHistoryQuery.ts'
+test('Ventas combina caja activa o fecha con el usuario seleccionado', () => {
+  assert.equal(saleHistoryQuery(1), '/Venta/listar?pagina=1&tamanoPagina=50')
+  assert.equal(saleHistoryQuery(1, undefined, 2), '/Venta/caja-activa/usuario/2?pagina=1&tamanoPagina=50')
+  const range = { desde: '2026-10-23', hasta: '2026-10-23' }
+  assert.equal(saleHistoryQuery(1, range), '/Venta/historial?pagina=1&tamanoPagina=50&desde=2026-10-23&hasta=2026-10-23')
+  assert.equal(saleHistoryQuery(2, range, 3), '/Venta/historial?pagina=2&tamanoPagina=50&desde=2026-10-23&hasta=2026-10-23&idUsuario=3')
+})
+
+
+test('El tamaño seleccionado se envía en todos los modos del listado de ventas', () => {
+  for (const size of [10, 25, 50]) {
+    for (const url of [saleHistoryQuery(1, undefined, undefined, size), saleHistoryQuery(2, undefined, 2, size),
+      saleHistoryQuery(1, { desde: '2026-10-23', hasta: '2026-10-23' }, 2, size)])
+      assert.equal(new URL(url, 'https://example.test').searchParams.get('tamanoPagina'), String(size))
+  }
+})

@@ -368,6 +368,48 @@ await using (var db = new CheckDb(options))
     await db.SaveChangesAsync();
     Check((await listado.ListarVentas(1)).Count == 0, "Sin caja abierta el listado queda vacío");
     Check((await filtroUsuario.Listar(2, 1)).Count == 0, "Filtro usuario: sin caja abierta devuelve lista vacía");
+    var historialFechas = new HistorialVentasFechaService(db, listado);
+    var inicioDia = new DateTime(2020, 5, 10);
+    API_SISTEMA.Models.Ventas VentaFecha(DateTime fecha, int sesion) => new()
+    { id_sesion_caja = sesion, id_cliente = 1, id_usuario = 1, id_estado_venta = 2,
+        total = 25, subtotal = 25, saldo_pendiente = 25, origen = "PRUEBA_FECHAS", fecha_venta = fecha };
+    var antesDia = VentaFecha(inicioDia.AddMilliseconds(-1), 1);
+    var inicio = VentaFecha(inicioDia, 1);
+    var finalDia = VentaFecha(inicioDia.AddDays(1).AddMilliseconds(-1), 2);
+    var siguienteDia = VentaFecha(inicioDia.AddDays(1), 2);
+    db.ventas.AddRange(antesDia, inicio, finalDia, siguienteDia); await db.SaveChangesAsync();
+    var filtroDia = new HistorialVentasFechaDto { Desde = new(2020, 5, 10), Hasta = new(2020, 5, 10) };
+    var delDia = await historialFechas.Listar(2, filtroDia);
+    Check(delDia.Select(v => v.id_ventas).Order().SequenceEqual(new[] { inicio.id_ventas, finalDia.id_ventas }.Order()),
+        "Historial: incluye desde medianoche y excluye medianoche siguiente en dos sesiones cerradas");
+    var pagDia1 = await historialFechas.Listar(2, new() { Desde = filtroDia.Desde, Hasta = filtroDia.Hasta, TamanoPagina = 1 });
+    var pagDia2 = await historialFechas.Listar(2, new() { Desde = filtroDia.Desde, Hasta = filtroDia.Hasta, TamanoPagina = 1, Pagina = 2 });
+    Check(pagDia1[0].id_ventas == finalDia.id_ventas && pagDia2[0].id_ventas == inicio.id_ventas,
+        "Historial: orden y paginación dentro del rango");
+    var fechaOtroUsuario = VentaFecha(inicioDia.AddHours(12), 2);
+    fechaOtroUsuario.id_usuario = 2;
+    db.ventas.Add(fechaOtroUsuario); await db.SaveChangesAsync();
+    var fechaUsuario = await historialFechas.Listar(2, new() { Desde = filtroDia.Desde, Hasta = filtroDia.Hasta, IdUsuario = 2 });
+    Check(fechaUsuario.Count == 1 && fechaUsuario[0].id_ventas == fechaOtroUsuario.id_ventas,
+        "Historial: usuario y fecha filtran todas las sesiones del día");
+    var fechaVendedor = await historialFechas.Listar(2, new() { Desde = filtroDia.Desde, Hasta = filtroDia.Hasta, IdUsuario = 1 });
+    Check(fechaVendedor.Count == 2 && fechaVendedor.All(v => v.id_usuario == 1),
+        "Historial: el usuario no incluye sus ventas de otros días");
+    Check((await historialFechas.Listar(2, filtroDia)).Count == 3, "Historial: sin usuario seleccionado muestra todos los del día");
+    try { await historialFechas.Listar(2, new() { IdUsuario = int.MaxValue }); throw new Exception("Usuario desconocido aceptado"); }
+    catch (KeyNotFoundException) { Check(true, "Historial: valida usuario del filtro combinado"); }
+    var hoyGt = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "America/Guatemala"));
+    var inicioSemana = hoyGt.AddDays(-6).ToDateTime(TimeOnly.MinValue);
+    var semanaIncluida = VentaFecha(inicioSemana, 2);
+    var semanaExcluida = VentaFecha(inicioSemana.AddMilliseconds(-1), 1);
+    db.ventas.AddRange(semanaIncluida, semanaExcluida); await db.SaveChangesAsync();
+    var semana = await historialFechas.Listar(2, new());
+    Check(semana.Any(v => v.id_ventas == semanaIncluida.id_ventas) && semana.All(v => v.id_ventas != semanaExcluida.id_ventas),
+        "Historial: últimos siete días de Guatemala incluyendo hoy");
+    try { await historialFechas.Listar(1, filtroDia); throw new Exception("Vendedor accedió al historial"); }
+    catch (UnauthorizedAccessException) { Check(true, "Historial: acceso exclusivo para administrador"); }
+    try { await historialFechas.Listar(2, new() { Desde = new(2020, 5, 11), Hasta = new(2020, 5, 10) }); throw new Exception("Rango invertido aceptado"); }
+    catch (ValidationException) { Check(true, "Historial: rechaza rango invertido"); }
 }
 await using (var db = new CheckDb(options))
 {
