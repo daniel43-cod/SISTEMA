@@ -132,10 +132,11 @@ test('Resumen de ganancias usa el total del backend y conserva todos los filtros
     assert.equal(parsed.pathname, '/api/Venta/resumen')
     assert.equal(parsed.searchParams.get('idUsuario'), '2')
     assert.equal(parsed.searchParams.get('desde'), '2026-10-23')
-    return Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false, gananciaTotal: 123.45, items: [] })
+    return Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false, gananciaTotal: 123.45, totalVentas: 500, items: [] })
   })
   const summary = await loadSaleSummary('token', 1, 10, { desde: '2026-10-23', hasta: '2026-10-23' }, 2)
   assert.equal(summary.gananciaTotal, 123.45)
+  assert.equal(summary.totalVentas, 500)
 })
 test('Resumen rechaza una respuesta sin ganancia para evitar importes inválidos', async t => {
   t.mock.method(globalThis, 'fetch', async () => Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false, items: [] }))

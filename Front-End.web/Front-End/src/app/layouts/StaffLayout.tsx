@@ -91,7 +91,7 @@ export function StaffLayout() {
   )
 
   return (
-    <div className={`staff-shell ${current.id === 'listado-ventas' ? 'staff-shell-sale-list ' : ''}${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : current.id === 'pedidos' ? 'staff-shell-orders' : ''}`}>
+    <div className={`staff-shell ${current.id === 'listado-ventas' ? 'staff-shell-sale-list ' : ''}${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : current.id === 'pedidos' ? 'staff-shell-orders' : current.id === 'usuarios' ? 'staff-shell-users' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">
@@ -125,7 +125,7 @@ export function StaffLayout() {
             </svg>
           </button>
 
-          {current.id !== 'ventas' && current.id !== 'inventario' && current.id !== 'listado-ventas' && current.id !== 'caja' && current.id !== 'pedidos' && <div className="staff-page-heading">
+          {current.id !== 'ventas' && current.id !== 'inventario' && current.id !== 'listado-ventas' && current.id !== 'caja' && current.id !== 'pedidos' && current.id !== 'usuarios' && <div className="staff-page-heading">
             <div>{current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
               <div className="staff-title-row"><h1>{current.label}</h1></div>
               <p>{current.description}</p>

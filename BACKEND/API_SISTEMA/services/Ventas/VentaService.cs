@@ -61,6 +61,7 @@ namespace API_SISTEMA.Services.Ventas
                 .Where(v => !hastaExclusiva.HasValue || v.fecha_venta < hastaExclusiva.Value)
                 .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value));
             var total = await consulta.CountAsync(ct);
+            var totalVentas = await consulta.SumAsync(v => (decimal?)v.total, ct) ?? 0m;
             decimal? ganancia = puedeVerGanancia
                 ? await consulta.SumAsync(v => (decimal?)v.ganancia_total, ct) ?? 0m : null;
             var items = await consulta
@@ -89,7 +90,8 @@ namespace API_SISTEMA.Services.Ventas
             return new VentasResumenPaginaDto
             {
                 Pagina = filtro.pagina, TamanoPagina = filtro.tamanoPagina, TotalRegistros = total,
-                HayMas = (long)filtro.pagina * filtro.tamanoPagina < total, GananciaTotal = ganancia, Items = items
+                HayMas = (long)filtro.pagina * filtro.tamanoPagina < total, GananciaTotal = ganancia,
+                TotalVentas = totalVentas, Items = items
             };
         }
 

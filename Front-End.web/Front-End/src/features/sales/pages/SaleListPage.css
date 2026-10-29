@@ -114,3 +114,14 @@
 .sale-profit-card strong { font-size: .9rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sale-list-view button.sale-profit-toggle { display: inline-flex; align-items: center; justify-content: center; width: 32px; min-height: 32px; padding: 4px; border: 0; background: transparent; }
 @media (max-width: 1100px) { .sale-list-view .sale-date-filters { flex-wrap: wrap; } .sale-date-actions { flex-wrap: wrap; } }
+
+.sale-date-actions { flex-wrap: wrap; }
+
+.sale-list-view .sale-arranged-filters { align-items: flex-start; justify-content: flex-start; gap: 20px 32px; flex-wrap: wrap; }
+.sale-filter-stack { display: grid; gap: 12px; }
+.sale-user-cash-row, .sale-date-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.sale-list-view .sale-arranged-filters .sale-filter-date { margin-left: 0; order: 0; }
+.sale-totals-stack { display: grid; gap: 8px; align-self: flex-start; }
+.sale-totals-stack .sale-profit-summary { display: grid; grid-template-columns: 110px minmax(160px, auto); gap: 8px; }
+.sale-totals-stack .sale-profit-card { min-height: 38px; box-sizing: border-box; }
+.sale-totals-stack .sale-profit-card > div { justify-content: space-between; }

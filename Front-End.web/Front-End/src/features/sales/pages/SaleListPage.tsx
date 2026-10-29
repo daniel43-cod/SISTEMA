@@ -32,6 +32,8 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
   const [pageSize, setPageSize] = useState(50)
   const [revision, setRevision] = useState(0)
   const [rows, setRows] = useState<SaleHistory[]>([])
+  const [salesVisible, setSalesVisible] = useState(false)
+  const [salesTotal, setSalesTotal] = useState<number | null>(null)
   const [profitTotal, setProfitTotal] = useState<number | null>(null)
   const [profitVisible, setProfitVisible] = useState(false)
   const [hasNext, setHasNext] = useState(false)
@@ -55,14 +57,14 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
   useEffect(() => {
     if (!token) return
     const controller = new AbortController()
-    setLoading(true); setError(''); setRows([]); setHasNext(false); setProfitTotal(null)
+    setLoading(true); setError(''); setRows([]); setHasNext(false); setProfitTotal(null); setSalesTotal(null)
     async function load() {
       try {
         if (isAdmin) {
           const summary = await loadSaleSummary(token!, page, pageSize, range, userId ? Number(userId) : undefined, controller.signal)
           if (controller.signal.aborted) return
           if (summary.items.length === 0 && page > 1) { setPage(1); return }
-          setRows(summary.items); setHasNext(summary.hayMas); setProfitTotal(summary.gananciaTotal)
+          setRows(summary.items); setHasNext(summary.hayMas); setProfitTotal(summary.gananciaTotal); setSalesTotal(summary.totalVentas)
           return
         }
         const result = await loadSaleHistory(token!, controller.signal, page, isAdmin ? range : undefined, isAdmin && userId ? Number(userId) : undefined, pageSize)
@@ -90,33 +92,29 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
     <div className="sales-card">
 
       <div className="sales-heading">
-      {isAdmin && <div className="sale-list-filters sale-date-filters">
-        <label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={event => {
+      {isAdmin && <div className="sale-list-filters sale-date-filters sale-arranged-filters">
+<div className="sale-filter-stack"><div className="sale-user-cash-row"><label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={event => {
           setUserId(event.target.value); setPage(1); setSelected(null); setSuccess('')
-        }}><option value="">Todos</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
-        <div className="sale-date-actions"><div className="sale-profit-summary"><span>Ganancia total</span><div className="sale-profit-card">
-        <div><strong aria-label={profitVisible ? undefined : 'Ganancia oculta'}>
-          {profitVisible ? (profitTotal === null ? '—' : money.format(profitTotal)) : 'Q ••••••'}
-        </strong>
-        <button type="button" className="sale-profit-toggle" aria-label={profitVisible ? 'Ocultar ganancia total' : 'Mostrar ganancia total'}
-          title={profitVisible ? 'Ocultar ganancia' : 'Mostrar ganancia'} aria-pressed={profitVisible} onClick={() => setProfitVisible(v => !v)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
-            {!profitVisible && <path d="m3 3 18 18" />}
-          </svg>
-        </button></div>
-      </div></div><RefreshButton label="Actualizar ventas" loading={loading || saving} onClick={() => { setPage(1); setRevision(v => v + 1) }} />
-        <label className="sale-filter-date">Fecha<input type="date" value={selectedDate} min={dateLimits.desde} max={dateLimits.hasta} disabled={saving} onChange={event => {
+        }}><option value="">Todos</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label><button type="button" disabled={saving || loading} onClick={() => {
+          setSelectedDate(''); setRange(undefined); setUserId(''); setPage(1); setSelected(null); setSuccess('')
+        }}>Caja activa</button></div>
+<div className="sale-date-row"><label className="sale-filter-date">Fecha<input type="date" value={selectedDate} min={dateLimits.desde} max={dateLimits.hasta} disabled={saving} onChange={event => {
           const day = event.target.value
           if (day && (day < dateLimits.desde || day > dateLimits.hasta)) return
           setSelectedDate(day); setUserId('')
           setRange(day ? { desde: day, hasta: day } : undefined)
           setPage(1); setSelected(null); setSuccess('')
-        }} /></label></div>
-        <button type="button" disabled={saving || loading} onClick={() => {
-          setSelectedDate(''); setRange(undefined); setUserId(''); setPage(1); setSelected(null); setSuccess('')
-        }}>Caja activa</button>
-        {usersLoading && <span role="status">Cargando usuarios…</span>}
+        }} /></label><RefreshButton label="Actualizar ventas" loading={loading || saving} onClick={() => { setPage(1); setRevision(v => v + 1) }} /></div></div>
+<div className="sale-totals-stack"><div className="sale-profit-summary"><span>Total de ventas</span><div className="sale-profit-card"><div>
+<strong aria-label={salesVisible ? undefined : 'Total de ventas oculto'}>{salesVisible ? (salesTotal === null ? '—' : money.format(salesTotal)) : 'Q ••••••'}</strong>
+<button type="button" className="sale-profit-toggle" aria-label={salesVisible ? 'Ocultar total de ventas' : 'Mostrar total de ventas'} title={salesVisible ? 'Ocultar' : 'Mostrar'} aria-pressed={salesVisible} onClick={() => setSalesVisible(v => !v)}>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{!salesVisible && <path d="m3 3 18 18" />}</svg></button>
+</div></div></div><div className="sale-profit-summary"><span>Ganancia total</span><div className="sale-profit-card"><div>
+<strong aria-label={profitVisible ? undefined : 'Ganancia oculta'}>{profitVisible ? (profitTotal === null ? '—' : money.format(profitTotal)) : 'Q ••••••'}</strong>
+<button type="button" className="sale-profit-toggle" aria-label={profitVisible ? 'Ocultar ganancia total' : 'Mostrar ganancia total'} title={profitVisible ? 'Ocultar' : 'Mostrar'} aria-pressed={profitVisible} onClick={() => setProfitVisible(v => !v)}>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{!profitVisible && <path d="m3 3 18 18" />}</svg></button>
+</div></div></div></div>
+{usersLoading && <span role="status">Cargando usuarios…</span>}
         {usersError && <div role="alert"><p>{usersError}</p><button type="button" disabled={saving} onClick={() => setRevision(v => v + 1)}>Reintentar usuarios</button></div>}
       </div>}
         {!isAdmin && <RefreshButton label="Actualizar ventas" loading={loading || saving} onClick={() => { setPage(1); setRevision(v => v + 1) }} />}

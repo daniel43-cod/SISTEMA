@@ -208,3 +208,6 @@
 @media (min-width: 801px) { .staff-shell-sale-list .staff-header { display: none; } }
 
 @media (max-width: 800px) { .staff-shell-sale-list .staff-content { padding: 16px; } }
+
+.staff-shell-users .staff-header { min-height: 44px; padding-block: 0; }
+.staff-shell-users .staff-content { margin-top: 0; padding-top: 0; }

@@ -368,9 +368,14 @@ await using (var db = new CheckDb(options))
     var esperadoGanancia = await db.ventas.Where(v => v.id_sesion_caja == 1).SumAsync(v => v.ganancia_total);
     var resumenPagina1 = await servicioResumen.Consultar(2, new() { TamanoPagina = 1 });
     var resumenPagina2 = await servicioResumen.Consultar(2, new() { TamanoPagina = 1, Pagina = 2 });
+    var esperadoTotalVentas = await db.ventas.Where(v => v.id_sesion_caja == 1).SumAsync(v => v.total);
+    Check(resumenPagina1.TotalVentas == esperadoTotalVentas && resumenPagina2.TotalVentas == esperadoTotalVentas,
+        "Resumen: total de ventas incluye toda la caja sin depender de la página ni del saldo");
     Check(resumenPagina1.Items.Count == 1 && resumenPagina1.GananciaTotal == esperadoGanancia && resumenPagina1.HayMas &&
         resumenPagina2.GananciaTotal == esperadoGanancia, "Resumen: suma ganancias de toda la caja antes de paginar");
     var resumenUsuario = await servicioResumen.Consultar(2, new() { IdUsuario = 1, TamanoPagina = 1 });
+    Check(resumenUsuario.TotalVentas == await db.ventas.Where(v => v.id_sesion_caja == 1 && v.id_usuario == 1).SumAsync(v => v.total),
+        "Resumen: total de ventas respeta filtro de usuario");
     Check(resumenUsuario.GananciaTotal == await db.ventas.Where(v => v.id_sesion_caja == 1 && v.id_usuario == 1).SumAsync(v => v.ganancia_total),
         "Resumen: ganancia respeta usuario en caja activa");
     try { await servicioResumen.Consultar(1, new()); throw new Exception("Vendedor recibió ganancias"); }
