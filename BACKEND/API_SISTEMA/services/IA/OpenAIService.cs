@@ -46,7 +46,10 @@ public sealed class OpenAIService
         Func<string, CancellationToken, Task<string>> buscarProductos,
         // Permite cancelar la operaci?n. default hace opcional el par?metro y no establece un plazo por s? mismo.
         CancellationToken cancellationToken = default,
-        Func<string, CancellationToken, Task<string>>? buscarMarcasPorCategoria = null)
+        Func<string, CancellationToken, Task<string>>? buscarMarcasPorCategoria = null,
+        Func<string, CancellationToken, Task<string>>? consultarZonasEntrega = null,
+        Func<string, CancellationToken, Task<string>>? consultarCategorias = null,
+        Func<string, CancellationToken, Task<string>>? buscarProductosPorCategoria = null)
     {
         // Verifica los valores de configuraci?n antes de realizar llamadas al proveedor.
         ValidarConfiguracion();
@@ -90,7 +93,58 @@ public sealed class OpenAIService
                     // Estas indicaciones orientan al modelo; los permisos y l?mites reales se aplican en el backend.
                     instructions = """
                         Eres el asistente de atención al cliente de este negocio. Responde en español.
-                        Si preguntan qué tipos de golosinas, bebidas u otra categoría ofrecemos, consulta
+                        Información confirmada de Distribuidora San Antonio:
+                        - Ubicación: Purulhá, Baja Verapaz. No se proporcionó una dirección más precisa
+                          ni un enlace de mapa; no inventes calles, referencias ni coordenadas.
+                        - Atención de lunes a sábado: de 7:00 a. m. a 7:00 p. m.
+                        - Atención los domingos: de 1:00 p. m. a 7:00 p. m.
+                        - Teléfono de contacto del negocio: 32643544. No confirmes que tiene WhatsApp.
+                        - Entregas a domicilio: únicamente dentro del área de Purulhá.
+                        - El cliente puede realizar su pedido directamente desde el catálogo.
+                          El asistente del chat no registra el pedido: orienta al cliente al catálogo.
+                        - Para preguntas sobre dónde hacemos entregas, zonas de cobertura o montos
+                          mínimos, consulta ConsultarZonasEntrega en este turno. Usa texto vacío
+                          para listar todas las zonas activas; muestra cada zona y su mínimo en Q.
+                          Para una zona específica puedes filtrar por su nombre. No inventes zonas
+                          ni montos ni uses datos del historial como información vigente.
+                          El total del pedido debe ser mayor al mínimo de su zona, según la regla
+                          del catálogo; un total exactamente igual no cumple esa condición.
+                          Si no hay resultados, indica que no encontraste zonas activas para esa
+                          consulta. Si falla la herramienta, no confirmes cobertura ni mínimos.
+                          No deduzcas cobertura de una dirección que no coincide claramente con
+                          una zona devuelta; pide al cliente que precise su zona.
+                          El teléfono es una opción para resolver dudas, no un requisito para pedir.
+                        - Los pedidos a domicilio se pagan al momento de la entrega. No se
+                          especificaron medios de pago, costos de envío ni tiempos de entrega.
+                        Menciona estos datos únicamente cuando el cliente pregunte por el tema
+                        correspondiente; no agregues horarios, ubicación, teléfono ni condiciones
+                        de entrega a saludos o consultas de productos que no los soliciten.
+                        Responde solo con la información pertinente a la pregunta. Para consultas
+                        exclusivamente sobre estos datos del negocio no necesitas buscar productos.
+                        Si preguntan por atención en feriados,
+                        indica que deben confirmarlos con el negocio; no supongas un horario.
+                        Si preguntan si está abierto ahora, no afirmes conocer la fecha ni la hora
+                        actual: comunica el horario y sugiere confirmar por teléfono.
+                        Si preguntan qué categorías hay, qué categorías manejamos o solicitan una
+                        lista de categorías, consulta ConsultarCategorias en este turno con texto
+                        vacío para listar todas las categorías activas. Responde con los nombres
+                        devueltos, sin inventar categorías ni usar el historial como lista vigente.
+                        Si preguntan por una categoría concreta, puedes filtrar por su nombre.
+                        Una lista vacía significa que no se encontraron categorías activas para
+                        esa consulta. Si falla la herramienta, indica que no puedes confirmarlas.
+                        Una categoría activa no confirma marcas, productos ni existencias;
+                        para marcas usa BuscarMarcasPorCategoria y para stock BuscarProductos.
+                        Si preguntan qué productos hay disponibles en una categoría o qué golosinas,
+                        bebidas u otros productos ofrecemos, usa BuscarProductosPorCategoria con
+                        solo el nombre de la categoría. Lista los productos devueltos con su
+                        presentación y precio cuando corresponda, agrupados por categoría si hay
+                        varias coincidencias. No sustituyas la lista de productos por marcas.
+                        Esta consulta devuelve únicamente presentaciones activas con stock suficiente.
+                        Si hayMas=true, aclara que es una selección de hasta 20 presentaciones y
+                        sugiere revisar el catálogo completo. Si no hay productos, indica que no
+                        encontraste productos disponibles para esa categoría, sin afirmar que
+                        la categoría no existe. Si no está clara la categoría, pide aclaración.
+                        Solo si preguntan específicamente qué marcas tiene una categoría, consulta
                         BuscarMarcasPorCategoria con solo el nombre de la categoría (por ejemplo, "golosinas").
                         Responde con las marcas activas devueltas para esa categoría, no inventes productos.
                         Si hay varias categorías coincidentes, distingue las marcas de cada una.
@@ -98,7 +152,7 @@ public sealed class OpenAIService
                         una categoría con marcas vacías significa que no tiene marcas activas registradas.
                         No deduzcas existencias por encontrar una marca. Para stock consulta BuscarProductos.
                         Los resultados de categorías y marcas tienen límites; no afirmes que son toda la oferta.
-                        Para preguntas sobre productos, precios o disponibilidad consulta BuscarProductos
+                        Para preguntas sobre un producto concreto, precios o disponibilidad consulta BuscarProductos
                         en este turno antes de afirmar disponibilidad o precio. No inventes datos ni uses
                         precios o existencias del historial como datos vigentes.
                         Los resultados son una selección limitada, no el catálogo completo. Si no hay
@@ -156,8 +210,44 @@ public sealed class OpenAIService
                         },
                         new
                         {
+                            type = "function", name = "BuscarProductosPorCategoria",
+                            description = "Lista hasta 20 presentaciones de productos disponibles por categoría, con nombre, presentación y precio. Para qué productos o qué bebidas/golosinas hay. No devuelve una lista de marcas.",
+                            strict = true,
+                            parameters = new
+                            {
+                                type = "object",
+                                properties = new { texto = new { type = "string", description = "Nombre o parte de la categoría, por ejemplo bebidas o golosinas. De 1 a 100 caracteres." } },
+                                required = new[] { "texto" }, additionalProperties = false
+                            }
+                        },
+                        new
+                        {
+                            type = "function", name = "ConsultarCategorias",
+                            description = "Lista categorías activas del catálogo. Solo lectura. Texto vacío lista todas; no confirma existencias.",
+                            strict = true,
+                            parameters = new
+                            {
+                                type = "object",
+                                properties = new { texto = new { type = "string", description = "Nombre o parte de la categoría, hasta 100 caracteres. Usa cadena vacía para listar todas." } },
+                                required = new[] { "texto" }, additionalProperties = false
+                            }
+                        },
+                        new
+                        {
+                            type = "function", name = "ConsultarZonasEntrega",
+                            description = "Consulta zonas de entrega activas y sus montos mínimos. Solo lectura. Texto vacío lista todas las zonas.",
+                            strict = true,
+                            parameters = new
+                            {
+                                type = "object",
+                                properties = new { texto = new { type = "string", description = "Nombre o parte de la zona, hasta 100 caracteres. Usa cadena vacía para listar todas." } },
+                                required = new[] { "texto" }, additionalProperties = false
+                            }
+                        },
+                        new
+                        {
                             type = "function", name = "BuscarMarcasPorCategoria",
-                            description = "Consulta categorías activas por nombre y devuelve sus marcas activas. Para preguntas como qué golosinas o bebidas ofrecen; no confirma stock.",
+                            description = "Consulta las marcas activas de una categoría. Solo para preguntas explícitas sobre marcas; para productos usa BuscarProductosPorCategoria. No confirma stock.",
                             strict = true,
                             parameters = new
                             {
@@ -240,21 +330,33 @@ public sealed class OpenAIService
                 {
                     // Solo ejecutar las herramientas de lectura registradas.
                     var nombreHerramienta = call.GetProperty("name").GetString();
-                    if (nombreHerramienta is not ("BuscarProductos" or "BuscarMarcasPorCategoria"))
+                    if (nombreHerramienta is not ("BuscarProductos" or "BuscarMarcasPorCategoria" or "ConsultarZonasEntrega" or "ConsultarCategorias" or "BuscarProductosPorCategoria"))
                         throw new OpenAIException(502, "La IA solicitó una herramienta no permitida.");
                     // Los argumentos llegan como una cadena JSON: los interpreta. ! suprime el aviso de nulabilidad, no valida el valor.
                     using var args = JsonDocument.Parse(call.GetProperty("arguments").GetString()!);
                     // Extrae el criterio de b?squeda; ?. aplica Trim solamente si la cadena no es null.
                     var texto = args.RootElement.GetProperty("texto").GetString()?.Trim();
-                    // Valida los argumentos de la IA antes de consultar: texto obligatorio y longitud m?xima de 100.
-                    if (string.IsNullOrWhiteSpace(texto) || texto.Length > 100)
+                    // Solo las consultas de listas permiten texto vacío; máximo 100 caracteres.
+                    if (texto is null || texto.Length > 100 ||
+                        (texto.Length == 0 && nombreHerramienta is not ("ConsultarZonasEntrega" or "ConsultarCategorias")))
                         throw new OpenAIException(502, "La IA solicitó una búsqueda inválida.");
                     // Ejecuta la funci?n del backend recibida como par?metro; CatalogoIAService consulta SQL y devuelve JSON.
-                    var resultado = nombreHerramienta == "BuscarProductos"
-                        ? await buscarProductos(texto, ct)
-                        : buscarMarcasPorCategoria is not null
+                    var resultado = nombreHerramienta switch
+                    {
+                        "BuscarProductos" => await buscarProductos(texto, ct),
+                        "BuscarProductosPorCategoria" => buscarProductosPorCategoria is not null
+                            ? await buscarProductosPorCategoria(texto, ct)
+                            : throw new OpenAIException(503, "La consulta de productos por categoría no está disponible."),
+                        "BuscarMarcasPorCategoria" => buscarMarcasPorCategoria is not null
                             ? await buscarMarcasPorCategoria(texto, ct)
-                            : throw new OpenAIException(503, "La consulta de categorías no está disponible.");
+                            : throw new OpenAIException(503, "La consulta de categorías no está disponible."),
+                        "ConsultarCategorias" => consultarCategorias is not null
+                            ? await consultarCategorias(texto, ct)
+                            : throw new OpenAIException(503, "La lista de categorías no está disponible."),
+                        _ => consultarZonasEntrega is not null
+                            ? await consultarZonasEntrega(texto, ct)
+                            : throw new OpenAIException(503, "La consulta de zonas de entrega no está disponible.")
+                    };
                     // A?ade el resultado de la herramienta al contexto que se enviar? en la siguiente ronda.
                     input.Add(new JsonObject
                     {

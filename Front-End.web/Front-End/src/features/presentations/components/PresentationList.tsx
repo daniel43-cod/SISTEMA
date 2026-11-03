@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react'
 ﻿import { RowDetails } from '../../../shared/ui/RowDetails'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { PresentationResponse } from '../types/presentation'
 
 type Props = {
+  createAction?: ReactNode
   items: PresentationResponse[]
   loading: boolean
   error: string
@@ -12,11 +14,11 @@ type Props = {
   pending?: boolean
   editing: boolean
 }
-export function PresentationList({ items, loading, error, onReload, onEdit, onStateChange, pending = false, editing }: Props) {
+export function PresentationList({ items, loading, error, onReload, onEdit, onStateChange, pending = false, editing, createAction }: Props) {
   return <section className="presentation-card presentation-list" aria-labelledby="presentation-list-title" aria-busy={loading}>
     <div className="catalog-list-heading">
       <h2 id="presentation-list-title">{onStateChange ? 'Presentaciones' : 'Presentaciones activas'}</h2>
-      <RefreshButton onClick={onReload} loading={loading || pending} label="Actualizar presentaciones" />
+      <div className="catalog-panel-actions"><RefreshButton onClick={onReload} loading={loading || pending} label="Actualizar presentaciones" />{createAction}</div>
     </div>
     {loading ? <p role="status">Cargando presentaciones…</p> :
       error ? <p className="presentation-error" role="alert">{error}</p> :

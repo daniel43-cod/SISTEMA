@@ -32,3 +32,10 @@
 .staff-shell-users .users-table-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .staff-shell-users .users-panel table { border-collapse: separate; border-spacing: 0; }
 .staff-shell-users .users-table-scroll th { position: sticky; top: 0; z-index: 1; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
+
+.users-header-actions { display: flex; align-items: center; gap: 12px; }
+.users-create-label { display: none; }
+@media (min-width: 801px) {
+  .users-panel .users-header-actions .users-create-floating { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; height: auto; min-height: 44px; padding: 10px 16px; border-radius: 8px; box-shadow: none; }
+  .users-create-label { display: inline; }
+}

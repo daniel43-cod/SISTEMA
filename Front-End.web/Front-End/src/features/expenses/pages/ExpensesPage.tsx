@@ -1,3 +1,4 @@
+import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { ExpensePage } from '../utils/expenseListing'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
@@ -106,18 +107,25 @@ export function ExpensesPage() {
     } finally { busy.current = false; if (alive.current) setSaving(false) }
   }
   return <section className="expense-panel" aria-labelledby="expense-title">
-    <div className="expense-heading"><h2 id="expense-title">Gastos de la caja activa</h2>
-      <button type="button" disabled={loading || saving} onClick={() => setRevision(v => v + 1)}>Actualizar</button></div>
+    <header className="expense-heading"><h2 id="expense-title">Gastos del turno</h2>
+      <div className="expense-header-actions">
+        <RefreshButton label="Actualizar gastos" loading={loading || saving} onClick={() => setRevision(v => v + 1)} />
+        <button type="button" className="expense-create-desktop" disabled={loading || saving || !cashOpen || !!cashError}
+          aria-haspopup="dialog" aria-controls="expense-create-dialog" onClick={() => setFormOpen(true)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          Registrar gasto
+        </button>
+      </div></header>
     <p className={cashOpen && !cashError ? 'expense-open' : 'expense-hint'} role="status">
       {loading ? 'Consultando caja…' : cashError ? 'No se pudo verificar la caja.'
-        : cashOpen ? 'Caja abierta. El gasto se registrará como una salida del turno actual.'
+        : cashOpen ? null
         : 'Abre la caja para registrar un gasto.'}
     </p>
     {cashError && <p role="alert" className="expense-error">{cashError}</p>}
     {success && <p role="status" className="expense-success">{success}</p>}
     {historyLoading ? <p role="status">Cargando gastos…</p>
       : historyError ? <p className="expense-error" role="alert">{historyError}</p>
-      : !history?.items.length ? <p>No hay gastos registrados en esta página de la caja activa.</p>
+      : !history?.items.length ? null
       : <div className="expense-table-scroll"><table className="expense-table">
         <thead><tr><th>Descripción</th><th>Monto</th><th>Observación</th><th>Encargado</th><th>Fecha y hora</th></tr></thead>
         <tbody>{history.items.map(item => <tr key={item.idGasto}>
@@ -127,12 +135,12 @@ export function ExpensesPage() {
           <td><time dateTime={item.fecha}>{new Date(item.fecha).toLocaleString('es-GT')}</time></td>
         </tr>)}</tbody>
       </table></div>}
-    <nav className="expense-pagination" aria-label="Páginas de gastos">
+    {!historyLoading && !historyError && history && history.total > 25 && <nav className="expense-pagination" aria-label="Páginas de gastos">
       <button type="button" disabled={historyLoading || page === 1} onClick={() => setPage(v => v - 1)}>Anterior</button>
       <span>Página {page} de {Math.max(1, Math.ceil((history?.total ?? 0) / 25))}</span>
       <button type="button" disabled={historyLoading || !!historyError || !history || page * 25 >= history.total}
         onClick={() => setPage(v => v + 1)}>Siguiente</button>
-    </nav>
+    </nav>}
     <button type="button" className="expense-create-floating" title="Registrar nuevo gasto"
       aria-label="Registrar nuevo gasto" aria-haspopup="dialog" aria-controls="expense-create-dialog"
       disabled={loading || saving || !cashOpen || !!cashError} onClick={() => setFormOpen(true)}>
@@ -141,7 +149,7 @@ export function ExpensesPage() {
     </button>
     <dialog id="expense-create-dialog" ref={dialogRef} className="expense-create-dialog"
       aria-labelledby="expense-create-title" onCancel={event => { if (saving) event.preventDefault(); else setFormOpen(false) }}
-      onClose={() => setFormOpen(false)}>
+>
       <div className="expense-heading"><h2 id="expense-create-title">Registrar gasto</h2>
         <button type="button" disabled={saving} aria-label="Cerrar formulario de gasto" onClick={() => setFormOpen(false)}>×</button>
       </div>

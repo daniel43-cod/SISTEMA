@@ -24,11 +24,8 @@ export function CreateProductPage() {
       <ProductForm onSaved={() => { setNotice('Producto creado correctamente.'); setRevision(value => value + 1); close() }} />
     </section> : <>
       {/* El botón + abre el formulario; el listado es la vista principal. */}
-      <div className="product-toolbar">
-        <button ref={add} type="button" className="catalog-add-button" aria-label="Crear producto" title="Crear producto"
-          onClick={() => { setNotice(''); setOpen(true) }}><span aria-hidden="true">+</span></button>
-      </div>
-      <ProductCatalogBrowser key={revision} />
+      <section className="product-card product-create-panel"><ProductCatalogBrowser key={revision} createAction={<button ref={add} type="button" className="catalog-add-button catalog-create-responsive" aria-label="Crear producto" title="Crear producto"
+          onClick={() => { setNotice(''); setOpen(true) }}><span aria-hidden="true">+</span><span className="catalog-create-label">Crear producto</span></button>} /></section>
     </>}
   </div>
 }

@@ -111,7 +111,11 @@ export function UsersPage() {
   }
   return <section className="users-panel" aria-labelledby="users-title">
     <div className="users-heading"><h2 id="users-title">Usuarios</h2>
-      <button type="button" disabled={loading || saving} onClick={() => setRevision(v => v + 1)}>Actualizar</button></div>
+      <div className="users-header-actions"><button type="button" disabled={loading || saving} onClick={() => setRevision(v => v + 1)}>Actualizar</button><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
+      aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
+      onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
+    </button></div></div>
     {success && <p role="status" className="users-success">{success}</p>}
     {loading ? <p role="status">Cargando usuarios…</p> : error ? <div role="alert"><p>{error}</p>
       <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div>
@@ -132,14 +136,10 @@ export function UsersPage() {
             </td>
           </tr>)}</tbody></table>
       </div>}
-    <button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
-      aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
-      onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-    </button>
+
     {!loading && !error && !availableRoles.length && <p role="status">No hay roles internos activos para crear usuarios.</p>}
     <dialog ref={dialogRef} id="users-create-dialog" className="users-dialog" aria-labelledby="users-create-title"
-      onCancel={event => { if (saving) event.preventDefault(); else setOpen(false) }} onClose={() => { formRef.current?.reset(); setOpen(false) }}>
+      onCancel={event => { if (saving) event.preventDefault(); else setOpen(false) }}>
       <div className="users-heading"><h2 id="users-create-title">{editing ? 'Editar usuario' : 'Crear usuario'}</h2><button type="button" disabled={saving} aria-label="Cerrar formulario" onClick={() => setOpen(false)}>×</button></div>
       <form key={formVersion} ref={formRef} onSubmit={submit} aria-busy={saving}>
         <fieldset disabled={saving || uncertain}><legend className="sr-only">Datos del usuario</legend>

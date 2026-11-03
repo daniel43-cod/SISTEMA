@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 ﻿import { RowDetails } from '../../../shared/ui/RowDetails'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useState } from 'react'
@@ -10,14 +11,14 @@ function CategoryImage({ url }: { url?: string | null }) {
     ? <img className="category-thumbnail" src={url} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
     : <span className="category-thumbnail category-thumbnail-empty">Sin imagen</span>
 }
-export function CategoryList({ items, loading, error, reload, onEdit, editing, onStateChange, pending = false }: {
-  items: CategoryResponse[]; loading: boolean; error: string; reload: () => void
+export function CategoryList({ createAction, items, loading, error, reload, onEdit, editing, onStateChange, pending = false }: {
+  createAction?: ReactNode; items: CategoryResponse[]; loading: boolean; error: string; reload: () => void
   onEdit?: (item: CategoryResponse) => void; editing: boolean; onStateChange?: (item: CategoryResponse) => void; pending?: boolean
 }) {
   return <section className="category-card category-list-card" aria-labelledby="category-list-title" aria-busy={loading || pending}>
     <div className="catalog-list-heading">
       <h2 id="category-list-title">Categorías</h2>
-      <RefreshButton onClick={reload} loading={loading || pending} label="Actualizar categorías" />
+      <div className="catalog-panel-actions"><RefreshButton onClick={reload} loading={loading || pending} label="Actualizar categorías" />{createAction}</div>
     </div>
     {loading && <p role="status">Cargando categorías…</p>}
     {error && <p className="category-error" role="alert">{error}</p>}

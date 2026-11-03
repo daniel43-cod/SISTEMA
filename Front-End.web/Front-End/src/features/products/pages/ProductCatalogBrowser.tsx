@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 ﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { useCategories } from '../../categories/hooks/useCategories'
@@ -38,7 +39,7 @@ function BrandCardImage({ url, name }: { url?: string | null; name: string }) {
         </span>}
   </span>
 }
-export function ProductCatalogBrowser() {
+export function ProductCatalogBrowser({ createAction }: { createAction?: ReactNode } = {}) {
   const { session } = useAuth()//comproba que el usuario sea admin
   const categories = useCategories()
   const brands = useBrands()//carga las categorias desde la api
@@ -55,8 +56,9 @@ export function ProductCatalogBrowser() {
     <ProductSearch onResult={setSearchActive} namesRevision={namesRevision} onNamesRefresh={refreshNames}
       onBack={category ? () => { if (brand) setBrand(null); else setCategory(null) } : undefined}
       backLabel={brand ? 'Volver a las marcas' : 'Volver a las categorías'} />
+    {searchActive && <div className="product-catalog-heading"><h2>Productos</h2>{createAction}</div>}
     {!searchActive && <>
-    <h2 ref={title} tabIndex={-1} className={category ? 'product-navigation-title' : undefined}>{category ? (brand ? 'Productos' : 'Marcas') : 'Categorías'}</h2>
+    <div className="product-catalog-heading"><h2 ref={title} tabIndex={-1} className={category ? 'product-navigation-title' : undefined}>{category ? (brand ? 'Productos' : 'Marcas') : 'Categorías'}</h2>{createAction}</div>
     {!category && <>
       {categories.loading && <p role="status">Cargando categorías…</p>}
       {categories.error && <><p role="alert" className="product-error">{categories.error}</p><button type="button" onClick={categories.reload}>Reintentar</button></>}

@@ -129,6 +129,8 @@ builder.Services.AddScoped<VentaService>();
 builder.Services.AddScoped<FiltrarVentasUsuarioService>();
 builder.Services.AddScoped<HistorialVentasFechaService>();
 builder.Services.AddScoped<ResumenVentasService>();
+builder.Services.AddScoped<ReporteVentasIntervaloService>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<DetalleVentaService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();

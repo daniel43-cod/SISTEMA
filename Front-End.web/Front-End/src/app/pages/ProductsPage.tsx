@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+﻿import { Activity, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
 import { PresentationsPage } from '../../features/presentations'
 import { CreateCategoryPage } from '../../features/categories'
@@ -31,7 +31,10 @@ export function ProductsPage() {
     </nav>}
     {/* Productos reúne el listado y la creación en una sola pantalla. */}
     <div ref={content} className="products-section-content" role="region" aria-label="Contenido de productos" tabIndex={0}>
-    {canCreate && section === 'products' ? <CreateProductPage /> : canCreate && section === 'brands' ? <BrandsPage /> : showCategories ? <CreateCategoryPage /> : <PresentationsPage />}
+    {canCreate && <Activity mode={section === 'products' ? 'visible' : 'hidden'}><CreateProductPage /></Activity>}
+    {canCreate && <Activity mode={section === 'brands' ? 'visible' : 'hidden'}><BrandsPage /></Activity>}
+    {canCreate && <Activity mode={showCategories ? 'visible' : 'hidden'}><CreateCategoryPage /></Activity>}
+    <Activity mode={section === 'presentations' || !canCreate ? 'visible' : 'hidden'}><PresentationsPage /></Activity>
     </div>
   </div>
 }

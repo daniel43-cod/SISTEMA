@@ -1,0 +1,22 @@
+.reports-panel { min-width: 0; padding: clamp(16px, 2vw, 28px); border: 1px solid #d1dce8; border-radius: 12px; background: #fff; }
+.reports-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.reports-heading h2 { margin: 0; font-size: 1.2rem; }
+.reports-filters { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+.reports-filters label { display: grid; gap: 8px; font-size: .875rem; max-width: 100%; }
+.reports-filters select, .reports-filters button { min-height: 42px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: inherit; font: inherit; max-width: 100%; }
+.reports-totals { display: flex; flex-wrap: wrap; gap: 16px 40px; }
+.reports-totals > div { display: grid; gap: 6px; }
+.reports-totals span, .reports-note { color: #526477; font-size: .875rem; }
+.reports-totals strong { font-size: 1.3rem; }
+.report-chart svg { width: 100%; display: block; min-width: 500px; }
+.report-chart { overflow-x: auto; }
+.report-chart text { font-size: 12px; fill: #526477; }
+.report-point-info { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 20px; padding: 12px; background: #eff8ff; border-radius: 8px; font-size: .9rem; }
+.report-point-control { display: grid; gap: 8px; margin: 16px 0; font-size: .875rem; }
+.report-point-control input { width: 100%; accent-color: #0876bc; }
+.report-chart details { margin-top: 16px; }
+.report-chart summary { cursor: pointer; }
+.report-data-scroll { max-height: 300px; overflow: auto; margin-top: 12px; }
+.report-data-scroll table { width: 100%; border-collapse: collapse; text-align: left; }
+.report-data-scroll th, .report-data-scroll td { padding: 10px; border-bottom: 1px solid #dce5ee; font-size: .875rem; white-space: nowrap; }
+.report-data-scroll th { position: sticky; top: 0; background: #f8fafc; }

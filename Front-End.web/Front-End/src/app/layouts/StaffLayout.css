@@ -211,3 +211,8 @@
 
 .staff-shell-users .staff-header { min-height: 44px; padding-block: 0; }
 .staff-shell-users .staff-content { margin-top: 0; padding-top: 0; }
+
+.staff-shell-reports .staff-header { min-height: 44px; padding-block: 0; }
+.staff-shell-reports .staff-content { margin-top: 0; padding-top: 0; }
+
+.staff-shell-products .staff-content { max-width: none; }

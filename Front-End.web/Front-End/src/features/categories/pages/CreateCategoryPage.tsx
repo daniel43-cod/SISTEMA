@@ -67,18 +67,18 @@ export function CreateCategoryPage() {
         }} />
     </section>}
     {/* Oculta el listado al crear o editar; vuelve a mostrarlo al cerrar el formulario. */}
-    {!formOpen && <CategoryList items={items} loading={loading} error={error} reload={reload} editing={formOpen} pending={pending} onStateChange={canEdit ? changeState : undefined}
+    {!formOpen && <CategoryList createAction={canEdit && <button ref={addButton} type="button" className="catalog-add-button catalog-create-responsive"
+      disabled={pending || loading} aria-label="Crear categoría" title="Crear categoría" aria-expanded={formOpen}
+      onClick={() => { setNotice(''); setFormOpen(true) }}>
+      <span aria-hidden="true">+</span><span className="catalog-create-label">Crear categoría</span>
+    </button>} items={items} loading={loading} error={error} reload={reload} editing={formOpen} pending={pending} onStateChange={canEdit ? changeState : undefined}
       onEdit={canEdit ? item => {
         trigger.current = document.activeElement as HTMLElement
         setNotice(''); setEditing(item); setFormOpen(true)
         editor.current?.focus()
         editor.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       } : undefined} />}
-    {canEdit && !formOpen && <button ref={addButton} type="button" className="catalog-add-button"
-      disabled={pending || loading} aria-label="Crear categoría" title="Crear categoría" aria-expanded={formOpen}
-      onClick={() => { setNotice(''); setFormOpen(true) }}>
-      <span aria-hidden="true">+</span>
-    </button>}
+    
   </div>
 }
 

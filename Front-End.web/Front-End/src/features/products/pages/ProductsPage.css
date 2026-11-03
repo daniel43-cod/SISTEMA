@@ -292,3 +292,9 @@
   background: #ffffff;
   box-shadow: 0 -6px 18px #0f172a0a;
 }
+
+.staff-shell-products .product-create-panel { width: 100%; max-width: none; min-height: 100%; box-sizing: border-box; }
+.staff-shell-products .product-create-panel .product-catalog-browser { width: 100%; max-width: none; }
+
+.product-catalog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.product-catalog-heading h2 { margin: 0; }

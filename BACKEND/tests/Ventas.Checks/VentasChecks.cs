@@ -489,6 +489,47 @@ await using (var db = new CheckDb(options))
     try { await servicioPagos.ListarPorVenta(venta.id_ventas, cancelPagos.Token); throw new Exception("Cancelación ignorada"); }
     catch (OperationCanceledException) { Check(true, "Historial de pagos: respeta cancelación"); }
 }
+await using (var db = new CheckDb(options))
+{
+    var inicio = new DateTime(2026, 1, 1, 23, 15, 0);
+    db.sesioncaja.Add(new SesionCaja { id_sesion_caja = 90, id_caja = 1, id_usuario_apertura = 1,
+        fecha_apertura = inicio, fecha_cierre = inicio.AddMinutes(95), monto_inicial = 0, observacion_apertura = "Reporte" });
+    API_SISTEMA.Models.Ventas VentaReporte(int minuto, decimal monto, decimal saldo) => new()
+    { id_sesion_caja = 90, id_cliente = 1, id_usuario = 1, id_estado_venta = saldo > 0 ? 2 : 1,
+        total = monto, subtotal = monto, saldo_pendiente = saldo, origen = "REPORTE", fecha_venta = inicio.AddMinutes(minuto) };
+    db.ventas.AddRange(VentaReporte(0, 10, 0), VentaReporte(30, 20, 20), VentaReporte(95, 30, 30));
+    await db.SaveChangesAsync();
+    var servicio = new ReporteVentasIntervaloService(db, TimeProvider.System);
+    var reporte = await servicio.Consultar(2, new() { IdSesionCaja = 90 });
+    Check(reporte.Puntos.Count == 4 && reporte.TotalVentas == 60 && reporte.CantidadVentas == 3,
+        "Gráfica: suma crédito y contado de la sesión cerrada");
+    Check(reporte.Puntos[0].TotalVentas == 10 && reporte.Puntos[1].TotalVentas == 20 && reporte.Puntos[2].TotalVentas == 0 &&
+        reporte.Puntos[3].TotalVentas == 30 && reporte.Puntos[3].Hasta == inicio.AddMinutes(95),
+        "Gráfica: límites de media hora, intervalo vacío y último parcial sin duplicar ventas");
+    Check(reporte.Puntos[2].Desde.Date != reporte.Puntos[0].Desde.Date,
+        "Gráfica: conserva fecha al cruzar medianoche");
+    Check((await servicio.Consultar(2, new() { IdSesionCaja = 90, IntervaloMinutos = 60 })).Puntos.Count == 2,
+        "Gráfica: admite intervalos de una hora");
+    db.ventas.Add(VentaReporte(30, 5, 0));
+    await db.SaveChangesAsync();
+    var acumulado = await servicio.ConsultarAcumulado(2, 90);
+    Check(acumulado.Puntos.Count == 5 && acumulado.Puntos[0].IdVenta == null && acumulado.Puntos[0].Acumulado == 0 &&
+        acumulado.Puntos.Select(p => p.Acumulado).SequenceEqual(new decimal[] { 0, 10, 30, 35, 65 }) &&
+        acumulado.CantidadVentas == 4 && acumulado.TotalVentas == 65,
+        "Acumulado: apertura en cero y un punto por venta de crédito o contado");
+    Check(acumulado.Puntos[2].Fecha == acumulado.Puntos[3].Fecha && acumulado.Puntos[2].IdVenta < acumulado.Puntos[3].IdVenta,
+        "Acumulado: orden estable cuando dos ventas tienen la misma fecha y hora");
+    Check(acumulado.Puntos[^1].MontoVenta == 30 && acumulado.Puntos[^1].Fecha == inicio.AddMinutes(95),
+        "Acumulado: conserva importe y hora de la venta al cierre");
+    try { await servicio.ConsultarAcumulado(1, 90); throw new Exception("Vendedor recibió acumulado"); }
+    catch (UnauthorizedAccessException) { Check(true, "Acumulado: rechaza vendedor"); }
+    try { await servicio.Consultar(1, new() { IdSesionCaja = 90 }); throw new Exception("Vendedor recibió reporte"); }
+    catch (UnauthorizedAccessException) { Check(true, "Gráfica: rechaza vendedor"); }
+    try { await servicio.Consultar(2, new() { IdSesionCaja = 90, IntervaloMinutos = 15 }); throw new Exception("Intervalo inválido"); }
+    catch (ValidationException) { Check(true, "Gráfica: rechaza intervalos no admitidos"); }
+    try { await servicio.Consultar(2, new() { IdSesionCaja = int.MaxValue }); throw new Exception("Sesión inexistente"); }
+    catch (KeyNotFoundException) { Check(true, "Gráfica: rechaza sesión inexistente"); }
+}
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)

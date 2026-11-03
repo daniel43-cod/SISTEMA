@@ -10,6 +10,8 @@ export function CustomerLoginForm({ onLogin }: { onLogin: (session: CustomerSess
   const [registering, setRegistering] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
   const [confirmation, setConfirmation] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -20,6 +22,7 @@ export function CustomerLoginForm({ onLogin }: { onLogin: (session: CustomerSess
   const id = useId()
   useEffect(() => () => controllerRef.current?.abort(), [])
   function changeMode(value: boolean) {
+    setShowPassword(false); setShowConfirmation(false)
     setRegistering(value); setPassword(''); setConfirmation(''); setError(''); setNotice('')
     emailRef.current?.focus()
   }
@@ -37,6 +40,7 @@ export function CustomerLoginForm({ onLogin }: { onLogin: (session: CustomerSess
         await registerCustomer(email, password, confirmation, controller.signal)
         if (!controller.signal.aborted) {
           setPassword(''); setConfirmation(''); setRegistering(false)
+          setShowPassword(false); setShowConfirmation(false)
           setNotice('Cuenta creada. Inicia sesión para continuar.'); emailRef.current?.focus()
         }
       } else {
@@ -59,13 +63,19 @@ export function CustomerLoginForm({ onLogin }: { onLogin: (session: CustomerSess
       <input ref={emailRef} id={id + '-email'} type="email" autoComplete="username" value={email}
         onChange={event => setEmail(event.target.value)} maxLength={254} required />
       <label htmlFor={id + '-password'}>Contraseña</label>
-      <input id={id + '-password'} type="password" autoComplete={registering ? 'new-password' : 'current-password'} value={password}
+      <div className="customer-password-field">
+      <input id={id + '-password'} type={showPassword ? 'text' : 'password'} autoComplete={registering ? 'new-password' : 'current-password'} value={password}
         onChange={event => setPassword(event.target.value)} required aria-describedby={registering ? id + '-rules' : undefined} />
+      <PasswordToggle visible={showPassword} onToggle={() => setShowPassword(value => !value)} controls={id + '-password'} />
+      </div>
       {registering && <>
         <small id={id + '-rules'}>Al menos 8 caracteres, una mayúscula, una minúscula y un número.</small>
         <label htmlFor={id + '-confirm'}>Confirmar contraseña</label>
-        <input id={id + '-confirm'} type="password" autoComplete="new-password" value={confirmation}
+        <div className="customer-password-field">
+        <input id={id + '-confirm'} type={showConfirmation ? 'text' : 'password'} autoComplete="new-password" value={confirmation}
           onChange={event => setConfirmation(event.target.value)} required />
+        <PasswordToggle visible={showConfirmation} onToggle={() => setShowConfirmation(value => !value)} controls={id + '-confirm'} confirmation />
+        </div>
       </>}
       <button type="submit">{loading ? registering ? 'Creando cuenta…' : 'Iniciando sesión…' : registering ? 'Crear cuenta' : 'Iniciar sesión'}</button>
     </fieldset>
@@ -74,4 +84,22 @@ export function CustomerLoginForm({ onLogin }: { onLogin: (session: CustomerSess
       <button type="button" disabled={loading} onClick={() => changeMode(!registering)}>{registering ? 'Inicia sesión' : 'Crear cuenta'}</button>
     </p>
   </form>
+}
+
+function PasswordToggle({ visible, onToggle, controls, confirmation = false }: {
+  visible: boolean
+  onToggle: () => void
+  controls: string
+  confirmation?: boolean
+}) {
+  const label = (visible ? 'Ocultar' : 'Mostrar') + ' ' + (confirmation ? 'confirmaci?n de contrase?a' : 'contrase?a')
+  return <button className="customer-password-toggle" type="button" aria-label={label}
+    title={label} aria-pressed={visible} aria-controls={controls} onClick={onToggle}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {visible && <path d="m3 3 18 18" />}
+    </svg>
+  </button>
 }

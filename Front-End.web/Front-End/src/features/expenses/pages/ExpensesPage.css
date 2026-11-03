@@ -32,3 +32,10 @@
 .expense-create-dialog form { margin-top: 20px; }
 .expense-create-dialog .expense-error { margin-top: 16px; }
 @media (max-width: 520px) { .expense-create-dialog { padding: 18px; } }
+.expense-header-actions { display: flex; align-items: center; gap: 12px; }
+.expense-panel button.expense-create-desktop { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #1d4ed8; border-color: #1d4ed8; color: white; }
+.expense-panel button.expense-create-floating { display: none; }
+@media (max-width: 800px) {
+  .expense-panel button.expense-create-desktop { display: none; }
+  .expense-panel button.expense-create-floating { display: grid; }
+}

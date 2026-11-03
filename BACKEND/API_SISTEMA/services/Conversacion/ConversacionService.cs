@@ -81,7 +81,8 @@ namespace API_SISTEMA.Services.Conversacion
             try
             {
                 mensaje.Respuesta = await _openAI.ResponderAsync(historial, _catalogo.BuscarProductos,
-                    cancellationToken, _catalogo.BuscarMarcasPorCategoria);
+                    cancellationToken, _catalogo.BuscarMarcasPorCategoria, _catalogo.ConsultarZonasEntrega,
+                    _catalogo.ConsultarCategorias, _catalogo.BuscarProductosPorCategoria);
                 await _context.SaveChangesAsync(cancellationToken);
             }
             catch (OpenAIException ex)

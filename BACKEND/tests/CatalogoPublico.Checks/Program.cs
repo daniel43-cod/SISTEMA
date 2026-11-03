@@ -50,6 +50,16 @@ Check((await service.ListarProductosPorMarca(3))!.Productos.Count == 0, "Marca a
 Check(await service.ListarProductosPorMarca(2) is null && await service.ListarProductosPorMarca(999) is null,
     "Marcas inactivas o inexistentes no disponibles");
 var catalogoIA = new API_SISTEMA.Services.IA.CatalogoIAService(db);
+using (var datos = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarProductosPorCategoria("Bebidas", default)))
+{
+    var productos = datos.RootElement.GetProperty("productos").EnumerateArray().ToArray();
+    Check(productos.Length == 1 && productos[0].GetProperty("nombre").GetString() == "Agua" &&
+        productos[0].GetProperty("presentacion").GetString() == "Unidad",
+        "Productos por categoría excluye agotados, cajas sin stock suficiente y presentaciones inactivas");
+}
+using (var datos = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarProductosPorCategoria("Limpieza", default)))
+    Check(datos.RootElement.GetProperty("productos").GetArrayLength() == 0,
+        "Productos por categoría no mezcla categorías que no coinciden");
 using (var datosIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarProductos("Agua", default)))
 {
     var opciones = datosIA.RootElement.GetProperty("productos").EnumerateArray().ToArray();
@@ -72,6 +82,9 @@ using (var marcasIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.Busca
 await db.SaveChangesAsync();
 using (var marcasIA = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarMarcasPorCategoria("Bebidas", default)))
     Check(marcasIA.RootElement.GetProperty("categorias").GetArrayLength() == 0, "Consulta IA excluye categoría inactiva");
+using (var datos = System.Text.Json.JsonDocument.Parse(await catalogoIA.BuscarProductosPorCategoria("Bebidas", default)))
+    Check(datos.RootElement.GetProperty("productos").GetArrayLength() == 0,
+        "Productos por categoría excluye categorías inactivas");
 Check(await service.ListarProductosPorMarca(1) is null, "Categoría inactiva bloquea productos de sus marcas");
 try { await service.ListarProductosPorMarca(1, 0); throw new Exception("Aceptó página inválida"); }
 catch (ArgumentOutOfRangeException) { Check(true, "Página inválida rechazada"); }

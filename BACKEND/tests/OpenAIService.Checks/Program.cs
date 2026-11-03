@@ -50,6 +50,96 @@ await categoryService.ResponderAsync(history, NoTools, buscarMarcasPorCategoria:
 });
 Check(categorySearches == 1 && categoryCalls == 2); passed++;
 
+var zoneCalls = 0;
+var zoneSearches = 0;
+const string zoneCall = """{"status":"completed","output":[{"type":"function_call","name":"ConsultarZonasEntrega","call_id":"zone_1","arguments":"{\"texto\":\"\"}"}]}""";
+var zoneService = Create(async (request, ct) =>
+{
+    using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));
+    Check(body.RootElement.GetProperty("tools").EnumerateArray()
+        .Any(t => t.GetProperty("name").GetString() == "ConsultarZonasEntrega"));
+    if (++zoneCalls == 1) return Json(zoneCall);
+    Check(body.RootElement.GetProperty("input").EnumerateArray().Any(x =>
+        x.TryGetProperty("call_id", out var id) && id.GetString() == "zone_1" &&
+        x.TryGetProperty("output", out var output) && output.GetString()!.Contains("Purulhá")));
+    return Json(success);
+});
+await zoneService.ResponderAsync(history, NoTools, consultarZonasEntrega: (text, ct) =>
+{
+    Check(text == ""); zoneSearches++;
+    return Task.FromResult("""{"moneda":"GTQ","regla":"totalMayorAlMinimo","zonas":[{"zona":"Purulhá","minimoCompra":100}]}""");
+});
+Check(zoneSearches == 1 && zoneCalls == 2); passed++;
+try
+{
+    await Create((r, ct) => Task.FromResult(Json(zoneCall))).ResponderAsync(history, NoTools);
+    throw new Exception("Faltó error de herramienta no disponible");
+}
+catch (OpenAIException ex) { Check(ex.StatusCode == 503); passed++; }
+
+foreach (var filtro in new[] { "", "bebidas" })
+{
+    var listCalls = 0;
+    var listSearches = 0;
+    var listCall = zoneCall.Replace("ConsultarZonasEntrega", "ConsultarCategorias")
+        .Replace("zone_1", "category_list_1")
+        .Replace("\\\"texto\\\":\\\"\\\"", "\\\"texto\\\":\\\"" + filtro + "\\\"");
+    var listService = Create(async (request, ct) =>
+    {
+        using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));
+        Check(body.RootElement.GetProperty("tools").EnumerateArray()
+            .Any(t => t.GetProperty("name").GetString() == "ConsultarCategorias"));
+        if (++listCalls == 1) return Json(listCall);
+        Check(body.RootElement.GetProperty("input").EnumerateArray().Any(x =>
+            x.TryGetProperty("call_id", out var id) && id.GetString() == "category_list_1" &&
+            x.TryGetProperty("output", out var output) && output.GetString()!.Contains("Bebidas")));
+        return Json(success);
+    });
+    await listService.ResponderAsync(history, NoTools, consultarCategorias: (text, ct) =>
+    {
+        Check(text == filtro); listSearches++;
+        return Task.FromResult("""{"categorias":[{"nombre":"Bebidas"}]}""");
+    });
+    Check(listCalls == 2 && listSearches == 1); passed++;
+}
+try
+{
+    await Create((r, ct) => Task.FromResult(Json(zoneCall.Replace("ConsultarZonasEntrega", "ConsultarCategorias"))))
+        .ResponderAsync(history, NoTools);
+    throw new Exception("Faltó error de lista de categorías no disponible");
+}
+catch (OpenAIException ex) { Check(ex.StatusCode == 503); passed++; }
+
+var productCategoryCalls = 0;
+var productCategorySearches = 0;
+var productCategoryCall = toolCall.Replace("BuscarProductos", "BuscarProductosPorCategoria")
+    .Replace("coca", "bebidas");
+var productCategoryService = Create(async (request, ct) =>
+{
+    using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));
+    Check(body.RootElement.GetProperty("tools").EnumerateArray().Any(t =>
+        t.GetProperty("name").GetString() == "BuscarProductosPorCategoria"));
+    if (++productCategoryCalls == 1) return Json(productCategoryCall);
+    Check(body.RootElement.GetProperty("input").EnumerateArray().Any(x =>
+        x.TryGetProperty("type", out var type) && type.GetString() == "function_call_output" &&
+        x.TryGetProperty("output", out var output) && output.GetString()!.Contains("Agua")));
+    return Json(success);
+});
+await productCategoryService.ResponderAsync(history, NoTools,
+    buscarMarcasPorCategoria: NoTools,
+    buscarProductosPorCategoria: (text, ct) =>
+    {
+        Check(text == "bebidas"); productCategorySearches++;
+        return Task.FromResult("""{"limite":20,"hayMas":false,"productos":[{"categoria":"Bebidas","nombre":"Agua","disponible":true}]}""");
+    });
+Check(productCategoryCalls == 2 && productCategorySearches == 1); passed++;
+try
+{
+    await Create((r, ct) => Task.FromResult(Json(productCategoryCall))).ResponderAsync(history, NoTools);
+    throw new Exception("Faltó error de consulta de productos por categoría no disponible");
+}
+catch (OpenAIException ex) { Check(ex.StatusCode == 503); passed++; }
+
 async Task Error(OpenAIService sut, int expected)
 {
     try { await sut.ResponderAsync(history, NoTools); throw new Exception("Faltó excepción"); }

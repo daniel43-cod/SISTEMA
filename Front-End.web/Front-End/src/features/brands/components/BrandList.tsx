@@ -1,15 +1,16 @@
+import type { ReactNode } from 'react'
 ﻿import { RowDetails } from '../../../shared/ui/RowDetails'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { BrandResponse } from '../types/brand'
 
 // Recibe los datos del hook: muestra el listado y los estados de carga, error y vacío.
-export function BrandList({ items, loading, error, reload, onEdit, onStateChange, pending = false }: {
-  items: BrandResponse[]; loading: boolean; error: string; reload: () => void; onEdit?: (brand: BrandResponse) => void; onStateChange?: (brand: BrandResponse) => void; pending?: boolean
+export function BrandList({ createAction, items, loading, error, reload, onEdit, onStateChange, pending = false }: {
+  createAction?: ReactNode; items: BrandResponse[]; loading: boolean; error: string; reload: () => void; onEdit?: (brand: BrandResponse) => void; onStateChange?: (brand: BrandResponse) => void; pending?: boolean
 }) {
   return <section className="brand-card brand-list-card" aria-labelledby="brand-list-title" aria-busy={loading || pending}>
     <div className="catalog-list-heading">
       <h2 id="brand-list-title">Marcas</h2>
-      <RefreshButton onClick={reload} loading={loading || pending} label="Actualizar marcas" />
+      <div className="catalog-panel-actions"><RefreshButton onClick={reload} loading={loading || pending} label="Actualizar marcas" />{createAction}</div>
     </div>
  
     {loading && <p role="status">Cargando marcas…</p>}

@@ -7,6 +7,58 @@ namespace API_SISTEMA.Services.IA;
 // sealed impide heredar de esta clase. El constructor primario recibe el contexto
 public sealed class CatalogoIAService(SistemaDbContext context)
 {
+    public async Task<string> BuscarProductosPorCategoria(string texto, CancellationToken ct)
+    {
+        const int limite = 20;
+        var resultados = await context.producto_presentaciones.AsNoTracking()
+            .Where(p => p.estado && p.Presentacion.Estado == true && p.Producto.Marca.Estado &&
+                p.Producto.Marca.Categoria.Estado &&
+                p.Producto.Marca.Categoria.nombreCategoria.Contains(texto) &&
+                p.unidades_equivalentes > 0 && (p.Producto.Stock ?? 0) >= p.unidades_equivalentes)
+            .OrderBy(p => p.Producto.Marca.Categoria.nombreCategoria)
+            .ThenBy(p => p.Producto.Nombre).ThenBy(p => p.id_producto_presentacion)
+            .Select(p => new
+            {
+                categoria = p.Producto.Marca.Categoria.nombreCategoria,
+                nombre = p.Producto.Nombre,
+                presentacion = p.Presentacion.Descripcion,
+                precio = p.precio,
+                disponible = true
+            }).Take(limite + 1).ToListAsync(ct);
+
+        // La fila adicional permite avisar si la selección no es la lista completa.
+        return JsonSerializer.Serialize(new
+        {
+            limite,
+            hayMas = resultados.Count > limite,
+            productos = resultados.Take(limite)
+        });
+    }
+
+    public async Task<string> ConsultarCategorias(string texto, CancellationToken ct)
+    {
+        // Lista las categorías activas, aunque todavía no tengan marcas o existencias.
+        var categorias = await context.categorias.AsNoTracking()
+            .Where(c => c.Estado && (texto == "" || c.nombreCategoria.Contains(texto)))
+            .OrderBy(c => c.nombreCategoria).ThenBy(c => c.IdCategoria)
+            .Select(c => new { nombre = c.nombreCategoria })
+            .ToListAsync(ct);
+
+        return JsonSerializer.Serialize(new { categorias });
+    }
+
+    public async Task<string> ConsultarZonasEntrega(string texto, CancellationToken ct)
+    {
+        // Todas las zonas activas; texto vacío permite listar la cobertura completa.
+        var zonas = await context.ZonasEntrega.AsNoTracking()
+            .Where(z => z.Estado && (texto == "" || z.Nombre.Contains(texto)))
+            .OrderBy(z => z.Nombre).ThenBy(z => z.IdZonaEntrega)
+            .Select(z => new { zona = z.Nombre, minimoCompra = z.MinimoCompra })
+            .ToListAsync(ct);
+
+        return JsonSerializer.Serialize(new { moneda = "GTQ", regla = "totalMayorAlMinimo", zonas });
+    }
+
     public async Task<string> BuscarMarcasPorCategoria(string texto, CancellationToken ct)
     {
         var categorias = await context.categorias.AsNoTracking()

@@ -25,13 +25,17 @@ export async function listMessages(token: string, conversationId: number, before
 }
 export class ChatSendError extends ApiError {
   conversationId: number | null
-  constructor(message: string, status: number, conversationId: number | null = null) {
+  readonly requiresRefresh: boolean
+  constructor(message: string, status: number, conversationId: number | null = null, requiresRefresh = true) {
     super(message, status)
     this.conversationId = conversationId
+    this.requiresRefresh = requiresRefresh
   }
 }
 export async function sendChat(token: string, text: string, conversationId: number | null) {
   if (!text.trim() || text.length > 2000) throw new ChatSendError('Escribe entre 1 y 2000 caracteres.', 400)
+  if (typeof navigator !== 'undefined' && navigator.onLine === false)
+    throw new ChatSendError('Sin conexión a internet. Revisa tu conexión y vuelve a intentarlo. Tu mensaje sigue aquí.', 0, null, false)
   // La respuesta de IA puede tardar más que una consulta normal. No reintentamos un POST automáticamente.
   let response: Response
   try {
@@ -40,13 +44,13 @@ export async function sendChat(token: string, text: string, conversationId: numb
       body: JSON.stringify({ mensaje: text.trim(), idConversacion: conversationId }),
       signal: AbortSignal.timeout(90000), credentials: 'omit', cache: 'no-store', redirect: 'error',
     })
-  } catch { throw new ChatSendError('No se pudo confirmar el envío. Actualiza tus chats antes de volver a enviar para evitar duplicarlo.', 0) }
+  } catch { throw new ChatSendError('Se perdió la conexión o no se pudo contactar con el servidor. Cuando vuelva, actualiza el chat para comprobar si tu mensaje se envió.', 0) }
   let data: unknown
   try { data = await response.json() } catch { data = null }
   if (!response.ok) {
     const savedId = record(data) && id(data.idConversacion) ? data.idConversacion : null
     const message = response.status === 401 || response.status === 403 ? 'La sesión del cliente ya no está disponible.'
-      : savedId ? 'Tu pregunta quedó guardada, pero la IA no pudo responder. Puedes continuar en este chat.'
+      : savedId ? 'El asistente no está disponible en este momento. Tu pregunta quedó guardada. Inténtalo más tarde.'
       : response.status === 429 ? 'Demasiados mensajes. Espera antes de volver a intentar.'
       : response.status === 400 ? 'Revisa el mensaje; admite hasta 2000 caracteres.'
       : 'No se pudo confirmar el envío. Actualiza el historial antes de volver a enviar.'

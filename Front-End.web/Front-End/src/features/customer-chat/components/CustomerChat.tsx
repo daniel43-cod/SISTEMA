@@ -69,7 +69,9 @@ function ChatThread({ token, conversationId, onConversation, onBusy, onUnauthori
         if (failure.conversationId === conversationId) setRevision(v => v + 1)
       } else {
         setError(failure instanceof Error ? failure.message : 'No se pudo enviar el mensaje.')
-        setBlocked(!(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500)
+        setBlocked(failure instanceof ChatSendError && !failure.requiresRefresh
+          ? false
+          : !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500)
       }
     } finally {
       busy.current = false

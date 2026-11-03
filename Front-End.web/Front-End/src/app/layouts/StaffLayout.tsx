@@ -1,3 +1,4 @@
+import { ReportsPage } from '../../features/reports/pages/ReportsPage'
 import { createPortal } from 'react-dom'
 import { OrdersPage } from '../../features/orders/pages/OrdersPage'
 import { SaleListPage } from '../../features/sales/pages/SaleListPage'
@@ -7,7 +8,7 @@ import { ExpensesPage } from '../../features/expenses/pages/ExpensesPage'
 import { PurchasesPage } from '../../features/purchases/pages/PurchasesPage'
 import { InventoryPage } from '../../features/inventory/pages/InventoryPage'
 import { CashPage } from '../../features/cash/pages/CashPage'
-import { useEffect, useId, useRef, useState } from 'react'
+import { Activity, useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../features/auth'
 import { ProductsPage } from '../pages/ProductsPage'
 import { StaffNavigation } from '../navigation/StaffNavigation'
@@ -19,6 +20,7 @@ import './StaffLayout.css'
 export function StaffLayout() {
   const { session, logout } = useAuth()
   const [selected, setSelected] = useState<StaffSection>('ventas')
+  const [visited, setVisited] = useState<StaffSection[]>(['ventas'])
   const [menuOpen, setMenuOpen] = useState(false)
   const [, setCashOpen] = useState<boolean | null>(null)
   const contentRef = useRef<HTMLElement>(null)
@@ -57,6 +59,7 @@ export function StaffLayout() {
   const current = items.find(item => item.id === selected) ?? items[0]
   const roleLabel = session.user.role === 'ADMINISTRADOR' ? 'Administrador' : 'Vendedor'
   function selectSection(section: StaffSection) {
+    setVisited(previous => previous.includes(section) ? previous : [...previous, section])
     setSelected(section)
     setMenuOpen(false)
     contentRef.current?.focus()
@@ -91,7 +94,7 @@ export function StaffLayout() {
   )
 
   return (
-    <div className={`staff-shell ${current.id === 'listado-ventas' ? 'staff-shell-sale-list ' : ''}${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : current.id === 'pedidos' ? 'staff-shell-orders' : current.id === 'usuarios' ? 'staff-shell-users' : ''}`}>
+    <div className={`staff-shell ${current.id === 'listado-ventas' ? 'staff-shell-sale-list ' : ''}${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : current.id === 'pedidos' ? 'staff-shell-orders' : current.id === 'usuarios' ? 'staff-shell-users' : current.id === 'reportes' ? 'staff-shell-reports' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">
@@ -125,7 +128,7 @@ export function StaffLayout() {
             </svg>
           </button>
 
-          {current.id !== 'ventas' && current.id !== 'inventario' && current.id !== 'listado-ventas' && current.id !== 'caja' && current.id !== 'pedidos' && current.id !== 'usuarios' && <div className="staff-page-heading">
+          {current.id !== 'ventas' && current.id !== 'inventario' && current.id !== 'listado-ventas' && current.id !== 'caja' && current.id !== 'pedidos' && current.id !== 'usuarios' && current.id !== 'reportes' && <div className="staff-page-heading">
             <div>{current.id !== 'productos' && <span className="staff-eyebrow">{current.group}</span>}
               <div className="staff-title-row"><h1>{current.label}</h1></div>
               <p>{current.description}</p>
@@ -138,12 +141,16 @@ export function StaffLayout() {
         </header>
         <main id="staff-content" className="staff-content" ref={contentRef} tabIndex={-1}>
 
-          {current.id === 'pedidos' ? <OrdersPage key={session.user.id} /> : current.id === 'listado-ventas' ? <SaleListPage key={session.user.id} onAccountTarget={setSaleAccountTarget} /> : current.id === 'ventas' ? <SalesPage key={session.user.id} /> : current.id === 'usuarios' ? <UsersPage key={session.user.id} /> : current.id === 'inventario' ? <InventoryPage key={session.user.id} /> : current.id === 'productos' ? <ProductsPage /> : current.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} headerTarget={cashHeaderTarget} /> : current.id === 'compras' ? <PurchasesPage key={session.user.id} /> : current.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
-            <span className="staff-empty-icon"><NavigationIcon section={current.id} /></span>
-            <h2 id="staff-empty-title">{current.label} estará disponible próximamente</h2>
+          {items.filter(item => visited.includes(item.id) || item.id === current.id).map(item => (
+            <Activity key={session.user.id + ':' + session.user.role + ':' + item.id} mode={item.id === current.id ? 'visible' : 'hidden'}>
+              {item.id === 'reportes' ? <ReportsPage key={session.user.id} /> : item.id === 'pedidos' ? <OrdersPage key={session.user.id} /> : item.id === 'listado-ventas' ? <SaleListPage key={session.user.id} onAccountTarget={setSaleAccountTarget} /> : item.id === 'ventas' ? <SalesPage key={session.user.id} /> : item.id === 'usuarios' ? <UsersPage key={session.user.id} /> : item.id === 'inventario' ? <InventoryPage key={session.user.id} /> : item.id === 'productos' ? <ProductsPage /> : item.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} headerTarget={cashHeaderTarget} /> : item.id === 'compras' ? <PurchasesPage key={session.user.id} /> : item.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+            <span className="staff-empty-icon"><NavigationIcon section={item.id} /></span>
+            <h2 id="staff-empty-title">{item.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>
             <button type="button" className="staff-text-link" onClick={() => selectSection('ventas')}>Ir a ventas</button>
           </section>}
+            </Activity>
+          ))}
         </main>
       </div>
     </div>

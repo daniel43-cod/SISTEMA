@@ -12,3 +12,17 @@
 .catalog-editor h2 { padding-right: 40px; }
 .catalog-editor .catalog-close { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; font-size: 26px; }
 .catalog-editor .catalog-close:hover { background: #f1f5f9; }
+
+.catalog-add-button .catalog-create-label { display: none; }
+@media (min-width: 801px) {
+  .catalog-page:has(.catalog-create-responsive) { display: flex; flex-direction: column; gap: 12px; padding-bottom: 0; }
+  .catalog-page > .catalog-create-responsive,
+  .catalog-page > .product-toolbar { order: -1; align-self: flex-end; }
+  .catalog-page .catalog-add-button.catalog-create-responsive { position: static; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; height: auto; min-height: 44px; padding: 10px 16px; border-radius: 8px; box-shadow: none; font: inherit; }
+  .catalog-add-button.catalog-create-responsive .catalog-create-label { display: inline; font-size: .9rem; line-height: 1.3; }
+  .catalog-add-button.catalog-create-responsive > span[aria-hidden] { font-size: 24px; }
+}
+
+.catalog-panel-actions { display: flex; align-items: center; gap: 12px; }
+.product-create-panel > .product-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+@media (max-width: 800px) { .product-create-panel > .product-toolbar { margin-bottom: 0; } }

@@ -50,9 +50,9 @@ export function BrandsPage() {
       <BrandForm key={editing?.idMarca ?? "new"} brand={editing} onSaved={() => { setNotice(editing ? 'Marca actualizada correctamente.' : 'Marca creada correctamente.'); reload(); close() }} />
     </section> : <>
       {/* El listado se oculta al abrir el formulario y se recarga después de guardar. */}
-      <BrandList items={items} loading={loading} error={error} reload={reload} pending={pending} onStateChange={changeState} onEdit={item => { setEditing(item); setNotice(""); setOpen(true) }} />
-      <button type="button" ref={add} disabled={pending || loading} className="catalog-add-button" aria-label="Crear marca" title="Crear marca"
-        onClick={() => { setNotice(''); setOpen(true) }}><span aria-hidden="true">+</span></button>
+      <BrandList createAction={<button type="button" ref={add} disabled={pending || loading} className="catalog-add-button catalog-create-responsive" aria-label="Crear marca" title="Crear marca"
+        onClick={() => { setNotice(''); setOpen(true) }}><span aria-hidden="true">+</span><span className="catalog-create-label">Crear marca</span></button>} items={items} loading={loading} error={error} reload={reload} pending={pending} onStateChange={changeState} onEdit={item => { setEditing(item); setNotice(""); setOpen(true) }} />
+      
     </>}
   </div>
 }

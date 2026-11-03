@@ -75,13 +75,13 @@ export function PresentationsPage() {
         : <PresentationForm onCreated={() => { reload(); setNotice('Presentación creada correctamente.'); closeForm() }} />}
     </section>}
     {/* Oculta el listado al crear o editar; vuelve a mostrarlo al cerrar el formulario. */}
-    {!formOpen && <PresentationList items={items} loading={loading} error={error} onReload={reload}
-      onEdit={canEdit ? startEdit : undefined} onStateChange={canEdit ? changeState : undefined} pending={pending} editing={formOpen} />}
-    {canEdit && !formOpen && <button ref={addButton} type="button" className="catalog-add-button"
+    {!formOpen && <PresentationList createAction={canEdit && <button ref={addButton} type="button" className="catalog-add-button catalog-create-responsive"
       disabled={pending} aria-label="Crear presentación" title="Crear presentación" aria-expanded={formOpen}
       onClick={() => { setNotice(''); setFormOpen(true) }}>
-      <span aria-hidden="true">+</span>
-    </button>}
+      <span aria-hidden="true">+</span><span className="catalog-create-label">Crear presentación</span>
+    </button>} items={items} loading={loading} error={error} onReload={reload}
+      onEdit={canEdit ? startEdit : undefined} onStateChange={canEdit ? changeState : undefined} pending={pending} editing={formOpen} />}
+    
   </div>
 }
 
