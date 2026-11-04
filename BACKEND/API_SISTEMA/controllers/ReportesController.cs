@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using API_SISTEMA.Dtos.Compras;
+using API_SISTEMA.Dtos.Gastos;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Services.Compras;
+using API_SISTEMA.Services.Gastos;
 using API_SISTEMA.Services.Ventas;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +18,7 @@ namespace API_SISTEMA.Controllers;
 [EnableRateLimiting("ventas")]
 [TypeFilter(typeof(VentaExceptionFilter))]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class ReportesController(ReporteVentasIntervaloService reporte, ReporteComprasService reporteCompras) : ControllerBase
+public sealed class ReportesController(ReporteVentasIntervaloService reporte, ReporteComprasService reporteCompras, ReporteGastosService reporteGastos) : ControllerBase
 {
     [HttpGet("ventas-acumuladas")]
     public async Task<ActionResult<ReporteVentasAcumuladasDto>> VentasAcumuladas(
@@ -49,6 +51,30 @@ public async Task<ActionResult<ReporteComprasDto>> ComprasCajaActiva(
     }
 
     var resultado = await reporteCompras.ConsultarCajaActiva(
+        idUsuario,
+        ct);
+
+    if (resultado is null)
+    {
+        return NoContent();
+    }
+
+    return Ok(resultado);
+}
+
+[HttpGet("gastos-caja-activa")]
+public async Task<ActionResult<ReporteGastosDto>> GastosCajaActiva(
+    CancellationToken ct)
+{
+    if (!int.TryParse(
+            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            out var idUsuario) ||
+        idUsuario <= 0)
+    {
+        return Unauthorized();
+    }
+
+    var resultado = await reporteGastos.ConsultarCajaActiva(
         idUsuario,
         ct);
 

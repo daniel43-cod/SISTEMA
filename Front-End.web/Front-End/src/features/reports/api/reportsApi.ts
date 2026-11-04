@@ -17,6 +17,52 @@ export type PurchasesReport = {
   puntos: PurchasePoint[]
 }
 
+export type ExpensePoint = {
+  idGasto: number
+  fecha: string
+  montoGasto: number
+}
+
+export type ExpensesReport = {
+  idSesionCaja: number
+  apertura: string
+  hasta: string
+  totalGastos: number
+  cantidadGastos: number
+  puntos: ExpensePoint[]
+}
+
+export async function getExpensesReport( token: string, signal?: AbortSignal,
+): Promise<ExpensesReport | null> {
+  const result = await requestJson('/reportes/gastos-caja-activa', { token, signal },)
+
+  // Sin caja activa, el backend responde 204.
+  if (result === null) return null
+
+  if (
+    !record(result) ||
+    !Number.isSafeInteger(result.idSesionCaja) ||
+    Number(result.idSesionCaja) <= 0 ||
+    !date(result.apertura) ||
+    !date(result.hasta) ||
+    !amount(result.totalGastos) ||
+    !count(result.cantidadGastos) ||
+    !Array.isArray(result.puntos) ||
+    result.puntos.length !== result.cantidadGastos ||
+    !result.puntos.every(p =>
+      record(p) &&
+      Number.isSafeInteger(p.idGasto) &&
+      Number(p.idGasto) > 0 &&
+      date(p.fecha) &&
+      amount(p.montoGasto)
+    )
+  ) {
+    throw new ApiError('El reporte de gastos no tiene el formato esperado.',)
+  }
+
+  return result as ExpensesReport
+}
+
 export async function getPurchasesReport(
   token: string,
   signal?: AbortSignal,

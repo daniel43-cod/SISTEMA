@@ -200,6 +200,9 @@ builder.Services.AddScoped<API_SISTEMA.Services.Marca.MarcaActualizarService>();
 //catalogo publico
 builder.Services.AddScoped<CatalogoPublicoService>();
 
+//Gastos
+builder.Services.AddScoped<ReporteGastosService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
