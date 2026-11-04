@@ -3,7 +3,7 @@ import { InventoryLookup } from '../components/InventoryLookup'
 import { loadCatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
 import type { CatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
 import { clearCatalogLookupCache } from '../../../shared/cache/catalogLookupCache'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -19,6 +19,24 @@ const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ
 export function InventoryPage() {
   const { session, logout } = useAuth()
   const [totalVisible, setTotalVisible] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 800px)').matches)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [draftCategory, setDraftCategory] = useState('')
+  const [draftBrand, setDraftBrand] = useState('')
+  const filterDialog = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 800px)')
+    const update = () => { setIsMobile(media.matches); if (!media.matches) setFiltersOpen(false) }
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+  useEffect(() => {
+    if (!filtersOpen) return
+    const dialog = filterDialog.current
+    const previousFocus = document.activeElement
+    dialog?.showModal()
+    return () => { dialog?.close(); if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus() }
+  }, [filtersOpen])
   const [categoryQuery, setCategoryQuery] = useState('')
   const [brandQuery, setBrandQuery] = useState('')
   const [categoryId, setCategoryId] = useState<number>()
@@ -73,6 +91,7 @@ export function InventoryPage() {
 
   function activateSearch(mode: 'product' | 'category' | 'brand') {
     setPage(1)
+    if (isMobile) return
     if (mode !== 'product') { setQuery(''); setText(''); setSuggestionsOpen(false) }
     if (mode !== 'category') { setCategoryId(undefined); setCategoryQuery('') }
     if (mode !== 'brand') { setBrandId(undefined); setBrandQuery('') }
@@ -109,7 +128,7 @@ export function InventoryPage() {
           </li>)}</ul> : <p role="status">No se encontraron productos.</p>}
       </div>}
       </div>
-      <InventoryLookup label="Categoría" items={lookups.categories.map(item => ({ id: item.idCategoria, nombre: item.nombre }))}
+      {!isMobile && <><InventoryLookup label="Categoría" items={lookups.categories.map(item => ({ id: item.idCategoria, nombre: item.nombre }))}
         query={categoryQuery} onQueryChange={value => { activateSearch('category'); setCategoryQuery(value) }}
         selected={categoryId} loading={lookupLoading} error={lookupError}
         onSelect={id => { setCategoryId(id); setPage(1) }} />
@@ -117,12 +136,35 @@ export function InventoryPage() {
         query={brandQuery} onQueryChange={value => { activateSearch('brand'); setBrandQuery(value) }}
         selected={brandId} loading={lookupLoading} error={lookupError}
         onSelect={id => { setBrandId(id); setPage(1) }} />
-      <RefreshButton loading={loading || names.loading || lookupLoading} label="Actualizar inventario"
-        onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} />
-    </div>
+      </>}
+      {!isMobile && <RefreshButton loading={loading || names.loading || lookupLoading} label="Actualizar inventario"
+        onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} />}
+      {isMobile && <button type="button" className="inventory-filter-button" aria-label="Abrir filtros de inventario" aria-haspopup="dialog" onClick={() => {
+        setDraftCategory(categoryId ? String(categoryId) : ''); setDraftBrand(brandId ? String(brandId) : ''); setFiltersOpen(true)
+      }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M3 5h18M6 11h12M9 17h6" /></svg>
+        <span>{Number(!!categoryId) + Number(!!brandId)}</span>
+      </button>}    </div>
   )
   return <section className="inventory-page" aria-label="Consulta de inventario" aria-busy={loading}>
-    {headerTarget ? createPortal(toolbar, headerTarget) : toolbar}
+    {isMobile && headerTarget && createPortal(<div className="inventory-mobile-heading"><h2>Inventario</h2><RefreshButton label="Actualizar inventario" loading={loading || lookupLoading} onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} /></div>, headerTarget)}
+    {headerTarget && !isMobile ? createPortal(toolbar, headerTarget) : toolbar}
+    {filtersOpen && createPortal(<dialog ref={filterDialog} className="inventory-filter-dialog" aria-labelledby="inventory-filter-title" onCancel={event => { event.preventDefault(); setFiltersOpen(false) }}>
+      <div className="inventory-filter-grip" aria-hidden="true" />
+      <div className="inventory-filter-title"><h2 id="inventory-filter-title">Filtros</h2><button type="button" aria-label="Cerrar filtros" onClick={() => setFiltersOpen(false)}>×</button></div>
+      {lookupError && <p role="alert">{lookupError}</p>}
+      <label>Categoría<select value={draftCategory} disabled={lookupLoading || !!lookupError} onChange={event => {
+        setDraftCategory(event.target.value)
+        if (draftBrand && event.target.value && !lookups.brands.some(brand => brand.idMarca === Number(draftBrand) && brand.idCategoria === Number(event.target.value))) setDraftBrand('')
+      }}><option value="">Todas</option>{lookups.categories.map(category => <option key={category.idCategoria} value={category.idCategoria}>{category.nombre}</option>)}</select></label>
+      <label>Marca<select value={draftBrand} disabled={lookupLoading || !!lookupError} onChange={event => setDraftBrand(event.target.value)}><option value="">Todas</option>{lookups.brands.filter(brand => !draftCategory || brand.idCategoria === Number(draftCategory)).map(brand => <option key={brand.idMarca} value={brand.idMarca}>{brand.nombre}</option>)}</select></label>
+      <div className="inventory-filter-actions"><button type="button" onClick={() => { setDraftCategory(''); setDraftBrand('') }}>Limpiar</button><button type="button" disabled={lookupLoading || !!lookupError} onClick={() => {
+        setCategoryId(draftCategory ? Number(draftCategory) : undefined); setBrandId(draftBrand ? Number(draftBrand) : undefined)
+        setCategoryQuery(lookups.categories.find(category => category.idCategoria === Number(draftCategory))?.nombre ?? '')
+        setBrandQuery(lookups.brands.find(brand => brand.idMarca === Number(draftBrand))?.nombre ?? '')
+        setPage(1); setFiltersOpen(false)
+      }}>Aplicar</button></div>
+    </dialog>, document.body)}
     {loading ? <p role="status">Cargando inventario…</p> : error ? <div role="alert">
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>
     </div> : data && <>
@@ -153,10 +195,10 @@ export function InventoryPage() {
           <thead><tr><th scope="col">Código de barras</th><th scope="col">Producto</th><th scope="col">Marca</th>
             <th scope="col" className="inventory-number">Existencia</th><th scope="col" className="inventory-number">Precio Costo</th><th scope="col" className="inventory-number">Costo</th></tr></thead>
           <tbody>{data.items.map(item => <tr key={item.idProducto}>
-            <td className="inventory-barcode">{item.codigoBarra || 'Sin código'}</td><td>{item.nombre}</td><td>{item.marca}</td>
-            <td className="inventory-number">{item.stock.toLocaleString('es-GT')}</td>
-            <td className="inventory-number">{item.precioPromedioCompra === null ? 'Sin registro' : money.format(item.precioPromedioCompra)}</td>
-            <td className="inventory-number">{item.valorInventario === null ? 'Sin costo' : typeof item.valorInventario === 'number' && Number.isFinite(item.valorInventario) ? money.format(item.valorInventario) : 'No disponible'}</td>
+            <td data-label="Código" className="inventory-barcode">{item.codigoBarra || 'Sin código'}</td><td data-label="Producto">{item.nombre}</td><td data-label="Marca">{item.marca}</td>
+            <td data-label="Existencia" className="inventory-number">{item.stock.toLocaleString('es-GT')}</td>
+            <td data-label="Costo unitario" className="inventory-number">{item.precioPromedioCompra === null ? 'Sin registro' : money.format(item.precioPromedioCompra)}</td>
+            <td data-label="Costo total" className="inventory-number">{item.valorInventario === null ? 'Sin costo' : typeof item.valorInventario === 'number' && Number.isFinite(item.valorInventario) ? money.format(item.valorInventario) : 'No disponible'}</td>
           </tr>)}</tbody>
         </table>
       </div> : <p>No hay productos{ text ? ' que coincidan con la búsqueda' : ' en esta página'}.</p>}

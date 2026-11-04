@@ -38,3 +38,13 @@
   .staff-shell-products .presentations-page { width: 100%; }
   .staff-shell-products .presentations-page > .presentation-card:not(.catalog-editor) { max-width: none; flex-basis: 100%; }
 }
+
+@media (max-width: 800px) {
+  .presentation-card.presentation-list { padding: 12px; border: 0; background: #f5f7fb; }
+  .presentation-list .presentation-list-items { display: grid; gap: 12px; }
+  .presentation-list .presentation-list-items > li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; border: 1px solid #dce5ef; border-radius: 16px; background: #fff; }
+  .presentation-list .presentation-list-items > li > strong { font-size: 1rem; min-height: 32px; display: flex; align-items: center; }
+  .presentation-list .presentation-row-actions { justify-content: space-between; width: 100%; }
+  .presentation-list .presentation-row-actions button { min-height: 44px; }
+  .presentation-list .catalog-row-open { border-radius: 16px; }
+}

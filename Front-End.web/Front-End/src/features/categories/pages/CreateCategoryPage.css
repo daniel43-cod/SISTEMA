@@ -65,3 +65,20 @@
 @media (max-width: 600px) {
   .category-table { min-width: 440px; }
 }
+
+@media (max-width: 800px) {
+  .category-list-card { padding: 12px; border: 0; background: #f5f7fb; }
+  .category-list-card .category-table-scroll { overflow: visible; }
+  .category-list-card .category-table { display: block; min-width: 0; width: 100%; }
+  .category-list-card .category-table thead { display: none; }
+  .category-list-card .category-table tbody { display: grid; gap: 12px; }
+  .category-list-card .category-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; border: 1px solid #dce5ef; border-radius: 16px; background: #fff; }
+  .category-list-card .category-table td { display: grid; align-content: center; min-width: 0; width: auto; padding: 0; border: 0; text-align: left; }
+  .category-list-card .category-table td:first-child { grid-column: 1 / -1; min-height: 52px; }
+  .category-list-card .category-table-name { display: flex; align-items: center; gap: 12px; }
+  .category-list-card .category-table-name strong { min-width: 0; font-size: 1rem; overflow-wrap: anywhere; }
+  .category-list-card .category-table-action { justify-items: start; }
+  .category-list-card .category-table-action:last-child { justify-items: end; }
+  .category-list-card .category-table-action button { min-height: 44px; }
+  .category-list-card .catalog-row-open { border-radius: 8px; }
+}
