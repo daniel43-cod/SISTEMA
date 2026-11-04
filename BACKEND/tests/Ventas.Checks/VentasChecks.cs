@@ -344,6 +344,15 @@ await using (var db = new CheckDb(options))
     var otraVenta = new API_SISTEMA.Models.Ventas { id_sesion_caja = 1, id_cliente = 1, id_usuario = 2,
         id_estado_venta = 2, total = 25, subtotal = 25, saldo_pendiente = 25, origen = "PRUEBA", fecha_venta = DateTime.Now };
     db.ventas.Add(otraVenta); await db.SaveChangesAsync();
+    var listadoVendedor = await listado.ListarVentas(1);
+    Check(listadoVendedor.Count == inicial.Count && listadoVendedor.All(v => v.id_usuario == 1 && v.id_ventas != otraVenta.id_ventas),
+        "Listado general: vendedor solo recibe ventas propias de la caja activa");
+    var listadoAdministrador = await listado.ListarVentas(2);
+    Check(listadoAdministrador.Any(v => v.id_usuario == 1) && listadoAdministrador.Any(v => v.id_usuario == 2),
+        "Listado general: administrador conserva ventas de todos los responsables");
+    var paginaVendedor = await listado.ListarVentas(1, new() { pagina = 1, tamanoPagina = 1 });
+    Check(paginaVendedor.Count == 1 && paginaVendedor[0].id_usuario == 1,
+        "Listado general: limita al vendedor antes de paginar");
     var filtroUsuario = new FiltrarVentasUsuarioService(db, listado);
     var delVendedor = await filtroUsuario.Listar(2, 1);
     Check(delVendedor.Count > 0 && delVendedor.All(v => v.id_usuario == 1 && v.id_ventas != historica.id_ventas) &&

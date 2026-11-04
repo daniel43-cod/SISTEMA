@@ -35,12 +35,20 @@ namespace API_SISTEMA.Services.Ventas
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
             var usuario = await _context.usuarios.AsNoTracking().Include(u => u.rol).FirstOrDefaultAsync(u => u.id_usuario == idUsuario, ct);
 
-            if (usuario == null)
+            if (usuario is null || !usuario.estado || usuario.rol is null || !usuario.rol.estado ||
+                (usuario.rol.nombre != Roles.Administrador && usuario.rol.nombre != Roles.Vendedor))
             {
-                throw new UnauthorizedAccessException("Usuario no encontrado.");
+                throw new UnauthorizedAccessException("No tienes permiso para consultar estas ventas.");
             }
 
             var puedeVerGanancia = usuario.estado && usuario.rol is { estado: true, nombre: Roles.Administrador };
+            // El turno es compartido; el vendedor solo puede consultar sus propias ventas.
+            if (usuario.rol.nombre == Roles.Vendedor)
+            {
+                if (idUsuarioFiltro.HasValue && idUsuarioFiltro.Value != idUsuario)
+                    throw new UnauthorizedAccessException("Solo un administrador puede consultar ventas de otro usuario.");
+                idUsuarioFiltro = idUsuario;
+            }
 
             // Consulta del turno compartido; el responsable de cada operacion se conserva.
             int? idSesionCaja = null;
