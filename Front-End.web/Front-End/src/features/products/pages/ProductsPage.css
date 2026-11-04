@@ -364,3 +364,22 @@
   outline-offset: 1px;
 }
 .product-create-editor .input[aria-invalid="true"] { border-color: var(--color-error); }
+
+/* Productos en tarjetas en móvil; la tabla se conserva en escritorio. */
+@media (max-width: 800px) {
+  .product-list-card { max-width: none; padding: 12px; background: #f5f7fb; border: 0; }
+  .product-list-card .product-table-scroll { overflow: visible; }
+  .product-list-card .product-table { display: block; width: 100%; min-width: 0; }
+  .product-list-card .product-table thead { display: none; }
+  .product-list-card .product-table tbody { display: grid; gap: 12px; }
+  .product-list-card .product-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 16px; border: 1px solid #dce5ef; border-radius: 16px; background: #fff; }
+  .product-list-card .product-table td { display: grid; align-content: center; gap: 4px; min-width: 0; width: auto; padding: 0; border: 0; text-align: left; overflow-wrap: anywhere; }
+  .product-list-card .product-table td:first-child { grid-column: 1 / -1; }
+  .product-list-card .product-table .product-name-button { min-height: 44px; font-size: 1rem; color: var(--color-text); }
+  .product-list-card .product-table td:nth-child(2) { grid-column: 1 / -1; font-size: .8rem; color: var(--color-muted); }
+  .product-list-card .product-table td:nth-child(2)::before { content: 'Marca'; font-size: .75rem; }
+  .product-list-card .product-table td:nth-child(3) { grid-column: 1; justify-items: start; }
+  .product-list-card .product-table td:last-child { grid-column: 2; justify-items: end; }
+  .product-list-card .product-table td:last-child button { min-height: 44px; padding: 8px 12px; border: 0; background: #eff6ff; border-radius: 8px; color: #075b96; }
+  .product-list-card .product-table .product-stock-status { white-space: normal; font-size: .75rem; }
+}

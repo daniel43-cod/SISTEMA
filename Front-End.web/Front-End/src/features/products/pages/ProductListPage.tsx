@@ -1,4 +1,4 @@
-﻿import { createPortal } from 'react-dom'
+import { createPortal } from 'react-dom'
 import '../../../shared/ui/catalog-row.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
@@ -124,15 +124,15 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
           <table className="product-table">
             <thead><tr><th scope="col">Producto</th><th scope="col">Marca</th><th scope="col">Estado</th><th scope="col">Editar</th></tr></thead>
             <tbody>{data.items.map(product => <tr key={product.idProducto}>
-              <td><button className="product-name-button" type="button" disabled={busy}
+              <td data-label="Producto"><button className="product-name-button" type="button" disabled={busy}
                 aria-label={`Ver detalles de ${product.nombre}`} aria-expanded={selected === product.idProducto}
                 aria-controls="product-detail"
                 onClick={event => { trigger.current = event.currentTarget; setSelected(product.idProducto) }}>{product.nombre}</button></td>
-              <td>{product.marca}</td>
-              <td><span className={`product-stock-status ${product.stockUnidades <= 0 ? 'is-empty' : product.stockUnidades <= product.stockMinimo ? 'is-low' : 'is-available'}`}>
+              <td data-label="Marca">{product.marca}</td>
+              <td data-label="Estado"><span className={`product-stock-status ${product.stockUnidades <= 0 ? 'is-empty' : product.stockUnidades <= product.stockMinimo ? 'is-low' : 'is-available'}`}>
                 {product.stockUnidades <= 0 ? 'Sin existencias' : product.stockUnidades <= product.stockMinimo ? 'Stock bajo' : 'Disponible'}
               </span></td>
-              <td><button className="Product-update-button" type="button" disabled={busy}
+              <td data-label="Editar"><button className="Product-update-button" type="button" disabled={busy}
                 aria-label={`Editar ${product.nombre}`} aria-controls="product-detail"
                 onClick={event => {
                   trigger.current = event.currentTarget
