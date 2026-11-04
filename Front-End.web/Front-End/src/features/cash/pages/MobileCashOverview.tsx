@@ -26,14 +26,19 @@ export function MobileCashOverview({ current, summary, error, saving, onClose, o
   })
   return <div className="cash-mobile-view">
     <section className="cash-mobile-balance" aria-label="Resumen de caja">
-      <span>Monto esperado en caja</span>
-      <strong className="cash-mobile-expected">{!error && validSummary ? money(validSummary.saldo_esperado) : '—'}</strong>
+      <div className="cash-mobile-balance-heading">
+        <div className="cash-mobile-amount-block"><span>Monto esperado en caja</span><strong className="cash-mobile-expected">{!error && validSummary ? money(validSummary.saldo_esperado) : '—'}</strong></div>
+        <div className="cash-mobile-opening-person">
+          <span>Abierta por</span>
+          <strong>{current.usuario_apertura}</strong>
+          <time dateTime={current.fecha_apertura}>{openingDate.format(new Date(current.fecha_apertura))}</time>
+        </div>
+      </div>
       <dl>
         <div><dt>Inicial</dt><dd>{money(current.monto_inicial)}</dd></div>
         <div><dt>Entradas</dt><dd className="cash-incoming">{!error && validSummary ? '+ ' + money(validSummary.total_entradas) : '—'}</dd></div>
         <div><dt>Salidas</dt><dd className="cash-outgoing">{!error && validSummary ? '− ' + money(validSummary.total_salidas) : '—'}</dd></div>
       </dl>
-      <p>Abierta por {current.usuario_apertura} · {openingDate.format(new Date(current.fecha_apertura))}</p>
     </section>
     {elapsedHours >= 24 && <p className="cash-mobile-duration">Este turno lleva {Math.floor(elapsedHours / 24)} d {elapsedHours % 24} h abierto.</p>}
     {error ? <p role="alert" className="cash-error">{error} Usa actualizar para volver a consultar.</p> : !validSummary ? <p role="status">Consultando movimientos…</p> : <>

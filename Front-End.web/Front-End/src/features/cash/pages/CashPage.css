@@ -1,4 +1,4 @@
-﻿.cash-panel { width: 100%; max-width: 760px; padding: clamp(16px, 4vw, 28px); background: var(--color-surface); color: var(--color-text); border: 1px solid #e2e8f0; border-radius: 16px; display: grid; gap: 20px; }
+.cash-panel { width: 100%; max-width: 760px; padding: clamp(16px, 4vw, 28px); background: var(--color-surface); color: var(--color-text); border: 1px solid #e2e8f0; border-radius: 16px; display: grid; gap: 20px; }
 .cash-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .cash-heading h2 { font-size: 1.2rem; }
 .cash-form, .cash-form fieldset { display: grid; gap: 20px; min-width: 0; }
@@ -205,7 +205,7 @@
   .cash-mobile-view { display: block; padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
   .cash-mobile-balance { padding: 20px; border: 1px solid #d3deed; border-left: 4px solid #075b96; border-radius: 18px; background: #fff; }
   .cash-mobile-balance > span { font-size: .85rem; color: #526477; }
-  .cash-mobile-expected { display: block; font-size: 2rem; margin-top: 10px; font-weight: 750; }
+  .cash-mobile-expected { display: block; font-size: 1.65rem; margin-top: 10px; font-weight: 750; }
   .cash-mobile-balance dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0; padding-top: 18px; border-top: 1px solid #edf2f7; }
   .cash-mobile-balance dt { color: #64748b; font-size: .8rem; }
   .cash-mobile-balance dd { margin: 5px 0 0; font-weight: 650; overflow-wrap: anywhere; }
@@ -230,4 +230,18 @@
   .cash-mobile-actions button + button { border-color: #075b96; background: #075b96; color: #fff; }
   .cash-mobile-actions button:disabled { opacity: .55; cursor: not-allowed; }
   .cash-mobile-view button:focus-visible { outline: 2px solid #075b96; outline-offset: 3px; }
+}
+
+@media (max-width: 800px) {
+  .cash-mobile-balance-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 10px; }
+  .cash-mobile-balance-heading .cash-mobile-expected { margin-top: 0; min-width: 0; overflow-wrap: anywhere; }
+  .cash-mobile-opening-person { display: grid; gap: 4px; min-width: 0; text-align: right; font-size: .75rem; }
+  .cash-mobile-opening-person > span, .cash-mobile-opening-person > time { color: #526477; }
+  .cash-mobile-opening-person > strong { font-size: .85rem; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 800px) {
+  .cash-mobile-balance-heading { align-items: flex-start; margin-top: 0; }
+  .cash-mobile-amount-block { display: grid; gap: 10px; min-width: 0; }
+  .cash-mobile-amount-block > span { font-size: .85rem; color: #526477; }
 }
