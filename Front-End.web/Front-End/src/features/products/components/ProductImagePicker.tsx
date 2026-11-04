@@ -30,7 +30,6 @@ export function ProductImagePicker({ url, file, onChange, disabled, currentImage
     </div>
     <input hidden ref={upload} type="file" accept="image/jpeg,image/png,image/webp" onChange={event => select(event.target.files?.[0])} />
     <input hidden ref={camera} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={event => select(event.target.files?.[0])} />
-    <small>JPEG, PNG o WebP, hasta 5 MB. La cámara depende del dispositivo.</small>
     {file && <small>{file.name}</small>}
   </fieldset>
 }

@@ -1,4 +1,4 @@
-﻿import { useId, useState } from 'react'
+import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useBrands } from '../../brands'
 import { usePresentations } from '../../presentations'
@@ -71,7 +71,6 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
     <ProductImagePicker url={url} file={file} disabled={pending} onChange={(value, image) => { setUrl(value); setFile(image) }} />
     <fieldset className="product-presentations" disabled={pending || loading || !!listError}>
       <legend>Presentaciones de venta</legend>
-      <p>Indica cuántas unidades contiene cada presentación. Ejemplo: unidad = 1, bandeja = 6.</p>
       {rows.map((row, index) => <fieldset key={row.key} className="product-row">
         <legend>Presentación {index + 1}</legend>
         <label className="field">Presentación
@@ -88,7 +87,11 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
         <Input label="Precio de venta" type="number" inputMode="decimal" required min="0.01" max="9999999999999.99" step="0.01"
           value={row.price} onChange={event => update(row.key, 'price', event.target.value)} />
         <button type="button" disabled={rows.length === 1} onClick={() => setRows(current => current.filter(item => item.key !== row.key))}
-          aria-label={'Quitar presentación ' + (index + 1)}>Quitar</button>
+          className="product-remove-presentation" title="Quitar presentación" aria-label={'Quitar presentación ' + (index + 1)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" />
+          </svg>
+        </button>
       </fieldset>)}
       <Button disabled={rows.length >= Math.min(100, presentations.items.length)} onClick={() => {
         setRows(current => [...current, { key: nextKey, presentation: '', units: '1', price: '' }]); setNextKey(value => value + 1)
