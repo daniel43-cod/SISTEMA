@@ -16,5 +16,6 @@ public sealed class PuntoVentaAcumuladaDto
     public int? IdVenta { get; init; }
     public DateTime Fecha { get; init; }
     public decimal MontoVenta { get; init; }
+    public decimal GananciaVenta { get; init; }
     public decimal Acumulado { get; init; }
 }

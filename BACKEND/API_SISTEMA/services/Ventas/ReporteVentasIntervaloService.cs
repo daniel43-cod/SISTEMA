@@ -20,16 +20,17 @@ public sealed class ReporteVentasIntervaloService(SistemaDbContext context, Time
         var hasta = sesion.fecha_cierre ?? ahora;
         if (hasta < sesion.fecha_apertura) throw new ValidationException("Las fechas de la sesión de caja no son válidas.");
         var ventas = await context.ventas.AsNoTracking().Where(v => v.id_sesion_caja == idSesionCaja &&
-                v.fecha_venta >= sesion.fecha_apertura && v.fecha_venta <= hasta)
+            v.fecha_venta >= sesion.fecha_apertura && v.fecha_venta <= hasta)
             .OrderBy(v => v.fecha_venta).ThenBy(v => v.id_ventas)
-            .Select(v => new { v.id_ventas, v.fecha_venta, v.total }).ToListAsync(ct);
+            .Select(v => new { v.id_ventas, v.fecha_venta, v.total, v.ganancia_total }).ToListAsync(ct);
         List<PuntoVentaAcumuladaDto> puntos = [new() { Fecha = sesion.fecha_apertura }];
         decimal acumulado = 0;
         foreach (var venta in ventas)
         {
             ct.ThrowIfCancellationRequested();
             acumulado += venta.total;
-            puntos.Add(new() { IdVenta = venta.id_ventas, Fecha = venta.fecha_venta, MontoVenta = venta.total, Acumulado = acumulado });
+            puntos.Add(new() { IdVenta = venta.id_ventas, Fecha = venta.fecha_venta, MontoVenta = venta.total,
+                GananciaVenta = venta.ganancia_total, Acumulado = acumulado });
         }
         return new() { IdSesionCaja = idSesionCaja, Apertura = sesion.fecha_apertura, Cierre = sesion.fecha_cierre,
             Hasta = hasta, TotalVentas = acumulado, CantidadVentas = ventas.Count, Puntos = puntos };

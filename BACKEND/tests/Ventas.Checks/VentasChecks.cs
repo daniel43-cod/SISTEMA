@@ -496,7 +496,7 @@ await using (var db = new CheckDb(options))
         fecha_apertura = inicio, fecha_cierre = inicio.AddMinutes(95), monto_inicial = 0, observacion_apertura = "Reporte" });
     API_SISTEMA.Models.Ventas VentaReporte(int minuto, decimal monto, decimal saldo) => new()
     { id_sesion_caja = 90, id_cliente = 1, id_usuario = 1, id_estado_venta = saldo > 0 ? 2 : 1,
-        total = monto, subtotal = monto, saldo_pendiente = saldo, origen = "REPORTE", fecha_venta = inicio.AddMinutes(minuto) };
+        total = monto, subtotal = monto, ganancia_total = monto / 4, saldo_pendiente = saldo, origen = "REPORTE", fecha_venta = inicio.AddMinutes(minuto) };
     db.ventas.AddRange(VentaReporte(0, 10, 0), VentaReporte(30, 20, 20), VentaReporte(95, 30, 30));
     await db.SaveChangesAsync();
     var servicio = new ReporteVentasIntervaloService(db, TimeProvider.System);
@@ -513,6 +513,8 @@ await using (var db = new CheckDb(options))
     db.ventas.Add(VentaReporte(30, 5, 0));
     await db.SaveChangesAsync();
     var acumulado = await servicio.ConsultarAcumulado(2, 90);
+    Check(acumulado.Puntos.Select(p => p.GananciaVenta).SequenceEqual(new decimal[] { 0, 2.5m, 5m, 1.25m, 7.5m }),
+        "Reporte: ganancia individual guardada, sin acumular, con apertura en cero y orden por venta");
     Check(acumulado.Puntos.Count == 5 && acumulado.Puntos[0].IdVenta == null && acumulado.Puntos[0].Acumulado == 0 &&
         acumulado.Puntos.Select(p => p.Acumulado).SequenceEqual(new decimal[] { 0, 10, 30, 35, 65 }) &&
         acumulado.CantidadVentas == 4 && acumulado.TotalVentas == 65,

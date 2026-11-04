@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Configuración privada; solo se publica la plantilla sin secretos.
+.env
+.env.*
+!.env.example
+.certs/
+*.key
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

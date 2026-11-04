@@ -1,7 +1,14 @@
 import { requestJson } from '../../../shared/api/httpClient'
 import { ApiError } from '../../../shared/api/ApiError'
 export type ReportSession = { id_sesion_caja: number; fecha_apertura: string; fecha_cierre: string | null; usuario_apertura: string }
-export type SalesPoint = { idVenta: number | null; fecha: string; montoVenta: number; acumulado: number }
+//export type SalesPoint = { idVenta: number | null; fecha: string; montoVenta: number; acumulado: number }
+export type SalesPoint = {
+idVenta: number | null
+  fecha: string
+  montoVenta: number
+  gananciaVenta: number
+  acumulado: number
+}
 export type SalesReport = { idSesionCaja: number; apertura: string; cierre: string | null; hasta: string; totalVentas: number; cantidadVentas: number; puntos: SalesPoint[] }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 const date = (v: unknown): v is string => typeof v === 'string' && Number.isFinite(Date.parse(v))
@@ -15,7 +22,16 @@ export async function listReportSessions(token: string, page: number, signal?: A
 }
 export async function getSalesReport(token: string, sessionId: number, signal?: AbortSignal): Promise<SalesReport> {
   const v = await requestJson('/reportes/ventas-acumuladas?idSesionCaja=' + sessionId, { token, signal })
-  if (!record(v) || v.idSesionCaja !== sessionId || !date(v.apertura) || !date(v.hasta) || (v.cierre !== null && !date(v.cierre)) || !amount(v.totalVentas) || !count(v.cantidadVentas) || !Array.isArray(v.puntos) || v.puntos.length !== Number(v.cantidadVentas) + 1 || !v.puntos.every((p, i) => record(p) && (i === 0 ? p.idVenta === null : Number.isSafeInteger(p.idVenta) && Number(p.idVenta) > 0) && date(p.fecha) && amount(p.montoVenta) && amount(p.acumulado)))
+  if (!record(v) || v.idSesionCaja !== sessionId || !date(v.apertura)
+     || !date(v.hasta) || (v.cierre !== null && !date(v.cierre))
+     || !amount(v.totalVentas) || !count(v.cantidadVentas) 
+     || !Array.isArray(v.puntos) || v.puntos.length !== Number(v.cantidadVentas) + 1 
+     || !v.puntos.every((p, i) => record(p) && (i === 0 ? p.idVenta === null : Number.isSafeInteger(p.idVenta)
+      && Number(p.idVenta) > 0) && date(p.fecha) 
+      && amount(p.montoVenta) &&
+typeof p.gananciaVenta === 'number' &&
+Number.isFinite(p.gananciaVenta) &&
+amount(p.acumulado)))
     throw new ApiError('El reporte de ventas no tiene el formato esperado.')
   let accumulated = 0
   let previousDate = Date.parse(v.apertura)

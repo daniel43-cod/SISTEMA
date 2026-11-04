@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -8,19 +8,34 @@ import './ReportsPage.css'
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: 'short' })
 function SalesChart({ report }: { report: SalesReport }) {
-  const titleId = useId()
   const [active, setActive] = useState(0)
   const [hovered, setHovered] = useState<number | null>(null)
   const points = report.puntos.filter(p => p.idVenta !== null)
-  const max = points.reduce((maximum, p) => Math.max(maximum, p.montoVenta), 1)
+ // const max = points.reduce((maximum, p) => Math.max(maximum, p.montoVenta), 1)
+ const max = points.reduce(
+  (maximum, p) => Math.max(maximum, p.montoVenta, p.gananciaVenta),
+  1,
+)
+
+const min = points.reduce(
+  (minimum, p) => Math.min(minimum, p.montoVenta, p.gananciaVenta),
+  0,
+)
   const beginning = Date.parse(report.apertura)
   const ending = Math.max(beginning + 1, Date.parse(report.hasta))
   const xTime = (time: number) => 100 + (time - beginning) / (ending - beginning) * 820
   const x = (i: number) => xTime(Date.parse(points[i]!.fecha))
-  const y = (value: number) => 270 - value / max * 220
+ // const y = (value: number) => 270 - value / max * 220
+ const y = (value: number) => 270 - (value - min) / (max - min) * 220
   const index = Math.min(active, points.length - 1)
   const selected = points[index]!
   const path = points.map((p, i) => (i === 0 ? 'M' : ' L') + x(i) + ',' + y(p.montoVenta)).join('')
+  const profitPath = points
+  .map(
+    (p, i) =>
+      (i === 0 ? 'M' : ' L') + x(i) + ',' + y(p.gananciaVenta),
+  )
+  .join('')
   function hoverPoint(clientX: number, clientY: number, svg: SVGSVGElement) {
     const bounds = svg.getBoundingClientRect()
     const sx = (clientX - bounds.left) / bounds.width * 960
@@ -28,7 +43,7 @@ function SalesChart({ report }: { report: SalesReport }) {
     let nearest: number | null = null
     let distance = 14 * 14
     points.forEach((p, i) => {
-      const next = (x(i) - sx) ** 2 + (y(p.montoVenta) - sy) ** 2
+      const next = (x(i) - sx) ** 2 + (y(p.gananciaVenta) - sy) ** 2
       if (next <= distance) { nearest = i; distance = next }
     })
     setHovered(nearest)
@@ -36,21 +51,58 @@ function SalesChart({ report }: { report: SalesReport }) {
   }
   if (!selected) return <p>No hay ventas para mostrar en la gráfica.</p>
   return <div className="report-chart">
-    <svg viewBox="0 0 960 340" role="img" aria-labelledby={titleId}>
-      <title id={titleId}>Importe de cada venta desde {date.format(new Date(report.apertura))}. Total: {money.format(report.totalVentas)}.</title>
-      {[0, 1, 2, 3, 4].map(i => <g key={i}><line x1="100" x2="920" y1={y(max * i / 4)} y2={y(max * i / 4)} stroke="#dce5ee" /><text x="90" y={y(max * i / 4) + 4} textAnchor="end">{money.format(max * i / 4)}</text></g>)}
+    <svg viewBox="0 0 960 340" role="img" aria-label="Importe y ganancia individual de cada venta">
+      {/* Escala vertical compartida por los importes y las ganancias de las ventas. */}
+      {[0, 1, 2, 3, 4].map(i => <g key={i}><line x1="100" x2="920" y1={y(min + (max - min) * i / 4)} y2={y(min + (max - min) * i / 4)} stroke="#dce5ee" /><text x="90" y={y(min + (max - min) * i / 4) + 4} textAnchor="end">{money.format(min + (max - min) * i / 4)}</text></g>)}
       <path d={path} fill="none" stroke="#0876bc" strokeWidth="3" strokeLinejoin="round" />
+      {/* Línea verde: ganancia individual de cada venta, sin acumular. */}
+      <path d={profitPath} fill="none" stroke="#16a34a" strokeWidth="3" strokeLinejoin="round" />
+      {points.length <= 60 && points.map((p, i) => (
+        <circle key={`profit-${p.idVenta}`} cx={x(i)} cy={y(p.gananciaVenta)} r="3" fill="#16a34a" />
+      ))}
       {points.length <= 60 && points.map((p, i) => <circle key={p.idVenta ?? 'opening'} cx={x(i)} cy={y(p.montoVenta)} r="3" fill="#0876bc" />)}
       {[0, 1, 2, 3, 4].map(i => <text key={i} x={100 + i * 205} y="302" textAnchor="middle">{date.format(new Date(beginning + (ending - beginning) * i / 4))}</text>)}
-      <circle cx={x(index)} cy={y(selected.montoVenta)} r="6" fill="#07558e" stroke="white" strokeWidth="2" />
+<circle
+  cx={x(index)}
+  cy={y(selected.gananciaVenta)}
+  r="6"
+  fill="#16a34a"
+  stroke="white"
+  strokeWidth="2"
+/>
       <rect x="86" y="26" width="848" height="258" fill="transparent"
         onPointerMove={event => hoverPoint(event.clientX, event.clientY, event.currentTarget.ownerSVGElement!)}
         onPointerDown={event => hoverPoint(event.clientX, event.clientY, event.currentTarget.ownerSVGElement!)}
         onPointerLeave={() => setHovered(null)} />
-      {hovered !== null && <g pointerEvents="none" aria-hidden="true" transform={'translate(' + Math.min(852, Math.max(168, x(hovered))) + ',' + Math.max(30, y(points[hovered]!.montoVenta) - 24) + ')'}>
-        <rect x="-68" y="-22" width="136" height="32" rx="6" fill="#07558e" />
-        <text textAnchor="middle" y="-2" style={{ fill: '#fff', fontWeight: 600 }}>{money.format(points[hovered]!.montoVenta)}</text>
-      </g>}
+      {hovered !== null && (
+  <g
+    pointerEvents="none"
+    aria-hidden="true"
+    transform={
+      'translate(' +
+      Math.min(820, Math.max(200, x(hovered))) +
+      ',' +
+      Math.max(30, y(points[hovered]!.gananciaVenta) - 24) +
+      ')'
+    }
+  >
+    <rect
+      x="-100"
+      y="-22"
+      width="200"
+      height="32"
+      rx="6"
+      fill="#15803d"
+    />
+    <text
+      textAnchor="middle"
+      y="-2"
+      style={{ fill: '#fff', fontWeight: 600 }}
+    >
+      Ganancia: {money.format(points[hovered]!.gananciaVenta)}
+    </text>
+  </g>
+)}
     </svg>
   </div>
 }
