@@ -8,8 +8,10 @@ import './ReportsPage.css'
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: 'short' })
 function SalesChart({ report }: { report: SalesReport }) {
-  const [active, setActive] = useState(0)
-  const [hovered, setHovered] = useState<number | null>(null)
+const [hovered, setHovered] = useState<{
+  index: number
+  series: 'venta' | 'ganancia'
+} | null>(null)
   const points = report.puntos.filter(p => p.idVenta !== null)
  // const max = points.reduce((maximum, p) => Math.max(maximum, p.montoVenta), 1)
  const max = points.reduce(
@@ -27,8 +29,40 @@ const min = points.reduce(
   const x = (i: number) => xTime(Date.parse(points[i]!.fecha))
  // const y = (value: number) => 270 - value / max * 220
  const y = (value: number) => 270 - (value - min) / (max - min) * 220
-  const index = Math.min(active, points.length - 1)
-  const selected = points[index]!
+function hoverPoint(
+  clientX: number,
+  clientY: number,
+  svg: SVGSVGElement,
+) {
+  const matrix = svg.getScreenCTM()
+  if (!matrix) return
+
+  const cursor = new DOMPoint(clientX, clientY)
+    .matrixTransform(matrix.inverse())
+
+  let nearest: typeof hovered = null
+  let distance = 14 * 14
+
+  points.forEach((p, i) => {
+    const series = [
+      { name: 'venta' as const, value: p.montoVenta },
+      { name: 'ganancia' as const, value: p.gananciaVenta },
+    ]
+
+    series.forEach(item => {
+      const next =
+        (x(i) - cursor.x) ** 2 +
+        (y(item.value) - cursor.y) ** 2
+
+      if (next <= distance) {
+        nearest = { index: i, series: item.name }
+        distance = next
+      }
+    })
+  })
+
+  setHovered(nearest)
+}
   const path = points.map((p, i) => (i === 0 ? 'M' : ' L') + x(i) + ',' + y(p.montoVenta)).join('')
   const profitPath = points
   .map(
@@ -36,20 +70,24 @@ const min = points.reduce(
       (i === 0 ? 'M' : ' L') + x(i) + ',' + y(p.gananciaVenta),
   )
   .join('')
-  function hoverPoint(clientX: number, clientY: number, svg: SVGSVGElement) {
-    const bounds = svg.getBoundingClientRect()
-    const sx = (clientX - bounds.left) / bounds.width * 960
-    const sy = (clientY - bounds.top) / bounds.height * 340
-    let nearest: number | null = null
-    let distance = 14 * 14
-    points.forEach((p, i) => {
-      const next = (x(i) - sx) ** 2 + (y(p.gananciaVenta) - sy) ** 2
-      if (next <= distance) { nearest = i; distance = next }
-    })
-    setHovered(nearest)
-    if (nearest !== null) setActive(nearest)
-  }
-  if (!selected) return <p>No hay ventas para mostrar en la gráfica.</p>
+
+if (points.length === 0) {
+  return <p>No hay ventas para mostrar en la gráfica.</p>
+}
+
+const hoveredPoint = hovered ? points[hovered.index] : undefined
+
+const hoveredValue = hoveredPoint
+  ? hovered?.series === 'ganancia'
+    ? hoveredPoint.gananciaVenta
+    : hoveredPoint.montoVenta
+  : 0
+
+const hoveredColor =
+  hovered?.series === 'ganancia' ? '#15803d' : '#07558e'
+
+const hoveredLabel =
+  hovered?.series === 'ganancia' ? 'Ganancia' : 'Total de venta'
   return <div className="report-chart">
     <svg viewBox="0 0 960 340" role="img" aria-label="Importe y ganancia individual de cada venta">
       {/* Escala vertical compartida por los importes y las ganancias de las ventas. */}
@@ -62,45 +100,44 @@ const min = points.reduce(
       ))}
       {points.length <= 60 && points.map((p, i) => <circle key={p.idVenta ?? 'opening'} cx={x(i)} cy={y(p.montoVenta)} r="3" fill="#0876bc" />)}
       {[0, 1, 2, 3, 4].map(i => <text key={i} x={100 + i * 205} y="302" textAnchor="middle">{date.format(new Date(beginning + (ending - beginning) * i / 4))}</text>)}
-<circle
-  cx={x(index)}
-  cy={y(selected.gananciaVenta)}
-  r="6"
-  fill="#16a34a"
-  stroke="white"
-  strokeWidth="2"
-/>
       <rect x="86" y="26" width="848" height="258" fill="transparent"
         onPointerMove={event => hoverPoint(event.clientX, event.clientY, event.currentTarget.ownerSVGElement!)}
         onPointerDown={event => hoverPoint(event.clientX, event.clientY, event.currentTarget.ownerSVGElement!)}
         onPointerLeave={() => setHovered(null)} />
-      {hovered !== null && (
-  <g
-    pointerEvents="none"
-    aria-hidden="true"
-    transform={
-      'translate(' +
-      Math.min(820, Math.max(200, x(hovered))) +
-      ',' +
-      Math.max(30, y(points[hovered]!.gananciaVenta) - 24) +
-      ')'
-    }
-  >
-    <rect
-      x="-100"
-      y="-22"
-      width="200"
-      height="32"
-      rx="6"
-      fill="#15803d"
+        {hovered && hoveredPoint && (
+  <g pointerEvents="none" aria-hidden="true">
+    <circle
+      cx={x(hovered.index)}
+      cy={y(hoveredValue)}
+      r="6"
+      fill={hoveredColor}
+      stroke="white"
+      strokeWidth="2"
     />
-    <text
-      textAnchor="middle"
-      y="-2"
-      style={{ fill: '#fff', fontWeight: 600 }}
+
+    <g
+      transform={`translate(
+        ${Math.min(810, Math.max(210, x(hovered.index)))},
+        ${Math.max(30, y(hoveredValue) - 24)}
+      )`}
     >
-      Ganancia: {money.format(points[hovered]!.gananciaVenta)}
-    </text>
+      <rect
+        x="-110"
+        y="-22"
+        width="220"
+        height="32"
+        rx="6"
+        fill={hoveredColor}
+      />
+
+      <text
+        textAnchor="middle"
+        y="-2"
+        style={{ fill: '#fff', fontWeight: 600 }}
+      >
+        {hoveredLabel}: {money.format(hoveredValue)}
+      </text>
+    </g>
   </g>
 )}
     </svg>
