@@ -139,5 +139,8 @@ namespace API_SISTEMA.Controllers
         public async Task<IActionResult> ListarPagos(int idCompra, CancellationToken ct)
             => Ok(await _pagoCompraService.ListarPagos(idCompra, ct));
 
+
+        
+
     }
 }

@@ -176,6 +176,7 @@ builder.Services.AddScoped<SubirImagenService>();
 builder.Services.AddScoped<BuscarCodigoBarraService>();
 //compras
 builder.Services.AddScoped<CrearCompraService>();
+builder.Services.AddScoped<ReporteComprasService>();
 //ventas
 builder.Services.AddScoped<BuscarVentaService>();
 builder.Services.AddScoped<ActualizarVentaService>();

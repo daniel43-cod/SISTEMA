@@ -2,6 +2,46 @@ import { requestJson } from '../../../shared/api/httpClient'
 import { ApiError } from '../../../shared/api/ApiError'
 export type ReportSession = { id_sesion_caja: number; fecha_apertura: string; fecha_cierre: string | null; usuario_apertura: string }
 //export type SalesPoint = { idVenta: number | null; fecha: string; montoVenta: number; acumulado: number }
+export type PurchasePoint = {
+  idCompra: number
+  fecha: string
+  montoCompra: number
+}
+
+export type PurchasesReport = {
+  idSesionCaja: number
+  apertura: string
+  hasta: string
+  totalCompras: number
+  cantidadCompras: number
+  puntos: PurchasePoint[]
+}
+
+export async function getPurchasesReport(
+  token: string,
+  signal?: AbortSignal,
+): Promise<PurchasesReport | null> {
+  const result = await requestJson('/reportes/compras-caja-activa',{ token, signal },)
+
+  // El backend devuelve 204 cuando no hay caja activa.
+  if (result === null) return null
+
+  if (
+    !record(result) || !Number.isSafeInteger(result.idSesionCaja) ||
+    Number(result.idSesionCaja) <= 0 || !date(result.apertura) ||
+    !date(result.hasta) || !amount(result.totalCompras) || !count(result.cantidadCompras) ||
+    !Array.isArray(result.puntos) || result.puntos.length !== result.cantidadCompras ||
+    !result.puntos.every(p => record(p) && Number.isSafeInteger(p.idCompra) && Number(p.idCompra) > 0 && date(p.fecha) &&
+      amount(p.montoCompra)
+    )
+  ) {
+    throw new ApiError(
+      'El reporte de compras no tiene el formato esperado.',
+    )
+  }
+
+  return result as PurchasesReport
+}
 export type SalesPoint = {
 idVenta: number | null
   fecha: string

@@ -2,34 +2,41 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
-import { getSalesReport, listReportSessions } from '../api/reportsApi'
-import type { ReportSession, SalesReport } from '../api/reportsApi'
+import { getSalesReport,getPurchasesReport, listReportSessions } from '../api/reportsApi'
+import type { ReportSession, SalesReport, PurchasesReport} from '../api/reportsApi'
 import './ReportsPage.css'
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: 'short' })
-function SalesChart({ report }: { report: SalesReport }) {
+function SalesChart({ report, purchasesReport, }: { report: SalesReport
+  purchasesReport: PurchasesReport | null
+}) {
 const [hovered, setHovered] = useState<{
   index: number
-  series: 'venta' | 'ganancia'
+  series: 'venta' | 'ganancia' | 'compra'
 } | null>(null)
   const points = report.puntos.filter(p => p.idVenta !== null)
+ const purchasePoints =
+  purchasesReport?.idSesionCaja === report.idSesionCaja
+    ? purchasesReport.puntos
+    : []
  // const max = points.reduce((maximum, p) => Math.max(maximum, p.montoVenta), 1)
  const max = points.reduce(
   (maximum, p) => Math.max(maximum, p.montoVenta, p.gananciaVenta),
-  1,
+  purchasePoints.reduce((maximum, p) => Math.max(maximum, p.montoCompra), 1),
 )
 
 const min = points.reduce(
   (minimum, p) => Math.min(minimum, p.montoVenta, p.gananciaVenta),
-  0,
+  purchasePoints.reduce((minimum, p) => Math.min(minimum, p.montoCompra), 0),
 )
   const beginning = Date.parse(report.apertura)
   const ending = Math.max(beginning + 1, Date.parse(report.hasta))
   const xTime = (time: number) => 100 + (time - beginning) / (ending - beginning) * 820
   const x = (i: number) => xTime(Date.parse(points[i]!.fecha))
  // const y = (value: number) => 270 - value / max * 220
- const y = (value: number) => 270 - (value - min) / (max - min) * 220
-function hoverPoint(
+  const purchaseX = (i: number) => xTime(Date.parse(purchasePoints[i]!.fecha))
+  const y = (value: number) => 270 - (value - min) / (max - min) * 220
+  function hoverPoint(
   clientX: number,
   clientY: number,
   svg: SVGSVGElement,
@@ -61,6 +68,14 @@ function hoverPoint(
     })
   })
 
+  purchasePoints.forEach((p, i) => {
+    const next = (purchaseX(i) - cursor.x) ** 2 + (y(p.montoCompra) - cursor.y) ** 2
+    if (next <= distance) {
+      nearest = { index: i, series: 'compra' }
+      distance = next
+    }
+  })
+
   setHovered(nearest)
 }
   const path = points.map((p, i) => (i === 0 ? 'M' : ' L') + x(i) + ',' + y(p.montoVenta)).join('')
@@ -70,25 +85,40 @@ function hoverPoint(
       (i === 0 ? 'M' : ' L') + x(i) + ',' + y(p.gananciaVenta),
   )
   .join('')
-
-if (points.length === 0) {
-  return <p>No hay ventas para mostrar en la gráfica.</p>
+if (points.length === 0 && purchasePoints.length === 0) {
+  return <p>No hay ventas ni compras para mostrar en la gráfica.</p>
 }
+const purchasePath = purchasePoints
+  .map(
+    (p, i) =>
+      (i === 0 ? 'M' : ' L') +
+      purchaseX(i) +
+      ',' +
+      y(p.montoCompra),
+  )
+  .join('')
 
-const hoveredPoint = hovered ? points[hovered.index] : undefined
-
-const hoveredValue = hoveredPoint
-  ? hovered?.series === 'ganancia'
-    ? hoveredPoint.gananciaVenta
-    : hoveredPoint.montoVenta
-  : 0
-
-const hoveredColor =
-  hovered?.series === 'ganancia' ? '#15803d' : '#07558e'
-
-const hoveredLabel =
-  hovered?.series === 'ganancia' ? 'Ganancia' : 'Total de venta'
+const hoveredSale = hovered && hovered.series !== 'compra' ? points[hovered.index] : undefined
+const hoveredPurchase = hovered?.series === 'compra' ? purchasePoints[hovered.index] : undefined
+const hoveredPoint = hoveredSale ?? hoveredPurchase
+const hoveredValue = hoveredPurchase
+  ? hoveredPurchase.montoCompra
+  : hoveredSale
+    ? hovered?.series === 'ganancia' ? hoveredSale.gananciaVenta : hoveredSale.montoVenta
+    : 0
+const hoveredX = hoveredPoint ? xTime(Date.parse(hoveredPoint.fecha)) : 0
+const hoveredColor = hovered?.series === 'compra'
+  ? '#ea580c'
+  : hovered?.series === 'ganancia' ? '#15803d' : '#07558e'
+const hoveredLabel = hovered?.series === 'compra'
+  ? ''
+  : hovered?.series === 'ganancia' ? 'Ganancia' : 'Total de venta'
   return <div className="report-chart">
+    <div className="report-legend" aria-label="Leyenda de la gráfica">
+      <span><span className="report-legend-dot report-legend-dot--purchases" aria-hidden="true" />Compras</span>
+      <span><span className="report-legend-dot report-legend-dot--profit" aria-hidden="true" />Ganancia</span>
+      <span><span className="report-legend-dot report-legend-dot--sales" aria-hidden="true" />Ventas</span>
+    </div>
     <svg viewBox="0 0 960 340" role="img" aria-label="Importe y ganancia individual de cada venta">
       {/* Escala vertical compartida por los importes y las ganancias de las ventas. */}
       {[0, 1, 2, 3, 4].map(i => <g key={i}><line x1="100" x2="920" y1={y(min + (max - min) * i / 4)} y2={y(min + (max - min) * i / 4)} stroke="#dce5ee" /><text x="90" y={y(min + (max - min) * i / 4) + 4} textAnchor="end">{money.format(min + (max - min) * i / 4)}</text></g>)}
@@ -100,6 +130,25 @@ const hoveredLabel =
       ))}
       {points.length <= 60 && points.map((p, i) => <circle key={p.idVenta ?? 'opening'} cx={x(i)} cy={y(p.montoVenta)} r="3" fill="#0876bc" />)}
       {[0, 1, 2, 3, 4].map(i => <text key={i} x={100 + i * 205} y="302" textAnchor="middle">{date.format(new Date(beginning + (ending - beginning) * i / 4))}</text>)}
+      {/* Compras individuales de la misma sesión de caja. */}
+<path
+  d={purchasePath}
+  fill="none"
+  stroke="#ea580c"
+  strokeWidth="3"
+  strokeLinejoin="round"
+/>
+
+{purchasePoints.length <= 60 &&
+  purchasePoints.map((p, i) => (
+    <circle
+      key={`purchase-${p.idCompra}`}
+      cx={purchaseX(i)}
+      cy={y(p.montoCompra)}
+      r="3"
+      fill="#ea580c"
+    />
+  ))}
       <rect x="86" y="26" width="848" height="258" fill="transparent"
         onPointerMove={event => hoverPoint(event.clientX, event.clientY, event.currentTarget.ownerSVGElement!)}
         onPointerDown={event => hoverPoint(event.clientX, event.clientY, event.currentTarget.ownerSVGElement!)}
@@ -107,7 +156,7 @@ const hoveredLabel =
         {hovered && hoveredPoint && (
   <g pointerEvents="none" aria-hidden="true">
     <circle
-      cx={x(hovered.index)}
+      cx={hoveredX}
       cy={y(hoveredValue)}
       r="6"
       fill={hoveredColor}
@@ -117,7 +166,7 @@ const hoveredLabel =
 
     <g
       transform={`translate(
-        ${Math.min(810, Math.max(210, x(hovered.index)))},
+        ${Math.min(810, Math.max(210, hoveredX))},
         ${Math.max(30, y(hoveredValue) - 24)}
       )`}
     >
@@ -135,7 +184,7 @@ const hoveredLabel =
         y="-2"
         style={{ fill: '#fff', fontWeight: 600 }}
       >
-        {hoveredLabel}: {money.format(hoveredValue)}
+        {hoveredLabel ? hoveredLabel + ': ' : ''}{money.format(hoveredValue)}
       </text>
     </g>
   </g>
@@ -144,6 +193,11 @@ const hoveredLabel =
   </div>
 }
 export function ReportsPage() {
+  const [purchasesReport, setPurchasesReport] =
+  useState<PurchasesReport | null>(null)
+
+const [purchasesLoading, setPurchasesLoading] = useState(false)
+const [purchasesError, setPurchasesError] = useState('')
   const { session, logout } = useAuth()
   const token = session?.token
   const admin = session?.user.role === 'ADMINISTRADOR'
@@ -184,9 +238,28 @@ export function ReportsPage() {
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [token, admin, sessionId, revision, logout])
+  useEffect(() => {
+    if (!token || !admin || !sessionId) return
+    const controller = new AbortController()
+    setPurchasesLoading(true)
+    setPurchasesError('')
+    setPurchasesReport(null)
+    void getPurchasesReport(token, controller.signal).then(value => {
+      if (controller.signal.aborted) return
+      // No mezclar las compras de la caja activa con ventas de otra sesión.
+      setPurchasesReport(value?.idSesionCaja === sessionId ? value : null)
+    }).catch(failure => {
+      if (controller.signal.aborted) return
+      if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
+      else setPurchasesError(failure instanceof Error ? failure.message : 'No se pudo cargar el reporte de compras.')
+    }).finally(() => {
+      if (!controller.signal.aborted) setPurchasesLoading(false)
+    })
+    return () => controller.abort()
+  }, [token, admin, sessionId, revision, logout])
   if (!admin) return null
   return <section className="reports-panel" aria-labelledby="sales-report-title">
-    <div className="reports-heading"><h2 id="sales-report-title">Importe de ventas por sesión de caja</h2><RefreshButton label="Actualizar reporte" loading={loading || sessionLoading} onClick={() => { setSessionPage(1); setRevision(v => v + 1) }} /></div>
+    <div className="reports-heading"><h2 id="sales-report-title">Importe de ventas por sesión de caja</h2><RefreshButton label="Actualizar reporte" loading={loading || sessionLoading || purchasesLoading} onClick={() => { setSessionPage(1); setRevision(v => v + 1) }} /></div>
     <div className="reports-filters"><label>Sesión de caja<select value={sessionId || ''} disabled={sessionLoading || !sessions.length} onChange={e => setSessionId(Number(e.target.value))}><option value="" disabled>Selecciona una sesión</option>{sessions.map(s => <option key={s.id_sesion_caja} value={s.id_sesion_caja}>{date.format(new Date(s.fecha_apertura))} · {s.fecha_cierre === null ? 'Abierta' : 'Cerrada'} · {s.usuario_apertura}</option>)}</select></label>
       {more && <button type="button" disabled={sessionLoading} onClick={() => setSessionPage(p => p + 1)}>Cargar sesiones anteriores</button>}
     </div>
@@ -197,7 +270,22 @@ export function ReportsPage() {
       <div className="reports-totals"><div><span>Total de ventas</span><strong>{money.format(report.totalVentas)}</strong></div><div><span>Ventas registradas</span><strong>{report.cantidadVentas}</strong></div></div>
       
       {report.cantidadVentas === 0 && <p>No hay ventas registradas en esta sesión.</p>}
-      <SalesChart key={sessionId} report={report} />
+      <SalesChart key={sessionId} report={report} purchasesReport={purchasesReport} />
     </>}
+    {sessionId > 0 && (purchasesLoading ? (
+      <p role="status">Cargando compras…</p>
+    ) : purchasesError ? (
+      <div role="alert">
+        <p>{purchasesError}</p>
+        <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button>
+      </div>
+    ) : purchasesReport && purchasesReport.idSesionCaja === sessionId ? (
+      <div className="reports-totals">
+        <div><span>Total de compras</span><strong>{money.format(purchasesReport.totalCompras)}</strong></div>
+        <div><span>Compras registradas</span><strong>{purchasesReport.cantidadCompras}</strong></div>
+      </div>
+    ) : (
+      <p>El reporte de compras está disponible únicamente para la caja activa.</p>
+    ))}
   </section>
 }

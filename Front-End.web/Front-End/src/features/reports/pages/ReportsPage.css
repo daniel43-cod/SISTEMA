@@ -20,3 +20,10 @@
 .report-data-scroll table { width: 100%; border-collapse: collapse; text-align: left; }
 .report-data-scroll th, .report-data-scroll td { padding: 10px; border-bottom: 1px solid #dce5ee; font-size: .875rem; white-space: nowrap; }
 .report-data-scroll th { position: sticky; top: 0; background: #f8fafc; }
+
+.report-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 16px 0; font-size: .875rem; }
+.report-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.report-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.report-legend-dot--purchases { background-color: #ea580c; }
+.report-legend-dot--profit { background-color: #16a34a; }
+.report-legend-dot--sales { background-color: #0876bc; }
