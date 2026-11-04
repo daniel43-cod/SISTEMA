@@ -106,9 +106,9 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
         </span></p>
     </header>
     {loading ? <p role="status">Cargando detalle…</p> : detailError ? <div role="alert"><p>{detailError}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar detalle</button></div> :
-      <div className="sales-table-scroll"><table><caption className="sr-only">Productos de la venta</caption><thead><tr><th scope="col">Producto</th><th scope="col">Presentación</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Descuento</th><th scope="col">Subtotal</th></tr></thead>
-        <tbody>{details.map((detail, index) => <tr key={index}><td>{detail.nombre_producto}</td><td>{detail.descripcion_resentacion}</td><td>{detail.cantidad}</td>
-          <td>{money.format(detail.precio)}</td><td>{money.format(detail.descuento)}</td><td>{money.format((Math.round(detail.precio * 100) * detail.cantidad - Math.round(detail.descuento * 100)) / 100)}</td></tr>)}</tbody></table></div>}
+      <div className="sales-table-scroll sale-detail-products"><table><caption className="sr-only">Productos de la venta</caption><thead><tr><th scope="col">Presentación y producto</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Descuento</th><th scope="col">Subtotal</th></tr></thead>
+        <tbody>{details.map((detail, index) => <tr key={index}><td data-label="Presentación y producto">{[detail.descripcion_resentacion, detail.nombre_producto].filter(Boolean).join(' · ')}</td><td data-label="Cantidad">{detail.cantidad}</td>
+          <td data-label="Precio unitario">{money.format(detail.precio)}</td><td data-label="Descuento">{money.format(detail.descuento)}</td><td data-label="Importe">{money.format((Math.round(detail.precio * 100) * detail.cantidad - Math.round(detail.descuento * 100)) / 100)}</td></tr>)}</tbody></table></div>}
     <dl className="sale-receipt-totals">
       <div><dt>Subtotal</dt><dd>{money.format(sale.subtotal)}</dd></div>
       <div><dt>Descuento</dt><dd>− {money.format(sale.descuento ?? 0)}</dd></div>

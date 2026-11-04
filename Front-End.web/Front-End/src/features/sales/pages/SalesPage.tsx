@@ -8,6 +8,7 @@ import { loadSaleCustomers } from '../api/customersApi'
 import type { SaleCustomer, SaleCustomerDetail } from '../api/customersApi'
 import { SaleCustomerPicker } from '../components/SaleCustomerPicker'
 import { SaleProductRow } from '../components/SaleProductRow'
+import { MobileSaleCart } from '../components/MobileSaleCart'
 import { saleOptions } from '../utils/saleSearch'
 import type { SaleDraft, SaleOption } from '../utils/saleSearch'
 import { cashCents, saleLineTotal, saleTotals } from '../utils/saleValidation'
@@ -41,6 +42,8 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const saleFormId = useId()
   const customerFieldsId = useId()
   const [customerCollapsed, setCustomerCollapsed] = useState(false)
+  const [mobileProductKey, setMobileProductKey] = useState<number | null>(null)
+  const [mobileCartVisible, setMobileCartVisible] = useState(false)
   const entryRef = useRef<HTMLDivElement>(null)
   const productTableRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -149,7 +152,9 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     const selection: SaleLine = { product: option.product, presentation: option.presentation, quantity: '1', discount: '0.00' }
     try {
       saleTotals([...rows.filter(other => other.key !== row.key).flatMap(other => other.selection ? [other.selection] : []), selection])
-      setRows(previous => previous.map(other => other.key === row.key ? { ...row, text: option.label, selection } : other))
+      setRows(previous => previous.some(other => other.key === row.key)
+        ? previous.map(other => other.key === row.key ? { ...row, text: option.label, selection } : other)
+        : [...previous, { ...row, text: option.label, selection }])
       setError(''); return true
     } catch (failure) { setError((failure as Error).message); return false }
   }
@@ -162,12 +167,43 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     else document.querySelector<HTMLInputElement>(`[data-sale-row="${rows[index + 1].key}"]`)?.focus()
   }
   function addMobileRow() {
-    const emptyRow = rows.find(row => !row.selection && !row.text.trim() && !row.barcode?.trim())
-    if (emptyRow) {
-      entryRef.current?.querySelector<HTMLInputElement>(`[data-sale-row="${emptyRow.key}"]`)?.focus()
-    } else {
-      addRow()
-    }
+    if (blocked || customerPending || customerSelectionFailed) return
+    setMobileProductKey(null)
+    setMobileCartVisible(true)
+    requestAnimationFrame(() => {
+      entryRef.current?.scrollTo({ top: 0 })
+      entryRef.current?.querySelector<HTMLInputElement>('[data-mobile-cart-search]')?.focus()
+    })
+  }
+  function chooseCartProduct(option: SaleOption, quantity: string, discount: string) {
+    if (blocked) return false
+    const existing = rows.find(row => row.selection?.presentation.id_producto_presentacion === option.presentation.id_producto_presentacion)
+    const empty = rows.find(row => !row.selection && !row.text.trim() && !row.barcode?.trim())
+    const key = existing?.key ?? empty?.key ?? nextRowKey.current++
+    const selected: SaleDraft = { key, text: option.label,
+      selection: { product: option.product, presentation: option.presentation, quantity, discount } }
+    const updated = rows.some(row => row.key === key)
+      ? rows.map(row => row.key === key ? selected : row)
+      : [...rows, selected]
+    try {
+      saleTotals(updated.flatMap(row => row.selection ? [row.selection] : []))
+      setRows(updated); setError('')
+      return true
+    } catch (failure) { setError((failure as Error).message); return false }
+  }
+  function changeCartDiscount(key: number, value: string) {
+    if (blocked) return
+    setRows(previous => previous.map(row => row.key === key && row.selection
+      ? { ...row, selection: { ...row.selection, discount: value } } : row))
+  }
+  function changeCartQuantity(key: number, quantity: number) {
+    if (blocked) return
+    const updated = rows.map(row => row.key === key && row.selection
+      ? { ...row, selection: { ...row.selection, quantity: String(quantity) } } : row)
+    try {
+      saleTotals(updated.flatMap(row => row.selection ? [row.selection] : []))
+      setRows(updated); setError('')
+    } catch (failure) { setError((failure as Error).message) }
   }
   function removeRow(key: number) {
     setRows(previous => previous.length === 1 ? [{ key: nextRowKey.current++, text: '', selection: null }] : previous.filter(row => row.key !== key))
@@ -287,6 +323,14 @@ telRef.current?.focus()}}}/></label>
     </dialog>
     <section className="sales-card" aria-labelledby="sale-title">
       <div className="sales-heading"><h2 id="sale-title">{order ? 'Preparar venta del pedido' : 'Nueva venta'}</h2>
+        <button className="sales-mobile-customer-heading" type="button" aria-controls={customerFieldsId}
+          disabled={pending} onClick={() => {
+            setMobileCartVisible(false)
+            setMobileProductKey(null)
+            setCustomerCollapsed(false)
+            productsInView.current = false
+            entryRef.current?.scrollTo({ top: 0 })
+          }}>Ver cliente</button>
         {order && <button type="button" disabled={pending} onClick={onCancelOrder}>Volver a pedidos</button>}<RefreshButton label="Actualizar catálogo y clientes" loading={loading || pending} onClick={() => setRevision(v => v + 1)} /></div>
       {order && <p>Revisa cantidades y precios actuales; puedes aplicar descuentos. El pedido original se conserva hasta confirmar la venta.</p>}
       {loading && <p role="status">Cargando catálogo y clientes…</p>}
@@ -295,18 +339,24 @@ telRef.current?.focus()}}}/></label>
       <form id={saleFormId} onSubmit={submit}>
         <fieldset disabled={blocked} className="sales-fields">
           <div className="sales-mobile-summary">
-          <button className="sales-view-customer" type="button" aria-expanded={!customerCollapsed} aria-controls={customerFieldsId} onClick={() => {
-            setCustomerCollapsed(value => !value)
-            productsInView.current = false
-            entryRef.current?.scrollTo({ top: 0 })
-          }}>{customerCollapsed ? 'Ver cliente' : 'Ocultar'}</button>
-          <p>Total <strong>{estimated === null ? '—' : money(estimated)}</strong></p>
+            <p aria-live="polite">Total <strong>{estimated === null ? '—' : money(estimated)}</strong></p>
           </div>
-          <div className="sales-entry" ref={entryRef}>
+          <div className={`sales-entry${mobileProductKey !== null ? ' sales-product-card-open' : ''}${mobileCartVisible && mobileProductKey === null ? ' sales-cart-open' : ''}`} ref={entryRef}>
           {customerFields}
+          <div className="sales-mobile-cart-region" hidden={!mobileCartVisible || mobileProductKey !== null}>
+            <MobileSaleCart rows={rows} options={options} token={token ?? ''} disabled={blocked}
+              onChoose={chooseCartProduct}
+              onQuantity={changeCartQuantity} onRemove={removeRow} onDiscount={changeCartDiscount}
+              />
+          </div>
+          {mobileCartVisible === false && mobileProductKey === null && lines.length > 0 && <button type="button" className="sales-mobile-return-cart" onClick={() => { setMobileCartVisible(true); setCustomerCollapsed(false) }}>Ver carrito ({lines.length})</button>}
+          {mobileProductKey !== null && <div className="sales-mobile-product-heading">
+            <h3>Agregar producto</h3>
+            <button type="button" onClick={() => setMobileProductKey(null)} aria-label="Volver a los datos del cliente">Volver</button>
+          </div>}
           <div className="sales-table-scroll" ref={productTableRef}><table className="sales-line-table">
             <thead><tr><th scope="col">Código de barras</th><th scope="col">Producto y presentación</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Descuento (Q)</th><th scope="col">Total</th><th scope="col"><span className="sr-only">Quitar</span></th></tr></thead>
-            <tbody>{rows.map((row, index) => <SaleProductRow key={row.key} row={row} options={options}
+            <tbody>{rows.map((row, index) => <SaleProductRow key={row.key} mobileActive={row.key === mobileProductKey} row={row} options={options}
               usedIds={rows.filter(other => other.key !== row.key).flatMap(other => other.selection ? [other.selection.presentation.id_producto_presentacion] : [])}
               token={token ?? ''} disabled={blocked} autoFocus={index > 0}
               onChange={updated => {
@@ -326,7 +376,25 @@ telRef.current?.focus()}}}/></label>
               onChoose={option => chooseRow(row, option)} onNext={() => nextRow(index)} onRemove={() => removeRow(row.key)}
               onPending={value => setRowPending(row.key, value)} />)}</tbody>
           </table></div>
-          <button type="button" className="sales-add-product" onClick={addMobileRow}>+ Agregar producto</button>
+          <button
+  type="button"
+  className="sales-add-product"
+  onClick={addMobileRow}
+  aria-label="Agregar producto"
+  title="Agregar producto"
+>
+  <span aria-hidden="true">+</span>
+</button>
+          {mobileProductKey !== null && <button type="button" className="sales-mobile-product-done" disabled={blocked} onClick={() => {
+            const row = rows.find(item => item.key === mobileProductKey)
+            if (!row?.selection) { setError('Selecciona un producto y presentación.'); return }
+            try {
+              saleTotals(lines)
+              setError('')
+              setMobileProductKey(null)
+              setMobileCartVisible(true)
+            } catch (failure) { setError((failure as Error).message) }
+          }}>Listo</button>}
           <label className="sales-observation">Observación<input value={note} maxLength={100} placeholder="Observación (opcional)" onChange={e => setNote(e.target.value)} /></label>
           </div>
           <div className="sales-checkout"><p className="sales-checkout-total">Total:<strong>{estimated === null ? '—' : money(estimated)}</strong></p><label>Efectivo recibido (Q)<input inputMode="decimal" value={received} placeholder="0.00" onChange={e => setReceived(e.target.value)} /></label><p>Cambio:<strong>{estimated === null ? '—' : money(Math.max(0, (receivedCents ?? 0) - estimated))}</strong></p><button className="sales-primary" type="submit" disabled={!lines.length || customerPending || customerSelectionFailed || productPending || (!customerId && !name.trim())}>{pending ? 'Registrando…' : order ? 'Confirmar y registrar venta' : 'Registrar venta'}</button></div>

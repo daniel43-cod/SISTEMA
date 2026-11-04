@@ -9,12 +9,13 @@ import type { SaleProduct } from '../utils/saleValidation'
 
 const money = (amount: number) => new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(amount)
 type Props = {
+  mobileActive?: boolean
   row: SaleDraft; options: SaleOption[]; usedIds: number[]; token: string; disabled: boolean; autoFocus: boolean
   onChange: (row: SaleDraft) => void; onChoose: (option: SaleOption) => boolean
   onNext: () => void; onRemove: () => void; onPending: (pending: boolean) => void
 }
 
-export function SaleProductRow({ row, options, usedIds, token, disabled, autoFocus, onChange, onChoose, onNext, onRemove, onPending }: Props) {
+export function SaleProductRow({ mobileActive, row, options, usedIds, token, disabled, autoFocus, onChange, onChoose, onNext, onRemove, onPending }: Props) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
   const [barcodeProduct, setBarcodeProduct] = useState<SaleProduct>()
@@ -96,7 +97,7 @@ export function SaleProductRow({ row, options, usedIds, token, disabled, autoFoc
       if (request.current === controller) { request.current = null; setPending(false); onPending(false) }
     }
   }
-  return <tr className={`sale-line-row${row.selection && lineTotal !== null && !discountError ? ' sale-line-ready' : ''}`}
+  return <tr className={`sale-line-row${mobileActive ? ' sale-mobile-active' : ''}${row.selection && lineTotal !== null && !discountError ? ' sale-line-ready' : ''}`}
     onKeyDownCapture={event => {
       if (event.nativeEvent.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
           (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return

@@ -32,8 +32,8 @@ export function SalePaymentsHistory({ saleId }: { saleId: number }) {
       <div className="sales-table-scroll" role="region" aria-label="Pagos de la venta" tabIndex={0}>
         <table><caption className="sr-only">Pago inicial y abonos de todas las sesiones de caja</caption>
           <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Usuario</th><th scope="col">Método</th><th scope="col">Monto</th><th scope="col">Observación</th></tr></thead>
-          <tbody>{items.map(payment => <tr key={payment.idPago}><td className="sale-list-nowrap">{date.format(new Date(payment.fechaPago))}</td>
-            <td>{payment.usuario}</td><td>{payment.metodoPago}</td><td className="sale-list-money">{money.format(payment.monto)}</td><td>{payment.observacion || '—'}</td></tr>)}</tbody>
+          <tbody>{items.map(payment => <tr key={payment.idPago}><td data-label="Fecha y hora" className="sale-list-nowrap">{date.format(new Date(payment.fechaPago))}</td>
+            <td data-label="Responsable">{payment.usuario}</td><td data-label="Método">{payment.metodoPago}</td><td data-label="Monto" className="sale-list-money">{money.format(payment.monto)}</td><td data-label="Observación">{payment.observacion || '—'}</td></tr>)}</tbody>
         </table>
       </div>}
   </section>

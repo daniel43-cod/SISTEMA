@@ -20,6 +20,7 @@ import './StaffLayout.css'
 export function StaffLayout() {
   const { session, logout } = useAuth()
   const [selected, setSelected] = useState<StaffSection>('ventas')
+  const [expenseCreateRequest, setExpenseCreateRequest] = useState(0)
   const [visited, setVisited] = useState<StaffSection[]>(['ventas'])
   const [menuOpen, setMenuOpen] = useState(false)
   const [, setCashOpen] = useState<boolean | null>(null)
@@ -30,6 +31,7 @@ export function StaffLayout() {
   const accountPanelId = useId()
   const [cashHeaderTarget, setCashHeaderTarget] = useState<HTMLDivElement | null>(null)
   const [saleAccountTarget, setSaleAccountTarget] = useState<HTMLDivElement | null>(null)
+  const [saleToolbarTarget, setSaleToolbarTarget] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!accountOpen) return
@@ -134,6 +136,7 @@ export function StaffLayout() {
               <p>{current.description}</p>
             </div>
           </div>}
+          {current.id === 'listado-ventas' && <div className="staff-sale-mobile-toolbar" ref={setSaleToolbarTarget} />}
           {current.id === 'caja' && <div className="cash-header-data" ref={setCashHeaderTarget} />}
           <div id="staff-inventory-search" hidden={current.id !== 'inventario' || menuOpen} />
           <div id="staff-product-search" hidden={current.id !== 'productos' || menuOpen} />
@@ -143,7 +146,7 @@ export function StaffLayout() {
 
           {items.filter(item => visited.includes(item.id) || item.id === current.id).map(item => (
             <Activity key={session.user.id + ':' + session.user.role + ':' + item.id} mode={item.id === current.id ? 'visible' : 'hidden'}>
-              {item.id === 'reportes' ? <ReportsPage key={session.user.id} /> : item.id === 'pedidos' ? <OrdersPage key={session.user.id} /> : item.id === 'listado-ventas' ? <SaleListPage key={session.user.id} onAccountTarget={setSaleAccountTarget} /> : item.id === 'ventas' ? <SalesPage key={session.user.id} /> : item.id === 'usuarios' ? <UsersPage key={session.user.id} /> : item.id === 'inventario' ? <InventoryPage key={session.user.id} /> : item.id === 'productos' ? <ProductsPage /> : item.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} headerTarget={cashHeaderTarget} /> : item.id === 'compras' ? <PurchasesPage key={session.user.id} /> : item.id === 'gastos' ? <ExpensesPage key={session.user.id} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
+              {item.id === 'reportes' ? <ReportsPage key={session.user.id} /> : item.id === 'pedidos' ? <OrdersPage key={session.user.id} /> : item.id === 'listado-ventas' ? <SaleListPage key={session.user.id} onAccountTarget={setSaleAccountTarget} toolbarTarget={saleToolbarTarget} /> : item.id === 'ventas' ? <SalesPage key={session.user.id} /> : item.id === 'usuarios' ? <UsersPage key={session.user.id} /> : item.id === 'inventario' ? <InventoryPage key={session.user.id} /> : item.id === 'productos' ? <ProductsPage /> : item.id === 'caja' ? <CashPage key={session.user.id} onOpenChange={setCashOpen} headerTarget={cashHeaderTarget} onAddExpense={() => { setExpenseCreateRequest(value => value + 1); selectSection('gastos') }} /> : item.id === 'compras' ? <PurchasesPage key={session.user.id} /> : item.id === 'gastos' ? <ExpensesPage key={session.user.id} createRequest={expenseCreateRequest} /> : <section className="staff-empty" aria-labelledby="staff-empty-title">
             <span className="staff-empty-icon"><NavigationIcon section={item.id} /></span>
             <h2 id="staff-empty-title">{item.label} estará disponible próximamente</h2>
             <p>Por ahora, las operaciones de esta sección aún no están habilitadas.</p>

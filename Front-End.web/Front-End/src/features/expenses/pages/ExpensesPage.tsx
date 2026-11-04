@@ -8,7 +8,7 @@ import { checkExpenseCash, createExpense, listExpenses } from '../api/expensesAp
 import { buildExpense } from '../utils/expenseValidation'
 import './ExpensesPage.css'
 
-export function ExpensesPage() {
+export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } = {}) {
   const { session, logout } = useAuth()
   const token = session?.token
   const [description, setDescription] = useState('')
@@ -23,6 +23,13 @@ export function ExpensesPage() {
   const [uncertain, setUncertain] = useState(false)
   const [revision, setRevision] = useState(0)
   const [formOpen, setFormOpen] = useState(false)
+  const handledCreateRequest = useRef(0)
+  useEffect(() => {
+    if (createRequest > handledCreateRequest.current) {
+      handledCreateRequest.current = createRequest
+      setFormOpen(true)
+    }
+  }, [createRequest])
   const [page, setPage] = useState(1)
   const [history, setHistory] = useState<ExpensePage | null>(null)
   const [historyLoading, setHistoryLoading] = useState(true)

@@ -2,6 +2,7 @@ import { listUsers } from '../../users/api/usersApi'
 import { lastSevenSaleDays } from '../utils/saleDateRange'
 import { SalePaymentForm } from './SalePaymentForm'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -14,7 +15,7 @@ import './SaleListPage.css'
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: 'short' })
 
-export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTMLDivElement | null) => void } = {}) {
+export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarget?: (node: HTMLDivElement | null) => void; toolbarTarget?: HTMLDivElement | null } = {}) {
   const { session, logout } = useAuth()
   const token = session?.token
   const isAdmin = session?.user.role === 'ADMINISTRADOR'
@@ -39,6 +40,13 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
   const [hasNext, setHasNext] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [mobileStatus, setMobileStatus] = useState<'all' | 'pending' | 'paid'>('all')
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [mobileSearch, setMobileSearch] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const mobileRows = rows.filter(sale =>
+    (mobileStatus === 'all' || (mobileStatus === 'paid' ? sale.saldo_pendiente === 0 : sale.saldo_pendiente > 0)) &&
+    (!mobileSearch.trim() || `${sale.cliente} ${sale.id_ventas} ${sale.usuario}`.toLocaleLowerCase().includes(mobileSearch.trim().toLocaleLowerCase())))
 
   useEffect(() => {
     if (!token || !isAdmin) return
@@ -84,6 +92,18 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
     return () => controller.abort()
   }, [token, page, revision, logout, range, isAdmin, userId, pageSize])
 
+  const mobileToolbar = (
+<div className="sale-mobile-toolbar">
+        <h2>Ventas</h2>
+        <button type="button" className="sale-mobile-icon" aria-label="Buscar ventas en esta página" aria-expanded={mobileSearchOpen} onClick={() => setMobileSearchOpen(value => !value)}>
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7" /><path d="m16 16 5 5" /></svg>
+        </button>
+        {isAdmin && <button type="button" className="sale-mobile-icon sale-mobile-user-filter" aria-label="Filtrar ventas por usuario y fecha" aria-expanded={mobileFiltersOpen} onClick={() => setMobileFiltersOpen(value => !value)}>
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M3 5h18M6 11h12M9 17h6" /></svg>
+          <span>{Number(!!userId) + Number(!!range)}</span>
+        </button>}
+      </div>
+  )
   return <section className="sales-page sale-list-page sale-list-view" aria-label={isAdmin && range ? 'Historial de ventas por fechas' : 'Ventas de la caja abierta'}>
     {success && <p role="status">{success}</p>}
     {selected && <SalePaymentForm key={selected.id_ventas} sale={selected} onSaving={setSaving}
@@ -121,10 +141,55 @@ export function SaleListPage({ onAccountTarget }: { onAccountTarget?: (node: HTM
       {onAccountTarget && <div className="sale-list-account-row"><div ref={onAccountTarget} /></div>}
       </div>
 
+      {toolbarTarget ? createPortal(mobileToolbar, toolbarTarget) : mobileToolbar}
+      {mobileSearchOpen && <label className="sale-mobile-search">Buscar en esta página<input type="search" autoFocus placeholder="Cliente, número de venta o responsable" value={mobileSearch} onChange={event => setMobileSearch(event.target.value)} /></label>}
+      {isAdmin && mobileFiltersOpen && <div className="sale-mobile-filters">
+        <label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={event => { setUserId(event.target.value); setPage(1); setSelected(null); setSuccess('') }}>
+          <option value="">Todos</option>{users.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}
+        </select></label>
+        <label>Fecha<input type="date" value={selectedDate} min={dateLimits.desde} max={dateLimits.hasta} disabled={saving} onChange={event => {
+          const day = event.target.value
+          if (day && (day < dateLimits.desde || day > dateLimits.hasta)) return
+          setSelectedDate(day); setRange(day ? { desde: day, hasta: day } : undefined); setPage(1); setSelected(null)
+        }} /></label>
+        <button type="button" disabled={saving || loading} onClick={() => { setSelectedDate(''); setRange(undefined); setUserId(''); setPage(1); setSelected(null) }}>Caja activa</button>
+      </div>}
+      <div className="sale-mobile-tabs" role="group" aria-label="Estado de las ventas de esta página">
+        <button type="button" aria-pressed={mobileStatus === 'all'} onClick={() => setMobileStatus('all')}>Todas ({rows.length})</button>
+        <button type="button" aria-pressed={mobileStatus === 'pending'} onClick={() => setMobileStatus('pending')}>Pendientes ({rows.filter(sale => sale.saldo_pendiente > 0).length})</button>
+        <button type="button" aria-pressed={mobileStatus === 'paid'} onClick={() => setMobileStatus('paid')}>Pagadas ({rows.filter(sale => sale.saldo_pendiente === 0).length})</button>
+        <small>Ventas de la página {page}</small>
+      </div>
+      {isAdmin && <div className="sale-mobile-summary-card">
+        <div><span>Total de ventas</span><strong>{salesVisible ? (salesTotal === null ? '—' : money.format(salesTotal)) : 'Q ••••••'}</strong></div>
+        <div><span>Ganancia</span><strong>{profitVisible ? (profitTotal === null ? '—' : money.format(profitTotal)) : 'Q ••••••'}</strong></div>
+        <button type="button" className="sale-mobile-icon" aria-label={salesVisible && profitVisible ? 'Ocultar importes' : 'Mostrar importes'} aria-pressed={salesVisible && profitVisible} onClick={() => { const visible = !(salesVisible && profitVisible); setSalesVisible(visible); setProfitVisible(visible) }}>
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{!(salesVisible && profitVisible) && <path d="m3 3 18 18" />}</svg>
+        </button>
+      </div>}
       {error && <div role="alert" className="sale-list-error"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div>}
       <div className="sale-list-body" aria-busy={loading}>
         {loading ? <p role="status">Cargando ventas…</p> : !error && rows.length === 0 ?
           <p role="status">{isAdmin && range ? 'No hay ventas para los filtros de esa fecha.' : 'No hay ventas para mostrar. La caja puede estar cerrada o aún no tener ventas.'}</p> : !error && <>
+            {!mobileRows.length && <p className="sale-mobile-empty" role="status">No hay ventas que coincidan en esta página.</p>}
+            <ul className="sale-mobile-cards" aria-label="Ventas">
+              {mobileRows.map(sale => <li key={sale.id_ventas}>
+                <button type="button" className={`sale-mobile-card${sale.saldo_pendiente > 0 ? ' is-pending' : ''}${selected?.id_ventas === sale.id_ventas ? ' is-selected' : ''}`}
+                  disabled={saving} aria-label={`Ver detalle de venta ${sale.id_ventas}, cliente ${sale.cliente}`}
+                  aria-expanded={selected?.id_ventas === sale.id_ventas}
+                  onClick={() => { setSelected(sale); setSuccess('') }}>
+                  <span className="sale-mobile-card-top">
+                    <strong className="sale-mobile-card-client">{sale.cliente}</strong>
+                    <strong className="sale-mobile-card-total">{money.format(sale.total)}</strong>
+                  </span>
+                  <span className="sale-mobile-card-date">Venta #{sale.id_ventas} · {Number.isNaN(Date.parse(sale.fecha_venta)) ? 'Fecha no disponible' : date.format(new Date(sale.fecha_venta))} · {sale.usuario}</span>
+                  <span className="sale-mobile-card-bottom">
+                    <span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
+                    {sale.saldo_pendiente > 0 && <span className="sale-mobile-card-balance">Debe <strong>{money.format(sale.saldo_pendiente)}</strong></span>}
+                  </span>
+                </button>
+              </li>)}
+            </ul>
             <div className="sales-table-scroll" role="region" aria-label="Listado de ventas" tabIndex={0}>
               <table><caption className="sr-only">{isAdmin && range ? 'Ventas de la fecha seleccionada, de todas las sesiones de caja' : 'Ventas registradas en la sesión de caja abierta'}</caption>
                 <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th>{isAdmin && <th scope="col" className="sale-list-money">Ganancia</th>}<th scope="col" className="sale-list-money">Saldo pendiente</th><th scope="col">Estado</th></tr></thead>

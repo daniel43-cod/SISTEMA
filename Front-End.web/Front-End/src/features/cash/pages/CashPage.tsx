@@ -9,8 +9,9 @@ import { ApiError } from '../../../shared/api/ApiError'
 import { loadCash, loadCashSummary, openCash, closeCash, parseOpeningAmount } from '../api/cashApi'
 import type { AvailableCash, CashSession, CashClosing, CashSummary } from '../api/cashApi'
 import './CashPage.css'
+import { MobileCashOverview } from './MobileCashOverview'
 
-export function CashPage({ onOpenChange, headerTarget }: { onOpenChange?: (open: boolean | null) => void; headerTarget?: HTMLDivElement | null }) {
+export function CashPage({ onOpenChange, headerTarget, onAddExpense }: { onOpenChange?: (open: boolean | null) => void; headerTarget?: HTMLDivElement | null; onAddExpense?: () => void }) {
   const { session } = useAuth()
   const [current, setCurrent] = useState<CashSession | null>(null)
   const [summary, setSummary] = useState<CashSummary | null>(null)
@@ -157,6 +158,10 @@ export function CashPage({ onOpenChange, headerTarget }: { onOpenChange?: (open:
 
   if (!isAdmin) return <p>No tienes permiso para administrar la caja.</p>
   return <section className="cash-panel" aria-label="Caja" aria-busy={phase === 'loading' || saving}>
+    {headerTarget && createPortal(<div className="cash-mobile-header">
+      <h2>Caja</h2><span className={current && phase === 'ready' ? 'cash-mobile-state is-open' : 'cash-mobile-state'}>{phase === 'loading' ? 'Consultando' : phase === 'error' ? 'Sin confirmar' : current ? '● Abierta' : 'Cerrada'}</span>
+      <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }} />
+    </div>, headerTarget)}
     <header className="cash-session-header">
     <div className="cash-heading">
       {current && phase === 'ready' && <h3 id="cash-movements-title">Movimientos del turno</h3>}
@@ -195,6 +200,8 @@ headerTarget ? createPortal(
       <Button onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }}>Volver a consultar</Button> :
       current ? <>
 
+        <MobileCashOverview current={current} summary={summary} error={summaryError} saving={saving}
+          onClose={() => { setClosing(true); setReview(null); setError(''); setNotice('') }} onExpense={onAddExpense} />
         <section className="cash-movements" aria-labelledby="cash-movements-title">
           {summaryError ? <p className="cash-error" role="alert">{summaryError} Usa actualizar para volver a consultar.</p> :
             summary?.id_sesion_caja !== current.id_sesion_caja ? <p role="status">Consultando movimientos…</p> : <>
