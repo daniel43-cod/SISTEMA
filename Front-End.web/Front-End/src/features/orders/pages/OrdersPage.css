@@ -12,3 +12,31 @@
 .staff-shell-orders .staff-content { width: 100%; max-width: none; margin: 0; padding: 0 10px 16px; box-sizing: border-box; }
 .staff-shell-orders .staff-header { min-height: 60px; padding-block: 8px; }
 .staff-shell-orders .staff-content > .sales-page > .sales-card { padding: clamp(18px, 2vw, 32px); }
+
+@media (max-width: 800px) {
+  .orders-page .sales-heading, .orders-dialog .sales-heading { padding-right: 0; min-height: 44px; }
+  .orders-page .sales-heading > .refresh-button { display: grid; }
+  .orders-dialog .sales-heading > h2 { position: static; width: auto; height: auto; padding: 0; margin: 0; overflow: visible; clip-path: none; white-space: normal; }
+  .orders-page > .sales-card { padding: 12px; border: 0; background: #f5f7fb; }
+  .orders-list-cards, .orders-detail-cards { display: block; overflow: visible; }
+  .orders-list-cards table, .orders-detail-cards table { display: block; width: 100%; min-width: 0; }
+  .orders-list-cards caption, .orders-detail-cards caption { display: block; font-size: .8rem; color: #64748b; margin-bottom: 12px; text-align: left; }
+  .orders-list-cards thead, .orders-detail-cards thead { display: none; }
+  .orders-list-cards tbody, .orders-detail-cards tbody { display: grid; gap: 12px; }
+  .orders-list-cards tr, .orders-detail-cards tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; border: 1px solid #dce5ef; border-radius: 16px; background: #fff; }
+  .orders-list-cards tr { border-left: 4px solid #f59e0b; }
+  .orders-list-cards tr:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+  .orders-list-cards td, .orders-detail-cards td { display: grid; gap: 4px; min-width: 0; padding: 0; border: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+  .orders-list-cards td::before, .orders-detail-cards td::before { content: attr(data-label); font-size: .75rem; font-weight: 400; color: #64748b; }
+  .orders-list-cards td:nth-child(2) { grid-column: 1; grid-row: 1; font-weight: 650; font-size: .95rem; }
+  .orders-list-cards td:nth-child(5) { grid-column: 2; grid-row: 1; text-align: right; color: #075b96; font-weight: 650; }
+  .orders-list-cards td:nth-child(2)::before, .orders-list-cards td:nth-child(5)::before { display: none; }
+  .orders-list-cards td:first-child { grid-column: 1 / -1; grid-row: 2; color: #64748b; font-size: .75rem; }
+  .orders-list-cards td:first-child::before { display: none; }
+  .orders-list-cards td:last-child { grid-column: 1 / -1; justify-items: start; }
+  .orders-list-cards td:last-child::before { display: none; }
+  .orders-detail-cards td:first-child { grid-column: 1 / -1; font-weight: 650; }
+  .orders-detail-cards td:last-child { color: #075b96; font-weight: 650; }
+  .orders-contact { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .orders-contact dd { overflow-wrap: anywhere; }
+}

@@ -49,10 +49,10 @@ function OrderDialog({ order, token, onClose, onExpired, onPrepare }: { order: O
           {detail.referencias && <div><dt>Referencias</dt><dd>{detail.referencias}</dd></div>}
           {detail.observacion && <div><dt>Observación</dt><dd>{detail.observacion}</dd></div>}
         </dl>
-        <div className="sales-table-scroll" role="region" aria-label="Productos del pedido" tabIndex={0}><table>
-          <caption>Productos solicitados</caption><thead><tr><th scope="col">Producto</th><th scope="col">Presentación</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Subtotal</th></tr></thead>
-          <tbody>{detail.detalles.map(line => <tr key={line.idProductoPresentacion}><td>{line.nombreProducto}</td><td>{line.nombrePresentacion}</td><td>{line.cantidad}</td>
-            <td className="sale-list-money">{money.format(line.precioUnitario)}</td><td className="sale-list-money">{money.format(line.subtotal)}</td></tr>)}</tbody>
+        <div className="sales-table-scroll orders-detail-cards" role="region" aria-label="Productos del pedido" tabIndex={0}><table>
+          <caption>Productos solicitados</caption><thead><tr><th scope="col">Presentación y producto</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Subtotal</th></tr></thead>
+          <tbody>{detail.detalles.map(line => <tr key={line.idProductoPresentacion}><td data-label="Presentación y producto">{[line.nombrePresentacion, line.nombreProducto].filter(Boolean).join(' · ')}</td><td data-label="Cantidad">{line.cantidad}</td>
+            <td data-label="Precio unitario" className="sale-list-money">{money.format(line.precioUnitario)}</td><td data-label="Importe" className="sale-list-money">{money.format(line.subtotal)}</td></tr>)}</tbody>
         </table></div>
         <dl className="sale-payment-summary sale-payment-totals"><div><dt>Total</dt><dd>{money.format(detail.total)}</dd></div>
           <div><dt>Estado</dt><dd><span className="sale-list-status">{detail.estado}</span></dd></div></dl>
@@ -102,7 +102,7 @@ export function OrdersPage() {
   if (!allowed || !token) return null
   if (prepared) return <SalesPage key={prepared.idPedido} order={prepared}
     onCancelOrder={() => setPrepared(null)} onOrderConfirmed={() => { setPrepared(null); setSuccess('Venta registrada correctamente.'); setRevision(v => v + 1) }} />
-  return <section className="sales-page sale-list-page" aria-label="Pedidos pendientes del catálogo">
+  return <section className="sales-page sale-list-page orders-page" aria-label="Pedidos pendientes del catálogo">
     {selected && <OrderDialog key={selected.idPedido} order={selected} token={token} onClose={() => setSelected(null)} onExpired={logout} onPrepare={detail => { setSelected(null); setSuccess(''); setPrepared(detail) }} />}
     {success && <p role="status">{success}</p>}
     <div className="sales-card"><div className="sales-heading"><div><h2>Pendientes de aprobación</h2><p className="sale-list-description">{loading ? 'Consultando pendientes…' : error ? 'No se pudieron consultar los pendientes' : data ? (data.hayMas ? 'Más de ' : '') + ((data.pagina - 1) * data.tamanoPagina + data.pedidos.length) + (data.pagina === 1 && data.pedidos.length === 1 && !data.hayMas ? ' pendiente' : ' pendientes') : '0 pendientes'}</p></div>
@@ -117,11 +117,11 @@ export function OrdersPage() {
           {updatedAt && <small>Última actualización: <time dateTime={updatedAt.toISOString()}>{updatedAt.toLocaleTimeString('es-GT', { hour: 'numeric', minute: '2-digit' })}</time></small>}
           <button type="button" className="orders-copy-link" onClick={() => void copyCatalogLink()}>Copiar enlace del catálogo</button>
           {copyStatus && <p role="status">{copyStatus}</p>}
-        </div> : <div className="sales-table-scroll" role="region" aria-label="Listado de pedidos" tabIndex={0}>
+        </div> : <div className="sales-table-scroll orders-list-cards" role="region" aria-label="Listado de pedidos" tabIndex={0}>
           <table><caption>Selecciona un pedido para consultar sus productos y datos de entrega.</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Cliente</th><th scope="col">Teléfono</th><th scope="col">Zona</th><th scope="col" className="sale-list-money">Total</th><th scope="col">Estado</th></tr></thead>
             <tbody>{data.pedidos.map(order => <tr key={order.idPedido} className="sale-list-row" tabIndex={0} aria-label={'Consultar pedido de ' + order.nombreCliente}
               aria-haspopup="dialog" onClick={() => setSelected(order)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(order) } }}>
-              <td className="sale-list-nowrap">{formatDate(order.fechaUtc)}</td><td>{order.nombreCliente}</td><td>{order.telefono}</td><td>{order.zonaEntrega}</td><td className="sale-list-money">{money.format(order.total)}</td><td><span className="sale-list-status">{order.estado}</span></td>
+              <td data-label="Fecha" className="sale-list-nowrap">{formatDate(order.fechaUtc)}</td><td data-label="Cliente">{order.nombreCliente}</td><td data-label="Teléfono">{order.telefono}</td><td data-label="Zona">{order.zonaEntrega}</td><td data-label="Total" className="sale-list-money">{money.format(order.total)}</td><td data-label="Estado"><span className="sale-list-status">{order.estado}</span></td>
             </tr>)}</tbody></table>
         </div>}
       {!loading && !error && !!data?.pedidos.length && (page > 1 || data.hayMas) && <nav className="sales-history-pagination" aria-label="Páginas de pedidos"><button type="button" disabled={loading || page === 1} onClick={() => setPage(v => v - 1)}>Anterior</button>
