@@ -1,3 +1,4 @@
+import { MobilePurchaseCart } from '../components/MobilePurchaseCart'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
@@ -35,6 +36,7 @@ export function PurchasesPage() {
   const [result, setResult] = useState<CreatedPurchase | null>(null)
   const [selected, setSelected] = useState<Purchase | null>(null)
   const [open, setOpen] = useState(false)
+  const [purchaseStep, setPurchaseStep] = useState<'supplier' | 'products'>('supplier')
   const editor = useRef<HTMLElement>(null)
   const add = useRef<HTMLButtonElement>(null)
   useEffect(() => { if (open) { editor.current?.focus({ preventScroll: true }); editor.current?.scrollIntoView({ block: 'nearest' }) } }, [open])
@@ -104,7 +106,7 @@ export function PurchasesPage() {
       <ul>{result.productos.map(p => <li key={p.idProducto}>{products.find(row => row.idProducto === p.idProducto)?.nombre ?? `Producto #${p.idProducto}`}
         : {p.stock} unidades · Costo promedio: {p.precioPromedioCompra.toFixed(6)}</li>)}</ul>
     </section>}
-    {open && <section ref={editor} tabIndex={-1} className="purchase-panel purchase-editor-panel" aria-labelledby="new-purchase-title">
+    {open && <section ref={editor} tabIndex={-1} className={"purchase-panel purchase-editor-panel purchase-step-" + purchaseStep} aria-labelledby="new-purchase-title">
       <div className="purchase-panel-heading">
         <h2 id="new-purchase-title">Registrar compra</h2>
         <button type="button" aria-label="Cerrar formulario" title="Cerrar formulario" disabled={saving}
@@ -113,15 +115,24 @@ export function PurchasesPage() {
       <form onSubmit={submit}>
         <fieldset disabled={saving || loading || !cashOpen || !!error || uncertain} className="purchase-form">
           <legend className="purchase-sr-only">Datos de la compra</legend>
-          <div className="purchase-fields">
-            <label>Proveedor<select value={supplier} onChange={e => setSupplier(e.target.value)} required>
+          <div className="purchase-fields purchase-supplier-card">
+            <label>Proveedor<select id="purchase-supplier" value={supplier} onChange={e => setSupplier(e.target.value)} required>
               <option value="">Selecciona un proveedor</option>
               {suppliers.map(p => <option key={p.idProveedor} value={p.idProveedor}>{p.nombre}</option>)}
             </select></label>
             <label>Observación<input maxLength={100} value={note} onChange={e => setNote(e.target.value)} /></label>
           </div>
+          <button type="button" className="purchase-step-continue purchase-primary" onClick={() => {
+            const select = document.getElementById('purchase-supplier') as HTMLSelectElement | null
+            if (!select?.reportValidity()) return
+            setPurchaseStep('products')
+            requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.purchase-product-cell input')?.focus())
+          }}>Continuar con productos →</button>
+          <button type="button" className="purchase-step-back purchase-legacy-back" onClick={() => setPurchaseStep('supplier')}>← Ver proveedor</button>
           {!loading && !suppliers.length && <p>No hay proveedores registrados. Registra un proveedor para continuar.</p>}
-          <div className="purchase-table-scroll"><table>
+          {purchaseStep === 'products' && <MobilePurchaseCart products={products} lines={lines} onChange={setLines}
+            onClose={closeEditor} onSupplier={() => setPurchaseStep('supplier')} total={totalCents} paid={paid} onPaid={setPaid} saving={saving} />}
+          <div className="purchase-table-scroll purchase-entry-cards"><table>
             <thead><tr><th>Producto</th><th>Unidades recibidas</th><th>Total de línea (Q)</th><th /></tr></thead>
             <tbody>{lines.map((line, index) => <PurchaseProductRow key={index} line={line} products={products}
               usedIds={lines.filter((_, position) => position !== index).map(row => row.idProducto)} autoFocus={index > 0}
@@ -154,12 +165,12 @@ export function PurchasesPage() {
         <RefreshButton label="Actualizar historial de compras" loading={saving || loading} onClick={() => setRevision(v => v + 1)} />
       </div>
       {loading ? <p role="status">Cargando compras…</p> : error ? <p>Actualiza para consultar el historial.</p>
-        : !purchases.length ? <p>No hay compras en esta página.</p> : <div className="purchase-table-scroll"><table>
+        : !purchases.length ? <p>No hay compras en esta página.</p> : <div className="purchase-table-scroll purchase-history-cards"><table>
           <thead><tr><th scope="col">Distribuidor</th><th scope="col">Usuario</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col">Fecha y hora</th></tr></thead>
           <tbody>{purchases.map(p => <tr key={p.id_compra} className="purchase-history-row" tabIndex={saving ? -1 : 0} aria-label={`Ver compra de ${p.nombre_proveedor}`} onClick={() => { if (!saving) setSelected(p) }} onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(p) } }}>
-            <td>{p.nombre_proveedor}</td><td>{p.nombre_usuario}</td><td>{money.format(p.total_compra)}</td>
-            <td className={p.saldo_pendiente > 0 ? 'purchase-balance-pending' : undefined}>{money.format(p.saldo_pendiente)}</td><td>{p.saldo_pendiente > 0 ? 'Pendiente' : 'Cancelada'}</td>
-            <td><time dateTime={p.fecha_ingreso}>{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</time></td>
+            <td data-label="Proveedor">{p.nombre_proveedor}</td><td data-label="Responsable">{p.nombre_usuario}</td><td data-label="Total">{money.format(p.total_compra)}</td>
+            <td data-label="Saldo pendiente" className={p.saldo_pendiente > 0 ? 'purchase-balance-pending' : undefined}>{money.format(p.saldo_pendiente)}</td><td data-label="Estado">{p.saldo_pendiente > 0 ? 'Pendiente' : 'Cancelada'}</td>
+            <td data-label="Fecha y hora"><time dateTime={p.fecha_ingreso}>{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</time></td>
           </tr>)}</tbody>
         </table></div>}
       <nav className="purchase-pagination" aria-label="Páginas de compras">
@@ -169,7 +180,7 @@ export function PurchasesPage() {
       </nav>
     </section>}
     {!open && <button ref={add} type="button" className="catalog-add-button" aria-label="Registrar nueva compra"
-      title="Registrar nueva compra" onClick={() => { setSelected(null); setResult(null); setOpen(true) }}>
+      title="Registrar nueva compra" onClick={() => { setSelected(null); setResult(null); setPurchaseStep('supplier'); setOpen(true) }}>
       <span aria-hidden="true">+</span>
     </button>}
     {selected && token && <PurchaseDetails key={selected.id_compra} purchase={selected} token={token}

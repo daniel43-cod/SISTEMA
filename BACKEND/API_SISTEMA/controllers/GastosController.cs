@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Dtos.Gastos;
+using API_SISTEMA.Dtos.Gastos;
 using API_SISTEMA.Services.Gastos;
 using API_SISTEMA.Utilidades;
 using Microsoft.AspNetCore.Authorization;
@@ -34,11 +34,12 @@ namespace API_SISTEMA.Controllers
             [FromServices] GastoListarService service,
             [FromQuery, Range(1, 100000)] int pagina = 1,
             [FromQuery, Range(1, 100)] int tamanoPagina = 25,
+            [FromQuery, Range(1, int.MaxValue)] int? idUsuarioFiltro = null,
             CancellationToken cancellationToken = default)
         {
             try
             {
-                return Ok(await service.Listar(pagina, tamanoPagina, cancellationToken));
+               return Ok(await service.Listar(pagina, tamanoPagina, cancellationToken, idUsuarioFiltro));
             }
             catch (ValidationException ex)
             {

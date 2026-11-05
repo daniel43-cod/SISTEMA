@@ -39,3 +39,45 @@
   .expense-panel button.expense-create-desktop { display: none; }
   .expense-panel button.expense-create-floating { display: grid; }
 }
+
+/* El historial conserva su tabla en escritorio y usa tarjetas en móvil. */
+@media (max-width: 800px) {
+  .expense-panel { padding: 12px; border: 0; background: #f5f7fb; }
+  .expense-heading h2 { font-size: 1.2rem; }
+  .expense-table-scroll { overflow: visible; min-width: 0; }
+  .expense-table { display: block; min-width: 0; width: 100%; }
+  .expense-table thead { display: none; }
+  .expense-table tbody { display: grid; gap: 14px; }
+  .expense-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 16px; padding: 18px; border: 1px solid #d3deed; border-radius: 18px; background: #fff; }
+  .expense-table td { display: grid; gap: 4px; min-width: 0; max-width: none; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .expense-table td::before { content: attr(data-label); font-size: .75rem; color: #64748b; }
+  .expense-table td:first-child { grid-column: 1; grid-row: 1; max-width: none; font-weight: 650; font-size: 1rem; }
+  .expense-table td:nth-child(2) { grid-column: 2; grid-row: 1; text-align: right; font-weight: 650; font-size: 1rem; color: #dc2626; }
+  .expense-table td:first-child::before, .expense-table td:nth-child(2)::before { display: none; }
+  .expense-table td:nth-child(3) { grid-column: 1 / -1; max-width: none; }
+  .expense-table td:nth-child(4), .expense-table td:last-child { grid-column: 1 / -1; min-width: 0; color: #475569; font-size: .85rem; }
+}
+.expense-total-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; border: 1px solid #d3deed; border-radius: 16px; background: #fff; }
+.expense-total-card > div { display: grid; gap: 6px; min-width: 0; }
+.expense-total-card span { font-size: .8rem; color: #526477; }
+.expense-total-card strong { font-size: 1.3rem; overflow-wrap: anywhere; }
+.expense-panel .expense-total-card button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #263747; }
+.expense-total-amount { display: flex; align-items: center; gap: 10px; }
+.expense-heading:has(.expense-header-actions:empty) { display: none; }
+@media (max-width: 800px) {
+  .expense-panel > .expense-heading { display: none; }
+}
+/* El resumen queda inmóvil y solo se desplaza el listado de gastos en móvil. */
+@media (max-width: 800px) {
+  .staff-shell:has(.expense-panel) { height: 100dvh; min-height: 0; overflow: hidden; }
+  .staff-workspace:has(.expense-panel) { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .staff-workspace:has(.expense-panel) > .staff-header { flex-shrink: 0; }
+  .staff-content:has(.expense-panel) { display: flex; flex: 1; flex-direction: column; min-height: 0; width: 100%; box-sizing: border-box; margin: 0; overflow: hidden; padding: 12px 24px; }
+  .expense-panel { display: flex; flex: 1; flex-direction: column; min-height: 0; box-sizing: border-box; margin-bottom: 0; padding: 38px 15px 16px; border-radius: 22px; gap: 18px; overflow: hidden; }
+  .expense-panel > * { flex-shrink: 0; }
+  .expense-panel > .expense-open:empty { display: none; }
+  .expense-panel > .expense-table-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 80px; }
+  .expense-total-card { padding: 22px; min-height: 116px; box-sizing: border-box; }
+  .expense-total-card > div { gap: 12px; }
+  .expense-total-amount { gap: 14px; }
+}

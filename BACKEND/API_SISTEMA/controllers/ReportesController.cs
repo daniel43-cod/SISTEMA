@@ -64,6 +64,7 @@ public async Task<ActionResult<ReporteComprasDto>> ComprasCajaActiva(
 
 [HttpGet("gastos-caja-activa")]
 public async Task<ActionResult<ReporteGastosDto>> GastosCajaActiva(
+    [FromQuery, System.ComponentModel.DataAnnotations.Range(1, int.MaxValue)] int? idUsuarioFiltro,
     CancellationToken ct)
 {
     if (!int.TryParse(
@@ -74,9 +75,7 @@ public async Task<ActionResult<ReporteGastosDto>> GastosCajaActiva(
         return Unauthorized();
     }
 
-    var resultado = await reporteGastos.ConsultarCajaActiva(
-        idUsuario,
-        ct);
+    var resultado = await reporteGastos.ConsultarCajaActiva(idUsuario, ct, idUsuarioFiltro);
 
     if (resultado is null)
     {

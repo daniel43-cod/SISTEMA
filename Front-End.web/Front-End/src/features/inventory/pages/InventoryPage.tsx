@@ -169,7 +169,7 @@ export function InventoryPage() {
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>
     </div> : data && <>
       <div className="inventory-results-heading">
-        <p role="status">{data.total} productos{text ? ' encontrados' : ' en inventario'}</p>
+        <p role="status" className="inventory-product-count"><span>Productos</span><strong>{data.total}</strong></p>
       <div className="inventory-value-summary" role="status">
         <div><span>{text || categoryId || brandId ? 'Valor del inventario filtrado' : 'Valor total del inventario'}</span>
           <div className="inventory-total-visibility">

@@ -1,3 +1,4 @@
+import { getExpensesReport } from '../../reports/api/reportsApi'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { ExpensePage } from '../utils/expenseListing'
 import { useEffect, useRef, useState } from 'react'
@@ -31,6 +32,27 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     }
   }, [createRequest])
   const [page, setPage] = useState(1)
+  const [totalExpenses, setTotalExpenses] = useState<number | null>(null)
+  const [totalLoading, setTotalLoading] = useState(true)
+  const [totalError, setTotalError] = useState('')
+  const [totalVisible, setTotalVisible] = useState(true)
+  useEffect(() => {
+    if (!token) return
+    const controller = new AbortController()
+    async function loadTotal() {
+      setTotalLoading(true); setTotalError(''); setTotalExpenses(null)
+      try {
+        const report = await getExpensesReport(token!, controller.signal)
+        if (!controller.signal.aborted) setTotalExpenses(report?.totalGastos ?? null)
+      } catch (failure) {
+        if (controller.signal.aborted) return
+        if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
+        else setTotalError(failure instanceof Error ? failure.message : 'No se pudo cargar el total de gastos.')
+      } finally { if (!controller.signal.aborted) setTotalLoading(false) }
+    }
+    void loadTotal()
+    return () => controller.abort()
+  }, [token, revision, logout])
   const [history, setHistory] = useState<ExpensePage | null>(null)
   const [historyLoading, setHistoryLoading] = useState(true)
   const [historyError, setHistoryError] = useState('')
@@ -113,10 +135,10 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
       }
     } finally { busy.current = false; if (alive.current) setSaving(false) }
   }
-  return <section className="expense-panel" aria-labelledby="expense-title">
-    <header className="expense-heading"><h2 id="expense-title">Gastos del turno</h2>
+  return <section className="expense-panel" aria-label="Gastos">
+    <header className="expense-heading">
       <div className="expense-header-actions">
-        <RefreshButton label="Actualizar gastos" loading={loading || saving} onClick={() => setRevision(v => v + 1)} />
+
         <button type="button" className="expense-create-desktop" disabled={loading || saving || !cashOpen || !!cashError}
           aria-haspopup="dialog" aria-controls="expense-create-dialog" onClick={() => setFormOpen(true)}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
@@ -130,16 +152,32 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     </p>
     {cashError && <p role="alert" className="expense-error">{cashError}</p>}
     {success && <p role="status" className="expense-success">{success}</p>}
+    <div className="expense-total-card">
+      <div><span>Total de gastos</span><div className="expense-total-amount">
+        <strong aria-label={totalVisible ? undefined : 'Total de gastos oculto'}>{!totalVisible ? 'Q ••••••'
+          : totalLoading ? '…' : totalExpenses === null ? '—'
+          : new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(totalExpenses)}</strong>
+      <button type="button" aria-label={totalVisible ? 'Ocultar total de gastos' : 'Mostrar total de gastos'}
+        aria-pressed={totalVisible} onClick={() => setTotalVisible(value => !value)}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+          {!totalVisible && <path d="M3 3l18 18" />}
+        </svg>
+      </button>
+      </div></div>
+      <RefreshButton label="Actualizar gastos" loading={loading || saving || historyLoading || totalLoading} onClick={() => setRevision(v => v + 1)} />
+    </div>
+    {totalError && <p className="expense-error" role="alert">{totalError}</p>}
     {historyLoading ? <p role="status">Cargando gastos…</p>
       : historyError ? <p className="expense-error" role="alert">{historyError}</p>
       : !history?.items.length ? null
       : <div className="expense-table-scroll"><table className="expense-table">
         <thead><tr><th>Descripción</th><th>Monto</th><th>Observación</th><th>Encargado</th><th>Fecha y hora</th></tr></thead>
         <tbody>{history.items.map(item => <tr key={item.idGasto}>
-          <td>{item.descripcion}</td>
-          <td>{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(item.monto)}</td>
-          <td>{item.observacion || '—'}</td><td>{item.encargado}</td>
-          <td><time dateTime={item.fecha}>{new Date(item.fecha).toLocaleString('es-GT')}</time></td>
+          <td data-label="Descripción">{item.descripcion}</td>
+          <td data-label="Monto">{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(item.monto)}</td>
+          <td data-label="Observación">{item.observacion || '—'}</td><td data-label="Encargado">{item.encargado}</td>
+          <td data-label="Fecha y hora"><time dateTime={item.fecha}>{new Date(item.fecha).toLocaleString('es-GT')}</time></td>
         </tr>)}</tbody>
       </table></div>}
     {!historyLoading && !historyError && history && history.total > 25 && <nav className="expense-pagination" aria-label="Páginas de gastos">

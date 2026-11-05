@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Gastos;
 using API_SISTEMA.Services.Caja;
@@ -12,7 +13,7 @@ public sealed class ReporteGastosService(
 {
     public async Task<ReporteGastosDto?> ConsultarCajaActiva(
         int idUsuario,
-        CancellationToken ct = default)
+        CancellationToken ct = default, int? idUsuarioFiltro = null)
     {
         // Comprueba que el usuario sea un administrador activo.
         var autorizado = await context.usuarios
@@ -30,6 +31,9 @@ public sealed class ReporteGastosService(
                 "Solo un administrador puede consultar este reporte.");
         }
 
+        if (idUsuarioFiltro.HasValue && idUsuarioFiltro.Value <= 0)
+            throw new ValidationException("El ID del usuario debe ser mayor que cero.");
+
         var sesion = await CajaSesionActual.Consultar(context, ct);
 
         if (sesion is null)
@@ -43,12 +47,17 @@ public sealed class ReporteGastosService(
         ).DateTime;
 
         // Recupera cada gasto de la sesión, sin acumular sus importes.
-        var puntos = await context.gastos
+        var consulta = context.gastos
             .AsNoTracking()
             .Where(g =>
                 g.id_sesion_caja == sesion.id_sesion_caja &&
                 g.fecha >= sesion.fecha_apertura &&
-                g.fecha <= hasta)
+                g.fecha <= hasta);
+
+        if (idUsuarioFiltro.HasValue)
+            consulta = consulta.Where(g => g.id_usuario == idUsuarioFiltro.Value);
+
+        var puntos = await consulta
             .OrderBy(g => g.fecha)
             .ThenBy(g => g.id_gastos)
             .Select(g => new PuntoGastoDto

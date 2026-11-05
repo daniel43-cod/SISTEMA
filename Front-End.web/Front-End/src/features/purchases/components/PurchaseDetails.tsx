@@ -97,10 +97,10 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
     {loading && <p role="status">Cargando detalle…</p>}
     {error && <p role="alert" className="purchase-error">{error}</p>}
     {!loading && !items.length && error && <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar detalle</button>}
-    {!loading && items.length > 0 && <div className="purchase-table-scroll"><table>
+    {!loading && items.length > 0 && <div className="purchase-table-scroll purchase-detail-cards"><table>
       <thead><tr><th>Producto</th><th>Unidades</th><th>Total de línea</th></tr></thead>
-      <tbody>{items.map(row => <tr key={row.id_detalle_compra}><td>{row.nombre_producto}</td>
-        <td>{row.cantidad}</td><td>{money.format(row.subtotal)}</td></tr>)}</tbody>
+      <tbody>{items.map(row => <tr key={row.id_detalle_compra}><td data-label="Producto">{row.nombre_producto}</td>
+        <td data-label="Unidades">{row.cantidad}</td><td data-label="Total de línea">{money.format(row.subtotal)}</td></tr>)}</tbody>
     </table></div>}
     {purchase.saldo_pendiente <= 0 && <div className="purchase-detail-balance"><span>Saldo pendiente</span><strong>{money.format(purchase.saldo_pendiente)}</strong></div>}
   </dialog>

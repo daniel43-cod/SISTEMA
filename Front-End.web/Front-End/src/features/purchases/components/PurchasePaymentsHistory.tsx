@@ -23,8 +23,8 @@ export function PurchasePaymentsHistory({ token, purchaseId, onUnauthorized }: {
   return <section className="purchase-payments-history" aria-label="Historial de pagos">
     <h3>Historial de pagos</h3>
     {loading ? <p role="status">Cargando pagos…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : !rows.length ? <p>No hay pagos registrados.</p> :
-      <div className="purchase-table-scroll"><table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Monto</th><th>Observación</th></tr></thead>
-        <tbody>{rows.map(p => <tr key={p.idPago}><td>{new Date(p.fechaPago).toLocaleString('es-GT')}</td><td>{p.usuario}</td><td>{p.monto === null ? 'Sin información' : money.format(p.monto)}</td><td>{p.observacion || '—'}</td></tr>)}</tbody>
+      <div className="purchase-table-scroll purchase-payment-cards"><table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Monto</th><th>Observación</th></tr></thead>
+        <tbody>{rows.map(p => <tr key={p.idPago}><td data-label="Fecha y hora">{new Date(p.fechaPago).toLocaleString('es-GT')}</td><td data-label="Responsable">{p.usuario}</td><td data-label="Monto">{p.monto === null ? 'Sin información' : money.format(p.monto)}</td><td data-label="Observación">{p.observacion || '—'}</td></tr>)}</tbody>
       </table></div>}
   </section>
 }

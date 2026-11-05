@@ -1,4 +1,4 @@
-﻿import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { KeyboardEvent } from 'react'
 import { filterProductNames } from '../../products/api/searchProducts'
@@ -54,7 +54,7 @@ export function PurchaseProductRow({ line, products, usedIds, onChange, onNext, 
     if (line.idProducto > 0) onNext()
   }
   return <tr>
-    <td className="purchase-product-cell">
+    <td data-label="Producto" className="purchase-product-cell">
       <input ref={searchInput} aria-label="Producto" role="combobox" aria-autocomplete="list" aria-expanded={open && suggestions.length > 0}
         aria-activedescendant={open && suggestions.length ? `${optionsId}-${Math.min(active, suggestions.length - 1)}` : undefined}
         aria-controls={optionsId} autoComplete="off" autoFocus={autoFocus}
@@ -82,10 +82,10 @@ export function PurchaseProductRow({ line, products, usedIds, onChange, onNext, 
         {!suggestions.length && <li role="status">No hay productos disponibles que coincidan.</li>}
       </ul>, document.body)}
     </td>
-    <td><input ref={quantity} aria-label={`Unidades de ${line.nombre || 'producto'}`} inputMode="numeric"
+    <td data-label="Unidades recibidas"><input ref={quantity} aria-label={`Unidades de ${line.nombre || 'producto'}`} inputMode="numeric"
       disabled={!line.idProducto} value={line.cantidad} onChange={event => onChange({ ...line, cantidad: event.target.value })}
       onKeyDown={advance} required={line.idProducto > 0} /></td>
-    <td><input ref={total} aria-label={`Total de ${line.nombre || 'producto'}`} inputMode="decimal"
+    <td data-label="Total de línea (Q)"><input ref={total} aria-label={`Total de ${line.nombre || 'producto'}`} inputMode="decimal"
       disabled={!line.idProducto} value={line.total} onChange={event => onChange({ ...line, total: event.target.value })}
       onKeyDown={advance} required={line.idProducto > 0} /></td>
     <td><button type="button" className="purchase-remove-line" aria-label={`Quitar ${line.nombre || 'fila'}`}

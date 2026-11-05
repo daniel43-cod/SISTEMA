@@ -8,9 +8,9 @@ namespace API_SISTEMA.Services.Gastos;
 
 public sealed class GastoListarService(SistemaDbContext context)
 {
-    public async Task<GastoPaginaDto> Listar(int pagina = 1, int tamanoPagina = 25,
-        CancellationToken cancellationToken = default)
+    public async Task<GastoPaginaDto> Listar(int pagina = 1, int tamanoPagina = 25, CancellationToken cancellationToken = default, int? idUsuarioFiltro = null)
     {
+        if (idUsuarioFiltro.HasValue && idUsuarioFiltro.Value <= 0) {throw new ValidationException("El ID del usuario debe ser mayor que cero.");}
         if (pagina < 1 || pagina > 100000 || tamanoPagina < 1 || tamanoPagina > 100)
             throw new ValidationException("La página debe estar entre 1 y 100000 y el tamaño entre 1 y 100.");
 
@@ -20,6 +20,7 @@ public sealed class GastoListarService(SistemaDbContext context)
 
         var consulta = context.gastos.AsNoTracking()
             .Where(g => g.id_sesion_caja == sesion.id_sesion_caja && g.sesionCaja.fecha_cierre == null);
+            if (idUsuarioFiltro.HasValue) {consulta = consulta.Where(g => g.id_usuario == idUsuarioFiltro.Value); }
         var total = await consulta.CountAsync(cancellationToken);
         var items = await consulta.OrderByDescending(g => g.fecha).ThenByDescending(g => g.id_gastos)
             .Skip((pagina - 1) * tamanoPagina).Take(tamanoPagina)
