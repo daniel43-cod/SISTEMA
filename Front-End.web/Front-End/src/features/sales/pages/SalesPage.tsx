@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, MouseEvent } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -212,6 +212,15 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   function setRowPending(key: number, pending: boolean) {
     setPendingRows(previous => { const next = new Set(previous); if (pending) next.add(key); else next.delete(key); return next })
   }
+  function checkCustomerBeforeRegister(event: MouseEvent<HTMLButtonElement>) {
+    if (order) return
+    if (customerSelectionFailed || (!customerId && !name.trim())) {
+      event.preventDefault()
+      setError(customerSelectionFailed
+        ? 'No se pudieron confirmar los datos del cliente. Selecciónalo nuevamente antes de registrar la venta.'
+        : 'Ingresa los datos del cliente o selecciona uno existente en «Ver cliente» antes de registrar la venta.')
+    }
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token || busy.current || paymentConfirmation.current || blocked || customerPending || customerSelectionFailed || productPending) return
@@ -266,13 +275,14 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       {order.observacion && <label>Observación del cliente<input value={order.observacion} readOnly /></label>}
     </fieldset>
   ) : (
-<fieldset id={customerFieldsId} disabled={blocked} className={`sales-page sales-customer sales-customer-header${customerCollapsed ? ' sales-customer-collapsed' : ''}`} onFocusCapture={() => { productsInView.current = false }}>
+<fieldset id={customerFieldsId} disabled={blocked} className={`sales-page sales-customer sales-customer-header sales-customer-form${customerCollapsed ? ' sales-customer-collapsed' : ''}`} onFocusCapture={() => { productsInView.current = false }}>
+            <div className="sales-customer-group sales-customer-personal"><h3>Datos personales</h3>
             <SaleCustomerPicker key={customerReset} value={name} formId={saleFormId} customers={customers} token={token ?? ''} disabled={blocked}
               onSelect={selectCustomer} onPending={setCustomerPending} onNameChange={changeCustomerName}
               onNext={() => surnameRef.current?.focus()}
               onFailure={() => setCustomerSelectionFailed(true)}
               onUnauthorized={() => logout('La sesión ya no es válida.')} />
-            <label>Apellido<input ref={surnameRef} form={saleFormId} value={surname} disabled={customerPending} maxLength={100} onChange={e => changeCustomerField(setSurname, e.target.value)} placeholder="Apellido (opcional)" 
+            <label>Apellido<span className="sales-customer-optional">opcional</span><input ref={surnameRef} form={saleFormId} value={surname} disabled={customerPending} maxLength={100} onChange={e => changeCustomerField(setSurname, e.target.value)} placeholder="Apellido (opcional)" 
             onKeyDown={event =>{
               if(event.key=='Enter' && !event.nativeEvent.isComposing){
                 event.preventDefault()
@@ -280,34 +290,39 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
               }
             }}
             /></label>
-            <label>NIT<input ref={nitRef}  form={saleFormId} value={nit} disabled={customerPending} maxLength={20} onChange={e => changeCustomerField(setNit, e.target.value)} placeholder="NIT (opcional)"
+            </div>
+            <div className="sales-customer-group sales-customer-documents"><h3>Documentos</h3>
+            <label>NIT<span className="sales-customer-optional">opcional</span><input ref={nitRef}  form={saleFormId} value={nit} disabled={customerPending} maxLength={20} onChange={e => changeCustomerField(setNit, e.target.value)} placeholder="NIT (opcional)"
             onKeyDown={event => {if (event.key === 'Enter' && !event.nativeEvent.isComposing) {event.preventDefault()
 dpiRef.current?.focus()}}}
             /></label>
-            <label>DPI<input ref={dpiRef} form={saleFormId} value={dpi} disabled={customerPending} maxLength={20} onChange={e => changeCustomerField(setDpi, e.target.value)} placeholder="DPI (opcional)" 
+            <label>DPI<span className="sales-customer-optional">opcional</span><input ref={dpiRef} form={saleFormId} value={dpi} disabled={customerPending} maxLength={20} onChange={e => changeCustomerField(setDpi, e.target.value)} placeholder="DPI (opcional)" 
                    onKeyDown={event => {if (event.key === 'Enter' && !event.nativeEvent.isComposing) {event.preventDefault()
 telRef.current?.focus()}}}/></label>
-            <label>Teléfono<input ref={telRef} form={saleFormId} value={phone} disabled={customerPending} maxLength={30} onChange={e => changeCustomerField(setPhone, e.target.value)} placeholder="Teléfono (opcional)"
+            </div>
+            <div className="sales-customer-group sales-customer-contact"><h3>Contacto</h3>
+            <label>Teléfono<span className="sales-customer-optional">opcional</span><input ref={telRef} form={saleFormId} value={phone} disabled={customerPending} maxLength={30} onChange={e => changeCustomerField(setPhone, e.target.value)} placeholder="Teléfono (opcional)"
               onKeyDown={event => {
                 if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                   event.preventDefault()
                   emailRef.current?.focus()
                 }
               }} /></label>
-            <label>Correo electrónico<input ref={emailRef} form={saleFormId} value={email} disabled={customerPending} type="email" maxLength={254} onChange={e => changeCustomerField(setEmail, e.target.value)} placeholder="Correo (opcional)"
+            <label>Correo electrónico<span className="sales-customer-optional">opcional</span><input ref={emailRef} form={saleFormId} value={email} disabled={customerPending} type="email" maxLength={254} onChange={e => changeCustomerField(setEmail, e.target.value)} placeholder="Correo (opcional)"
               onKeyDown={event => {
                 if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                   event.preventDefault()
                   addressRef.current?.focus()
                 }
               }} /></label>
-            <label>Dirección<input ref={addressRef} form={saleFormId} value={address} disabled={customerPending} maxLength={200} onChange={e => changeCustomerField(setAddress, e.target.value)} placeholder="Dirección (opcional)"
+            <label>Dirección<span className="sales-customer-optional">opcional</span><input ref={addressRef} form={saleFormId} value={address} disabled={customerPending} maxLength={200} onChange={e => changeCustomerField(setAddress, e.target.value)} placeholder="Dirección (opcional)"
               onKeyDown={event => {
                 if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                   event.preventDefault()
                   productTableRef.current?.querySelector<HTMLInputElement>('.sale-barcode-cell input:not(:disabled)')?.focus()
                 }
               }} /></label>
+            </div>
           </fieldset>
   )
   return <div className="sales-page">
@@ -340,14 +355,21 @@ telRef.current?.focus()}}}/></label>
         <fieldset disabled={blocked} className="sales-fields">
           <div className="sales-mobile-summary">
             <p aria-live="polite">Total <strong>{estimated === null ? '—' : money(estimated)}</strong></p>
+            {mobileCartVisible && mobileProductKey === null && (
+            <button type="submit" className="sales-mobile-register-sale" onClick={checkCustomerBeforeRegister}
+              disabled={blocked || !lines.length || estimated === null || customerPending || productPending}>
+              {pending ? 'Registrando…' : order ? 'Confirmar y registrar venta' : 'Registrar venta'}
+            </button>
+            )}
           </div>
-          <div className={`sales-entry${mobileProductKey !== null ? ' sales-product-card-open' : ''}${mobileCartVisible && mobileProductKey === null ? ' sales-cart-open' : ''}`} ref={entryRef}>
+          <div className={`sales-entry${mobileProductKey !== null ? ' sales-product-card-open' : ''}${mobileCartVisible && mobileProductKey === null ? ' sales-cart-open' : ''}${!mobileCartVisible && mobileProductKey === null && !order ? ' sales-customer-step' : ''}`} ref={entryRef}>
           {customerFields}
           <div className="sales-mobile-cart-region" hidden={!mobileCartVisible || mobileProductKey !== null}>
             <MobileSaleCart rows={rows} options={options} token={token ?? ''} disabled={blocked}
               onChoose={chooseCartProduct}
               onQuantity={changeCartQuantity} onRemove={removeRow} onDiscount={changeCartDiscount}
               />
+
           </div>
           {mobileCartVisible === false && mobileProductKey === null && lines.length > 0 && <button type="button" className="sales-mobile-return-cart" onClick={() => { setMobileCartVisible(true); setCustomerCollapsed(false) }}>Ver carrito ({lines.length})</button>}
           {mobileProductKey !== null && <div className="sales-mobile-product-heading">
@@ -397,7 +419,13 @@ telRef.current?.focus()}}}/></label>
           }}>Listo</button>}
           <label className="sales-observation">Observación<input value={note} maxLength={100} placeholder="Observación (opcional)" onChange={e => setNote(e.target.value)} /></label>
           </div>
-          <div className="sales-checkout"><p className="sales-checkout-total">Total:<strong>{estimated === null ? '—' : money(estimated)}</strong></p><label>Efectivo recibido (Q)<input inputMode="decimal" value={received} placeholder="0.00" onChange={e => setReceived(e.target.value)} /></label><p>Cambio:<strong>{estimated === null ? '—' : money(Math.max(0, (receivedCents ?? 0) - estimated))}</strong></p><button className="sales-primary" type="submit" disabled={!lines.length || customerPending || customerSelectionFailed || productPending || (!customerId && !name.trim())}>{pending ? 'Registrando…' : order ? 'Confirmar y registrar venta' : 'Registrar venta'}</button></div>
+          {!order && !mobileCartVisible && mobileProductKey === null && <div className="sales-customer-continue">
+            <div><span>Total</span><strong>{estimated === null ? '—' : money(estimated)}</strong></div>
+            <button type="button" disabled={blocked || customerPending || customerSelectionFailed} onClick={addMobileRow}>
+              Continuar a productos <span aria-hidden="true">→</span>
+            </button>
+          </div>}
+          <div className="sales-checkout"><p className="sales-checkout-total">Total:<strong>{estimated === null ? '—' : money(estimated)}</strong></p><label>Efectivo recibido (Q)<input inputMode="decimal" value={received} placeholder="0.00" onChange={e => setReceived(e.target.value)} /></label><p>Cambio:<strong>{estimated === null ? '—' : money(Math.max(0, (receivedCents ?? 0) - estimated))}</strong></p><button className="sales-primary" type="submit" onClick={checkCustomerBeforeRegister} disabled={!lines.length || customerPending || productPending}>{pending ? 'Registrando…' : order ? 'Confirmar y registrar venta' : 'Registrar venta'}</button></div>
         </fieldset>
       </form>
       {uncertain && <button type="button" onClick={() => { setUncertain(false); setError('') }}>Ya revisé el historial y confirmé que esta venta no se registró</button>}

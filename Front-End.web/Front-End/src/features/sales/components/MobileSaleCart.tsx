@@ -12,7 +12,6 @@ type Props = {
   onChoose: (option: SaleOption, quantity: string, discount: string) => boolean; onQuantity: (key: number, quantity: number) => void
   onRemove: (key: number) => void; onDiscount: (key: number, value: string) => void
 }
-
 export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQuantity, onRemove, onDiscount }: Props) {
   const [query, setQuery] = useState('')
   const [editor, setEditor] = useState<{ option: SaleOption; quantity: string; discount: string } | null>(null)

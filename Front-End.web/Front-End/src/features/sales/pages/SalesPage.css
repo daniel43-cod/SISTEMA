@@ -309,3 +309,56 @@
     background: var(--surface, #fff);
   }
 }
+
+.sales-page button.sales-mobile-register-sale { display: none; }
+@media (max-width: 800px) {
+  .sales-page button.sales-mobile-register-sale {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 16px;
+    padding: 12px 18px;
+    border: 1px solid #075b96;
+    border-radius: 14px;
+    background: #075b96;
+    color: #fff;
+    font-weight: 650;
+  }
+  .sales-page button.sales-mobile-register-sale:hover:not(:disabled) { background: #064a7b; }
+  .sales-page button.sales-mobile-register-sale:focus-visible { outline: 2px solid #075b96; outline-offset: 3px; }
+}
+
+/* Las agrupaciones conservan la distribución actual en escritorio. */
+.sales-customer-group { display: contents; }
+.sales-customer-group > h3, .sales-customer-optional, .sales-customer-continue { display: none; }
+@media (max-width: 800px) {
+  .staff-shell-sales .sales-customer-step { background: #f5f7fb; padding: 12px 8px calc(100px + env(safe-area-inset-bottom)); }
+  .sales-page .sales-customer-step > .sales-customer-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; border: 0; padding: 0; }
+  .sales-customer-step .sales-customer-group { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; padding: 20px; border: 1px solid #d3deed; border-radius: 20px; background: #fff; }
+  .sales-customer-step .sales-customer-group > h3 { display: block; margin: 0 0 2px; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: #64748b; }
+  .sales-customer-step .sales-customer-group label { position: relative; display: grid; gap: 8px; font-size: .95rem; font-weight: 500; color: #0f172a; }
+  .sales-customer-step .sales-customer-optional { display: block; position: absolute; top: 0; right: 0; font-size: .75rem; font-weight: 400; color: #64748b; }
+  .sales-customer-step .sale-customer-search label::after { content: 'obligatorio'; position: absolute; top: 0; right: 0; font-size: .75rem; font-weight: 400; color: #64748b; }
+  .sales-page .sales-customer-step .sales-customer-group input { min-height: 54px; padding: 14px; border: 1px solid #c4d0e1; border-radius: 14px; font-size: 16px; background: #fff; }
+  .sales-customer-step .sale-customer-search { display: block; }
+  .sales-customer-step .sale-customer-search > label { width: 100%; }
+  .sales-customer-step .sale-customer-picker { min-width: 0; }
+  .sales-customer-step .sales-customer-documents { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  .sales-customer-step .sales-customer-documents > h3 { grid-column: 1 / -1; }
+  .sales-customer-step .sales-customer-documents label { padding-top: 18px; }
+  .sales-customer-step .sales-customer-documents .sales-customer-optional { top: 0; }
+  .sales-page .sales-customer-step .sales-add-product, .sales-page .sales-customer-step .sales-mobile-return-cart { display: none; }
+  .sales-customer-continue { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 16px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #d3deed; background: #fff; }
+  .sales-customer-continue > div { display: grid; gap: 4px; min-width: 78px; }
+  .sales-customer-continue > div > span { font-size: .75rem; color: #64748b; }
+  .sales-customer-continue strong { font-size: 1.2rem; }
+  .sales-page .sales-customer-continue > button { flex: 1; min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 0; border-radius: 14px; background: #075b96; color: #fff; font-size: .9rem; font-weight: 650; }
+  .sales-customer-continue > button > span { font-size: 22px; }
+}
+
+@media (max-width: 800px) {
+  .sales-mobile-summary { gap: 8px; max-width: calc(100% - 122px); }
+  .sales-mobile-summary p { display: grid; gap: 2px; margin: 0; font-size: .7rem; }
+  .sales-mobile-summary strong { margin-left: 0; font-size: .95rem; }
+  .sales-page .sales-mobile-summary button.sales-mobile-register-sale { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: auto; max-width: 120px; min-height: 36px; margin: 0; padding: 7px 10px; border-radius: 10px; font-size: .72rem; line-height: 1.2; }
+}
