@@ -1,3 +1,4 @@
+import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
@@ -17,6 +18,15 @@ export function UsersPage() {
   const [formError, setFormError] = useState('')
   const [success, setSuccess] = useState('')
   const [revision, setRevision] = useState(0)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const detailsRef = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (selectedId === null) return
+    const dialog = detailsRef.current
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    dialog?.showModal()
+    return () => { dialog?.close(); trigger?.focus() }
+  }, [selectedId])
   const [editing, setEditing] = useState<StaffUser | null>(null)
   const [formVersion, setFormVersion] = useState(0)
   const [open, setOpen] = useState(false)
@@ -55,6 +65,7 @@ export function UsersPage() {
     return () => { dialog.close(); document.body.style.overflow = previous; trigger?.focus() }
   }, [open])
   if (!allowed) return null
+  const selectedUser = items.find(item => item.id_usuario === selectedId)
   const availableRoles = roles.filter(role => role.estado && ['ADMINISTRADOR', 'VENDEDOR'].includes(role.nombre))
   async function toggleState(item: StaffUser) {
     if (!token || busy.current || item.id_usuario === session?.user.id) return
@@ -111,7 +122,7 @@ export function UsersPage() {
   }
   return <section className="users-panel" aria-labelledby="users-title">
     <div className="users-heading"><h2 id="users-title">Usuarios</h2>
-      <div className="users-header-actions"><button type="button" disabled={loading || saving} onClick={() => setRevision(v => v + 1)}>Actualizar</button><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
+      <div className="users-header-actions"><RefreshButton label="Actualizar usuarios" loading={loading || saving} onClick={() => setRevision(v => v + 1)} /><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
       aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
       onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
@@ -119,7 +130,7 @@ export function UsersPage() {
     {success && <p role="status" className="users-success">{success}</p>}
     {loading ? <p role="status">Cargando usuarios…</p> : error ? <div role="alert"><p>{error}</p>
       <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div>
-      : !items.length ? <p>No hay usuarios registrados.</p> : <div className="users-table-scroll" tabIndex={0} role="region" aria-label="Lista de usuarios">
+      : !items.length ? <p>No hay usuarios registrados.</p> : <div className="users-table-scroll users-desktop-table" tabIndex={0} role="region" aria-label="Lista de usuarios">
         <table><thead><tr>{['Nombre', 'Apellido', 'Usuario', 'Correo', 'Teléfono', 'Estado', 'Rol', 'Acciones'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
           <tbody>{items.map(item => <tr key={item.id_usuario}>
             <td>{item.nombre}</td><td>{item.apellido}</td><td>{item.usuario}</td><td>{item.correo || '—'}</td><td>{item.telefono}</td>
@@ -137,6 +148,41 @@ export function UsersPage() {
           </tr>)}</tbody></table>
       </div>}
 
+    {!loading && !error && items.length > 0 && <div className="users-mobile-cards" aria-label="Lista de usuarios">
+      {items.map(item => <button type="button" key={item.id_usuario} className="users-mobile-card"
+        aria-label={'Ver detalles de ' + item.nombre + ' ' + item.apellido} aria-haspopup="dialog"
+        aria-controls="users-details-dialog" disabled={saving} onClick={() => setSelectedId(item.id_usuario)}>
+        <strong>{[item.nombre, item.apellido].filter(Boolean).join(' ')}</strong>
+        <span className={item.estado ? 'users-active' : 'users-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
+        <span className="users-card-phone"><small>Teléfono</small>{item.telefono || '—'}</span>
+        <span className="users-card-role"><small>Rol</small>{roles.find(role => role.id_rol === item.id_rol)?.nombre ?? 'Rol #' + item.id_rol}</span>
+      </button>)}
+    </div>}
+    <dialog ref={detailsRef} id="users-details-dialog" className="users-dialog users-details-dialog" aria-labelledby="users-details-title"
+      onCancel={event => { if (saving) event.preventDefault(); else setSelectedId(null) }}>
+      <div className="users-heading"><h2 id="users-details-title">Datos del usuario</h2>
+        <button type="button" aria-label="Cerrar detalles" disabled={saving} onClick={() => setSelectedId(null)}>×</button>
+      </div>
+      {selectedUser && <>
+        <dl className="users-details-grid">
+          <div><dt>Nombre</dt><dd>{selectedUser.nombre}</dd></div>
+          <div><dt>Apellido</dt><dd>{selectedUser.apellido}</dd></div>
+          <div><dt>Usuario</dt><dd>{selectedUser.usuario}</dd></div>
+          <div><dt>Correo</dt><dd>{selectedUser.correo || '—'}</dd></div>
+          <div><dt>Teléfono</dt><dd>{selectedUser.telefono || '—'}</dd></div>
+          <div><dt>Cargo</dt><dd>{roles.find(role => role.id_rol === selectedUser.id_rol)?.nombre ?? 'Rol #' + selectedUser.id_rol}</dd></div>
+          <div><dt>Estado</dt><dd><span className={selectedUser.estado ? 'users-active' : 'users-inactive'}>{selectedUser.estado ? 'Activo' : 'Inactivo'}</span></dd></div>
+        </dl>
+        <div className="users-details-actions">
+          <button type="button" disabled={saving} onClick={() => {
+            setEditing(selectedUser); setSelectedId(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true)
+          }}>Editar</button>
+          <button type="button" disabled={saving || selectedUser.id_usuario === session?.user.id}
+            title={selectedUser.id_usuario === session?.user.id ? 'No puedes desactivar tu propia cuenta' : undefined}
+            onClick={() => { void toggleState(selectedUser) }}>{selectedUser.estado ? 'Desactivar' : 'Activar'}</button>
+        </div>
+      </>}
+    </dialog>
     {!loading && !error && !availableRoles.length && <p role="status">No hay roles internos activos para crear usuarios.</p>}
     <dialog ref={dialogRef} id="users-create-dialog" className="users-dialog" aria-labelledby="users-create-title"
       onCancel={event => { if (saving) event.preventDefault(); else setOpen(false) }}>
