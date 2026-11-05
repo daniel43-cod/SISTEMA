@@ -15,8 +15,8 @@ export async function createExpense(token: string, body: ReturnType<typeof build
   return response.id_gasto
 }
 
-export async function listExpenses(token: string, page = 1, signal?: AbortSignal) {
-  const response = await requestJson(`/Gastos/listar?pagina=${page}&tamanoPagina=25`, { token, signal })
+export async function listExpenses(token: string, page = 1, signal?: AbortSignal, idUsuarioFiltro?: number) {
+  const response = await requestJson(`/Gastos/listar?pagina=${page}&tamanoPagina=25` + (idUsuarioFiltro ? "&idUsuarioFiltro=" + idUsuarioFiltro : ""), { token, signal })
   try { return parseExpensePage(response) }
   catch { throw new ApiError('El listado de gastos recibido no es válido.') }
 }

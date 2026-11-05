@@ -32,9 +32,9 @@ export type ExpensesReport = {
   puntos: ExpensePoint[]
 }
 
-export async function getExpensesReport( token: string, signal?: AbortSignal,
+export async function getExpensesReport( token: string, signal?: AbortSignal, idUsuarioFiltro?: number,
 ): Promise<ExpensesReport | null> {
-  const result = await requestJson('/reportes/gastos-caja-activa', { token, signal },)
+  const result = await requestJson("/reportes/gastos-caja-activa" + (idUsuarioFiltro ? "?idUsuarioFiltro=" + idUsuarioFiltro : ""), { token, signal },)
 
   // Sin caja activa, el backend responde 204.
   if (result === null) return null

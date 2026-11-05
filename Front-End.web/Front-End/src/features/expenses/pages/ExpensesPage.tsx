@@ -1,3 +1,5 @@
+import { listUsers } from '../../users/api/usersApi'
+import type { StaffUser } from '../../users/api/usersApi'
 import { getExpensesReport } from '../../reports/api/reportsApi'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import type { ExpensePage } from '../utils/expenseListing'
@@ -12,6 +14,33 @@ import './ExpensesPage.css'
 export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } = {}) {
   const { session, logout } = useAuth()
   const token = session?.token
+  const [userFilter, setUserFilter] = useState('')
+  const [draftUser, setDraftUser] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [users, setUsers] = useState<StaffUser[]>([])
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [usersError, setUsersError] = useState('')
+  const [usersRevision, setUsersRevision] = useState(0)
+  const filterDialog = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (!token || !filtersOpen) return
+    const controller = new AbortController()
+    setUsersLoading(true); setUsersError('')
+    void listUsers(token, controller.signal).then(rows => {
+      if (!controller.signal.aborted) setUsers(rows)
+    }).catch(failure => {
+      if (controller.signal.aborted) return
+      if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
+      else setUsersError(failure instanceof Error ? failure.message : 'No se pudieron cargar los usuarios.')
+    }).finally(() => { if (!controller.signal.aborted) setUsersLoading(false) })
+    return () => controller.abort()
+  }, [token, filtersOpen, usersRevision, logout])
+  useEffect(() => {
+    if (!filtersOpen) return
+    const dialog = filterDialog.current
+    dialog?.showModal()
+    return () => dialog?.close()
+  }, [filtersOpen])
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -42,7 +71,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     async function loadTotal() {
       setTotalLoading(true); setTotalError(''); setTotalExpenses(null)
       try {
-        const report = await getExpensesReport(token!, controller.signal)
+        const report = await getExpensesReport(token!, controller.signal, userFilter ? Number(userFilter) : undefined)
         if (!controller.signal.aborted) setTotalExpenses(report?.totalGastos ?? null)
       } catch (failure) {
         if (controller.signal.aborted) return
@@ -52,7 +81,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     }
     void loadTotal()
     return () => controller.abort()
-  }, [token, revision, logout])
+  }, [token, revision, logout, userFilter])
   const [history, setHistory] = useState<ExpensePage | null>(null)
   const [historyLoading, setHistoryLoading] = useState(true)
   const [historyError, setHistoryError] = useState('')
@@ -71,7 +100,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     async function loadHistory() {
       setHistoryLoading(true); setHistoryError('')
       try {
-        const result = await listExpenses(token!, page, controller.signal)
+        const result = await listExpenses(token!, page, controller.signal, userFilter ? Number(userFilter) : undefined)
         if (!controller.signal.aborted) {
           const lastPage = Math.max(1, Math.ceil(result.total / result.tamanoPagina))
           if (page > lastPage) setPage(lastPage)
@@ -85,7 +114,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     }
     void loadHistory()
     return () => controller.abort()
-  }, [token, page, revision, logout])
+  }, [token, page, revision, logout, userFilter])
   const busy = useRef(false)
   const alive = useRef(true)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
@@ -165,12 +194,17 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
         </svg>
       </button>
       </div></div>
+      <button type="button" className="expense-filter-button" aria-label="Filtrar gastos por usuario" aria-haspopup="dialog" aria-controls="expense-filter-dialog"
+        onClick={() => { setDraftUser(userFilter); setFiltersOpen(true) }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M3 5h18M6 11h12M9 17h6" /></svg>
+        <span>{userFilter ? 1 : 0}</span>
+      </button>
       <RefreshButton label="Actualizar gastos" loading={loading || saving || historyLoading || totalLoading} onClick={() => setRevision(v => v + 1)} />
     </div>
     {totalError && <p className="expense-error" role="alert">{totalError}</p>}
     {historyLoading ? <p role="status">Cargando gastos…</p>
       : historyError ? <p className="expense-error" role="alert">{historyError}</p>
-      : !history?.items.length ? null
+      : !history?.items.length ? <p role="status">No hay gastos para mostrar con este filtro.</p>
       : <div className="expense-table-scroll"><table className="expense-table">
         <thead><tr><th>Descripción</th><th>Monto</th><th>Observación</th><th>Encargado</th><th>Fecha y hora</th></tr></thead>
         <tbody>{history.items.map(item => <tr key={item.idGasto}>
@@ -192,6 +226,23 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
     </button>
+    <dialog id="expense-filter-dialog" ref={filterDialog} className="expense-filter-dialog" aria-labelledby="expense-filter-title"
+      onCancel={() => setFiltersOpen(false)}>
+      <div className="expense-filter-grip" aria-hidden="true" />
+      <div className="expense-filter-heading"><h2 id="expense-filter-title">Filtros</h2>
+        <button type="button" aria-label="Cerrar filtros" onClick={() => setFiltersOpen(false)}>×</button>
+      </div>
+      <label>Usuario<select value={draftUser} disabled={usersLoading || !!usersError} onChange={e => setDraftUser(e.target.value)}>
+        <option value="">Todos</option>
+        {users.map(user => <option key={user.id_usuario} value={user.id_usuario}>{[user.nombre, user.apellido].filter(Boolean).join(' ')}</option>)}
+      </select></label>
+      {usersLoading && <p role="status">Cargando usuarios…</p>}
+      {usersError && <div role="alert"><p>{usersError}</p><button type="button" onClick={() => setUsersRevision(v => v + 1)}>Reintentar</button></div>}
+      <div className="expense-filter-actions">
+        <button type="button" onClick={() => { setUserFilter(''); setDraftUser(''); setPage(1); setFiltersOpen(false) }}>Limpiar</button>
+        <button type="button" disabled={usersLoading || !!usersError} onClick={() => { setUserFilter(draftUser); setPage(1); setFiltersOpen(false) }}>Aplicar</button>
+      </div>
+    </dialog>
     <dialog id="expense-create-dialog" ref={dialogRef} className="expense-create-dialog"
       aria-labelledby="expense-create-title" onCancel={event => { if (saving) event.preventDefault(); else setFormOpen(false) }}
 >
