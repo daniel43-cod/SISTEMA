@@ -9,11 +9,11 @@
         public decimal total { get; set; }
         public DateTime fecha_venta { get; set; }
         public int id_cliente { get; set; }
-        public string cliente { get; set; }
+        public required string cliente { get; set; }
         public int id_usuario { get; set; }
-        public string usuario { get; set; }
-        public string estado { get; set; }
-        public string origen { get; set; }
+        public required string usuario { get; set; }
+        public  string? estado { get; set; }
+        public required string origen { get; set; }
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         public decimal? ganancia_total { get; set; }
         public decimal monto_pagado { get; set; }

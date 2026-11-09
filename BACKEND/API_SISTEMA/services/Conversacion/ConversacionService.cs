@@ -75,7 +75,9 @@ namespace API_SISTEMA.Services.Conversacion
             foreach (var anterior in anteriores.AsEnumerable().Reverse())
             {
                 historial.Add(new TurnoIA("user", anterior.MensajeRecibido[..Math.Min(2000, anterior.MensajeRecibido.Length)]));
-                historial.Add(new TurnoIA("assistant", anterior.Respuesta![..Math.Min(8000, anterior.Respuesta.Length)]));
+                // La consulta anterior incluye únicamente mensajes con respuesta completada.
+                var respuesta = anterior.Respuesta ?? throw new InvalidOperationException("El historial contiene una respuesta nula.");
+                historial.Add(new TurnoIA("assistant", respuesta[..Math.Min(8000, respuesta.Length)]));
             }
             historial.Add(new TurnoIA("user", mensaje.MensajeRecibido));
             try

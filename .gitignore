@@ -3,3 +3,4 @@ BACKEND/.artifacts/
 BACKEND/debug.log
 **/bin/
 **/obj/
+**/sixlabors.lic

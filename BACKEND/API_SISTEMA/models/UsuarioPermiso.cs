@@ -10,7 +10,7 @@ namespace API_SISTEMA.Models
         public int id_permiso { get; set; }
         public bool permitido { get; set; }   
 
-        public Usuario Usuario { get; set; }
-        public TablaPermiso tabla_permiso { get;  set; }
+        public Usuario Usuario { get; set; } = null!;
+        public TablaPermiso tabla_permiso { get;  set; } = null!;
     }
 }

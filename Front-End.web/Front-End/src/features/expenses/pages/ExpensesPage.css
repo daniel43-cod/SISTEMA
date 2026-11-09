@@ -69,10 +69,10 @@
 }
 /* El resumen queda inmóvil y solo se desplaza el listado de gastos en móvil. */
 @media (max-width: 800px) {
-  .staff-shell:has(.expense-panel) { height: 100dvh; min-height: 0; overflow: hidden; }
-  .staff-workspace:has(.expense-panel) { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-  .staff-workspace:has(.expense-panel) > .staff-header { flex-shrink: 0; }
-  .staff-content:has(.expense-panel) { display: flex; flex: 1; flex-direction: column; min-height: 0; width: 100%; box-sizing: border-box; margin: 0; overflow: hidden; padding: 12px 24px; }
+  .staff-shell-expenses { height: 100dvh; min-height: 0; overflow: hidden; }
+  .staff-shell-expenses .staff-workspace { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .staff-shell-expenses .staff-workspace > .staff-header { flex-shrink: 0; }
+  .staff-shell-expenses .staff-content { display: flex; flex: 1; flex-direction: column; min-height: 0; width: 100%; box-sizing: border-box; margin: 0; overflow: hidden; padding: 12px 24px; }
   .expense-panel { display: flex; flex: 1; flex-direction: column; min-height: 0; box-sizing: border-box; margin-bottom: 0; padding: 38px 15px 16px; border-radius: 22px; gap: 18px; overflow: hidden; }
   .expense-panel > * { flex-shrink: 0; }
   .expense-panel > .expense-open:empty { display: none; }

@@ -14,6 +14,7 @@ function SalesChart({ report, purchasesReport, expensesReport }: { report: Sales
 const [hovered, setHovered] = useState<{
   index: number
   series: 'venta' | 'ganancia' | 'compra' | 'gasto'
+  
 } | null>(null)
   const points = report.puntos.filter(p => p.idVenta !== null)
  const purchasePoints =
@@ -126,12 +127,6 @@ const hoveredLabel = hovered?.series === 'compra' || hovered?.series === 'gasto'
   ? ''
   : hovered?.series === 'ganancia' ? 'Ganancia' : 'Total de venta'
   return <div className="report-chart">
-    <div className="report-legend" aria-label="Leyenda de la gráfica">
-      <span><span className="report-legend-dot report-legend-dot--expenses" aria-hidden="true" />Gastos</span>
-      <span><span className="report-legend-dot report-legend-dot--purchases" aria-hidden="true" />Compras</span>
-      <span><span className="report-legend-dot report-legend-dot--profit" aria-hidden="true" />Ganancia</span>
-      <span><span className="report-legend-dot report-legend-dot--sales" aria-hidden="true" />Ventas</span>
-    </div>
     <svg viewBox="0 0 960 340" role="img" aria-label="Ventas, ganancias, compras y gastos individuales de la sesión">
       {/* Escala vertical compartida por los importes y las ganancias de las ventas. */}
       {[0, 1, 2, 3, 4].map(i => <g key={i}><line x1="100" x2="920" y1={y(min + (max - min) * i / 4)} y2={y(min + (max - min) * i / 4)} stroke="#dce5ee" /><text x="90" y={y(min + (max - min) * i / 4) + 4} textAnchor="end">{money.format(min + (max - min) * i / 4)}</text></g>)}
@@ -306,7 +301,33 @@ const [purchasesError, setPurchasesError] = useState('')
     {sessionLoading && <p role="status">Cargando sesiones…</p>}
     {!sessionLoading && !sessionError && !sessions.length && <p>No hay sesiones de caja registradas.</p>}
     {loading ? <p role="status">Cargando gráfica…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : report && <>
-      <div className="reports-totals"><div><span>Total de ventas</span><strong>{money.format(report.totalVentas)}</strong></div><div><span>Ventas registradas</span><strong>{report.cantidadVentas}</strong></div></div>
+      <p className={'reports-session-status ' + (report.cierre === null ? 'is-open' : 'is-closed')}>
+        <span aria-hidden="true" />{report.cierre === null ? 'Abierta' : 'Cerrada'}
+      </p>
+      <div className="reports-summary-grid">
+        <article className="reports-summary-card reports-summary-sales">
+          <span className="reports-summary-label"><i aria-hidden="true" />Ventas</span>
+          <strong>{money.format(report.totalVentas)}</strong>
+          <small>{report.cantidadVentas} {report.cantidadVentas === 1 ? 'venta' : 'ventas'}</small>
+        </article>
+        <article className="reports-summary-card reports-summary-profit">
+          <span className="reports-summary-label"><i aria-hidden="true" />Ganancia</span>
+          <strong>{money.format(report.puntos.filter(p => p.idVenta !== null).reduce((sum, p) => sum + p.gananciaVenta, 0))}</strong>
+          <small>Margen {report.totalVentas > 0 ? Math.round(report.puntos.filter(p => p.idVenta !== null).reduce((sum, p) => sum + p.gananciaVenta, 0) / report.totalVentas * 100) + ' %' : '—'}</small>
+        </article>
+        <article className="reports-summary-card reports-summary-purchases">
+          <span className="reports-summary-label"><i aria-hidden="true" />Compras</span>
+          <strong>{purchasesLoading ? '…' : purchasesReport?.idSesionCaja === report.idSesionCaja ? money.format(purchasesReport.totalCompras) : '—'}</strong>
+          <small>{purchasesLoading ? 'Cargando…' : purchasesError ? 'No disponible' : purchasesReport?.idSesionCaja === report.idSesionCaja
+            ? purchasesReport.cantidadCompras + (purchasesReport.cantidadCompras === 1 ? ' compra' : ' compras') : 'Solo caja activa'}</small>
+        </article>
+        <article className="reports-summary-card reports-summary-expenses">
+          <span className="reports-summary-label"><i aria-hidden="true" />Gastos</span>
+          <strong>{expensesLoading ? '…' : expensesReport?.idSesionCaja === report.idSesionCaja ? money.format(expensesReport.totalGastos) : '—'}</strong>
+          <small>{expensesLoading ? 'Cargando…' : expensesError ? 'No disponible' : expensesReport?.idSesionCaja === report.idSesionCaja
+            ? expensesReport.cantidadGastos + (expensesReport.cantidadGastos === 1 ? ' gasto' : ' gastos') : 'Solo caja activa'}</small>
+        </article>
+      </div>
       
       {report.cantidadVentas === 0 && <p>No hay ventas registradas en esta sesión.</p>}
       <SalesChart key={sessionId} report={report} purchasesReport={purchasesReport} expensesReport={expensesReport} />
@@ -318,12 +339,7 @@ const [purchasesError, setPurchasesError] = useState('')
         <p>{purchasesError}</p>
         <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button>
       </div>
-    ) : purchasesReport && purchasesReport.idSesionCaja === sessionId ? (
-      <div className="reports-totals">
-        <div><span>Total de compras</span><strong>{money.format(purchasesReport.totalCompras)}</strong></div>
-        <div><span>Compras registradas</span><strong>{purchasesReport.cantidadCompras}</strong></div>
-      </div>
-    ) : (
+    ) : purchasesReport && purchasesReport.idSesionCaja === sessionId ? null : (
       <p>El reporte de compras está disponible únicamente para la caja activa.</p>
     ))}
     {sessionId > 0 && (expensesLoading ? (
@@ -333,12 +349,7 @@ const [purchasesError, setPurchasesError] = useState('')
         <p>{expensesError}</p>
         <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button>
       </div>
-    ) : expensesReport?.idSesionCaja === sessionId ? (
-      <div className="reports-totals">
-        <div><span>Total de gastos</span><strong>{money.format(expensesReport.totalGastos)}</strong></div>
-        <div><span>Gastos registrados</span><strong>{expensesReport.cantidadGastos}</strong></div>
-      </div>
-    ) : (
+    ) : expensesReport?.idSesionCaja === sessionId ? null : (
       <p>El reporte de gastos está disponible únicamente para la caja activa.</p>
     ))}
   </section>

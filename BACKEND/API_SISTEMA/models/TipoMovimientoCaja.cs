@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.Models
 {
@@ -6,7 +6,7 @@ namespace API_SISTEMA.Models
     {
         [Key]
         public int id_tipo_movimiento { get; set; }
-        public string nombre_movimiento { get; set; }
-        public string naturaleza { get; set; }
+        public required string nombre_movimiento { get; set; }
+        public required string naturaleza { get; set; }
     }
 }

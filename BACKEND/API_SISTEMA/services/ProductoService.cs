@@ -109,14 +109,14 @@ namespace API_SISTEMA.Services
                 .Where(p =>
                     p.Producto.Nombre.Contains(texto) ||
                     (p.Presentacion.Descripcion != null && p.Presentacion.Descripcion.Contains(texto)) ||
-                    p.Producto.CodigoBarra.Contains(texto))
+                    (p.Producto.CodigoBarra != null && p.Producto.CodigoBarra.Contains(texto)))
                 .Select(p => new ProductoVentaBuscarDto
                 {
                     id_producto = p.id_producto,
                     id_producto_presentacion = p.id_producto_presentacion,
                     
                     nombre_producto = p.Producto.Nombre,
-                    presentacion = p.Presentacion.Descripcion,
+                    presentacion = p.Presentacion.Descripcion ?? string.Empty,
                     
                     unidades_equivalentes = p.unidades_equivalentes,
                     precio = p.precio,

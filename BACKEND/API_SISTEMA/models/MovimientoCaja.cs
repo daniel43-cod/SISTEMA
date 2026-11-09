@@ -20,9 +20,9 @@ namespace API_SISTEMA.Models
         public SesionCaja sesionCaja { get; set; } = null!;
         public TipoMovimientoCaja tipoMovimientoCaja { get; set; } = null!;
         public Usuario usuario { get; set; } = null!;
-        public   Ventas venta { get; set; }
-        public RegistroCompras RegistroCompras { get; set; }
-        public Pagos pagos { get; set; }
-        public PagosCompra pagosCompra { get; set; }
+        public   Ventas? venta { get; set; }
+        public RegistroCompras? RegistroCompras { get; set; }
+        public Pagos? pagos { get; set; }
+        public PagosCompra? pagosCompra { get; set; }
     }
 }

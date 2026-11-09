@@ -9,11 +9,17 @@ namespace API_SISTEMA.Data
         {
             
             private readonly string _cadenaConexion;
-
+            
             public Conexion(IConfiguration configuration)
-            {
-                _cadenaConexion = configuration.GetConnectionString("ConexionSQL");
-            }
+{
+    var cadena = configuration.GetConnectionString("ConexionSQL");
+
+    if (string.IsNullOrWhiteSpace(cadena))
+        throw new InvalidOperationException(
+            "No está configurada la cadena de conexión ConexionSQL.");
+
+    _cadenaConexion = cadena;
+}
 
             public SqlConnection CrearConexion()
             {

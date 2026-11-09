@@ -29,3 +29,33 @@
 .report-legend-dot--sales { background-color: #0876bc; }
 
 .report-legend-dot--expenses { background-color: #dc2626; }
+
+.reports-session-status { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; font-size: .9rem; font-weight: 600; }
+.reports-session-status.is-open { color: #00845b; }
+.reports-session-status.is-closed { color: #64748b; }
+.reports-session-status > span { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.reports-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.reports-summary-card { --summary-color: #0876bc; display: grid; align-content: start; gap: 8px; min-width: 0; padding: 18px; border: 1px solid #d3deed; border-left: 5px solid var(--summary-color); border-radius: 18px; background: #fff; }
+.reports-summary-profit { --summary-color: #0aa34f; }
+.reports-summary-purchases { --summary-color: #ea580c; }
+.reports-summary-expenses { --summary-color: #dc2626; }
+.reports-summary-label { display: flex; align-items: center; gap: 8px; color: #526477; font-size: .9rem; }
+.reports-summary-label i { width: 12px; height: 12px; flex-shrink: 0; border-radius: 50%; background: var(--summary-color); }
+.reports-summary-card strong { font-size: clamp(1.1rem, 4.8vw, 1.5rem); color: #142b3d; overflow-wrap: anywhere; }
+.reports-summary-card small { font-size: .8rem; color: #526477; }
+@media (max-width: 800px) {
+  .reports-panel { background: #f5f7fb; }
+  .reports-summary-grid { gap: 12px; }
+  .reports-summary-card { padding: 16px 12px; }
+}
+/* El selector respeta el ancho del panel incluso con nombres largos. */
+.reports-panel { box-sizing: border-box; width: 100%; max-width: 100%; }
+.reports-filters { min-width: 0; max-width: 100%; }
+.reports-filters label { min-width: 0; flex: 0 1 440px; width: 100%; box-sizing: border-box; }
+.reports-filters select { display: block; width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 800px) {
+  .staff-shell-reports .staff-content { min-width: 0; width: 100%; box-sizing: border-box; }
+  .reports-filters { gap: 10px; margin-block: 16px; }
+  .reports-filters label { flex-basis: 100%; }
+  .reports-filters select { font-size: 14px; padding-right: 28px; }
+}

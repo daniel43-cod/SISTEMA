@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API_SISTEMA.Models
@@ -14,7 +14,7 @@ namespace API_SISTEMA.Models
         [Column("id_presentacion")]
         public int IdPresentacion {get;set;}
 
-        public API_SISTEMA.Models.Productos Producto { get; set; }
-        public Presentacion Presentacion {get;set;}
+        public API_SISTEMA.Models.Productos Producto { get; set; } = null!;
+        public Presentacion Presentacion {get;set;} = null!;
     }
 }

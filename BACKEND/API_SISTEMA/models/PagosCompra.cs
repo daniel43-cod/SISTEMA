@@ -11,12 +11,12 @@ namespace API_SISTEMA.Models
         public int id_compra { get; set; }
         [Required]
         public int id_usuario { get; set; }
-        public string observacion { get; set; }
+        public string observacion { get; set; } = string.Empty;
         [Required]
         public DateTime fecha_pago { get; set; }
         [Required]
         public decimal? monto { get; set; }
         public int id_sesion_caja { get; set; }
-        public SesionCaja sesioncaja { get; set; }
+        public SesionCaja sesioncaja { get; set; } = null!;
     }
 }

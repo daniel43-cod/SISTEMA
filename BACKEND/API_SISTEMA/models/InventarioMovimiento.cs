@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.Models
 {
@@ -8,9 +8,9 @@ namespace API_SISTEMA.Models
        public int id_movimiento {  get; set; }
        public int id_producto { get; set; }
        public int id_usuario { get; set; }
-       public string tipo_movimiento {get; set; }
-       public string cantidad { get; set; }
-       public string motivo { get; set; }
+       public required string tipo_movimiento {get; set; }
+       public required string cantidad { get; set; }
+       public required string motivo { get; set; }
         public DateTime fecha_mocimiento { get; set; }
     }
 }

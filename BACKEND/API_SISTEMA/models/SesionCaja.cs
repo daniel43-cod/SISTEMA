@@ -14,7 +14,7 @@ namespace API_SISTEMA.Models
         public decimal? monto_esperado { get; set; }
         public decimal? monto_contado { get; set; }
         public decimal? diferencia { get; set; }
-        public string observacion_apertura { get; set; }
+        public string observacion_apertura { get; set; } = string.Empty;
         public DateTime? fecha_cierre { get; set;}
         public string? observacion_cierre { get; set; }
         public Caja caja { get; set; } = null!;

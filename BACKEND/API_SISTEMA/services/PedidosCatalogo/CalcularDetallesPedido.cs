@@ -40,7 +40,7 @@ internal static class CalcularDetallesPedido
             VentaReglas.Monto(bruto, false);
             total += bruto;
             detalles.Add(new DetallePedidoCatalogo { IdProductoPresentacion = pr.id_producto_presentacion,
-                NombreProducto = pr.Producto.Nombre, NombrePresentacion = pr.Presentacion.Descripcion,
+                NombreProducto = pr.Producto.Nombre, NombrePresentacion = pr.Presentacion.Descripcion ?? string.Empty,
                 Cantidad = linea.Cantidad, PrecioUnitario = pr.precio });
         }
         VentaReglas.Monto(total, false);

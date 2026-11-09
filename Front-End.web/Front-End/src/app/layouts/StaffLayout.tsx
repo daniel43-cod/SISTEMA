@@ -96,7 +96,7 @@ export function StaffLayout() {
   )
 
   return (
-    <div className={`staff-shell ${current.id === 'listado-ventas' ? 'staff-shell-sale-list ' : ''}${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : current.id === 'pedidos' ? 'staff-shell-orders' : current.id === 'usuarios' ? 'staff-shell-users' : current.id === 'reportes' ? 'staff-shell-reports' : ''}`}>
+    <div className={`staff-shell ${current.id === 'listado-ventas' ? 'staff-shell-sale-list ' : ''}${current.id === 'caja' ? 'staff-shell-cash ' : current.id === 'ventas' ? 'staff-shell-sales ' : ''}${current.id === 'productos' ? 'staff-shell-products' : current.id === 'inventario' ? 'staff-shell-inventory' : current.id === 'compras' ? 'staff-shell-purchases' : current.id === 'pedidos' ? 'staff-shell-orders' : current.id === 'usuarios' ? 'staff-shell-users' : current.id === 'reportes' ? 'staff-shell-reports' : current.id === 'gastos' ? 'staff-shell-expenses' : ''}`}>
       <a className="staff-skip" href="#staff-content">Ir al contenido</a>
       <aside className="staff-sidebar">
         <div className="staff-brand">

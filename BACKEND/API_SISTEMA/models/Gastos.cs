@@ -14,7 +14,7 @@ namespace API_SISTEMA.Models
         public DateTime fecha { get; set; }
         public string? observacion { get; set; }
 
-        public SesionCaja sesionCaja { get; set; }
-        public Usuario usuario { get; set; }
+        public SesionCaja sesionCaja { get; set; } = null!;
+        public Usuario usuario { get; set; } = null!;
     }
 }

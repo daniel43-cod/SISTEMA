@@ -10,6 +10,6 @@ namespace API_SISTEMA.Models
         public bool estado { get; set; }
 
         //relacion para un producto que tiene muchos registrps
-        public ICollection<ProductoPrecio> ProductoPrecios { get; set; }
+        public ICollection<ProductoPrecio> ProductoPrecios { get; set; } = new List<ProductoPrecio>();
     }
 }

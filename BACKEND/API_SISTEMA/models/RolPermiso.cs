@@ -9,7 +9,7 @@ namespace API_SISTEMA.Models
     public int id_permiso { get; set; }
     public int id_rol { get; set; }
 
-        public TablaPermiso Permiso { get; set; } // navegación hacia el permiso
-        public Rol Rol { get; set; } // navegación hacia el rol
+        public TablaPermiso Permiso { get; set; } = null!;
+        public Rol Rol { get; set; } =null!;
     }
 }

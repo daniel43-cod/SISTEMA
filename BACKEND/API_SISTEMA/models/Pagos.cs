@@ -9,12 +9,12 @@ namespace API_SISTEMA.Models
         public int id_venta { get; set; }
         public int id_usuario { get; set; }
         public decimal monto { get; set; }
-        public string metodo_pago { get; set; }
+        public required string metodo_pago { get; set; }
         public string? observacion { get; set; }
         public DateTime fecha_pago { get; set; } =DateTime.Now;
         public int id_sesion_caja { get; set; }
 
-        public SesionCaja sesionCaja { get; set; }
+        public SesionCaja sesionCaja { get; set; } = null!;
 
     }
 }

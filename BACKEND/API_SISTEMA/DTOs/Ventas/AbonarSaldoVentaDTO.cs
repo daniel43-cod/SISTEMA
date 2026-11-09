@@ -4,6 +4,6 @@
     {
         public int id_venta { get; set; }
         public decimal monto { get; set; }
-        public string observacion { get; set; }
+        public string? observacion { get; set; }
     }
 }

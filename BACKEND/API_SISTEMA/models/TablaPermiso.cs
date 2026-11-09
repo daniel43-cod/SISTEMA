@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.Models
 {
@@ -6,11 +6,11 @@ namespace API_SISTEMA.Models
     {
         [Key]
      public int id_permiso {  get; set; }
-        public string nombre { get; set; }
-        public string descripcion { get; set; }
+        public required string nombre { get; set; }
+        public required string descripcion { get; set; }
         public bool estado { get; set; }
 
-        public List<RolPermiso> RolPermisos { get; set; }
+        public List<RolPermiso> RolPermisos { get; set; } = new();
 
     }
 }

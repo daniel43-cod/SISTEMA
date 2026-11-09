@@ -1,10 +1,10 @@
-﻿namespace API_SISTEMA.Dtos.Empresa
+namespace API_SISTEMA.Dtos.Empresa
 {
     public class EmpresaDto
     {
         public int id_empresa { get; set; }
-        public string nombre_empresa { get; set; }
-        public string nit { get; set; }
+        public required string nombre_empresa { get; set; }
+        public required string nit { get; set; }
 
     }
 }

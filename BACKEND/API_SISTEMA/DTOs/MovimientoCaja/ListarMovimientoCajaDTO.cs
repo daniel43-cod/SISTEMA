@@ -1,4 +1,4 @@
-﻿namespace API_SISTEMA.Dtos.MovimientoCaja
+namespace API_SISTEMA.Dtos.MovimientoCaja
 {
     public class ListarMovimientoCajaDto
     {
@@ -8,12 +8,12 @@
         public int id_sesion_caja { get; set; }
 
         public int id_tipo_movimiento { get; set; }
-        public string tipo_movimiento { get; set; }
+        public required string tipo_movimiento { get; set; }
 
-        public string naturaleza { get; set; }
+        public required string naturaleza { get; set; }
 
         public int id_usuario { get; set; }
-        public string usuario { get; set; }
+        public required string usuario { get; set; }
 
         public DateTime fecha_movimiento { get; set; }
 

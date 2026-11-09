@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.Models
 {
@@ -12,9 +12,9 @@ namespace API_SISTEMA.Models
         public bool estado {  get; set; }
 
         //relacion con productos
-        public API_SISTEMA.Models.Productos Producto { get; set; }
+        public API_SISTEMA.Models.Productos Producto { get; set; } = null!;
         //relacion con tipocliente
-        public TipoCliente TipoCliente { get; set; }
+        public TipoCliente TipoCliente { get; set; } = null!;
  
     }
 }
