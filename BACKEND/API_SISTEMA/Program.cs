@@ -21,6 +21,15 @@ using System.Text;
 using API_SISTEMA.Services.CatalogoPublico;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddOptions<API_SISTEMA.Services.Fel.InfileOptions>()
+    .Bind(builder.Configuration.GetSection("Infile"))
+    .Validate(o => o.Ambiente is "PRUEBAS" or "PRODUCCION",
+        "Infile:Ambiente debe ser PRUEBAS o PRODUCCION.")
+    .Validate(o => !o.Habilitado ||
+        (!string.IsNullOrWhiteSpace(o.UsuarioApi) && !string.IsNullOrWhiteSpace(o.LlaveApi) &&
+         !string.IsNullOrWhiteSpace(o.UsuarioFirma) && !string.IsNullOrWhiteSpace(o.LlaveFirma)),
+        "Configura las cuatro credenciales privadas de INFILE antes de habilitar FEL.")
+    .ValidateOnStart();
 //agregue la coneciom del appsetings
 builder.Services.AddDbContext<SistemaDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSQL")));

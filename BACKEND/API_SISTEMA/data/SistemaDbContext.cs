@@ -38,6 +38,7 @@ namespace API_SISTEMA.Data
         public DbSet<AuditoriaEvento> AuditoriaEventos { get; set; }
         public DbSet<AuditoriaEventoDetalle> AuditoriaEventoDetalles { get; set; }
         public DbSet<VentaOperacion> VentaOperaciones { get; set; }
+        public DbSet<DocumentoFel> DocumentosFel { get; set; }
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<ZonaEntrega> ZonasEntrega { get; set; }
         public DbSet<PedidoCatalogo> PedidosCatalogo { get; set; }
@@ -65,6 +66,7 @@ namespace API_SISTEMA.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new AuditoriaEventoConfiguration());
+            modelBuilder.ApplyConfiguration(new DocumentoFelConfiguration());
             modelBuilder.ApplyConfiguration(new ZonaEntregaConfiguration());
             modelBuilder.ApplyConfiguration(new PedidoCatalogoConfiguration());
             modelBuilder.ApplyConfiguration(new DetallePedidoCatalogoConfiguration());
