@@ -21,6 +21,13 @@ using System.Text;
 using API_SISTEMA.Services.CatalogoPublico;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddOptions<API_SISTEMA.Services.WhatsApp.WhatsAppOptions>()
+    .Bind(builder.Configuration.GetSection("WhatsApp"));
+builder.Services.AddHttpClient<API_SISTEMA.Services.WhatsApp.WhatsAppClient>(client =>
+    client.Timeout = TimeSpan.FromSeconds(60))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+    .RedactLoggedHeaders(new[] { "Authorization" });
+builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.EnviarComprobanteWhatsAppService>();
 builder.Services.AddOptions<API_SISTEMA.Services.Fel.InfileOptions>()
     .Bind(builder.Configuration.GetSection("Infile"))
     .Validate(o => o.Ambiente is "PRUEBAS" or "PRODUCCION",

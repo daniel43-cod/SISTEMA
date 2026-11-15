@@ -16,6 +16,15 @@ namespace API_SISTEMA.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
 {
+    [HttpPost("ventas/{idVenta:int:min(1)}/whatsapp")]
+    public async Task<IActionResult> EnviarWhatsApp(int idVenta, [FromQuery] int idEmpresa,
+        [FromServices] API_SISTEMA.Services.WhatsApp.EnviarComprobanteWhatsAppService servicio, CancellationToken ct)
+    {
+        var datos = await Consultar(idVenta, idEmpresa, ct);
+        var resultado = await servicio.Enviar(datos.Venta, datos.Empresa, ct);
+        return Ok(resultado);
+    }
+
     [HttpGet("ventas/{idVenta:int:min(1)}/paginas")]
     public async Task<IActionResult> Paginas(int idVenta, [FromQuery] int idEmpresa, CancellationToken ct)
     {

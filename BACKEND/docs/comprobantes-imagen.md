@@ -44,4 +44,4 @@ dotnet run --project tests/Comprobantes.Checks -- artifacts/comprobantes
 
 Las pruebas generan ejemplos sintéticos de 0, 2 y 100 detalles y verifican que no se pierdan filas, dimensiones máximas y archivos menores de 5 MB. No requieren conexión a SQL Server.
 
-No incluye envío a Meta, webhooks, botón de frontend ni comprobantes de abonos/productos. El generador puede reutilizarse desde el futuro servicio de envío sin exponer el archivo por una URL pública.
+El envío por plantilla a Meta está documentado en [whatsapp-comprobantes.md](whatsapp-comprobantes.md). No incluye webhooks, botón de frontend ni comprobantes de abonos/productos. El servicio reutiliza el generador sin exponer el archivo por una URL pública.
