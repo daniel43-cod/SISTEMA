@@ -1,7 +1,6 @@
-﻿import test from 'node:test'
+import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createOperationId } from '../src/features/sales/utils/operationId.ts'
-
 test('El identificador de venta funciona sin randomUUID al acceder por HTTP local', () => {
   const source = { getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto) }
   const ids = Array.from({ length: 100 }, () => createOperationId(source))
@@ -70,8 +69,8 @@ test('El descuento se aplica una vez por línea y los totales usan centavos', ()
   assert.equal(saleTotals([{ product, presentation: unit, quantity: '3', discount: '0,05' }]), 1000)
 })
 
-test('Descuentos negativos, vacíos o de más de dos decimales bloquean el registro', () => {
-  for (const discount of ['-1', '', '0.001', 'NaN', 'Infinity'])
+test('Descuentos negativos o de más de dos decimales bloquean el registro', () => {
+  for (const discount of ['-1', '0.001', 'NaN', 'Infinity'])
     assert.throws(() => saleTotals([{ product, presentation: unit, quantity: '1', discount }]), /descuento/)
 })
 
@@ -141,4 +140,13 @@ test('Resumen de ganancias usa el total del backend y conserva todos los filtros
 test('Resumen rechaza una respuesta sin ganancia para evitar importes inválidos', async t => {
   t.mock.method(globalThis, 'fetch', async () => Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false, items: [] }))
   await assert.rejects(loadSaleSummary('token', 1, 10))
+})
+
+test('El descuento vacío se toma como cero sin modificar el pago inicial', () => {
+  for (const discount of ['', '   ', undefined]) {
+    const line = { product, presentation: unit, quantity: '2', discount }
+    assert.equal(saleLineTotal(line), Math.round(unit.precio * 100) * 2)
+    assert.equal(saleTotals([line]), Math.round(unit.precio * 100) * 2)
+  }
+  assert.equal(cashCents(''), null)
 })

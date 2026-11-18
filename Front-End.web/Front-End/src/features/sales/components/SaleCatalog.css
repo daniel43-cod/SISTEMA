@@ -1,0 +1,29 @@
+.sale-catalog-page { width: 100%; max-width: none; min-height: 0; flex: 1; padding: 0; border: 1px solid #d3deed; border-radius: 18px; overflow-y: auto; }
+.sale-catalog-toolbar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; background: white; border-bottom: 1px solid #d3deed; }
+.sale-catalog-page button { min-height: 44px; cursor: pointer; font: inherit; }
+.sale-catalog-toolbar button, .sale-catalog-heading button { padding: 8px 12px; border: 1px solid #cbd8e8; border-radius: 10px; background: white; color: #075b96; }
+.sale-catalog-toolbar span { color: #526477; font-size: .85rem; }
+.sale-catalog-content { padding: 24px; }
+.sale-catalog-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.sale-catalog-heading h1 { font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; }
+.sale-catalog-heading h1:focus { outline: none; }
+.sale-catalog-page .public-presentation { flex-direction: column; align-items: stretch; }
+.sale-catalog-presentation-actions { display: grid; gap: 10px; }
+.sale-catalog-page .public-quantity { justify-content: center; }
+.sale-catalog-page .public-quantity input { width: 64px; min-width: 0; min-height: 44px; border: 1px solid #cbd8e8; border-radius: 8px; padding: 6px; text-align: center; font: inherit; }
+.sale-catalog-add { border: 0; border-radius: 10px; padding: 8px 12px; background: #075b96; color: white; font-size: .85rem; }
+.sale-catalog-page button:disabled, .sale-catalog-page input:disabled { opacity: .5; cursor: not-allowed; }
+.sale-catalog-success, .sale-catalog-error { padding: 14px; border-radius: 12px; margin: 0 0 16px; }
+.sale-catalog-success { background: #dcfce7; color: #166534; }
+.sale-catalog-error { background: #fee2e2; color: #991b1b; }
+.sale-catalog-added { margin: 0; color: #075b96; font-size: .8rem; line-height: 1.5; }
+@media (max-width: 640px) {
+  .sale-catalog-page { width: 100%; min-height: 0; border-radius: 12px; }
+  .sale-catalog-content { padding: 16px 12px; }
+  .sale-catalog-toolbar { padding: 10px 12px; }
+  .sale-catalog-page .public-quantity input { width: 44px; }
+}
+.sales-page.sales-catalog-open > .sales-card { display: none; }
+.sale-catalog-card-footer { padding: 0 18px 18px; }
+.sale-catalog-card-footer .sale-catalog-add { width: 100%; }
+@media (max-width: 640px) { .sale-catalog-card-footer { padding: 0 8px 12px; } }

@@ -35,7 +35,7 @@ export function SaleProductRow({ mobileActive, row, options, usedIds, token, dis
     : filterSaleOptions(options, row.text, usedIds)
   const expanded = open && row.selection === null && matches.length > 0 && !disabled
   const index = Math.min(active, matches.length - 1)
-  const discountCents = cashCents(row.selection?.discount ?? '0.00')
+  const discountCents = cashCents(row.selection?.discount?.trim() || '0.00')
   const gross = row.selection ? Math.round(row.selection.presentation.precio * 100) * (Number(row.selection.quantity) || 0) : 0
   const discountError = row.selection && (discountCents === null || discountCents >= gross)
     ? 'Usa hasta dos decimales y un descuento menor al importe de la línea.' : ''
@@ -205,7 +205,7 @@ export function SaleProductRow({ mobileActive, row, options, usedIds, token, dis
       }} /></td>
     <td>{row.selection ? money(row.selection.presentation.precio) : '—'}</td>
     <td className="sale-discount-cell"><input ref={discount} type="text" inputMode="decimal"
-      pattern="[0-9]{1,8}([.,][0-9]{1,2})?" required={!!row.selection} disabled={disabled || !row.selection}
+      pattern="[0-9]{1,8}([.,][0-9]{1,2})?" disabled={disabled || !row.selection}
       aria-label={`Descuento en quetzales de ${row.text || 'producto'}`} aria-invalid={!!discountError}
       aria-describedby={discountError ? `${listId}-discount-error` : undefined}
       value={row.selection?.discount ?? (row.selection ? '0.00' : '')} placeholder="0.00"

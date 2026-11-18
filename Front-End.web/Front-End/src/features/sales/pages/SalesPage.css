@@ -362,3 +362,17 @@
   .sales-mobile-summary strong { margin-left: 0; font-size: .95rem; }
   .sales-page .sales-mobile-summary button.sales-mobile-register-sale { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: auto; max-width: 120px; min-height: 36px; margin: 0; padding: 7px 10px; border-radius: 10px; font-size: .72rem; line-height: 1.2; }
 }
+
+.sales-catalog-access { display: flex; justify-content: flex-end; flex-shrink: 0; padding-block: 4px 8px; }
+.sales-page .sales-catalog-access button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border: 1px solid #cbd8e8; border-radius: 12px; color: #075b96; background: #fff; }
+@media (max-width: 800px) {
+  .sales-catalog-access { display: none; }
+  .sales-cart-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-block: 12px; }
+  .sales-cart-title-row h3 { margin: 0; }
+  .sales-page .sales-cart-catalog-button { min-height: 40px; padding: 8px 14px; border: 1px solid #cbd8e8; border-radius: 10px; background: #fff; color: #075b96; font-weight: 600; }
+}
+.sales-heading-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.sales-heading-actions .sales-catalog-access { padding: 0; }
+@media (max-width: 800px) {
+  .sales-heading-actions { display: none; }
+}

@@ -1,7 +1,7 @@
 import { FloatingPublicAssistant } from '../components/FloatingPublicAssistant'
 import type { PublicCategory } from '../types/category'
 import type { PublicBrand } from '../types/brand'
-import { CatalogImage } from '../components/CatalogImage'
+import { CatalogCategoriesList } from '../components/CatalogCategoriesList'
 import { PublicBrandsList } from '../components/PublicBrandsList'
 import { PublicProductsList } from '../components/PublicProductsList'
 import { FloatingPublicCart } from '../components/FloatingPublicCart'
@@ -73,14 +73,7 @@ export function PublicCategoriesPage() {
             </div>}
             {!loading && !error && !items.length &&
               <p className="public-catalog-message" role="status">Por ahora no hay categorías disponibles.</p>}
-            {!loading && !error && items.length > 0 && <ul className="public-categories-grid">
-              {items.map(category => <li key={category.idCategoria} className="public-category-card">
-                <button type="button" className="public-category-select" onClick={() => setSelectedCategory(category)}>
-                  <CatalogImage key={category.urlImagen} url={category.urlImagen} name={category.nombre} kind="categorias" />
-                  <h2>{category.nombre}</h2>
-                </button>
-              </li>)}
-            </ul>}
+            {!loading && !error && items.length > 0 && <CatalogCategoriesList items={items} onSelect={setSelectedCategory} />}
           </>}
       <FloatingPublicAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
       <FloatingPublicCart items={cart.items} total={cart.total} count={cart.count} storageError={cart.storageError}

@@ -77,3 +77,53 @@
   .users-mobile-card > strong { grid-column: 1; grid-row: 1; }
   .users-mobile-card > .users-active, .users-mobile-card > .users-inactive { grid-column: 2; grid-row: 1; justify-self: end; width: auto; }
 }
+/* Exploración de usuarios y tarjetas de escritorio. */
+.users-browse-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; flex-shrink: 0; }
+.users-search { display: flex; align-items: center; gap: 12px; width: min(100%, 420px); min-width: 0; box-sizing: border-box; min-height: 52px; padding: 0 16px; border: 1px solid #c4d0e1; border-radius: 14px; color: #64748b; background: white; }
+.users-search svg { flex-shrink: 0; }
+.users-search input { width: 100%; min-width: 0; min-height: 50px; padding: 0; border: 0; background: transparent; font: inherit; color: #263747; }
+.users-search:focus-within { outline: 2px solid #075b96; outline-offset: 2px; }
+.users-search input:focus-visible { outline: none; }
+.users-role-tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+.users-panel .users-role-tabs button { padding: 10px 18px; border-radius: 28px; border-color: #d3deed; color: #526477; background: white; }
+.users-panel .users-role-tabs button[aria-pressed=true] { background: #075b96; border-color: #075b96; color: white; font-weight: 650; }
+.users-desktop-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-content: start; flex: 1; min-height: 0; overflow-y: auto; padding: 2px 2px 90px; }
+.users-profile-card { display: flex; flex-direction: column; min-width: 0; padding: 24px; border: 1px solid #d3deed; border-radius: 20px; background: white; gap: 16px; cursor: pointer; }
+.users-panel button.users-profile-heading { display: flex; gap: 16px; align-items: center; width: 100%; padding: 0; border: 0; text-align: left; color: #142b3d; background: transparent; }
+.users-profile-heading > span:last-child { display: grid; gap: 4px; min-width: 0; }
+.users-profile-heading strong { font-size: 1.1rem; overflow-wrap: anywhere; }
+.users-profile-heading small { font-size: .9rem; font-weight: 400; color: #64748b; overflow-wrap: anywhere; }
+.users-avatar { display: grid; place-items: center; width: 64px; height: 64px; flex-shrink: 0; border-radius: 50%; background: #dceafb; color: #075b96; font-weight: 800; font-size: 1.2rem; }
+.users-avatar-1 { background: #e0f5e9; }
+.users-avatar-2 { background: #ffead8; }
+.users-avatar-3 { background: #eee7ff; }
+.users-avatar-4 { background: #fcece8; }
+.users-profile-badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .8rem; font-weight: 600; }
+.users-role-badge, .users-duplicate-badge { padding: 5px 12px; border-radius: 20px; background: #eef1f5; color: #475569; }
+.users-role-badge.is-admin { background: #deedff; color: #075b96; }
+.users-role-badge.is-supervisor { background: #eee7ff; color: #6d28d9; }
+.users-duplicate-badge { background: #fff3df; color: #9a5800; }
+.users-profile-contact { display: grid; align-content: start; gap: 10px; flex: 1; min-height: 54px; font-size: .9rem; color: #526477; }
+.users-profile-contact p { display: flex; align-items: center; gap: 12px; margin: 0; }
+.users-profile-contact svg { flex-shrink: 0; }
+.users-profile-contact span { overflow-wrap: anywhere; min-width: 0; }
+.users-profile-footer { display: flex; align-items: center; gap: 10px; border-top: 1px solid #e8edf5; padding-top: 14px; }
+.users-profile-footer > span { margin-right: auto; font-size: .8rem; }
+.users-profile-footer > button { font-weight: 650; }
+.users-profile-menu { position: relative; }
+.users-profile-menu summary { display: grid; place-items: center; list-style: none; cursor: pointer; width: 44px; min-height: 44px; border: 1px solid #d3deed; border-radius: 12px; color: #075b96; font-size: 1.2rem; }
+.users-profile-menu summary::-webkit-details-marker { display: none; }
+.users-profile-menu > div { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 3; min-width: 160px; display: grid; gap: 4px; padding: 8px; border: 1px solid #d3deed; border-radius: 12px; background: #fff; box-shadow: 0 6px 22px #0f172a20; }
+.users-profile-menu button { text-align: left; }
+@media (min-width: 801px) {
+  .users-panel > .users-heading h2 { font-size: 2rem; margin: 0; }
+  .users-panel .users-header-actions .users-create-floating { min-height: 52px; border-radius: 16px; padding-inline: 24px; font-weight: 650; }
+}
+@media (min-width: 801px) and (max-width: 1200px) { .users-desktop-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+@media (max-width: 800px) {
+  .users-desktop-cards { display: none; }
+  .users-browse-toolbar { gap: 12px; }
+  .users-search { width: 100%; }
+  .users-role-tabs { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; padding-bottom: 4px; }
+  .users-panel .users-role-tabs button { white-space: nowrap; flex-shrink: 0; padding: 8px 12px; font-size: .8rem; }
+}

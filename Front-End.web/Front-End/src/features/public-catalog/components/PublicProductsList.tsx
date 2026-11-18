@@ -1,9 +1,9 @@
 import { usePublicProducts } from '../hooks/usePublicProducts'
-import { CatalogImage } from './CatalogImage'
+import { CatalogProductCard } from './CatalogProductCard'
 import { MAX_QUANTITY } from '../utils/cart'
 import type { CartItem } from '../types/product'
 
-const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
+
 export function PublicProductsList({ idMarca, cartItems, setQuantity }: {
   idMarca: number
   cartItems: CartItem[]
@@ -19,34 +19,20 @@ export function PublicProductsList({ idMarca, cartItems, setQuantity }: {
       No hay productos disponibles en esta página.
     </p>}
     {!loading && !error && items.length > 0 && <ul className="public-products-grid">
-      {items.map(product => <li key={product.idProducto} className="public-category-card">
-        <CatalogImage key={product.urlImagen} url={product.urlImagen} name={product.nombre} kind="productos" />
-        <h2>{product.nombre}</h2>
-        <ul className="public-presentations">
-          {product.presentaciones.map(presentation => {
-            const quantity = cartItems.find(row => row.idProductoPresentacion === presentation.idProductoPresentacion)?.cantidad ?? 0
-            const cartItem = { idProducto: product.idProducto, idProductoPresentacion: presentation.idProductoPresentacion,
-              producto: product.nombre, presentacion: presentation.nombre, precio: presentation.precio }
-            const label = `${product.nombre}, ${presentation.nombre}`
-            return <li key={presentation.idProductoPresentacion} className="public-presentation">
-              <div className="public-presentation-info">
-                <div className="public-presentation-heading">
-                  <strong>{presentation.nombre}</strong>
-                  <span>{money.format(presentation.precio)}</span>
-                </div>
-                <small className={presentation.disponible ? 'public-availability-available' : 'public-availability-unavailable'}>{presentation.disponible ? 'Disponible' : 'Agotado'}</small></div>
-              <div className="public-quantity" role="group" aria-label={`Cantidad en carrito de ${label}`}>
-                <button type="button" aria-label={`Quitar uno: ${label}`} disabled={quantity === 0}
-                  onClick={() => setQuantity(cartItem, quantity - 1)}>−</button>
-                <output aria-label={`Cantidad de ${label}`}>{quantity}</output>
-                <button type="button" aria-label={`Agregar uno: ${label}`}
-                  disabled={!presentation.disponible || quantity >= MAX_QUANTITY}
-                  onClick={() => setQuantity(cartItem, quantity + 1)}>+</button>
-              </div>
-            </li>
-          })}
-        </ul>
-      </li>)}
+      {items.map(product => <CatalogProductCard key={product.idProducto} product={product} renderActions={presentation => {
+        const quantity = cartItems.find(row => row.idProductoPresentacion === presentation.idProductoPresentacion)?.cantidad ?? 0
+        const cartItem = { idProducto: product.idProducto, idProductoPresentacion: presentation.idProductoPresentacion,
+          producto: product.nombre, presentacion: presentation.nombre, precio: presentation.precio }
+        const label = product.nombre + ', ' + presentation.nombre
+        return <div className="public-quantity" role="group" aria-label={'Cantidad en carrito de ' + label}>
+          <button type="button" aria-label={'Quitar uno: ' + label} disabled={quantity === 0}
+            onClick={() => setQuantity(cartItem, quantity - 1)}>−</button>
+          <output aria-label={'Cantidad de ' + label}>{quantity}</output>
+          <button type="button" aria-label={'Agregar uno: ' + label}
+            disabled={!presentation.disponible || quantity >= MAX_QUANTITY}
+            onClick={() => setQuantity(cartItem, quantity + 1)}>+</button>
+        </div>
+      }} />)}
     </ul>}
     <nav className="public-pagination" aria-label="Páginas de productos">
       <button type="button" disabled={loading || pagina === 1} onClick={() => setPagina(pagina - 1)}>Anterior</button>

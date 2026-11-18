@@ -13,7 +13,6 @@ import './SalesPage.css'
 import './SaleListPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
-const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: 'short' })
 
 export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarget?: (node: HTMLDivElement | null) => void; toolbarTarget?: HTMLDivElement | null } = {}) {
   const { session, logout } = useAuth()
@@ -182,7 +181,7 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
                     <strong className="sale-mobile-card-client">{sale.cliente}</strong>
                     <strong className="sale-mobile-card-total">{money.format(sale.total)}</strong>
                   </span>
-                  <span className="sale-mobile-card-date">Venta #{sale.id_ventas} · {Number.isNaN(Date.parse(sale.fecha_venta)) ? 'Fecha no disponible' : date.format(new Date(sale.fecha_venta))} · {sale.usuario}</span>
+                  <span className="sale-mobile-card-date">Venta #{sale.id_ventas} · {sale.usuario}</span>
                   <span className="sale-mobile-card-bottom">
                     <span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
                     {sale.saldo_pendiente > 0 && <span className="sale-mobile-card-balance">Debe <strong>{money.format(sale.saldo_pendiente)}</strong></span>}
@@ -192,12 +191,11 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
             </ul>
             <div className="sales-table-scroll" role="region" aria-label="Listado de ventas" tabIndex={0}>
               <table><caption className="sr-only">{isAdmin && range ? 'Ventas de la fecha seleccionada, de todas las sesiones de caja' : 'Ventas registradas en la sesión de caja abierta'}</caption>
-                <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th>{isAdmin && <th scope="col" className="sale-list-money">Ganancia</th>}<th scope="col" className="sale-list-money">Saldo pendiente</th><th scope="col">Estado</th></tr></thead>
+                <thead><tr><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th>{isAdmin && <th scope="col" className="sale-list-money">Ganancia</th>}<th scope="col" className="sale-list-money">Saldo pendiente</th><th scope="col">Estado</th></tr></thead>
                 <tbody>{rows.map(sale => <tr key={sale.id_ventas} className={selected?.id_ventas === sale.id_ventas ? 'sale-list-row is-selected' : 'sale-list-row'}
                   tabIndex={saving ? -1 : 0} aria-label={'Ver detalle de la venta de ' + sale.cliente} aria-expanded={selected?.id_ventas === sale.id_ventas}
                   onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(sale); setSuccess('') } }}
                   onClick={() => { if (!saving) { setSelected(sale); setSuccess('') } }}>
-                  <td className="sale-list-nowrap">{Number.isNaN(Date.parse(sale.fecha_venta)) ? 'Fecha no disponible' : date.format(new Date(sale.fecha_venta))}</td>
                   <td>{sale.cliente}</td><td>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
                   {isAdmin && <td className="sale-list-money">{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</td>}
                   <td className="sale-list-money">{money.format(sale.saldo_pendiente)}</td>

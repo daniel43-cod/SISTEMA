@@ -231,3 +231,12 @@
   .sale-payments-history td:nth-child(4) { grid-column: 2; grid-row: 1; text-align: right; color: #075b96; font-weight: 650; }
   .sale-payments-history td:nth-child(5) { grid-column: 1 / -1; }
 }
+
+/* Historial en PC: importes juntos a la izquierda y filtros en una fila. */
+@media (min-width: 801px) {
+  .sale-list-view .sale-arranged-filters { width: 100%; align-items: flex-end; gap: 16px 24px; }
+  .sale-list-view .sale-totals-stack { order: -1; display: flex; flex-wrap: wrap; align-self: auto; gap: 16px; margin-right: auto; }
+  .sale-list-view .sale-totals-stack .sale-profit-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .sale-list-view .sale-filter-stack { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+  .sale-list-view .sale-user-cash-row, .sale-list-view .sale-date-row { flex-wrap: nowrap; }
+}

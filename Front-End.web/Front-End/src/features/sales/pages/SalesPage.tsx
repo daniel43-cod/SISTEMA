@@ -1,3 +1,5 @@
+import { catalogSaleLines } from '../utils/catalogSelection'
+import { SaleCatalog } from '../components/SaleCatalog'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { FormEvent, MouseEvent } from 'react'
 import { useAuth } from '../../auth'
@@ -44,6 +46,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const [customerCollapsed, setCustomerCollapsed] = useState(false)
   const [mobileProductKey, setMobileProductKey] = useState<number | null>(null)
   const [mobileCartVisible, setMobileCartVisible] = useState(false)
+  const [catalogOpen, setCatalogOpen] = useState(false)
   const entryRef = useRef<HTMLDivElement>(null)
   const productTableRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -191,6 +194,24 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       return true
     } catch (failure) { setError((failure as Error).message); return false }
   }
+  function addFromCatalog(productId: number, selections: { presentationId: number; quantity: string }[]): string | null {
+    if (blocked) return 'La venta no está disponible para agregar productos en este momento.'
+    let added: SaleLine[]
+    try {
+      added = catalogSaleLines(productId, selections, options, lines)
+    } catch (failure) { return failure instanceof Error ? failure.message : 'Revisa las cantidades y las existencias.' }
+    const updated = [...rows]
+    for (const selection of added) {
+      const index = updated.findIndex(row => !row.selection && !row.text.trim() && !row.barcode?.trim() && !pendingRows.has(row.key))
+      const key = index >= 0 ? updated[index].key : nextRowKey.current++
+      const selected: SaleDraft = { key, text: selection.product.nombre + ' · ' + selection.presentation.presentacion, selection }
+      if (index >= 0) updated[index] = selected
+      else updated.push(selected)
+    }
+    setRows(updated)
+    setError('')
+    return null
+  }
   function changeCartDiscount(key: number, value: string) {
     if (blocked) return
     setRows(previous => previous.map(row => row.key === key && row.selection
@@ -212,18 +233,34 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   function setRowPending(key: number, pending: boolean) {
     setPendingRows(previous => { const next = new Set(previous); if (pending) next.add(key); else next.delete(key); return next })
   }
+  function focusCustomerName() {
+    setMobileCartVisible(false)
+    setMobileProductKey(null)
+    setCustomerCollapsed(false)
+    productsInView.current = false
+    setError('')
+    requestAnimationFrame(() => {
+      const input = entryRef.current?.querySelector<HTMLInputElement>('.sale-customer-picker input')
+      input?.focus({ preventScroll: true })
+      input?.scrollIntoView({ block: 'center', behavior: 'auto' })
+    })
+  }
   function checkCustomerBeforeRegister(event: MouseEvent<HTMLButtonElement>) {
     if (order) return
-    if (customerSelectionFailed || (!customerId && !name.trim())) {
+    if (!customerId && !name.trim()) {
       event.preventDefault()
-      setError(customerSelectionFailed
-        ? 'No se pudieron confirmar los datos del cliente. Selecciónalo nuevamente antes de registrar la venta.'
-        : 'Ingresa los datos del cliente o selecciona uno existente en «Ver cliente» antes de registrar la venta.')
+      focusCustomerName()
+      return
+    }
+    if (customerSelectionFailed) {
+      event.preventDefault()
+      setError('No se pudieron confirmar los datos del cliente. Selecciónalo nuevamente antes de registrar la venta.')
     }
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token || busy.current || paymentConfirmation.current || blocked || customerPending || customerSelectionFailed || productPending) return
+    if (!order && !customerId && !name.trim()) { focusCustomerName(); return }
     setError('')
     let total: number
     try {
@@ -245,14 +282,14 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       if (order) {
         await confirmOrderSale(order.idPedido, { idOperacion: operationId.current, totalEsperado: total / 100,
           pagoInicial: Math.min(receivedCents!, total) / 100,
-          detalles: lines.map(l => ({ idProductoPresentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount ?? '0.00')! / 100 })) }, token)
+          detalles: lines.map(l => ({ idProductoPresentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })) }, token)
         onOrderConfirmed?.(); return
       }
       await createSale({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
         ...(newCustomer ? { clienteNuevo: { nombre: name.trim(), apellido: surname.trim() || null, nit: nit.trim() || null,
           direccion: address.trim() || null, dpi: dpi.trim() || null, telefono: phone.trim() || null, correo_electronico: email.trim() || null } } : {}),
         origen: 'MOSTRADOR', observacion: note.trim() || null,
-        detalles: lines.map(l => ({ id_producto: l.product.id_producto, id_producto_presentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount ?? '0.00')! / 100 })),
+        detalles: lines.map(l => ({ id_producto: l.product.id_producto, id_producto_presentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })),
         pago: { monto: Math.min(receivedCents!, total) / 100, metodo_pago: 'EFECTIVO' } }, token)
       operationId.current = createOperationId()
       setRows([{ key: nextRowKey.current++, text: '', selection: null }]); setPendingRows(new Set()); setReceived(''); setNote(''); selectCustomer(null); setCustomerReset(v => v + 1)
@@ -325,7 +362,9 @@ telRef.current?.focus()}}}/></label>
             </div>
           </fieldset>
   )
-  return <div className="sales-page">
+  return <div className={catalogOpen ? "sales-page sales-catalog-open" : "sales-page"}>
+    {catalogOpen && <SaleCatalog options={options} lines={lines} disabled={blocked} onAdd={addFromCatalog}
+      onClose={() => { setCatalogOpen(false); if (lines.length) { setMobileCartVisible(true); setMobileProductKey(null) } requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(window.matchMedia("(max-width: 800px)").matches ? ".sales-cart-catalog-button" : ".sales-catalog-access button")?.focus()) }} />}
     <dialog ref={paymentDialogRef} className="sales-payment-dialog" aria-labelledby={paymentTitleId} aria-describedby={paymentDescriptionId}
       onCancel={event => { event.preventDefault(); closePaymentConfirmation(false) }}>
       <h2 id={paymentTitleId}>Confirmar venta sin pago inicial</h2>
@@ -346,12 +385,22 @@ telRef.current?.focus()}}}/></label>
             productsInView.current = false
             entryRef.current?.scrollTo({ top: 0 })
           }}>Ver cliente</button>
-        {order && <button type="button" disabled={pending} onClick={onCancelOrder}>Volver a pedidos</button>}<RefreshButton label="Actualizar catálogo y clientes" loading={loading || pending} onClick={() => setRevision(v => v + 1)} /></div>
+        {order && <button type="button" disabled={pending} onClick={onCancelOrder}>Volver a pedidos</button>}<div className="sales-heading-actions"><div className="sales-catalog-access"><button type="button" disabled={blocked || productPending}
+            aria-expanded={catalogOpen} onClick={() => setCatalogOpen(true)}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" /></svg>
+            Catálogo
+          </button></div><RefreshButton label="Actualizar catálogo y clientes" loading={loading || pending} onClick={() => setRevision(v => v + 1)} /></div></div>
       {order && <p>Revisa cantidades y precios actuales; puedes aplicar descuentos. El pedido original se conserva hasta confirmar la venta.</p>}
       {loading && <p role="status">Cargando catálogo y clientes…</p>}
       {loadError && <p className="sales-error" role="alert">{loadError}</p>}
       {error && <p className="sales-error" role="alert">{error}</p>}
-      <form id={saleFormId} onSubmit={submit}>
+      <form id={saleFormId} onSubmit={submit} onInvalidCapture={event => {
+        if (!order && !customerId && !name.trim() && event.target instanceof HTMLInputElement &&
+          event.target.closest('.sale-customer-picker')) {
+          event.preventDefault()
+          focusCustomerName()
+        }
+      }}>
         <fieldset disabled={blocked} className="sales-fields">
           <div className="sales-mobile-summary">
             <p aria-live="polite">Total <strong>{estimated === null ? '—' : money(estimated)}</strong></p>
@@ -362,11 +411,12 @@ telRef.current?.focus()}}}/></label>
             </button>
             )}
           </div>
+
           <div className={`sales-entry${mobileProductKey !== null ? ' sales-product-card-open' : ''}${mobileCartVisible && mobileProductKey === null ? ' sales-cart-open' : ''}${!mobileCartVisible && mobileProductKey === null && !order ? ' sales-customer-step' : ''}`} ref={entryRef}>
           {customerFields}
           <div className="sales-mobile-cart-region" hidden={!mobileCartVisible || mobileProductKey !== null}>
             <MobileSaleCart rows={rows} options={options} token={token ?? ''} disabled={blocked}
-              onChoose={chooseCartProduct}
+              onOpenCatalog={() => setCatalogOpen(true)} onChoose={chooseCartProduct}
               onQuantity={changeCartQuantity} onRemove={removeRow} onDiscount={changeCartDiscount}
               />
 

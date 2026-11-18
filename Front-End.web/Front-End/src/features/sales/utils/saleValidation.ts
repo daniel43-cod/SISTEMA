@@ -12,7 +12,7 @@ export function saleLineTotal(line: SaleLine): number {
     throw new Error('Ingresa cantidades enteras mayores a cero.')
   const gross = Math.round(line.presentation.precio * 100) * Number(line.quantity)
   if (!Number.isSafeInteger(gross) || gross > 9999999999) throw new Error('El importe de la línea excede el límite permitido.')
-  const discount = cashCents(line.discount ?? '0.00')
+  const discount = cashCents(line.discount?.trim() || '0.00')
   if (discount === null) throw new Error('El descuento debe ser un importe no negativo con máximo dos decimales.')
   if (discount >= gross) throw new Error('El descuento debe ser menor al importe de la línea.')
   return gross - discount

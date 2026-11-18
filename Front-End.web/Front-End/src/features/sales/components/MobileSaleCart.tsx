@@ -10,9 +10,10 @@ const money = (amount: number) => new Intl.NumberFormat('es-GT', { style: 'curre
 type Props = {
   rows: SaleDraft[]; options: SaleOption[]; token: string; disabled: boolean
   onChoose: (option: SaleOption, quantity: string, discount: string) => boolean; onQuantity: (key: number, quantity: number) => void
+  onOpenCatalog: () => void
   onRemove: (key: number) => void; onDiscount: (key: number, value: string) => void
 }
-export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQuantity, onRemove, onDiscount }: Props) {
+export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQuantity, onRemove, onDiscount, onOpenCatalog }: Props) {
   const [query, setQuery] = useState('')
   const [editor, setEditor] = useState<{ option: SaleOption; quantity: string; discount: string } | null>(null)
   const quantityInput = useRef<HTMLInputElement>(null)
@@ -157,7 +158,7 @@ export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQua
         }}>Listo</button>
       </div>
     </fieldset></dialog>, document.body)}
-    <h3>Carrito ({selectedRows.length})</h3>
+    <div className="sales-cart-title-row"><h3>Carrito ({selectedRows.length})</h3><button type="button" className="sales-cart-catalog-button" disabled={disabled} onClick={onOpenCatalog}>Catálogo</button></div>
     {!selectedRows.length && <p>Busca un producto para agregarlo.</p>}
     <ul className="sales-cart-items">
       {selectedRows.map(row => {

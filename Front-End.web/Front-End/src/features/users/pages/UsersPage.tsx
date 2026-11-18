@@ -13,6 +13,8 @@ export function UsersPage() {
   const allowed = session?.user.role === 'ADMINISTRADOR'
   const [items, setItems] = useState<StaffUser[]>([])
   const [roles, setRoles] = useState<UserRole[]>([])
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [formError, setFormError] = useState('')
@@ -65,6 +67,18 @@ export function UsersPage() {
     return () => { dialog.close(); document.body.style.overflow = previous; trigger?.focus() }
   }, [open])
   if (!allowed) return null
+  const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim()
+  const filteredUsers = items.filter(item => (roleFilter === null || item.id_rol === roleFilter) &&
+    normalize([item.nombre, item.apellido, item.usuario, item.correo ?? ''].join(' ')).includes(normalize(search)))
+  const roleTabs = roles.filter(role => role.estado || items.some(item => item.id_rol === role.id_rol))
+  const roleLabel = (name: string, plural = false) => ({
+    ADMINISTRADOR: plural ? 'Administradores' : 'Administrador',
+    SUPERVISOR: plural ? 'Supervisores' : 'Supervisor',
+    VENDEDOR: plural ? 'Vendedores' : 'Vendedor',
+  }[name.toUpperCase()] ?? name)
+  function editUser(item: StaffUser) {
+    setEditing(item); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true)
+  }
   const selectedUser = items.find(item => item.id_usuario === selectedId)
   const availableRoles = roles.filter(role => role.estado && ['ADMINISTRADOR', 'VENDEDOR'].includes(role.nombre))
   async function toggleState(item: StaffUser) {
@@ -128,28 +142,64 @@ export function UsersPage() {
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
     </button></div></div>
     {success && <p role="status" className="users-success">{success}</p>}
+    <div className="users-browse-toolbar">
+      <label className="users-search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7" /><path d="m16 16 5 5" /></svg>
+        <input type="search" aria-label="Buscar por nombre, usuario o correo" placeholder="Buscar por nombre, usuario o correo"
+          value={search} onChange={e => setSearch(e.target.value)} />
+      </label>
+      <div className="users-role-tabs" role="group" aria-label="Filtrar usuarios por rol">
+        <button type="button" aria-pressed={roleFilter === null} onClick={() => setRoleFilter(null)}>Todos ({items.length})</button>
+        {roleTabs.map(role => <button type="button" key={role.id_rol} aria-pressed={roleFilter === role.id_rol}
+          onClick={() => setRoleFilter(role.id_rol)}>{roleLabel(role.nombre, true)} ({items.filter(item => item.id_rol === role.id_rol).length})</button>)}
+      </div>
+    </div>
     {loading ? <p role="status">Cargando usuarios…</p> : error ? <div role="alert"><p>{error}</p>
       <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div>
-      : !items.length ? <p>No hay usuarios registrados.</p> : <div className="users-table-scroll users-desktop-table" tabIndex={0} role="region" aria-label="Lista de usuarios">
-        <table><thead><tr>{['Nombre', 'Apellido', 'Usuario', 'Correo', 'Teléfono', 'Estado', 'Rol', 'Acciones'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
-          <tbody>{items.map(item => <tr key={item.id_usuario}>
-            <td>{item.nombre}</td><td>{item.apellido}</td><td>{item.usuario}</td><td>{item.correo || '—'}</td><td>{item.telefono}</td>
-            <td><span className={item.estado ? 'users-active' : 'users-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span></td>
-            <td>{roles.find(role => role.id_rol === item.id_rol)?.nombre ?? 'Rol #' + item.id_rol}</td>
-            <td><button type="button" disabled={saving} aria-label={'Editar usuario ' + item.usuario}
-              aria-haspopup="dialog" aria-controls="users-create-dialog" onClick={() => {
-                setEditing(item); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true)
-              }}>Editar</button>
-              <button type="button" disabled={saving || item.id_usuario === session?.user.id}
-                title={item.id_usuario === session?.user.id ? 'No puedes desactivar tu propia cuenta' : undefined}
-                aria-label={(item.estado ? 'Desactivar a ' : 'Activar a ') + item.usuario}
-                onClick={() => { void toggleState(item) }}>{item.estado ? 'Desactivar' : 'Activar'}</button>
-            </td>
-          </tr>)}</tbody></table>
+      : !filteredUsers.length ? <p role="status">{items.length ? 'No hay usuarios que coincidan con los filtros.' : 'No hay usuarios registrados.'}</p>
+      : <div className="users-desktop-cards" aria-label="Lista de usuarios">
+        {filteredUsers.map(item => {
+          const role = roles.find(r => r.id_rol === item.id_rol)
+          const duplicate = items.filter(row => normalize(row.usuario) === normalize(item.usuario)).length > 1
+          const initials = [item.nombre, item.apellido].filter(Boolean).map(part => part.trim().charAt(0)).join('').toLocaleUpperCase()
+          return <article key={item.id_usuario} className="users-profile-card" onClick={event => {
+            if (!(event.target instanceof Element) || event.target.closest('button, summary, details')) return
+            if (!saving) setSelectedId(item.id_usuario)
+          }}>
+            <button type="button" className="users-profile-heading" disabled={saving} aria-haspopup="dialog" aria-controls="users-details-dialog"
+              aria-label={'Ver detalles de ' + item.nombre + ' ' + item.apellido} onClick={() => setSelectedId(item.id_usuario)}>
+              <span className={'users-avatar users-avatar-' + item.id_usuario % 5} aria-hidden="true">{initials}</span>
+              <span><strong>{[item.nombre, item.apellido].filter(Boolean).join(' ')}</strong><small>@{item.usuario}</small></span>
+            </button>
+            <div className="users-profile-badges">
+              <span className={'users-role-badge ' + (role?.nombre === 'ADMINISTRADOR' ? 'is-admin' : role?.nombre === 'SUPERVISOR' ? 'is-supervisor' : '')}>
+                {role ? roleLabel(role.nombre) : 'Rol #' + item.id_rol}
+              </span>
+              {duplicate && <span className="users-duplicate-badge">Usuario repetido</span>}
+              {item.id_usuario === session?.user.id && <span className="users-active">Tú</span>}
+            </div>
+            <div className="users-profile-contact">
+              {item.correo && <p><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 5h18v14H3zM3 5l9 7 9-7" /></svg><span>{item.correo}</span></p>}
+              <p><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="m5 3 4 1 1 5-3 2a15 15 0 0 0 6 6l2-3 5 1 1 4c-1 5-9 2-14-3S0 4 5 3Z" /></svg><span>{item.telefono || 'Sin teléfono'}</span></p>
+            </div>
+            <footer className="users-profile-footer">
+              <span className={item.estado ? 'users-active' : 'users-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
+              <button type="button" disabled={saving} onClick={() => editUser(item)}>Editar</button>
+              <details className="users-profile-menu">
+                <summary aria-label={'Más opciones de ' + item.usuario}>···</summary>
+                <div>
+                  <button type="button" disabled={saving} onClick={() => setSelectedId(item.id_usuario)}>Ver detalles</button>
+                  <button type="button" disabled={saving || item.id_usuario === session?.user.id}
+                    title={item.id_usuario === session?.user.id ? 'No puedes desactivar tu propia cuenta' : undefined}
+                    onClick={() => { void toggleState(item) }}>{item.estado ? 'Desactivar' : 'Activar'}</button>
+                </div>
+              </details>
+            </footer>
+          </article>
+        })}
       </div>}
-
-    {!loading && !error && items.length > 0 && <div className="users-mobile-cards" aria-label="Lista de usuarios">
-      {items.map(item => <button type="button" key={item.id_usuario} className="users-mobile-card"
+    {!loading && !error && filteredUsers.length > 0 && <div className="users-mobile-cards" aria-label="Lista de usuarios">
+      {filteredUsers.map(item => <button type="button" key={item.id_usuario} className="users-mobile-card"
         aria-label={'Ver detalles de ' + item.nombre + ' ' + item.apellido} aria-haspopup="dialog"
         aria-controls="users-details-dialog" disabled={saving} onClick={() => setSelectedId(item.id_usuario)}>
         <strong>{[item.nombre, item.apellido].filter(Boolean).join(' ')}</strong>
