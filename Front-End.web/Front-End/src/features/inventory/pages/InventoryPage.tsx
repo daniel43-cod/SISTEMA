@@ -1,5 +1,4 @@
 import { createPortal } from 'react-dom'
-import { InventoryLookup } from '../components/InventoryLookup'
 import { loadCatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
 import type { CatalogLookups } from '../../catalog-lookups/api/catalogLookupsApi'
 import { clearCatalogLookupCache } from '../../../shared/cache/catalogLookupCache'
@@ -15,10 +14,12 @@ import './InventoryPage.css'
 
 const totalMoney = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', maximumFractionDigits: 6 })
+const desktopUnitMoney = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', maximumFractionDigits: 4 })
 
 export function InventoryPage() {
   const { session, logout } = useAuth()
   const [totalVisible, setTotalVisible] = useState(false)
+  const [stockFilter, setStockFilter] = useState<'' | 'bajo' | 'agotado'>('')
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 800px)').matches)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [draftCategory, setDraftCategory] = useState('')
@@ -37,8 +38,6 @@ export function InventoryPage() {
     dialog?.showModal()
     return () => { dialog?.close(); if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus() }
   }, [filtersOpen])
-  const [categoryQuery, setCategoryQuery] = useState('')
-  const [brandQuery, setBrandQuery] = useState('')
   const [categoryId, setCategoryId] = useState<number>()
   const [brandId, setBrandId] = useState<number>()
   const [lookups, setLookups] = useState<CatalogLookups>({ categories: [], brands: [] })
@@ -79,7 +78,7 @@ export function InventoryPage() {
     if (!token || !allowed) return
     const controller = new AbortController()
     setLoading(true); setError(''); setData(null)
-    void listInventory(page, text, token, controller.signal, { idCategoria: categoryId, idMarca: brandId }).then(result => {
+    void listInventory(page, text, token, controller.signal, { idCategoria: categoryId, idMarca: brandId, estadoStock: isMobile ? undefined : stockFilter }).then(result => {
       if (!controller.signal.aborted) setData(result)
     }).catch(failure => {
       if (controller.signal.aborted) return
@@ -87,16 +86,9 @@ export function InventoryPage() {
       else setError(failure instanceof Error ? failure.message : 'No se pudo cargar el inventario.')
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [token, allowed, page, text, categoryId, brandId, revision, logout])
+  }, [token, allowed, page, text, categoryId, brandId, revision, logout, stockFilter, isMobile])
 
-  function activateSearch(mode: 'product' | 'category' | 'brand') {
-    setPage(1)
-    if (isMobile) return
-    if (mode !== 'product') { setQuery(''); setText(''); setSuggestionsOpen(false) }
-    if (mode !== 'category') { setCategoryId(undefined); setCategoryQuery('') }
-    if (mode !== 'brand') { setBrandId(undefined); setBrandQuery('') }
-  }
-
+  function activateSearch(_mode: 'product' | 'category' | 'brand') { setPage(1) }
   if (!allowed) return null
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 25))
   const headerTarget = document.getElementById('staff-inventory-search')
@@ -107,7 +99,7 @@ export function InventoryPage() {
       }}>
       <label htmlFor="inventory-search">Producto</label>
         <input id="inventory-search" type="search" maxLength={100} value={query}
-          placeholder="Buscar producto…" aria-expanded={suggestionsOpen && query.trim().length >= 3}
+          placeholder="Nombre o código de barras" aria-expanded={suggestionsOpen && query.trim().length >= 3}
           aria-controls="inventory-suggestions" onFocus={() => setSuggestionsOpen(true)}
           onKeyDown={event => {
             if (event.key === 'Escape') setSuggestionsOpen(false)
@@ -128,15 +120,23 @@ export function InventoryPage() {
           </li>)}</ul> : <p role="status">No se encontraron productos.</p>}
       </div>}
       </div>
-      {!isMobile && <><InventoryLookup label="Categoría" items={lookups.categories.map(item => ({ id: item.idCategoria, nombre: item.nombre }))}
-        query={categoryQuery} onQueryChange={value => { activateSearch('category'); setCategoryQuery(value) }}
-        selected={categoryId} loading={lookupLoading} error={lookupError}
-        onSelect={id => { setCategoryId(id); setPage(1) }} />
-      <InventoryLookup label="Marca" items={lookups.brands.map(item => ({ id: item.idMarca, nombre: item.nombre }))}
-        query={brandQuery} onQueryChange={value => { activateSearch('brand'); setBrandQuery(value) }}
-        selected={brandId} loading={lookupLoading} error={lookupError}
-        onSelect={id => { setBrandId(id); setPage(1) }} />
+      {!isMobile && <>
+        <label>Categoría<select value={categoryId ?? ''} disabled={lookupLoading || !!lookupError} onChange={e => {
+          const id = e.target.value ? Number(e.target.value) : undefined
+          setCategoryId(id)
+          if (brandId && id && !lookups.brands.some(b => b.idMarca === brandId && b.idCategoria === id)) setBrandId(undefined)
+          setPage(1)
+        }}><option value="">Todas</option>{lookups.categories.map(c => <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>)}</select></label>
+        <label>Marca<select value={brandId ?? ''} disabled={lookupLoading || !!lookupError} onChange={e => { setBrandId(e.target.value ? Number(e.target.value) : undefined); setPage(1) }}>
+          <option value="">Todas</option>{lookups.brands.filter(b => !categoryId || b.idCategoria === categoryId).map(b => <option key={b.idMarca} value={b.idMarca}>{b.nombre}</option>)}</select></label>
       </>}
+      {!isMobile && <label>Existencia<select value={stockFilter} onChange={e => {
+        setStockFilter(e.target.value as '' | 'bajo' | 'agotado'); setPage(1)
+      }}>
+        <option value="">Todos</option>
+        <option value="bajo">Stock bajo</option>
+        <option value="agotado">Agotados</option>
+      </select></label>}
       {!isMobile && <RefreshButton loading={loading || names.loading || lookupLoading} label="Actualizar inventario"
         onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} />}
       {isMobile && <button type="button" className="inventory-filter-button" aria-label="Abrir filtros de inventario" aria-haspopup="dialog" onClick={() => {
@@ -148,7 +148,8 @@ export function InventoryPage() {
   )
   return <section className="inventory-page" aria-label="Consulta de inventario" aria-busy={loading}>
     {isMobile && headerTarget && createPortal(<div className="inventory-mobile-heading"><h2>Inventario</h2><RefreshButton label="Actualizar inventario" loading={loading || lookupLoading} onClick={() => { clearCatalogLookupCache(); setRevision(value => value + 1) }} /></div>, headerTarget)}
-    {headerTarget && !isMobile ? createPortal(toolbar, headerTarget) : toolbar}
+
+
     {filtersOpen && createPortal(<dialog ref={filterDialog} className="inventory-filter-dialog" aria-labelledby="inventory-filter-title" onCancel={event => { event.preventDefault(); setFiltersOpen(false) }}>
       <div className="inventory-filter-grip" aria-hidden="true" />
       <div className="inventory-filter-title"><h2 id="inventory-filter-title">Filtros</h2><button type="button" aria-label="Cerrar filtros" onClick={() => setFiltersOpen(false)}>×</button></div>
@@ -160,14 +161,31 @@ export function InventoryPage() {
       <label>Marca<select value={draftBrand} disabled={lookupLoading || !!lookupError} onChange={event => setDraftBrand(event.target.value)}><option value="">Todas</option>{lookups.brands.filter(brand => !draftCategory || brand.idCategoria === Number(draftCategory)).map(brand => <option key={brand.idMarca} value={brand.idMarca}>{brand.nombre}</option>)}</select></label>
       <div className="inventory-filter-actions"><button type="button" onClick={() => { setDraftCategory(''); setDraftBrand('') }}>Limpiar</button><button type="button" disabled={lookupLoading || !!lookupError} onClick={() => {
         setCategoryId(draftCategory ? Number(draftCategory) : undefined); setBrandId(draftBrand ? Number(draftBrand) : undefined)
-        setCategoryQuery(lookups.categories.find(category => category.idCategoria === Number(draftCategory))?.nombre ?? '')
-        setBrandQuery(lookups.brands.find(brand => brand.idMarca === Number(draftBrand))?.nombre ?? '')
         setPage(1); setFiltersOpen(false)
       }}>Aplicar</button></div>
     </dialog>, document.body)}
+    {toolbar}
     {loading ? <p role="status">Cargando inventario…</p> : error ? <div role="alert">
       <p>{error}</p><button type="button" onClick={() => setRevision(value => value + 1)}>Reintentar</button>
     </div> : data && <>
+      {!isMobile && <>
+        <div className="inventory-metric-grid">
+          <article><span>Productos</span><strong>{data.total}</strong><small>de {data.totalProductos ?? data.total} en los filtros</small></article>
+          <article><span>Valor total del inventario</span><div className="inventory-metric-amount">
+            <strong>{totalVisible ? totalMoney.format(data.valorInventarioTotal) : 'Q ••••••'}</strong>
+            <button type="button" className="inventory-total-toggle" aria-label={totalVisible ? 'Ocultar total del inventario' : 'Mostrar total del inventario'}
+              aria-pressed={totalVisible} onClick={() => setTotalVisible(v => !v)}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+                {!totalVisible && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div><small>a costo, según filtros</small></article>
+          <article className="inventory-metric-low"><span>Stock bajo</span><strong>{data.productosStockBajo ?? '—'}</strong><small>por debajo del mínimo</small></article>
+          <article className="inventory-metric-empty"><span>Agotados</span><strong>{data.productosAgotados ?? '—'}</strong><small>existencia en 0</small></article>
+        </div>
+        {lookupError && <p role="alert">{lookupError}</p>}
+      </>}
       <div className="inventory-results-heading">
         <p role="status" className="inventory-product-count"><span>Productos</span><strong>{data.total}</strong></p>
       <div className="inventory-value-summary" role="status">
@@ -193,12 +211,21 @@ export function InventoryPage() {
         <table>
           <caption className="sr-only">Existencias, costo promedio y valor del inventario por producto</caption>
           <thead><tr><th scope="col">Código de barras</th><th scope="col">Producto</th><th scope="col">Marca</th>
-            <th scope="col" className="inventory-number">Existencia</th><th scope="col" className="inventory-number">Precio Costo</th><th scope="col" className="inventory-number">Costo</th></tr></thead>
+            <th scope="col" className="inventory-number">Existencia</th><th scope="col" className="inventory-number">Costo unitario</th><th scope="col" className="inventory-number">Costo total</th></tr></thead>
           <tbody>{data.items.map(item => <tr key={item.idProducto}>
-            <td data-label="Código" className="inventory-barcode">{item.codigoBarra || 'Sin código'}</td><td data-label="Producto">{item.nombre}</td><td data-label="Marca">{item.marca}</td>
-            <td data-label="Existencia" className="inventory-number">{item.stock.toLocaleString('es-GT')}</td>
-            <td data-label="Costo unitario" className="inventory-number">{item.precioPromedioCompra === null ? 'Sin registro' : money.format(item.precioPromedioCompra)}</td>
-            <td data-label="Costo total" className="inventory-number">{item.valorInventario === null ? 'Sin costo' : typeof item.valorInventario === 'number' && Number.isFinite(item.valorInventario) ? money.format(item.valorInventario) : 'No disponible'}</td>
+            <td data-label="Código" className="inventory-barcode">{item.codigoBarra || 'Sin código'}</td><td data-label="Producto"><strong>{item.nombre}</strong>{!isMobile && item.categoria && <small className="inventory-product-category">{item.categoria}</small>}</td><td data-label="Marca">{item.marca}</td>
+            <td data-label="Existencia" className="inventory-number">{item.stock.toLocaleString('es-GT')}
+              {!isMobile && (item.stock === 0 ? <small className="inventory-stock-badge is-empty">Agotado</small>
+                : item.stockMinimo != null && item.stock < item.stockMinimo ? <small className="inventory-stock-badge">Stock bajo · mín. {item.stockMinimo}</small> : null)}
+            </td>
+            <td data-label="Costo unitario" className="inventory-number">{item.precioPromedioCompra === null ? '—' : (isMobile ? money : desktopUnitMoney).format(item.precioPromedioCompra)}</td>
+            <td data-label="Costo total" className="inventory-number">{item.valorInventario === null ? '—' : totalMoney.format(item.valorInventario)}
+              {!isMobile && item.valorInventario !== null && data.valorInventarioTotal > 0 &&
+                <div className="inventory-value-bar" role="img" aria-label={(item.valorInventario / data.valorInventarioTotal * 100).toFixed(2) + ' % del valor del inventario filtrado'}
+                  title={(item.valorInventario / data.valorInventarioTotal * 100).toFixed(2) + ' % del inventario'}>
+                  <span style={{ width: Math.max(0, Math.min(100, item.valorInventario / data.valorInventarioTotal * 100)) + '%' }} />
+                </div>}
+            </td>
           </tr>)}</tbody>
         </table>
       </div> : <p>No hay productos{ text ? ' que coincidan con la búsqueda' : ' en esta página'}.</p>}

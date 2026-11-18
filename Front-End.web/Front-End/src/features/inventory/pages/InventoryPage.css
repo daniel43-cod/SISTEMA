@@ -116,3 +116,58 @@
 .inventory-product-count { display: grid; gap: 6px; }
 .inventory-product-count > span { font-size: .85rem; color: var(--color-muted); }
 .inventory-product-count > strong { font-size: 1.2rem; }
+
+.inventory-metric-grid, .inventory-stock-tabs { display: none; }
+@media (min-width: 801px) {
+  .staff-shell-inventory .staff-header { display: none; }
+  .staff-shell-inventory .staff-content { padding-top: 16px; max-width: none; }
+  .inventory-page { padding: 26px 32px; gap: 20px; }
+  .inventory-metric-grid { display: grid; order: 1; grid-template-columns: 1fr 1.4fr 1fr 1fr; gap: 18px; }
+  .inventory-metric-grid article { display: grid; align-content: start; gap: 10px; padding: 22px 24px; min-width: 0; border-radius: 18px; background: #eaf4fe; }
+  .inventory-metric-grid span, .inventory-metric-grid small { font-size: .85rem; color: #526477; }
+  .inventory-metric-grid strong { font-size: clamp(1.3rem, 2vw, 2rem); color: #142b3d; overflow-wrap: anywhere; }
+  .inventory-metric-grid article.inventory-metric-low { background: #fff4df; }
+  .inventory-metric-low strong { color: #995600; }
+  .inventory-metric-grid article.inventory-metric-empty { background: #ffeded; }
+  .inventory-metric-empty strong { color: #dc2626; }
+  .inventory-page > .inventory-toolbar { order: 2; flex-wrap: nowrap; gap: 18px; }
+  .inventory-toolbar .inventory-search { flex: 1.8 1 280px; }
+  .inventory-toolbar > label { flex: 1 1 180px; min-width: 0; color: #526477; }
+  .inventory-toolbar select, .inventory-toolbar input { width: 100%; min-width: 0; box-sizing: border-box; min-height: 52px; border: 1px solid #c4d0e1; border-radius: 14px; padding: 12px 16px; background: white; color: #263747; font: inherit; }
+  .inventory-toolbar .inventory-search > label { color: #526477; }
+  .inventory-stock-tabs { display: flex; flex-wrap: wrap; gap: 10px; order: 3; }
+  .inventory-stock-tabs button { border-radius: 28px; padding: 10px 18px; border-color: #d3deed; color: #526477; }
+  .inventory-stock-tabs button[aria-pressed=true] { color: white; background: #075b96; border-color: #075b96; font-weight: 650; }
+  .inventory-results-heading { display: none; }
+  .inventory-table-scroll { order: 4; }
+  .inventory-pagination { order: 5; }
+  .inventory-page th { padding-block: 18px; background: #eaf4fe; }
+  .inventory-page td { padding-block: 6px; border-bottom-color: #e8edf5; }
+  .inventory-product-category { display: block; color: #64748b; margin-top: 6px; font-size: .8rem; }
+  .inventory-stock-badge { display: block; width: fit-content; margin: 6px 0 0 auto; padding: 3px 10px; border-radius: 20px; background: #fff4df; color: #995600; font-size: .75rem; white-space: nowrap; }
+  .inventory-stock-badge.is-empty { background: #ffeded; color: #dc2626; }
+  .inventory-value-bar { width: 138px; max-width: 100%; height: 6px; margin: 8px 0 0 auto; border-radius: 8px; background: #e2eaf4; overflow: hidden; }
+  .inventory-value-bar span { display: block; height: 100%; border-radius: inherit; background: #7fb5e3; }
+}
+@media (min-width: 801px) and (max-width: 1100px) {
+  .inventory-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inventory-page > .inventory-toolbar { flex-wrap: wrap; }
+}
+.inventory-metric-amount { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.inventory-metric-amount .inventory-total-toggle { flex-shrink: 0; }
+@media (min-width: 801px) {
+  .staff-shell.staff-shell-inventory .staff-content { margin: 0; padding: clamp(28px, 5vh, 56px) clamp(24px, 3.6vw, 58px) 16px; }
+  .staff-shell-inventory .inventory-page { padding: clamp(18px, 2vw, 32px); }
+}
+@media (min-width: 801px) {
+  .inventory-metric-grid article { padding: 10px 16px; gap: 4px; }
+  .inventory-metric-grid strong { font-size: clamp(1.1rem, 1.5vw, 1.5rem); line-height: 1.1; }
+  .inventory-metric-grid span, .inventory-metric-grid small { font-size: .75rem; line-height: 1.2; }
+  .inventory-metric-amount { gap: 6px; }
+  .inventory-metric-amount .inventory-total-toggle { min-height: 28px; width: 28px; padding: 3px; }
+}
+@media (min-width: 801px) {
+  .inventory-page > .inventory-toolbar { display: grid; grid-template-columns: minmax(180px, 1.25fr) repeat(3, minmax(120px, 1fr)) auto; gap: 14px; }
+  .inventory-toolbar .inventory-search { min-width: 0; }
+  .inventory-toolbar > label { min-width: 0; }
+}

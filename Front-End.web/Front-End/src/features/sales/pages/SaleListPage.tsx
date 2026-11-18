@@ -22,6 +22,24 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   const [range, setRange] = useState<{ desde: string; hasta: string }>()
   const [selectedDate, setSelectedDate] = useState('')
   const [userId, setUserId] = useState('')
+  const [desktopView, setDesktopView] = useState(() => window.matchMedia('(min-width: 801px)').matches)
+  const [desktopSearch, setDesktopSearch] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [desktopStatus, setDesktopStatus] = useState<'all' | 'pendientes' | 'pagadas'>('all')
+  const [saleCount, setSaleCount] = useState<number | null>(null)
+  const [receivable, setReceivable] = useState<number | null>(null)
+  const [receivableVisible, setReceivableVisible] = useState(false)
+  const [pendingCount, setPendingCount] = useState<number | null>(null)
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 801px)')
+    const update = () => { setDesktopView(media.matches); setPage(1) }
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+  useEffect(() => {
+    const timer = window.setTimeout(() => { setAppliedSearch(desktopSearch.trim()); setPage(1) }, 300)
+    return () => window.clearTimeout(timer)
+  }, [desktopSearch])
   const [users, setUsers] = useState<{ id: number; name: string }[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState('')
@@ -64,14 +82,14 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   useEffect(() => {
     if (!token) return
     const controller = new AbortController()
-    setLoading(true); setError(''); setRows([]); setHasNext(false); setProfitTotal(null); setSalesTotal(null)
+    setLoading(true); setError(''); setRows([]); setHasNext(false); setProfitTotal(null); setSalesTotal(null); setSaleCount(null); setReceivable(null); setPendingCount(null)
     async function load() {
       try {
         if (isAdmin) {
-          const summary = await loadSaleSummary(token!, page, pageSize, range, userId ? Number(userId) : undefined, controller.signal)
+          const summary = await loadSaleSummary(token!, page, pageSize, range, userId ? Number(userId) : undefined, controller.signal, desktopView ? { search: appliedSearch, status: desktopStatus === 'all' ? undefined : desktopStatus } : undefined)
           if (controller.signal.aborted) return
           if (summary.items.length === 0 && page > 1) { setPage(1); return }
-          setRows(summary.items); setHasNext(summary.hayMas); setProfitTotal(summary.gananciaTotal); setSalesTotal(summary.totalVentas)
+          setRows(summary.items); setHasNext(summary.hayMas); setProfitTotal(summary.gananciaTotal); setSalesTotal(summary.totalVentas); setSaleCount(summary.totalRegistros); setReceivable(summary.totalPorCobrar); setPendingCount(summary.cantidadPendientes)
           return
         }
         const result = await loadSaleHistory(token!, controller.signal, page, isAdmin ? range : undefined, isAdmin && userId ? Number(userId) : undefined, pageSize)
@@ -89,8 +107,19 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
     }
     void load()
     return () => controller.abort()
-  }, [token, page, revision, logout, range, isAdmin, userId, pageSize])
+  }, [token, page, revision, logout, range, isAdmin, userId, pageSize, desktopView, appliedSearch, desktopStatus])
 
+  function desktopAmount(value: number | null, visible: boolean, toggle: () => void, label: string) {
+    return <div className="sale-desktop-amount">
+      <strong>{visible ? value === null ? '—' : money.format(value) : 'Q ••••••'}</strong>
+      <button type="button" aria-label={(visible ? 'Ocultar ' : 'Mostrar ') + label} aria-pressed={visible} onClick={toggle}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+          {!visible && <path d="m3 3 18 18" />}
+        </svg>
+      </button>
+    </div>
+  }
   const mobileToolbar = (
 <div className="sale-mobile-toolbar">
         <h2>Ventas</h2>
@@ -110,6 +139,34 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
       onPaid={() => { setSuccess('Abono registrado correctamente.'); setSelected(null); setRevision(v => v + 1) }} />}
     <div className="sales-card">
 
+      {isAdmin && <div className="sale-desktop-dashboard">
+        <div className="sale-desktop-metrics">
+          <article><span>Total de ventas</span>{desktopAmount(salesTotal, salesVisible, () => setSalesVisible(v => !v), 'total de ventas')}<small>{saleCount === null ? '—' : saleCount + (saleCount === 1 ? ' venta' : ' ventas')}</small></article>
+          <article><span>Ganancia total</span>{desktopAmount(profitTotal, profitVisible, () => setProfitVisible(v => !v), 'ganancia total')}<small>{salesVisible && profitVisible && salesTotal !== null && profitTotal !== null && salesTotal > 0 ? Math.round(profitTotal / salesTotal * 100) + ' % de margen' : 'Margen —'}</small></article>
+          <article className="sale-desktop-receivable"><span>Por cobrar</span>{desktopAmount(receivable, receivableVisible, () => setReceivableVisible(v => !v), 'total por cobrar')}<small>{pendingCount === null ? '—' : pendingCount + (pendingCount === 1 ? ' venta con saldo' : ' ventas con saldo')}</small></article>
+        </div>
+        <div className="sale-desktop-filters">
+          <label className="sale-desktop-search">Buscar<input type="search" placeholder="Cliente o número de venta" maxLength={100} value={desktopSearch} onChange={e => setDesktopSearch(e.target.value)} /></label>
+          <label>Filtrar ventas<select value={desktopStatus} disabled={saving} onChange={e => {
+            setDesktopStatus(e.target.value as 'all' | 'pendientes' | 'pagadas')
+            setSelectedDate(''); setRange(undefined); setPage(1); setSelected(null); setSuccess('')
+          }}>
+            <option value="all">Todas</option>
+            <option value="pendientes">Pendientes</option>
+            <option value="pagadas">Pagadas</option>
+          </select></label>
+          <label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={e => { setUserId(e.target.value); setPage(1); setSelected(null); setSuccess('') }}>
+            <option value="">Todos</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
+          <label>Fecha<input type="date" value={selectedDate} min={dateLimits.desde} max={dateLimits.hasta} disabled={saving} onChange={e => {
+            const day = e.target.value
+            if (day && (day < dateLimits.desde || day > dateLimits.hasta)) return
+            setSelectedDate(day); setRange(day ? { desde: day, hasta: day } : undefined); setPage(1); setSelected(null); setSuccess('')
+          }} /></label>
+          <RefreshButton label="Actualizar ventas" loading={loading || saving} onClick={() => { setPage(1); setRevision(v => v + 1) }} />
+        </div>
+        {usersLoading && <p role="status">Cargando usuarios…</p>}
+        {usersError && <p role="alert">{usersError}</p>}
+      </div>}
       <div className="sales-heading">
       {isAdmin && <div className="sale-list-filters sale-date-filters sale-arranged-filters">
 <div className="sale-filter-stack"><div className="sale-user-cash-row"><label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={event => {
@@ -191,12 +248,12 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
             </ul>
             <div className="sales-table-scroll" role="region" aria-label="Listado de ventas" tabIndex={0}>
               <table><caption className="sr-only">{isAdmin && range ? 'Ventas de la fecha seleccionada, de todas las sesiones de caja' : 'Ventas registradas en la sesión de caja abierta'}</caption>
-                <thead><tr><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th>{isAdmin && <th scope="col" className="sale-list-money">Ganancia</th>}<th scope="col" className="sale-list-money">Saldo pendiente</th><th scope="col">Estado</th></tr></thead>
+                <thead><tr><th scope="col" className="sale-desktop-number">Venta</th><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th>{isAdmin && <th scope="col" className="sale-list-money">Ganancia</th>}<th scope="col" className="sale-list-money">Saldo pendiente</th><th scope="col">Estado</th></tr></thead>
                 <tbody>{rows.map(sale => <tr key={sale.id_ventas} className={selected?.id_ventas === sale.id_ventas ? 'sale-list-row is-selected' : 'sale-list-row'}
                   tabIndex={saving ? -1 : 0} aria-label={'Ver detalle de la venta de ' + sale.cliente} aria-expanded={selected?.id_ventas === sale.id_ventas}
                   onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(sale); setSuccess('') } }}
                   onClick={() => { if (!saving) { setSelected(sale); setSuccess('') } }}>
-                  <td>{sale.cliente}</td><td>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
+                  <td className="sale-desktop-number"><strong>#{sale.id_ventas}</strong></td><td>{sale.cliente}</td><td>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
                   {isAdmin && <td className="sale-list-money">{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</td>}
                   <td className="sale-list-money">{money.format(sale.saldo_pendiente)}</td>
                   <td><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span></td>

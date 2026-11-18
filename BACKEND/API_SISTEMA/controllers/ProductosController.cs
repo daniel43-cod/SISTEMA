@@ -51,12 +51,13 @@ namespace API_SISTEMA.Controllers
             [FromQuery, StringLength(100)] string? texto = null,
             [FromQuery, Range(1, int.MaxValue)] int? idMarca = null,
             [FromQuery, Range(1, int.MaxValue)] int? idCategoria = null,
+            [FromQuery, RegularExpression("^(bajo|agotado)$")] string? estadoStock = null,
             CancellationToken cancellationToken = default)
         {
             var filtro = new ProductoConsultaDto
             {
                 Pagina = pagina, TamanoPagina = tamanoPagina, Texto = texto,
-                IdMarca = idMarca, IdCategoria = idCategoria
+                IdMarca = idMarca, IdCategoria = idCategoria, EstadoStock = estadoStock
             };
             try { return Ok(await service.Listar(filtro, cancellationToken)); }
             catch (ValidationException ex) { return BadRequest(new { mensaje = ex.Message }); }

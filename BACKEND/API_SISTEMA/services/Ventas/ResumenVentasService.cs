@@ -19,6 +19,6 @@ public sealed class ResumenVentasService(SistemaDbContext context, VentaService 
         if (filtro.IdUsuario.HasValue && !await context.usuarios.AnyAsync(u => u.id_usuario == filtro.IdUsuario, ct))
             throw new KeyNotFoundException("El usuario consultado no existe.");
         return await ventas.ConsultarPagina(idUsuario, new FiltrarVentasDto
-        { pagina = filtro.Pagina, tamanoPagina = filtro.TamanoPagina }, filtro.IdUsuario, ct);
+        { pagina = filtro.Pagina, tamanoPagina = filtro.TamanoPagina, idCliente = filtro.IdCliente, buscar = filtro.Buscar, estadoPago = filtro.EstadoPago }, filtro.IdUsuario, ct);
     }
 }

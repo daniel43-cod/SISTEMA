@@ -6,21 +6,24 @@ export type InventoryItem = {
   codigoBarra: string | null; 
   nombre: string; 
   marca: string
+  stockMinimo?: number | null; categoria?: string;
   stock: number; 
   precioPromedioCompra: number | null;
   valorInventario: number | null;
 }
 export type InventoryPageData = {
+  totalProductos?: number; productosStockBajo?: number; productosAgotados?: number;
   pagina: number; tamanoPagina: number; total: number; valorInventarioTotal: number; productosSinCosto: number; items: InventoryItem[]
 }
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
-export async function listInventory(page: number, text: string, token: string, signal: AbortSignal, filters: { idCategoria?: number; idMarca?: number } = {}): Promise<InventoryPageData> {
+export async function listInventory(page: number, text: string, token: string, signal: AbortSignal, filters: { idCategoria?: number; idMarca?: number; estadoStock?: string } = {}): Promise<InventoryPageData> {
   const params = new URLSearchParams({ pagina: String(page), tamanoPagina: '25' })
   if (text.trim()) params.set('texto', text.trim())
   if (filters.idCategoria) params.set('idCategoria', String(filters.idCategoria))
   if (filters.idMarca) params.set('idMarca', String(filters.idMarca))
+  if (filters.estadoStock) params.set('estadoStock', filters.estadoStock)
   const result = await requestJson(`/Productos/inventario?${params}`, { token, signal })
   if (!record(result) || result.pagina !== page || result.tamanoPagina !== 25 ||
     typeof result.valorInventarioTotal !== 'number' || !Number.isFinite(result.valorInventarioTotal) ||
@@ -35,5 +38,8 @@ export async function listInventory(page: number, text: string, token: string, s
         Number.isFinite(item.precioPromedioCompra) && item.precioPromedioCompra >= 0))) ||
     new Set(result.items.map(item => item.idProducto)).size !== result.items.length)
     throw new ApiError('El servidor devolvió datos de inventario inválidos.')
+  for (const key of ['totalProductos', 'productosStockBajo', 'productosAgotados'])
+    if (result[key] !== undefined && (!Number.isSafeInteger(result[key]) || Number(result[key]) < 0))
+      throw new ApiError('El resumen de inventario no es válido.')
   return result as InventoryPageData
 }

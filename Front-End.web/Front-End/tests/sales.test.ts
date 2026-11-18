@@ -150,3 +150,21 @@ test('El descuento vacío se toma como cero sin modificar el pago inicial', () =
   }
   assert.equal(cashCents(''), null)
 })
+test('Resumen de PC envía cliente, búsqueda y estado junto al responsable y conserva los totales del backend', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string) => {
+    const query = new URL(url, 'https://test.invalid').searchParams
+    assert.equal(query.get('idCliente'), '9')
+    assert.equal(query.get('idUsuario'), '2')
+    assert.equal(query.get('buscar'), 'Cliente')
+    assert.equal(query.get('estadoPago'), 'pendientes')
+    assert.equal(query.get('pagina'), '1')
+    return Response.json({ pagina: 1, tamanoPagina: 10, totalRegistros: 0, hayMas: false,
+      totalVentas: 0, gananciaTotal: 0, totalPorCobrar: 0, cantidadPendientes: 0, cantidadPagadas: 0,
+      clientesCajaActiva: [{ idCliente: 9, nombre: 'Cliente' }], items: [] })
+  })
+  const summary = await loadSaleSummary('token', 1, 10, undefined, 2, undefined,
+    { clientId: 9, search: 'Cliente', status: 'pendientes' })
+  assert.equal(summary.totalPorCobrar, 0)
+  assert.equal(summary.cantidadPendientes, 0)
+  assert.deepEqual(summary.clientesCajaActiva, [{ idCliente: 9, nombre: 'Cliente' }])
+})

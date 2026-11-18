@@ -387,6 +387,28 @@ await using (var db = new CheckDb(options))
         "Resumen: total de ventas respeta filtro de usuario");
     Check(resumenUsuario.GananciaTotal == await db.ventas.Where(v => v.id_sesion_caja == 1 && v.id_usuario == 1).SumAsync(v => v.ganancia_total),
         "Resumen: ganancia respeta usuario en caja activa");
+    db.cliente.AddRange(new Cliente { id_cliente = 901, nombre = "Cliente solo activo", estado = true },
+        new Cliente { id_cliente = 902, nombre = "Cliente solo histórico", estado = true });
+    var activaCliente = new API_SISTEMA.Models.Ventas { id_sesion_caja = 1, id_cliente = 901, id_usuario = 2,
+        id_estado_venta = 2, total = 30, subtotal = 30, ganancia_total = 7, saldo_pendiente = 12, origen = "PRUEBA", fecha_venta = DateTime.Now };
+    var historicaCliente = new API_SISTEMA.Models.Ventas { id_sesion_caja = 2, id_cliente = 902, id_usuario = 2,
+        id_estado_venta = 2, total = 90, subtotal = 90, saldo_pendiente = 90, origen = "PRUEBA", fecha_venta = DateTime.Now };
+    db.ventas.AddRange(activaCliente, historicaCliente); await db.SaveChangesAsync();
+    var porCliente = await servicioResumen.Consultar(2, new() { IdCliente = 901, TamanoPagina = 1 });
+    Check(porCliente.TotalRegistros == 1 && porCliente.TotalVentas == 30 && porCliente.GananciaTotal == 7 &&
+        porCliente.TotalPorCobrar == 12 && porCliente.Items.Single().id_cliente == 901,
+        "Resumen: cliente filtra listado y todos los importes antes de paginar");
+    Check(porCliente.ClientesCajaActiva.Any(c => c.IdCliente == 901) && porCliente.ClientesCajaActiva.All(c => c.IdCliente != 902),
+        "Resumen: selector de clientes excluye quienes solo tienen ventas históricas");
+    Check((await servicioResumen.Consultar(2, new() { IdCliente = 901, IdUsuario = 1 })).TotalRegistros == 0,
+        "Resumen: combina cliente y responsable sin mezclar ventas");
+    var pendientesCliente = await servicioResumen.Consultar(2, new() { IdCliente = 901, EstadoPago = "pendientes", Buscar = "#" + activaCliente.id_ventas });
+    Check(pendientesCliente.TotalRegistros == 1 && pendientesCliente.CantidadPendientes == 1 && pendientesCliente.CantidadPagadas == 0 &&
+        (await servicioResumen.Consultar(2, new() { IdCliente = 901, EstadoPago = "pagadas" })).TotalRegistros == 0,
+        "Resumen: búsqueda y estado se aplican sobre la consulta de cliente");
+    try { await servicioResumen.Consultar(2, new() { IdCliente = 901, Desde = DateOnly.FromDateTime(DateTime.Now) }); throw new Exception("Cliente histórico aceptado"); }
+    catch (ValidationException) { Check(true, "Resumen: cliente restringido al turno activo"); }
+    db.ventas.RemoveRange(activaCliente, historicaCliente); await db.SaveChangesAsync();
     try { await servicioResumen.Consultar(1, new()); throw new Exception("Vendedor recibió ganancias"); }
     catch (UnauthorizedAccessException) { Check(true, "Resumen: solo administrador puede consultar ganancias"); }
     var resumenVendedor = new VentasResumenPaginaDto { Items = propias };

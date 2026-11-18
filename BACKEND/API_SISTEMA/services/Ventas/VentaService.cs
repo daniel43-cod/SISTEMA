@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Catalogo;
 using API_SISTEMA.Dtos.Ventas;
@@ -33,6 +33,10 @@ namespace API_SISTEMA.Services.Ventas
         {
             filtro ??= new FiltrarVentasDto();
             if (filtro.pagina < 1 || filtro.pagina > 100000 || filtro.tamanoPagina < 1 || filtro.tamanoPagina > 100 || filtro.desde > filtro.hasta) throw new ValidationException("Filtros de ventas inválidos.");
+            if (filtro.idCliente is <= 0 || (filtro.idCliente.HasValue && !soloCajaActiva) ||
+                (filtro.buscar?.Length ?? 0) > 100 ||
+                (filtro.estadoPago is not null && filtro.estadoPago != "pendientes" && filtro.estadoPago != "pagadas"))
+                throw new ValidationException("Filtros de ventas inválidos.");
             var usuario = await _context.usuarios.AsNoTracking().Include(u => u.rol).FirstOrDefaultAsync(u => u.id_usuario == idUsuario, ct);
 
             if (usuario is null || !usuario.estado || usuario.rol is null || !usuario.rol.estado ||
@@ -68,6 +72,28 @@ namespace API_SISTEMA.Services.Ventas
                 .Where(v => !idUsuarioFiltro.HasValue || v.id_usuario == idUsuarioFiltro.Value)
                 .Where(v => !hastaExclusiva.HasValue || v.fecha_venta < hastaExclusiva.Value)
                 .Where(v => (!filtro.desde.HasValue || v.fecha_venta >= filtro.desde.Value) && (!filtro.hasta.HasValue || v.fecha_venta <= filtro.hasta.Value));
+            // Las opciones de clientes pertenecen al turno activo y respetan el alcance del usuario.
+            var clientes = soloCajaActiva
+                ? await _context.ventas.AsNoTracking()
+                    .Where(v => v.id_sesion_caja == idSesionCaja && (puedeVerGanancia || v.id_usuario == idUsuario))
+                    .Select(v => new { v.id_cliente, v.cliente.nombre }).Distinct()
+                    .OrderBy(v => v.nombre)
+                    .Select(v => new ClienteVentasCajaDto { IdCliente = v.id_cliente, Nombre = v.nombre })
+                    .ToListAsync(ct)
+                : new List<ClienteVentasCajaDto>();
+            if (filtro.idCliente.HasValue)
+                consulta = consulta.Where(v => v.id_cliente == filtro.idCliente.Value);
+            if (!string.IsNullOrWhiteSpace(filtro.buscar))
+            {
+                var texto = filtro.buscar.Trim();
+                var esId = int.TryParse(texto.TrimStart('#'), out var numeroVenta);
+                consulta = consulta.Where(v => v.cliente.nombre.Contains(texto) || (esId && v.id_ventas == numeroVenta));
+            }
+            var pendientes = await consulta.CountAsync(v => v.saldo_pendiente > 0, ct);
+            var pagadas = await consulta.CountAsync(v => v.saldo_pendiente == 0, ct);
+            if (filtro.estadoPago == "pendientes") consulta = consulta.Where(v => v.saldo_pendiente > 0);
+            if (filtro.estadoPago == "pagadas") consulta = consulta.Where(v => v.saldo_pendiente == 0);
+            var porCobrar = await consulta.SumAsync(v => (decimal?)v.saldo_pendiente, ct) ?? 0m;
             var total = await consulta.CountAsync(ct);
             var totalVentas = await consulta.SumAsync(v => (decimal?)v.total, ct) ?? 0m;
             decimal? ganancia = puedeVerGanancia
@@ -99,7 +125,7 @@ namespace API_SISTEMA.Services.Ventas
             {
                 Pagina = filtro.pagina, TamanoPagina = filtro.tamanoPagina, TotalRegistros = total,
                 HayMas = (long)filtro.pagina * filtro.tamanoPagina < total, GananciaTotal = ganancia,
-                TotalVentas = totalVentas, Items = items
+                TotalVentas = totalVentas, TotalPorCobrar = porCobrar, CantidadPendientes = pendientes, CantidadPagadas = pagadas, ClientesCajaActiva = clientes, Items = items
             };
         }
 

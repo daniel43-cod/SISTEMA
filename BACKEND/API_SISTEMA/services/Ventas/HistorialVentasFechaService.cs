@@ -21,6 +21,8 @@ public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaS
         if (filtro.IdUsuario.HasValue && !await context.usuarios.AsNoTracking()
             .AnyAsync(u => u.id_usuario == filtro.IdUsuario.Value, ct))
             throw new KeyNotFoundException("El usuario consultado no existe.");
+        if (filtro.IdCliente.HasValue)
+            throw new ValidationException("El filtro de cliente está disponible únicamente para la caja activa.");
         var hoy = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "America/Guatemala"));
         var hasta = filtro.Hasta ?? hoy;
         if (!filtro.Desde.HasValue && hasta.DayNumber < 6)
@@ -31,7 +33,7 @@ public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaS
         // fecha_venta almacena la hora local del negocio. No utilizar fecha de apertura/cierre.
         return await ventas.ConsultarPagina(idUsuario, new FiltrarVentasDto
         {
-            pagina = filtro.Pagina, tamanoPagina = filtro.TamanoPagina,
+            pagina = filtro.Pagina, tamanoPagina = filtro.TamanoPagina, buscar = filtro.Buscar, estadoPago = filtro.EstadoPago,
             desde = desde.ToDateTime(TimeOnly.MinValue)
         }, filtro.IdUsuario, ct, soloCajaActiva: false, hastaExclusiva: hasta.AddDays(1).ToDateTime(TimeOnly.MinValue));
     }

@@ -4,6 +4,9 @@ namespace API_SISTEMA.Dtos.Ventas;
 
 public sealed class HistorialVentasFechaDto
 {
+    [Range(1, int.MaxValue)] public int? IdCliente { get; init; }
+    [StringLength(100)] public string? Buscar { get; init; }
+    [RegularExpression("^(pendientes|pagadas)$")] public string? EstadoPago { get; init; }
     public DateOnly? Desde { get; init; }
     public DateOnly? Hasta { get; init; }
     [Range(1, int.MaxValue)] public int? IdUsuario { get; init; }

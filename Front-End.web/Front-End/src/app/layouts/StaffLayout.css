@@ -216,3 +216,8 @@
 .staff-shell-reports .staff-content { margin-top: 0; padding-top: 0; }
 
 .staff-shell-products .staff-content { max-width: none; }
+
+/* En PC Inventario usa el mismo acceso directo al panel que el listado de Ventas. */
+@media (min-width: 801px) {
+  .staff-shell.staff-shell-inventory .staff-header { display: none; }
+}

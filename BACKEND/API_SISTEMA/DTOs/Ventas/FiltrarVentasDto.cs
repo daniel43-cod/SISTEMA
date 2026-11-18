@@ -1,7 +1,10 @@
-﻿namespace API_SISTEMA.Dtos.Ventas
+namespace API_SISTEMA.Dtos.Ventas
 {
     public class FiltrarVentasDto
     {
+        public int? idCliente { get; set; }
+        public string? buscar { get; set; }
+        public string? estadoPago { get; set; }
         public int pagina { get; set; } = 1;
         public int tamanoPagina { get; set; } = 50;
         public DateTime? desde { get; set;  }

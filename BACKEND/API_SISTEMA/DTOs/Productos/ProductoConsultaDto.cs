@@ -4,6 +4,7 @@ namespace API_SISTEMA.Dtos.Productos;
 
 public sealed class ProductoConsultaDto
 {
+    [RegularExpression("^(bajo|agotado)$")] public string? EstadoStock { get; set; }
     [Range(1, 100000)] public int Pagina { get; set; } = 1;
     [Range(1, 100)] public int TamanoPagina { get; set; } = 20;
     [StringLength(100)] public string? Texto { get; set; }

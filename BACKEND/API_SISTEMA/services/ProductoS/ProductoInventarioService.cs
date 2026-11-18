@@ -23,6 +23,14 @@ public sealed class ProductoInventarioService(SistemaDbContext context)
         if (filtro.IdCategoria.HasValue)
             consulta = consulta.Where(p => p.Marca.IdCategoria == filtro.IdCategoria.Value);
 
+        var totalProductos = await consulta.CountAsync(cancellationToken);
+        var bajos = await consulta.CountAsync(p => p.Stock > 0 && p.StockMinimo.HasValue && p.Stock < p.StockMinimo.Value, cancellationToken);
+        var agotados = await consulta.CountAsync(p => (p.Stock ?? 0) == 0, cancellationToken);
+        if (filtro.EstadoStock == "bajo")
+            consulta = consulta.Where(p => p.Stock > 0 && p.StockMinimo.HasValue && p.Stock < p.StockMinimo.Value);
+        if (filtro.EstadoStock == "agotado")
+            consulta = consulta.Where(p => (p.Stock ?? 0) == 0);
+
         // Resume todos los productos filtrados, antes de Skip/Take.
         var resumen = await consulta.GroupBy(_ => 1).Select(g => new
         {
@@ -40,6 +48,8 @@ public sealed class ProductoInventarioService(SistemaDbContext context)
                 PrecioPromedioCompra = p.PrecioPromedioCompra,
                 ValorInventario = p.PrecioPromedioCompra > 0 ? (p.Stock ?? 0) * p.PrecioPromedioCompra: null,
                 Stock = p.Stock ?? 0,
+                StockMinimo = p.StockMinimo,
+                Categoria = p.Marca.Categoria.nombreCategoria,
                 CodigoBarra = p.CodigoBarra,
                 IdMarca = p.IdMarca,
                 Marca = p.Marca.Nombre,
@@ -50,6 +60,7 @@ public sealed class ProductoInventarioService(SistemaDbContext context)
         {
             Pagina = filtro.Pagina, TamanoPagina = filtro.TamanoPagina,
             Total = resumen?.Total ?? 0, Items = items,
+            TotalProductos = totalProductos, ProductosStockBajo = bajos, ProductosAgotados = agotados,
             ValorInventarioTotal = resumen?.ValorInventarioTotal ?? 0m,
             ProductosSinCosto = resumen?.ProductosSinCosto ?? 0
         };
