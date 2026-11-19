@@ -53,7 +53,7 @@ public class VentaController(VentaService consulta, AbonarSaldoVentaService abon
     {
         var venta = await registro.CrearVenta(dto, Usuario(), ct);
         return Ok(new { mensaje = "Venta registrada correctamente.", id_venta = venta.id_ventas, dto.id_operacion,
-            venta.subtotal, venta.descuento, venta.total, venta.monto_pagado, venta.saldo_pendiente, venta.fecha_venta });
+            venta.subtotal, venta.descuento, venta.impuesto, venta.total, venta.monto_pagado, venta.saldo_pendiente, venta.fecha_venta });
     }
 
     [HttpPost("AbonarVenta")]

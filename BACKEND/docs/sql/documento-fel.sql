@@ -13,7 +13,7 @@ BEGIN
         estado varchar(15) NOT NULL,
         identificador uniqueidentifier NOT NULL,
         uuid varchar(36) NULL,
-        serie varchar(8) NULL,
+        serie varchar(20) NULL,
         numero varchar(30) NULL,
         fecha_creacion datetimeoffset NOT NULL,
         fecha_emision datetimeoffset NOT NULL,

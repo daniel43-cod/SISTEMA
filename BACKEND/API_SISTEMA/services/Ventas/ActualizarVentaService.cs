@@ -26,6 +26,8 @@ public class ActualizarVentaService(SistemaDbContext context)
         await CajaSesionActual.ParaOperacion(context, ct);
         var venta = await context.ventas.Include(v => v.DetalleVentas).SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct)
             ?? throw new KeyNotFoundException("La venta no existe.");
+        if (await context.DocumentosFel.AnyAsync(d => d.id_venta == idVenta, ct))
+            throw new VentaConflictoException("La venta tiene un documento FEL registrado y no puede modificarse mientras exista ese documento.");
         if (!await context.cliente.AnyAsync(c => c.id_cliente == dto.id_cliente, ct)) throw new ValidationException("El cliente no existe.");
         // Nunca reconstruir unidades históricas usando una presentación que pudo cambiar.
         if (venta.DetalleVentas.Any(d => d.unidades_descontadas <= 0 || d.precio <= 0 || d.costo_unitario_venta is null))
@@ -52,6 +54,7 @@ public class ActualizarVentaService(SistemaDbContext context)
             nuevos.Add(VentaReglas.Calcular(p, pr, d.cantidad, d.descuento));
         }
         var total = nuevos.Sum(d => d.subtotal);
+        var receptorFiscal = ReceptorVentaReglas.Validar(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
         var descuento = nuevos.Sum(d => d.descuento ?? 0m);
         VentaReglas.Monto(total, false); VentaReglas.Monto(total + descuento);
         var pagado = await context.pagos.Where(p => p.id_venta == idVenta).SumAsync(p => (decimal?)p.monto, ct) ?? 0m;
@@ -59,7 +62,11 @@ public class ActualizarVentaService(SistemaDbContext context)
         context.detalle_Ventas.RemoveRange(venta.DetalleVentas);
         venta.DetalleVentas = nuevos;
         venta.id_cliente = dto.id_cliente; venta.subtotal = total + descuento; venta.descuento = descuento;
+        venta.tipo_identificacion_receptor = receptorFiscal.Tipo;
+        venta.identificacion_receptor = receptorFiscal.Identificacion;
+        venta.nombre_receptor = receptorFiscal.Nombre;
         venta.total = total; venta.ganancia_total = nuevos.Sum(d => d.ganancia); venta.monto_pagado = pagado;
+        venta.impuesto = nuevos.Sum(d => d.impuesto ?? 0m);
         venta.saldo_pendiente = total - pagado; venta.id_estado_venta = total == pagado ? 1 : 2; venta.observacion = dto.observacion?.Trim();
         await context.SaveChangesAsync(ct); await tx.CommitAsync(ct);
     }

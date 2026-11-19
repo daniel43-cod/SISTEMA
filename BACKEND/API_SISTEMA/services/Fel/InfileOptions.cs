@@ -10,4 +10,5 @@ public sealed class InfileOptions
     public string LlaveApi { get; set; } = string.Empty;
     public string UsuarioFirma { get; set; } = string.Empty;
     public string LlaveFirma { get; set; } = string.Empty;
+    public List<FraseFel> Frases { get; set; } = [];
 }

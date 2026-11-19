@@ -7,6 +7,9 @@ namespace API_SISTEMA.Dtos.PedidosCatalogo;
 public sealed class ConfirmarVentaPedidoDto
 {
     public Guid IdOperacion { get; init; }
+    public string? TipoIdentificacionReceptor { get; init; }
+    public string? IdentificacionReceptor { get; init; }
+    public string? NombreReceptor { get; init; }
     [Range(typeof(decimal), "0.01", "99999999.99")] public decimal TotalEsperado { get; init; }
     [Range(typeof(decimal), "0", "99999999.99")] public decimal PagoInicial { get; init; }
     [Required, MinLength(1), MaxLength(100)] public List<ConfirmarLineaPedidoDto> Detalles { get; init; } = new();

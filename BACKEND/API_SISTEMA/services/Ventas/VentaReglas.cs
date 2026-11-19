@@ -40,7 +40,8 @@ public static class VentaReglas
         {
             id_producto = producto.IdProducto, id_producto_presentacion = presentacion.id_producto_presentacion,
             cantidad = cantidad, precio = presentacion.precio, unidades_descontadas = unidades,
-            costo_unitario_venta = costo, descuento = descuento, subtotal = neto, ganancia = neto - unidades * costo
+            costo_unitario_venta = costo, descuento = descuento, subtotal = neto, ganancia = neto - unidades * costo,
+            impuesto = IvaIncluido.Calcular(neto).Impuesto
         };
     }
 }

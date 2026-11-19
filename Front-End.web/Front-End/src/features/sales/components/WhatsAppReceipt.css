@@ -13,3 +13,19 @@ button.wa-send-button:hover { background: #0c713b; }
 .wa-receipt-error { color: #a62020; }
 .wa-receipt-status { color: #176636; }
 .wa-receipt-dialog :focus-visible, button.wa-send-button:focus-visible { outline: 3px solid #157dcb; outline-offset: 3px; }
+
+/* Certificación opcional después de registrar la venta. */
+.wa-receipt-actions { flex-wrap: wrap; }
+.fel-certification-panel { margin-block: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); }
+.fel-certification-panel h3 { margin-top: 0; }
+.fel-certification-panel fieldset { margin: 0; padding: 0; border: 0; display: grid; gap: 12px; min-width: 0; }
+.fel-certification-panel label { display: grid; gap: 5px; }
+.fel-certification-panel input { box-sizing: border-box; min-width: 0; width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; }
+.fel-certification-panel .fel-confirmation { display: flex; align-items: center; gap: 8px; }
+.fel-confirmation input { width: 20px; min-height: 20px; flex-shrink: 0; }
+.fel-certification-panel > button { margin-top: 12px; }
+.fel-pdf-link { display: inline-block; padding-block: 10px; }
+.wa-receipt-dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
+.wa-receipt-actions:has(.fel-certify-button) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wa-receipt-actions:has(.fel-certify-button) > button:first-child { grid-column: 1 / -1; order: 3; }
+.wa-receipt-actions .fel-certify-button { color: #fff; background: #2361a0; border-color: #2361a0; }

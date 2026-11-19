@@ -32,6 +32,8 @@ namespace API_SISTEMA.Services.Ventas
                 .Select(v => new VentaBuscarDto
                 {
                     id_venta = v.id_ventas,
+                    tipo_identificacion_receptor = v.tipo_identificacion_receptor,
+                    identificacion_receptor = v.identificacion_receptor, nombre_receptor = v.nombre_receptor,
                     fecha_venta = v.fecha_venta,
                     total = v.total,
 
@@ -44,7 +46,8 @@ namespace API_SISTEMA.Services.Ventas
                             cantidad = d.cantidad,
                             precio = d.precio,
                             descuento = d.descuento??0,
-                            subtotal = d.subtotal
+                            subtotal = d.subtotal,
+                            impuesto = d.impuesto
                         })
                         .ToList()
                 })

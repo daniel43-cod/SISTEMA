@@ -9,4 +9,5 @@ public class DetalleVentaBuscarDto
         public decimal precio { get; set; }
         public decimal descuento { get; set; }
         public decimal subtotal { get; set; }
+        public decimal? impuesto { get; set; }
     }

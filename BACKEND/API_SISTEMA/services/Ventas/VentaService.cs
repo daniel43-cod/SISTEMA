@@ -108,6 +108,8 @@ namespace API_SISTEMA.Services.Ventas
                     descuento = v.descuento,
                     impuesto = v.impuesto,
                     total = v.total,
+                    tipo_identificacion_receptor = v.tipo_identificacion_receptor,
+                    identificacion_receptor = v.identificacion_receptor, nombre_receptor = v.nombre_receptor,
                     fecha_venta = v.fecha_venta,
                     id_cliente = v.id_cliente,
                     cliente = v.cliente.nombre,

@@ -39,6 +39,7 @@ namespace API_SISTEMA.Data
         public DbSet<AuditoriaEventoDetalle> AuditoriaEventoDetalles { get; set; }
         public DbSet<VentaOperacion> VentaOperaciones { get; set; }
         public DbSet<DocumentoFel> DocumentosFel { get; set; }
+        public DbSet<DocumentoFelIntento> DocumentosFelIntentos { get; set; }
         public DbSet<WhatsAppEnvio> WhatsAppEnvios { get; set; }
         public DbSet<WhatsAppEnvioPagina> WhatsAppEnvioPaginas { get; set; }
         public DbSet<WhatsAppEnvioIntento> WhatsAppEnvioIntentos { get; set; }
@@ -72,6 +73,7 @@ namespace API_SISTEMA.Data
             modelBuilder.ApplyConfiguration(new AuditoriaEventoConfiguration());
             WhatsAppEnvioConfiguration.Configurar(modelBuilder);
             modelBuilder.ApplyConfiguration(new DocumentoFelConfiguration());
+            modelBuilder.ApplyConfiguration(new DocumentoFelIntentoConfiguration());
             modelBuilder.ApplyConfiguration(new ZonaEntregaConfiguration());
             modelBuilder.ApplyConfiguration(new PedidoCatalogoConfiguration());
             modelBuilder.ApplyConfiguration(new DetallePedidoCatalogoConfiguration());
@@ -104,6 +106,8 @@ namespace API_SISTEMA.Data
             modelBuilder.Entity<VentaOperacion>().HasIndex(o => o.id_venta).IsUnique();
             modelBuilder.Entity<DetalleVenta>().Property(d => d.costo_unitario_venta).HasPrecision(18, 6);
             modelBuilder.Entity<DetalleVenta>().Property(d => d.ganancia).HasPrecision(18, 6);
+            modelBuilder.Entity<DetalleVenta>().Property(d => d.impuesto).HasPrecision(18, 6);
+            modelBuilder.Entity<Ventas>().Property(v => v.impuesto).HasPrecision(18, 6);
             modelBuilder.Entity<Ventas>().Property(v => v.ganancia_total).HasPrecision(18, 6);
             modelBuilder.Entity<Ventas>().Property(v => v.subtotal).HasPrecision(18, 2);
             modelBuilder.Entity<Ventas>().Property(v => v.descuento).HasPrecision(18, 2);

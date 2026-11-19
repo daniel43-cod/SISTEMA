@@ -20,7 +20,7 @@ public sealed class DocumentoFelConfiguration : IEntityTypeConfiguration<Documen
         b.Property(d => d.tipo_dte).HasMaxLength(4).IsUnicode(false);
         b.Property(d => d.estado).HasMaxLength(15).IsUnicode(false);
         b.Property(d => d.uuid).HasMaxLength(36).IsUnicode(false);
-        b.Property(d => d.serie).HasMaxLength(8).IsUnicode(false);
+        b.Property(d => d.serie).HasMaxLength(20).IsUnicode(false);
         b.Property(d => d.numero).HasMaxLength(30).IsUnicode(false);
         b.Property(d => d.version).IsRowVersion();
         b.HasIndex(d => new { d.id_venta, d.ambiente }).IsUnique().HasDatabaseName("UX_documento_fel_venta_ambiente");

@@ -37,6 +37,7 @@ public sealed class ConfirmarVentaPedidoService(SistemaDbContext context, Contex
         // La huella del borrador permite comprobar reintentos después de una respuesta perdida.
         var firma = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
         { IdPedido = idPedido, IdUsuario = idUsuario, dto.TotalEsperado, dto.PagoInicial,
+            dto.TipoIdentificacionReceptor, dto.IdentificacionReceptor, dto.NombreReceptor,
             Detalles = dto.Detalles.OrderBy(d => d.IdProductoPresentacion).Select(d => new
             { d.IdProductoPresentacion, d.Cantidad, Descuento = d.Descuento.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) }) })));
         if (pedido.Estado == EstadoPedidoCatalogo.ConvertidoAVenta && pedido.IdVenta is int existente)
@@ -76,6 +77,8 @@ public sealed class ConfirmarVentaPedidoService(SistemaDbContext context, Contex
         var venta = await ventas.CrearVenta(new CrearVentaDto
         {
             id_operacion = dto.IdOperacion, origen = "CATALOGO", observacion = $"Pedido catálogo #{pedido.IdPedido}",
+            tipo_identificacion_receptor = dto.TipoIdentificacionReceptor,
+            identificacion_receptor = dto.IdentificacionReceptor, nombre_receptor = dto.NombreReceptor,
             clienteNuevo = new CrearClienteVentaDto { nombre = pedido.NombreCliente, telefono = pedido.Telefono, direccion = pedido.Direccion },
             detalles = lineas, pago = new CrearPagoVentaDto { monto = dto.PagoInicial, metodo_pago = "EFECTIVO" }
         }, idUsuario, ct);

@@ -21,6 +21,7 @@ using System.Text;
 using API_SISTEMA.Services.CatalogoPublico;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<API_SISTEMA.Services.Ventas.EditarReceptorVentaService>();
 builder.Services.AddOptions<API_SISTEMA.Services.WhatsApp.WhatsAppOptions>()
     .Bind(builder.Configuration.GetSection("WhatsApp"));
 builder.Services.AddHttpClient<API_SISTEMA.Services.WhatsApp.WhatsAppClient>(client =>
@@ -30,6 +31,13 @@ builder.Services.AddHttpClient<API_SISTEMA.Services.WhatsApp.WhatsAppClient>(cli
 builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.EnviarComprobanteWhatsAppService>();
 builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.WhatsAppHistorialService>();
 builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.WhatsAppWebhookService>();
+builder.Services.AddSingleton<API_SISTEMA.Services.Fel.FacturaXsdValidator>(services =>
+    new API_SISTEMA.Services.Fel.FacturaXsdValidator(services.GetRequiredService<IWebHostEnvironment>()));
+builder.Services.AddScoped<API_SISTEMA.Services.Fel.CertificarVentaService>();
+builder.Services.AddHttpClient<API_SISTEMA.Services.Fel.InfileClient>(client =>
+    client.Timeout = TimeSpan.FromSeconds(60))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+    .RedactLoggedHeaders(new[] { "UsuarioAPI", "LlaveAPI", "UsuarioFirma", "LlaveFirma" });
 builder.Services.AddOptions<API_SISTEMA.Services.Fel.InfileOptions>()
     .Bind(builder.Configuration.GetSection("Infile"))
     .Validate(o => o.Ambiente is "PRUEBAS" or "PRODUCCION",

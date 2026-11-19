@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { CertifySalePanel } from './CertifySalePanel'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -24,6 +25,9 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose }: { saleId: numbe
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [certifying, setCertifying] = useState(false)
+  const [certificationOpen, setCertificationOpen] = useState(false)
+  const certUnauthorized = useCallback(() => logout('La sesión ya no es válida.'), [logout])
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [response, setResponse] = useState<ReceiptResult | null>(null)
@@ -87,7 +91,7 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose }: { saleId: numbe
     } finally { busy.current = false; if (alive.current) setSending(false) }
   }
   return createPortal(<dialog ref={dialog} className="wa-receipt-dialog" aria-labelledby={title}
-    onCancel={e => { e.preventDefault(); if (!busy.current) onClose() }}>
+    onCancel={e => { e.preventDefault(); if (!busy.current && !certifying) onClose() }}>
     <h2 id={title}>{mode === 'registro' ? `Venta #${saleId} registrada` : `Comprobante de venta #${saleId}`}</h2>
     <p>¿Quieres enviar el comprobante por WhatsApp?</p>
     {loading ? <p role="status">Cargando datos…</p> : options && <>
@@ -104,11 +108,18 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose }: { saleId: numbe
     {error && <p className="wa-receipt-error" role="alert">{error}</p>}
     {!loading && !options && <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar carga</button>}
     {response && <p className={response.huboFallo ? 'wa-receipt-error' : 'wa-receipt-status'} role={response.huboFallo ? 'alert' : 'status'}>{response.mensaje}</p>}
+    {mode === 'registro' && <CertifySalePanel saleId={saleId} token={token} active={certificationOpen}
+      onBusy={setCertifying} onUnauthorized={certUnauthorized} />}
     <div className="wa-receipt-actions">
-      <button type="button" disabled={sending} onClick={onClose}>{response ? 'Cerrar' : 'Ahora no'}</button>
-      <button type="button" className="wa-send-button" disabled={loading || sending || !options || !options.empresas.length} onClick={() => { void send() }}>
+      <button type="button" disabled={sending || certifying} onClick={onClose}>{response ? 'Cerrar' : 'Ahora no'}</button>
+      <button type="button" className="wa-send-button" disabled={loading || sending || certifying || !options || !options.empresas.length} onClick={() => { void send() }}>
         <WhatsAppIcon />{sending ? 'Enviando…' : 'Enviar comprobante'}
       </button>
+      {mode === 'registro' && <button type="button" className="fel-certify-button"
+        disabled={sending || certifying} aria-expanded={certificationOpen}
+        onClick={() => setCertificationOpen(value => !value)}>
+        {certifying ? 'Certificando…' : certificationOpen ? 'Ocultar certificación' : 'Certificar factura'}
+      </button>}
     </div>
   </dialog>, document.body)
 }

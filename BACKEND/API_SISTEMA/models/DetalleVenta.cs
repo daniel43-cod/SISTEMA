@@ -14,6 +14,8 @@ namespace API_SISTEMA.Models
         public decimal precio { get; set; }
         public decimal? descuento { get; set; }
         public decimal subtotal { get; set; }
+        // NULL indica que el IVA de esta línea todavía no fue calculado.
+        public decimal? impuesto { get; set; }
         public int id_producto_presentacion { get; set; }
         public int unidades_descontadas { get; set; }
         public decimal? costo_unitario_venta { get; set; }

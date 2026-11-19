@@ -3,6 +3,9 @@
     public class ListarVentasDto
     {
         public int id_ventas { get; set; }
+        public string? tipo_identificacion_receptor { get; set; }
+        public string? identificacion_receptor { get; set; }
+        public string? nombre_receptor { get; set; }
         public decimal subtotal { get; set; }
         public decimal? descuento { get; set; }
         public decimal impuesto { get; set; }

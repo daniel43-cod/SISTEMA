@@ -13,6 +13,9 @@ namespace API_SISTEMA.Models
         public decimal total { get; set; }
         public DateTime fecha_venta { get; set; } = DateTime.Now;
         public int id_cliente { get; set; }
+        [MaxLength(3)] public string? tipo_identificacion_receptor { get; set; }
+        [MaxLength(20)] public string? identificacion_receptor { get; set; }
+        [MaxLength(250)] public string? nombre_receptor { get; set; }
         public int id_usuario { get; set; }
         public decimal ganancia_total { get; set; }
         public required string origen { get; set; }
