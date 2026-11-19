@@ -8,6 +8,8 @@ public sealed class WhatsAppOptions
     public string AccessToken { get; set; } = "";
     public string PhoneNumberId { get; set; } = "";
     public string BusinessAccountId { get; set; } = "";
+    public string AppSecret { get; set; } = "";
+    public string VerifyToken { get; set; } = "";
     public string ApiVersion { get; set; } = "v27.0";
     public string TemplateName { get; set; } = "envio_de_comprobante";
     public string TemplateLanguage { get; set; } = "es_PA";

@@ -37,4 +37,5 @@ export async function confirmOrderSale(orderId: number, body: unknown, token: st
   const v = await requestJson('/pedidos-catalogo/' + orderId + '/confirmar-venta', { method: 'POST', body, token, validationMessages: true })
   if (!record(v) || !id(v.idVenta) || !amount(v.total) || !amount(v.saldoPendiente))
     throw new ApiError('No se pudo confirmar la respuesta de la venta.', 200)
+  return { id: Number(v.idVenta), total: Number(v.total), saldo: Number(v.saldoPendiente) }
 }

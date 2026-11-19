@@ -19,6 +19,7 @@ import './SalesPage.css'
 import type { OrderDetail } from '../../orders/api/ordersApi'
 import { confirmOrderSale } from '../../orders/api/ordersApi'
 import { createOperationId } from '../utils/operationId'
+import { WhatsAppReceiptDialog } from '../components/WhatsAppReceipt'
 
 const money = (cents: number) => new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(cents / 100)
 export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
@@ -90,6 +91,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
+  const [receiptSaleId, setReceiptSaleId] = useState<number | null>(null)
   const [uncertain, setUncertain] = useState(false)
   const busy = useRef(false)
   const operationId = useRef('')
@@ -280,12 +282,12 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     busy.current = true; setPending(true)
     try {
       if (order) {
-        await confirmOrderSale(order.idPedido, { idOperacion: operationId.current, totalEsperado: total / 100,
+        const registered = await confirmOrderSale(order.idPedido, { idOperacion: operationId.current, totalEsperado: total / 100,
           pagoInicial: Math.min(receivedCents!, total) / 100,
           detalles: lines.map(l => ({ idProductoPresentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })) }, token)
-        onOrderConfirmed?.(); return
+        setReceiptSaleId(registered.id); return
       }
-      await createSale({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
+      const registered = await createSale({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
         ...(newCustomer ? { clienteNuevo: { nombre: name.trim(), apellido: surname.trim() || null, nit: nit.trim() || null,
           direccion: address.trim() || null, dpi: dpi.trim() || null, telefono: phone.trim() || null, correo_electronico: email.trim() || null } } : {}),
         origen: 'MOSTRADOR', observacion: note.trim() || null,
@@ -294,6 +296,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       operationId.current = createOperationId()
       setRows([{ key: nextRowKey.current++, text: '', selection: null }]); setPendingRows(new Set()); setReceived(''); setNote(''); selectCustomer(null); setCustomerReset(v => v + 1)
       setRevision(v => v + 1)
+      setReceiptSaleId(registered.id)
     } catch (failure) {
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
       const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500 || failure.status === 200
@@ -365,6 +368,9 @@ telRef.current?.focus()}}}/></label>
   return <div className={catalogOpen ? "sales-page sales-catalog-open" : "sales-page"}>
     {catalogOpen && <SaleCatalog options={options} lines={lines} disabled={blocked} onAdd={addFromCatalog}
       onClose={() => { setCatalogOpen(false); if (lines.length) { setMobileCartVisible(true); setMobileProductKey(null) } requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(window.matchMedia("(max-width: 800px)").matches ? ".sales-cart-catalog-button" : ".sales-catalog-access button")?.focus()) }} />}
+    {receiptSaleId !== null && <WhatsAppReceiptDialog saleId={receiptSaleId} mode="registro" onClose={() => {
+      setReceiptSaleId(null); if (order) onOrderConfirmed?.()
+    }} />}
     <dialog ref={paymentDialogRef} className="sales-payment-dialog" aria-labelledby={paymentTitleId} aria-describedby={paymentDescriptionId}
       onCancel={event => { event.preventDefault(); closePaymentConfirmation(false) }}>
       <h2 id={paymentTitleId}>Confirmar venta sin pago inicial</h2>

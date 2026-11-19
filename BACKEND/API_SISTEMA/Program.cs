@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Data;
+using API_SISTEMA.Data;
 using API_SISTEMA.Services;
 using API_SISTEMA.Services.Caja;
 using API_SISTEMA.Services.IA;
@@ -28,6 +28,8 @@ builder.Services.AddHttpClient<API_SISTEMA.Services.WhatsApp.WhatsAppClient>(cli
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
     .RedactLoggedHeaders(new[] { "Authorization" });
 builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.EnviarComprobanteWhatsAppService>();
+builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.WhatsAppHistorialService>();
+builder.Services.AddScoped<API_SISTEMA.Services.WhatsApp.WhatsAppWebhookService>();
 builder.Services.AddOptions<API_SISTEMA.Services.Fel.InfileOptions>()
     .Bind(builder.Configuration.GetSection("Infile"))
     .Validate(o => o.Ambiente is "PRUEBAS" or "PRODUCCION",
@@ -220,6 +222,18 @@ builder.Services.AddScoped<CatalogoPublicoService>();
 builder.Services.AddScoped<ReporteGastosService>();
 
 var app = builder.Build();
+
+// El puerto del túnel solo acepta el webhook: la comparación usa el puerto real, no un Host modificable.
+if (app.Environment.IsDevelopment() && builder.Configuration.GetValue<int>("WhatsApp:TunnelPort") is var tunnelPort && tunnelPort > 0)
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.Connection.LocalPort == tunnelPort &&
+            !string.Equals(context.Request.Path.Value?.TrimEnd('/'), "/api/whatsapp/webhook", StringComparison.OrdinalIgnoreCase))
+        { context.Response.StatusCode = 404; return; }
+        await next(context);
+    });
+}
 
 if (app.Environment.IsDevelopment())
 {

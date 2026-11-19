@@ -1,4 +1,4 @@
-﻿using API_SISTEMA.Models;
+using API_SISTEMA.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Abstractions;
 using System.Net.Security;
@@ -39,6 +39,10 @@ namespace API_SISTEMA.Data
         public DbSet<AuditoriaEventoDetalle> AuditoriaEventoDetalles { get; set; }
         public DbSet<VentaOperacion> VentaOperaciones { get; set; }
         public DbSet<DocumentoFel> DocumentosFel { get; set; }
+        public DbSet<WhatsAppEnvio> WhatsAppEnvios { get; set; }
+        public DbSet<WhatsAppEnvioPagina> WhatsAppEnvioPaginas { get; set; }
+        public DbSet<WhatsAppEnvioIntento> WhatsAppEnvioIntentos { get; set; }
+        public DbSet<WhatsAppWebhookEvento> WhatsAppWebhookEventos { get; set; }
         public DbSet<Ventas> ventas { get; set; }
         public DbSet<ZonaEntrega> ZonasEntrega { get; set; }
         public DbSet<PedidoCatalogo> PedidosCatalogo { get; set; }
@@ -66,6 +70,7 @@ namespace API_SISTEMA.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new AuditoriaEventoConfiguration());
+            WhatsAppEnvioConfiguration.Configurar(modelBuilder);
             modelBuilder.ApplyConfiguration(new DocumentoFelConfiguration());
             modelBuilder.ApplyConfiguration(new ZonaEntregaConfiguration());
             modelBuilder.ApplyConfiguration(new PedidoCatalogoConfiguration());

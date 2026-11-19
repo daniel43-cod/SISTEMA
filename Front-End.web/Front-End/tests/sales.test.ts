@@ -1,6 +1,55 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createOperationId } from '../src/features/sales/utils/operationId.ts'
+import { receiptOptions, sendReceipt, validReceiptPhone } from '../src/features/sales/api/comprobantesApi.ts'
+
+const receiptResponse = { idEnvio: '11111111-1111-4111-8111-111111111111', huboFallo: false, mensaje: 'Aceptado', resultado: { idVenta: 12, estado: 'aceptado' } }
+test('Comprobante usa el teléfono registrado sin permitir otro destinatario', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/comprobantes/ventas/12/whatsapp?idEmpresa=3')
+    assert.equal(options.body, undefined)
+    assert.equal((options.headers as Record<string, string>).Authorization, 'Bearer test')
+    return Response.json(receiptResponse)
+  })
+  await sendReceipt(12, 3, '55551234', '44441234', 'historial', 'test')
+})
+test('Registro de venta envía el teléfono faltante a la ruta que lo guarda', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/comprobantes/ventas/12/whatsapp/registro?idEmpresa=3')
+    assert.deepEqual(JSON.parse(options.body as string), { telefono: '55551234' })
+    return Response.json(receiptResponse)
+  })
+  await sendReceipt(12, 3, null, '55551234', 'registro', 'test')
+})
+test('Historial envía teléfono temporal sin editar venta o cliente', async t => {
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    calls++; assert.equal(url, '/api/comprobantes/ventas/12/whatsapp/historial?idEmpresa=3')
+    assert.deepEqual(JSON.parse(options.body as string), { telefono: '55551234' })
+    return Response.json(receiptResponse)
+  })
+  await sendReceipt(12, 3, null, '55551234', 'historial', 'test'); assert.equal(calls, 1)
+})
+test('Sin teléfono se valida antes de enviar', async t => {
+  t.mock.method(globalThis, 'fetch', async () => { throw new Error('No debe enviar') })
+  await assert.rejects(sendReceipt(12, 3, null, '', 'registro', 'test'), /Ingresa el número de teléfono primero/)
+  assert.ok(validReceiptPhone('5555 1234')); assert.ok(validReceiptPhone('+502 5555-1234'))
+  assert.equal(validReceiptPhone('no es teléfono'), false)
+})
+test('Preparar comprobante solo consulta datos sin enviarlo', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/comprobantes/ventas/12/opciones-whatsapp'); assert.equal(options.method, 'GET')
+    return Response.json({ telefono: null, empresas: [{ id: 3, nombre: 'Negocio' }] })
+  })
+  assert.equal((await receiptOptions(12, 'test')).telefono, null)
+})
+test('Un fallo de WhatsApp conserva aviso y no se reintenta solo', async t => {
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async () => { calls++; return Response.json({ ...receiptResponse, huboFallo: true, mensaje: 'Hubo un fallo. Intenta más tarde.' }) })
+  const result = await sendReceipt(12, 3, '55551234', '', 'registro', 'test')
+  assert.equal(result.huboFallo, true); assert.equal(calls, 1)
+})
+
 test('El identificador de venta funciona sin randomUUID al acceder por HTTP local', () => {
   const source = { getRandomValues: globalThis.crypto.getRandomValues.bind(globalThis.crypto) }
   const ids = Array.from({ length: 100 }, () => createOperationId(source))

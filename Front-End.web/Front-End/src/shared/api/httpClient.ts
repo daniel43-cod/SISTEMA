@@ -8,6 +8,7 @@ type RequestOptions = {
   token?: string
   signal?: AbortSignal
   validationMessages?: boolean
+  timeoutMs?: number
 }
 
 export function parseRetryAfter(value: string | null): number {
@@ -24,8 +25,8 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
   if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (options.token) headers.Authorization = `Bearer ${options.token}`
   const signal = options.signal
-    ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)])
-    : AbortSignal.timeout(15000)
+    ? AbortSignal.any([options.signal, AbortSignal.timeout(options.timeoutMs ?? 15000)])
+    : AbortSignal.timeout(options.timeoutMs ?? 15000)
   try {
     const response = await fetch(API_BASE_URL + path, {
       method: options.method ?? 'GET',

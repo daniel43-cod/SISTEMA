@@ -1,0 +1,15 @@
+.wa-receipt-dialog { width: min(440px, calc(100vw - 32px)); box-sizing: border-box; border: 1px solid #dce4dd; border-radius: 16px; padding: 24px; color: #17271c; background: #fff; box-shadow: 0 20px 60px #0003; }
+.wa-receipt-dialog::backdrop { background: #10201788; }
+.wa-receipt-dialog h2 { margin: 0 0 12px; font-size: 1.25rem; }
+.wa-receipt-dialog p { line-height: 1.5; }
+.wa-receipt-dialog label { display: grid; gap: 8px; margin: 16px 0; font-weight: 600; }
+.wa-receipt-dialog input, .wa-receipt-dialog select { box-sizing: border-box; width: 100%; padding: 12px; border: 1px solid #8d9e92; border-radius: 8px; font: inherit; }
+.wa-receipt-dialog small { font-size: .85rem; font-weight: 400; color: #526359; }
+.wa-receipt-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.wa-receipt-actions button { min-height: 44px; padding: 10px 14px; border-radius: 8px; border: 1px solid #b8c4bd; background: #fff; font: inherit; cursor: pointer; }
+button.wa-send-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; border-radius: 8px; padding: 10px 14px; color: #fff; background: #128c4a; font: inherit; font-weight: 600; cursor: pointer; }
+button.wa-send-button:hover { background: #0c713b; }
+.wa-receipt-dialog button:disabled, button.wa-send-button:disabled { opacity: .55; cursor: not-allowed; }
+.wa-receipt-error { color: #a62020; }
+.wa-receipt-status { color: #176636; }
+.wa-receipt-dialog :focus-visible, button.wa-send-button:focus-visible { outline: 3px solid #157dcb; outline-offset: 3px; }

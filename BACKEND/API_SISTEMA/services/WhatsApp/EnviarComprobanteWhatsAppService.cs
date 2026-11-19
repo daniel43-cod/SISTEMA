@@ -6,7 +6,7 @@ using API_SISTEMA.Services.Comprobantes;
 namespace API_SISTEMA.Services.WhatsApp;
 
 public sealed record PaginaWhatsAppResultado(int Pagina, string Estado, string? MessageId = null,
-    string? Etapa = null, int? CodigoMeta = null);
+    string? Etapa = null, int? CodigoMeta = null, string? EstadoEntrega = null, int? CodigoEntrega = null);
 public sealed record EnvioWhatsAppResultado(int IdVenta, string Estado, int TotalPaginas,
     IReadOnlyList<PaginaWhatsAppResultado> Paginas);
 
