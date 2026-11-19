@@ -127,3 +127,11 @@
   .users-role-tabs { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; padding-bottom: 4px; }
   .users-panel .users-role-tabs button { white-space: nowrap; flex-shrink: 0; padding: 8px 12px; font-size: .8rem; }
 }
+.users-list-title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.users-browse-toolbar > .users-header-actions { margin-left: auto; }
+@media (min-width: 801px) {
+  .users-browse-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .users-browse-toolbar > .users-search { grid-column: 1; grid-row: 1; }
+  .users-browse-toolbar > .users-header-actions { grid-column: 2; grid-row: 1; margin-left: 0; }
+  .users-browse-toolbar > .users-role-tabs { grid-column: 1 / -1; grid-row: 2; }
+}

@@ -32,6 +32,39 @@ public class CompraService(SistemaDbContext context, MovimientoCajaService movim
             }).ToListAsync(ct);
     }
 
+    public async Task<ResumenComprasDto> Resumen(FiltroResumenComprasDto filtro, CancellationToken ct = default)
+    {
+        System.ComponentModel.DataAnnotations.Validator.ValidateObject(filtro,
+            new System.ComponentModel.DataAnnotations.ValidationContext(filtro), true);
+        var sesion = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(context, ct);
+        if (sesion is null) return new ResumenComprasDto();
+        var consulta = context.registroCompras.AsNoTracking().Where(c => c.IdSesionCaja == sesion.id_sesion_caja);
+        if (!string.IsNullOrWhiteSpace(filtro.Buscar))
+        {
+            var texto = filtro.Buscar.Trim();
+            var idTexto = texto.StartsWith("C-", StringComparison.OrdinalIgnoreCase) ? texto[2..] : texto.TrimStart('#');
+            var esNumero = int.TryParse(idTexto, out var numero);
+            consulta = consulta.Where(c => c.Proveedores.nombre.Contains(texto) || (esNumero && c.IdCompra == numero));
+        }
+        var pendientes = await consulta.CountAsync(c => c.SaldoPendiente > 0, ct);
+        var pagadas = await consulta.CountAsync(c => c.SaldoPendiente == 0, ct);
+        if (filtro.EstadoPago == "pendientes") consulta = consulta.Where(c => c.SaldoPendiente > 0);
+        if (filtro.EstadoPago == "pagadas") consulta = consulta.Where(c => c.SaldoPendiente == 0);
+        var count = await consulta.CountAsync(ct);
+        var comprado = await consulta.SumAsync(c => (decimal?)c.TotalCompra, ct) ?? 0m;
+        var saldo = await consulta.SumAsync(c => (decimal?)c.SaldoPendiente, ct) ?? 0m;
+        var items = await consulta.OrderByDescending(c => c.IdCompra)
+            .Skip((filtro.Pagina - 1) * filtro.TamanoPagina).Take(filtro.TamanoPagina)
+            .Select(c => new ListarComprasDto {
+                id_compra = c.IdCompra, id_usuario = c.IdUsuario, nombre_usuario = c.Usuario.nombre,
+                id_proveedor = c.IdProveedor, nombre_proveedor = c.Proveedores.nombre,
+                id_estado_compra = c.IdEstadoCompra, descripcion_estado_compra = c.EstadoCompra.descripcion,
+                fecha_ingreso = c.FechaIngreso, total_compra = c.TotalCompra, saldo_pendiente = c.SaldoPendiente
+            }).ToListAsync(ct);
+        return new ResumenComprasDto { TotalRegistros = count, CantidadPendientes = pendientes, CantidadPagadas = pagadas,
+            TotalComprado = comprado, TotalPorPagar = saldo, TotalPagado = comprado - saldo,
+            HayMas = (long)filtro.Pagina * filtro.TamanoPagina < count, Items = items };
+    }
     public async Task<List<ListarDetalleCompraDto>?> ListarDetalleCompra(int id_compra, CancellationToken ct = default)
     {
         if (id_compra <= 0) throw new CompraValidationException("El ID debe ser mayor que cero.");

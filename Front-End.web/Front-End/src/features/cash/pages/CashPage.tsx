@@ -1,3 +1,4 @@
+import { DesktopCashOverview } from './DesktopCashOverview'
 import { createPortal } from 'react-dom'
 ﻿import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
@@ -157,7 +158,7 @@ export function CashPage({ onOpenChange, headerTarget, onAddExpense }: { onOpenC
   }
 
   if (!isAdmin) return <p>No tienes permiso para administrar la caja.</p>
-  return <section className="cash-panel" aria-label="Caja" aria-busy={phase === 'loading' || saving}>
+  return <section className={current && phase === "ready" ? "cash-panel cash-panel-active" : "cash-panel"} aria-label="Caja" aria-busy={phase === 'loading' || saving}>
     {headerTarget && createPortal(<div className="cash-mobile-header">
       <h2>Caja</h2><span className={current && phase === 'ready' ? 'cash-mobile-state is-open' : 'cash-mobile-state'}>{phase === 'loading' ? 'Consultando' : phase === 'error' ? 'Sin confirmar' : current ? '● Abierta' : 'Cerrada'}</span>
       <RefreshButton label="Actualizar estado de caja" loading={saving || phase === 'loading'} onClick={() => { setError(''); setSummary(null); setSummaryError(''); setPhase('loading'); setVersion(value => value + 1) }} />
@@ -202,48 +203,9 @@ headerTarget ? createPortal(
 
         <MobileCashOverview current={current} summary={summary} error={summaryError} saving={saving}
           onClose={() => { setClosing(true); setReview(null); setError(''); setNotice('') }} onExpense={onAddExpense} />
-        <section className="cash-movements" aria-labelledby="cash-movements-title">
-          {summaryError ? <p className="cash-error" role="alert">{summaryError} Usa actualizar para volver a consultar.</p> :
-            summary?.id_sesion_caja !== current.id_sesion_caja ? <p role="status">Consultando movimientos…</p> : <>
-
-              {summary.movimientos.length === 0 ? <p>Aún no hay movimientos en este turno.</p> :
-                <div className="cash-movement-table-scroll">
-                  <table className="cash-movement-table">
-                    <thead><tr>
-                      <th scope="col">Movimiento</th>
-                      <th scope="col">Encargado</th>
-                      <th scope="col">Fecha y hora</th>
-                      <th scope="col">Tipo</th>
-                      <th scope="col">Monto</th>
-                    </tr></thead>
-                    <tbody>{summary.movimientos.map(movement => {
-                      const incoming = ['ENTRADA', 'INGRESO'].includes(movement.naturaleza.trim().toUpperCase())
-                      const showDescription = movement.descripcion &&
-                        !/^(?:(?:pago|abono)\s*(?:de\s+|a\s+)?(?:compras?|ventas?)\s*#|gasto\s+registrado\s*:)/i.test(movement.descripcion.trim())
-                      return <tr key={movement.id_movimiento_caja}>
-                        <td><strong>{movement.tipo_movimiento}</strong>
-                          {showDescription && <small>{movement.descripcion}</small>}
-                        </td>
-                        <td>{movement.usuario}</td>
-                        <td><time dateTime={movement.fecha_movimiento}>
-                          {new Date(movement.fecha_movimiento).toLocaleString('es-GT')}
-                        </time></td>
-                        <td className={incoming ? 'cash-incoming' : 'cash-outgoing'}>{incoming ? 'Entrada' : 'Salida'}</td>
-                        <td className={incoming ? 'cash-incoming' : 'cash-outgoing'}>
-                          <strong>{incoming ? '+' : '−'}{money(movement.monto)}</strong>
-                        </td>
-                      </tr>
-                    })}</tbody>
-                  </table>
-                </div>}
-              <dl className="cash-summary cash-movements-totals">
-                <div><dt>Entradas</dt><dd className="cash-incoming">{money(summary.total_entradas)}</dd></div>
-                <div><dt>Salidas</dt><dd className="cash-outgoing">{money(summary.total_salidas)}</dd></div>
-                <div><dt>Monto esperado</dt><dd>{money(summary.saldo_esperado)}</dd></div>
-                <div><dt>Total de movimientos</dt><dd>{summary.total_movimientos}</dd></div>
-              </dl>
-            </>}
-        </section>
+        <DesktopCashOverview key={current.id_sesion_caja} current={current} summary={summary} error={summaryError} saving={saving}
+          onClose={() => { setClosing(true); setReview(null); setError(''); setNotice('') }}
+          onRefresh={() => { setSummary(null); setSummaryError(''); setVersion(v => v + 1) }} />
         {closing && createPortal(<dialog ref={closingDialog} className="cash-closing-dialog" aria-labelledby="cash-closing-title"
           onCancel={event => { event.preventDefault(); if (!busy.current) { setClosing(false); setReview(null); setError('') } }}>
           <button type="button" className="cash-dialog-close" aria-label="Cerrar formulario" disabled={saving}

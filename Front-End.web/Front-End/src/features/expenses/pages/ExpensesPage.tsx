@@ -14,6 +14,13 @@ import './ExpensesPage.css'
 export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } = {}) {
   const { session, logout } = useAuth()
   const token = session?.token
+  const [desktopView, setDesktopView] = useState(() => window.matchMedia('(min-width: 801px)').matches)
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 801px)')
+    const update = () => setDesktopView(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   const [userFilter, setUserFilter] = useState('')
   const [draftUser, setDraftUser] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -23,7 +30,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
   const [usersRevision, setUsersRevision] = useState(0)
   const filterDialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
-    if (!token || !filtersOpen) return
+    if (!token || (!filtersOpen && !desktopView)) return
     const controller = new AbortController()
     setUsersLoading(true); setUsersError('')
     void listUsers(token, controller.signal).then(rows => {
@@ -34,7 +41,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
       else setUsersError(failure instanceof Error ? failure.message : 'No se pudieron cargar los usuarios.')
     }).finally(() => { if (!controller.signal.aborted) setUsersLoading(false) })
     return () => controller.abort()
-  }, [token, filtersOpen, usersRevision, logout])
+  }, [token, filtersOpen, desktopView, usersRevision, logout])
   useEffect(() => {
     if (!filtersOpen) return
     const dialog = filterDialog.current
@@ -48,7 +55,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
   const [cashOpen, setCashOpen] = useState(false)
   const [cashError, setCashError] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+
   const [saving, setSaving] = useState(false)
   const [uncertain, setUncertain] = useState(false)
   const [revision, setRevision] = useState(0)
@@ -61,6 +68,7 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     }
   }, [createRequest])
   const [page, setPage] = useState(1)
+  const [expenseCount, setExpenseCount] = useState<number | null>(null)
   const [totalExpenses, setTotalExpenses] = useState<number | null>(null)
   const [totalLoading, setTotalLoading] = useState(true)
   const [totalError, setTotalError] = useState('')
@@ -69,10 +77,10 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     if (!token) return
     const controller = new AbortController()
     async function loadTotal() {
-      setTotalLoading(true); setTotalError(''); setTotalExpenses(null)
+      setTotalLoading(true); setTotalError(''); setTotalExpenses(null); setExpenseCount(null)
       try {
         const report = await getExpensesReport(token!, controller.signal, userFilter ? Number(userFilter) : undefined)
-        if (!controller.signal.aborted) setTotalExpenses(report?.totalGastos ?? null)
+        if (!controller.signal.aborted) { setTotalExpenses(report?.totalGastos ?? null); setExpenseCount(report?.cantidadGastos ?? null) }
       } catch (failure) {
         if (controller.signal.aborted) return
         if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
@@ -140,15 +148,14 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token || busy.current || uncertain || loading || !cashOpen || cashError) return
-    setError(''); setSuccess('')
+    setError('')
     let payload
     try { payload = buildExpense(description, amount, note) }
     catch (failure) { setError(failure instanceof Error ? failure.message : 'Revisa los datos.'); return }
     busy.current = true; setSaving(true)
     try {
-      const id = await createExpense(token, payload)
+      await createExpense(token, payload)
       if (!alive.current) return
-      setSuccess(`Gasto #${id} registrado por ${new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(payload.monto)}.`)
       setDescription(''); setAmount(''); setNote('')
       setFormOpen(false); setPage(1)
       setRevision(v => v + 1)
@@ -165,22 +172,38 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     } finally { busy.current = false; if (alive.current) setSaving(false) }
   }
   return <section className="expense-panel" aria-label="Gastos">
-    <header className="expense-heading">
-      <div className="expense-header-actions">
 
-        <button type="button" className="expense-create-desktop" disabled={loading || saving || !cashOpen || !!cashError}
-          aria-haspopup="dialog" aria-controls="expense-create-dialog" onClick={() => setFormOpen(true)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-          Registrar gasto
-        </button>
-      </div></header>
     <p className={cashOpen && !cashError ? 'expense-open' : 'expense-hint'} role="status">
       {loading ? 'Consultando caja…' : cashError ? 'No se pudo verificar la caja.'
         : cashOpen ? null
         : 'Abre la caja para registrar un gasto.'}
     </p>
     {cashError && <p role="alert" className="expense-error">{cashError}</p>}
-    {success && <p role="status" className="expense-success">{success}</p>}
+
+    <div className="expense-desktop-summary">
+      <article><span>Total de gastos</span><div className="expense-desktop-amount">
+        <strong>{!totalVisible ? 'Q ••••••' : totalLoading ? '…' : totalExpenses === null ? '—' : new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(totalExpenses)}</strong>
+        <button type="button" aria-label={totalVisible ? 'Ocultar total de gastos' : 'Mostrar total de gastos'} aria-pressed={totalVisible} onClick={() => setTotalVisible(v => !v)}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{!totalVisible && <path d="m3 3 18 18" />}</svg>
+        </button>
+      </div></article>
+      <article><span>Número de gastos</span><strong>{totalLoading ? '…' : expenseCount ?? '—'}</strong></article>
+      <article><span>Promedio por gasto</span><strong>{!totalVisible ? 'Q ••••••' : totalLoading ? '…' : totalExpenses === null || expenseCount === null ? '—' : new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(expenseCount > 0 ? totalExpenses / expenseCount : 0)}</strong></article>
+    </div>
+    <div className="expense-desktop-filters">
+      <label>Encargado<select value={userFilter} disabled={saving || usersLoading || !!usersError} onChange={e => { setUserFilter(e.target.value); setPage(1) }}>
+        <option value="">Todos</option>
+        {users.map(user => <option key={user.id_usuario} value={user.id_usuario}>{[user.nombre, user.apellido].filter(Boolean).join(' ')}</option>)}
+      </select></label>
+      <RefreshButton label="Actualizar gastos" loading={loading || saving || historyLoading || totalLoading} onClick={() => setRevision(v => v + 1)} />
+      <button type="button" className="expense-create-desktop" disabled={loading || saving || !cashOpen || !!cashError}
+          aria-haspopup="dialog" aria-controls="expense-create-dialog" onClick={() => setFormOpen(true)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          Registrar gasto
+        </button>
+      {usersLoading && <p role="status">Cargando usuarios…</p>}
+      {usersError && <div role="alert"><p>{usersError}</p><button type="button" onClick={() => setUsersRevision(v => v + 1)}>Reintentar usuarios</button></div>}
+    </div>
     <div className="expense-total-card">
       <div><span>Total de gastos</span><div className="expense-total-amount">
         <strong aria-label={totalVisible ? undefined : 'Total de gastos oculto'}>{!totalVisible ? 'Q ••••••'

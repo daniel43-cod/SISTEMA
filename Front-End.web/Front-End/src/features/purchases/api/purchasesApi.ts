@@ -1,6 +1,6 @@
-import { requestJson } from '../../../shared/api/httpClient'
-import { ApiError } from '../../../shared/api/ApiError'
-import type { CreatePurchase, CreatedPurchase, Purchase, PurchaseDetail, Supplier } from '../types/purchase'
+﻿import { requestJson } from '../../../shared/api/httpClient.ts'
+import { ApiError } from '../../../shared/api/ApiError.ts'
+import type { CreatePurchase, CreatedPurchase, Purchase, PurchaseDetail, Supplier } from '../types/purchase.ts'
 
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object'
 const id = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v > 0
@@ -52,4 +52,23 @@ export async function getPurchasePayments(token: string, purchaseId: number, sig
     typeof p.usuario === 'string' && (p.observacion === null || typeof p.observacion === 'string')))
     throw new ApiError('El historial de pagos no tiene el formato esperado.')
   return result as PurchasePayment[]
+}
+
+export type PurchaseSummary = {
+  totalRegistros: number; cantidadPendientes: number; cantidadPagadas: number
+  totalComprado: number; totalPorPagar: number; totalPagado: number; hayMas: boolean; items: Purchase[]
+}
+export async function getPurchaseSummary(token: string, page: number, search: string, status: string, signal?: AbortSignal): Promise<PurchaseSummary> {
+  const params = new URLSearchParams({ pagina: String(page), tamanoPagina: '20' })
+  if (search.trim()) params.set('buscar', search.trim())
+  if (status) params.set('estadoPago', status)
+  const result = await requestJson('/Compra/resumen?' + params, { token, signal })
+  if (!object(result) || !['totalRegistros', 'cantidadPendientes', 'cantidadPagadas'].every(k => Number.isSafeInteger(result[k]) && Number(result[k]) >= 0) ||
+    !['totalComprado', 'totalPorPagar', 'totalPagado'].every(k => amount(result[k])) || typeof result.hayMas !== 'boolean' ||
+    !Array.isArray(result.items) || result.items.length > 20 || !result.items.every(row => object(row) && id(row.id_compra) &&
+      typeof row.nombre_proveedor === 'string' && typeof row.nombre_usuario === 'string' && typeof row.descripcion_estado_compra === 'string' &&
+      typeof row.fecha_ingreso === 'string' && Number.isFinite(Date.parse(row.fecha_ingreso)) &&
+      amount(row.total_compra) && amount(row.saldo_pendiente) && row.saldo_pendiente <= row.total_compra))
+    throw badResponse()
+  return result as unknown as PurchaseSummary
 }

@@ -135,12 +135,8 @@ export function UsersPage() {
     } finally { busy.current = false; if (alive.current) setSaving(false) }
   }
   return <section className="users-panel" aria-labelledby="users-title">
-    <div className="users-heading"><h2 id="users-title">Usuarios</h2>
-      <div className="users-header-actions"><RefreshButton label="Actualizar usuarios" loading={loading || saving} onClick={() => setRevision(v => v + 1)} /><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
-      aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
-      onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
-    </button></div></div>
+    <h2 id="users-title" className="users-list-title">Usuarios</h2>
+
     {success && <p role="status" className="users-success">{success}</p>}
     <div className="users-browse-toolbar">
       <label className="users-search">
@@ -153,6 +149,11 @@ export function UsersPage() {
         {roleTabs.map(role => <button type="button" key={role.id_rol} aria-pressed={roleFilter === role.id_rol}
           onClick={() => setRoleFilter(role.id_rol)}>{roleLabel(role.nombre, true)} ({items.filter(item => item.id_rol === role.id_rol).length})</button>)}
       </div>
+      <div className="users-header-actions"><RefreshButton label="Actualizar usuarios" loading={loading || saving} onClick={() => setRevision(v => v + 1)} /><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
+      aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
+      onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
+    </button></div>
     </div>
     {loading ? <p role="status">Cargando usuarios…</p> : error ? <div role="alert"><p>{error}</p>
       <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div>

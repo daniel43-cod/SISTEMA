@@ -1,3 +1,4 @@
+import { getPurchaseSummary } from '../src/features/purchases/api/purchasesApi.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { amountCents, buildPurchase } from '../src/features/purchases/utils/purchaseValidation.ts'
@@ -18,4 +19,23 @@ test('Invalid quantities, duplicate lines and overpayments are rejected', () => 
   assert.throws(() => buildPurchase('2', '', '0', [{ ...line, cantidad: '1.5' }]))
   assert.throws(() => buildPurchase('', '', '0', [line]))
   assert.throws(() => buildPurchase('2', '', '0', []))
+})
+
+test('Purchase summary sends search and payment state and uses backend totals', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string) => {
+    const params = new URL(url, 'https://test.invalid').searchParams
+    assert.equal(params.get('buscar'), 'Proveedor')
+    assert.equal(params.get('estadoPago'), 'pendientes')
+    assert.equal(params.get('pagina'), '2')
+    return Response.json({ totalRegistros: 21, cantidadPendientes: 21, cantidadPagadas: 2,
+      totalComprado: 590, totalPorPagar: 490, totalPagado: 100, hayMas: false, items: [] })
+  })
+  const result = await getPurchaseSummary('token', 2, 'Proveedor', 'pendientes')
+  assert.equal(result.totalComprado, 590)
+  assert.equal(result.totalPagado, 100)
+  assert.equal(result.totalPorPagar, 490)
+})
+test('Purchase summary rejects invalid totals instead of displaying zero', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ items: [] }))
+  await assert.rejects(getPurchaseSummary('token', 1, '', ''), /respuesta de compras/)
 })

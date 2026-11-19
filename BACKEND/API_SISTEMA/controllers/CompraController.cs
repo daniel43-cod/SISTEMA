@@ -48,6 +48,12 @@ namespace API_SISTEMA.Controllers
         }
 
         [Authorize(Roles = Roles.Administrador)]
+        [HttpGet("resumen")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<ResumenComprasDto>> Resumen(
+            [FromQuery] FiltroResumenComprasDto filtro, CancellationToken ct)
+            => Ok(await _context.Resumen(filtro, ct));
+        [Authorize(Roles = Roles.Administrador)]
         [HttpPost("crear")]
         [Consumes("application/json")]
         [ProducesResponseType(typeof(RespuestaCrearCompraDto), StatusCodes.Status200OK)]
