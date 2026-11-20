@@ -7,6 +7,10 @@ public sealed record DatosReceptorVenta(string Tipo, string Identificacion, stri
 
 public static class ReceptorVentaReglas
 {
+    public static DatosReceptorVenta? ValidarOpcional(string? tipo, string? identificacion, string? nombre, decimal total)
+        => string.IsNullOrWhiteSpace(tipo) && string.IsNullOrWhiteSpace(identificacion) && string.IsNullOrWhiteSpace(nombre)
+            ? null : Validar(tipo, identificacion, nombre, total);
+
     public static DatosReceptorVenta Validar(string? tipo, string? identificacion, string? nombre, decimal total)
     {
         tipo = tipo?.Trim().ToUpperInvariant();

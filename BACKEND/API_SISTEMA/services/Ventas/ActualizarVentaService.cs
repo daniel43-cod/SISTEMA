@@ -54,7 +54,7 @@ public class ActualizarVentaService(SistemaDbContext context)
             nuevos.Add(VentaReglas.Calcular(p, pr, d.cantidad, d.descuento));
         }
         var total = nuevos.Sum(d => d.subtotal);
-        var receptorFiscal = ReceptorVentaReglas.Validar(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
+        var receptorFiscal = ReceptorVentaReglas.ValidarOpcional(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
         var descuento = nuevos.Sum(d => d.descuento ?? 0m);
         VentaReglas.Monto(total, false); VentaReglas.Monto(total + descuento);
         var pagado = await context.pagos.Where(p => p.id_venta == idVenta).SumAsync(p => (decimal?)p.monto, ct) ?? 0m;
@@ -62,9 +62,12 @@ public class ActualizarVentaService(SistemaDbContext context)
         context.detalle_Ventas.RemoveRange(venta.DetalleVentas);
         venta.DetalleVentas = nuevos;
         venta.id_cliente = dto.id_cliente; venta.subtotal = total + descuento; venta.descuento = descuento;
-        venta.tipo_identificacion_receptor = receptorFiscal.Tipo;
-        venta.identificacion_receptor = receptorFiscal.Identificacion;
-        venta.nombre_receptor = receptorFiscal.Nombre;
+        if (receptorFiscal is not null)
+        {
+            venta.tipo_identificacion_receptor = receptorFiscal.Tipo;
+            venta.identificacion_receptor = receptorFiscal.Identificacion;
+            venta.nombre_receptor = receptorFiscal.Nombre;
+        }
         venta.total = total; venta.ganancia_total = nuevos.Sum(d => d.ganancia); venta.monto_pagado = pagado;
         venta.impuesto = nuevos.Sum(d => d.impuesto ?? 0m);
         venta.saldo_pendiente = total - pagado; venta.id_estado_venta = total == pagado ? 1 : 2; venta.observacion = dto.observacion?.Trim();

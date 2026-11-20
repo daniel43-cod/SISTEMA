@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { certifySale, loadFel, parseFelDocument } from '../src/features/sales/api/felApi.ts'
+import { certifySale, loadFel, loadFelPreparation, parseFelDocument } from '../src/features/sales/api/felApi.ts'
 
 const invoice = { id_documento_fel: 7, id_venta: 1141, ambiente: 'PRUEBAS', estado: 'CERTIFICADA',
   uuid: '15B0C102-4DD4-4ED6-8C5C-85B9515720B7', serie: '**PRUEBAS**', numero: '1305759446',
@@ -21,6 +21,14 @@ test('FEL: certificación explícita envía una sola petición autenticada', asy
   assert.equal(calls, 1)
 })
 
+test('FEL: CF se envía sin datos de dirección', async t => {
+  t.mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+    assert.deepEqual(JSON.parse(options.body as string), { confirmar_bienes_gravados: true })
+    return Response.json(invoice)
+  })
+  await certifySale(1141, { confirmar_bienes_gravados: true }, 'test')
+})
+
 test('FEL: consulta no emite factura y conserva mensajes de rechazo', async t => {
   t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
     assert.equal(url, '/api/Venta/1141/fel')
@@ -34,4 +42,23 @@ test('FEL: consulta no emite factura y conserva mensajes de rechazo', async t =>
 test('FEL: rechaza resultados de otra venta y enlaces PDF ajenos a INFILE', () => {
   assert.throws(() => parseFelDocument(invoice, 99))
   assert.throws(() => parseFelDocument({ ...invoice, pdf: 'https://example.com/factura' }, 1141))
+})
+
+test('Preparar certificación obtiene el total sin emitir una factura', async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    assert.equal(url, '/api/Venta/1141/fel/preparacion')
+    assert.equal(options.method, 'GET')
+    return Response.json({ total: 3000, tipo_identificacion_receptor: null })
+  })
+  assert.equal((await loadFelPreparation(1141, 'test')).total, 3000)
+})
+
+test('La selección fiscal se envía al certificar, sin nombre arbitrario', async t => {
+  t.mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+    assert.deepEqual(JSON.parse(options.body as string), {
+      tipo_identificacion_receptor: 'CF', identificacion_receptor: 'CF', confirmar_bienes_gravados: true,
+    })
+    return Response.json(invoice)
+  })
+  await certifySale(1141, { tipo_identificacion_receptor: 'CF', identificacion_receptor: 'CF', confirmar_bienes_gravados: true }, 'test')
 })

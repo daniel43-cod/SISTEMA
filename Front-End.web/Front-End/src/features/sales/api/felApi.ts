@@ -8,8 +8,9 @@ export type FelDocument = {
   descripcion?: string | null; errores: FelMessage[]; alertas: FelMessage[]
 }
 export type FelAddress = {
-  direccion: string; codigo_postal: string; municipio: string; departamento: string
-  pais: string; correo_receptor?: string; confirmar_bienes_gravados: boolean
+  tipo_identificacion_receptor?: 'CF' | 'NIT' | 'CUI'; identificacion_receptor?: string
+  direccion?: string; codigo_postal?: string; municipio?: string; departamento?: string
+  pais?: string; correo_receptor?: string; confirmar_bienes_gravados: boolean
 }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 export function parseFelDocument(value: unknown, saleId: number): FelDocument {
@@ -37,4 +38,11 @@ export async function certifySale(saleId: number, body: FelAddress, token: strin
     method: 'POST', body, token, validationMessages: true, timeoutMs: 90000,
   })
   return parseFelDocument(result, saleId)
+}
+
+export async function loadFelPreparation(saleId: number, token: string, signal?: AbortSignal): Promise<{ total: number }> {
+  const result = await requestJson(`/Venta/${saleId}/fel/preparacion`, { token, signal })
+  if (!record(result) || typeof result.total !== 'number' || !Number.isFinite(result.total) || result.total <= 0)
+    throw new ApiError('No se pudo obtener el total de la venta para certificar.')
+  return { total: result.total }
 }

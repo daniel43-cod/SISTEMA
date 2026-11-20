@@ -22,7 +22,7 @@ public static class IdentificacionReceptorFel
         if (string.IsNullOrWhiteSpace(identificacion) || identificacion == "CF")
         {
             if (total >= 2500m)
-                throw new ValidationException("Para facturas de Q2,500.00 o más debes proporcionar NIT o CUI del receptor. No se permite consumidor final (CF).");
+                throw new ValidationException("Para facturas de Q2,500.00 o más debes proporcionar NIT o CUI del cliente. No se permite consumidor final (CF).");
             if (string.IsNullOrWhiteSpace(identificacion))
                 throw new ValidationException("Indica NIT, CUI o CF para identificar al receptor.");
             return ("CF", "NIT");

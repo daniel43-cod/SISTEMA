@@ -25,7 +25,8 @@ public sealed record EstadoFacturaFel(int id_documento_fel, int id_venta, string
 public sealed record MensajeFel(string? fuente, string? categoria, string? numeral, string? validacion, string? mensaje);
 
 public sealed class CertificarVentaService(SistemaDbContext db, InfileClient infile,
-    IOptions<InfileOptions> options, PermisoUsuarioService permisos, FacturaXsdValidator validador)
+    IOptions<InfileOptions> options, PermisoUsuarioService permisos, FacturaXsdValidator validador,
+    ConsultarReceptorInfileService consultaReceptor)
 {
     private static EstadoFacturaFel Resumen(DocumentoFel d) => new(d.id_documento_fel, d.id_venta, d.ambiente,
         d.estado, d.uuid, d.serie, d.numero, d.fecha_certificacion,
@@ -58,6 +59,14 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
             throw new UnauthorizedAccessException("No tienes permiso para certificar ventas.");
     }
 
+    public async Task<object> Preparar(int idVenta, int usuario, CancellationToken ct)
+    {
+        await Autorizar(usuario);
+        return await db.ventas.AsNoTracking().Where(v => v.id_ventas == idVenta)
+            .Select(v => new { v.total, v.tipo_identificacion_receptor, v.identificacion_receptor, v.nombre_receptor })
+            .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
+    }
+
     public async Task<EstadoFacturaFel> Certificar(int idVenta, CertificarVentaDto dto, int usuario, CancellationToken ct)
     {
         await Autorizar(usuario);
@@ -65,6 +74,16 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
         if (!config.Habilitado) throw new ValidationException("La integración FEL está deshabilitada.");
         // Habilitar producción después de validar XSD, reglas fiscales y pruebas integrales.
         if (config.Ambiente != "PRUEBAS") throw new ValidationException("Esta versión de certificación está habilitada únicamente para pruebas.");
+        // Consultar fuera de la transacción SQL. En reconciliación se respeta el XML anterior.
+        var estadoAnterior = await db.DocumentosFel.AsNoTracking()
+            .Where(d => d.id_venta == idVenta && d.ambiente == config.Ambiente).Select(d => d.estado).SingleOrDefaultAsync(ct);
+        string? nombreConsultado = null;
+        if ((estadoAnterior is null or "RECHAZADA") && (dto.tipo_identificacion_receptor is "NIT" or "CUI"))
+        {
+            var consulta = await consultaReceptor.Consultar(dto.tipo_identificacion_receptor, dto.identificacion_receptor ?? "", ct);
+            if (!consulta.resultado) throw new ValidationException(consulta.descripcion ?? "No se pudo validar al receptor.");
+            nombreConsultado = consulta.nombre;
+        }
         DocumentoFel documento;
         DocumentoFelIntento intento;
         await using (var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct))
@@ -93,9 +112,16 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
                 if (empresas.Count != 1) throw new ValidationException("Debe existir exactamente una empresa configurada.");
                 var fecha = DateTimeOffset.UtcNow;
                 var identidad = API_SISTEMA.Services.Ventas.ReceptorVentaReglas.Validar(
-                    venta.tipo_identificacion_receptor, venta.identificacion_receptor, venta.nombre_receptor, venta.total);
+                    dto.tipo_identificacion_receptor ?? venta.tipo_identificacion_receptor,
+                    dto.tipo_identificacion_receptor is null ? venta.identificacion_receptor : dto.identificacion_receptor,
+                    dto.tipo_identificacion_receptor is null ? venta.nombre_receptor : nombreConsultado, venta.total);
+                venta.tipo_identificacion_receptor = identidad.Tipo;
+                venta.identificacion_receptor = identidad.Identificacion;
+                venta.nombre_receptor = identidad.Nombre;
+                var tieneDireccion = new[] { dto.direccion, dto.codigo_postal, dto.municipio, dto.departamento }
+                    .Any(valor => !string.IsNullOrWhiteSpace(valor));
                 var receptor = new ReceptorFel(identidad.Identificacion, identidad.Nombre,
-                    new(dto.direccion, dto.codigo_postal, dto.municipio, dto.departamento, dto.pais), dto.correo_receptor,
+                    identidad.Tipo == "CF" || !tieneDireccion ? null : new(dto.direccion!, dto.codigo_postal!, dto.municipio!, dto.departamento!, dto.pais!), dto.correo_receptor,
                     identidad.Tipo == "CUI" ? "CUI" : "NIT");
                 var lineas = venta.DetalleVentas.OrderBy(d => d.id_detalle_venta).Select(d =>
                     new LineaFacturaFel(d.Producto.Nombre, d.cantidad, d.precio, d.descuento ?? 0m, "UND", "B", d.impuesto)).ToArray();

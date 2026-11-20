@@ -11,6 +11,8 @@ static void Verificar(bool condicion, string mensaje)
     if (!condicion) throw new Exception(mensaje);
 }
 var cfVenta = API_SISTEMA.Services.Ventas.ReceptorVentaReglas.Validar("cf", null, null, 2499.99m);
+Verificar(API_SISTEMA.Services.Ventas.ReceptorVentaReglas.ValidarOpcional(null, null, null, 3000m) is null,
+    "Registrar una venta sin certificar no debe requerir identificación fiscal, incluso desde Q2,500.");
 Verificar(cfVenta.Identificacion == "CF" && cfVenta.Nombre == "CONSUMIDOR FINAL", "No normaliza receptor CF.");
 foreach (var datosVenta in new[] { (Tipo: (string?)null, Id: (string?)null, Nombre: (string?)null, Total: 100m),
     (Tipo: "CF", Id: (string?)null, Nombre: (string?)null, Total: 2500m),
@@ -74,6 +76,26 @@ foreach (var datos in new[] { (Nit: (string?)null, Cui: "123"), (Nit: "CF", Cui:
     catch (ValidationException) { }
 }
 validador.ValidarAntesDeFirma(xml);
+Verificar(!XDocument.Parse(xml).Descendants().Any(e => e.Name.LocalName == "DireccionReceptor"), "CF no debe enviar dirección del receptor.");
+var xmlCfSinDireccion = FacturaXmlGenerator.Generar(empresa, receptor with { Direccion = null }, DateTimeOffset.UtcNow,
+    lineas, [new(1, 1)], 112m);
+validador.ValidarAntesDeFirma(xmlCfSinDireccion);
+foreach (var sinDireccion in new[] { receptor with { Identificacion = "5203333", Direccion = null },
+    receptor with { Identificacion = "2993930620101", TipoIdentificacion = "CUI", Direccion = null } })
+{
+    var xmlSinDireccion = FacturaXmlGenerator.Generar(empresa, sinDireccion, DateTimeOffset.UtcNow,
+        lineas, [new(1, 1)], 112m);
+    validador.ValidarAntesDeFirma(xmlSinDireccion);
+    Verificar(!XDocument.Parse(xmlSinDireccion).Descendants().Any(e => e.Name.LocalName == "DireccionReceptor"),
+        "NIT/CUI sin dirección debe omitir el bloque completo.");
+}
+try
+{
+    FacturaXmlGenerator.Generar(empresa, receptor with { Identificacion = "5203333", Direccion = new("Ciudad", "", "", "", "GT") },
+        DateTimeOffset.UtcNow, lineas, [new(1, 1)], 112m);
+    throw new Exception("Se aceptó una dirección parcial.");
+}
+catch (ValidationException) { }
 var iva30 = API_SISTEMA.Services.Ventas.IvaIncluido.Calcular(30m).Impuesto;
 var xmlSeisDecimales = FacturaXmlGenerator.Generar(empresa, receptor, DateTimeOffset.UtcNow,
     [new("Producto A", 1, 20m, 0m, "UND", "B", iva20.Impuesto), new("Producto B", 1, 30m, 0m, "UND", "B", iva30)],
@@ -144,6 +166,7 @@ var invalidoNormalizado = new DocumentoFelIntento();
 NormalizarRespuestaFel.Aplicar(invalidoNormalizado, new(HttpStatusCode.BadGateway, "<html>Error</html>", null, null, null, null, null));
 Verificar(invalidoNormalizado.resultado is null && invalidoNormalizado.codigo_http == 502 &&
     invalidoNormalizado.descripcion!.Contains("JSON"), "Respuesta no JSON mal clasificada.");
+await ReceptorLookupChecks.Run();
 Console.WriteLine("FEL: XML, IVA, límite CF, CUI, HTTP simulado y normalización de éxito/rechazo/alertas correctos. Sin llamadas reales.");
 
 sealed class ServidorSimulado(Guid identificador) : HttpMessageHandler

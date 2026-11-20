@@ -26,7 +26,7 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose }: { saleId: numbe
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [certifying, setCertifying] = useState(false)
-  const [certificationOpen, setCertificationOpen] = useState(false)
+  const [certificationOpen, setCertificationOpen] = useState(true)
   const certUnauthorized = useCallback(() => logout('La sesión ya no es válida.'), [logout])
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
@@ -92,34 +92,39 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose }: { saleId: numbe
   }
   return createPortal(<dialog ref={dialog} className="wa-receipt-dialog" aria-labelledby={title}
     onCancel={e => { e.preventDefault(); if (!busy.current && !certifying) onClose() }}>
-    <h2 id={title}>{mode === 'registro' ? `Venta #${saleId} registrada` : `Comprobante de venta #${saleId}`}</h2>
-    <p>¿Quieres enviar el comprobante por WhatsApp?</p>
-    {loading ? <p role="status">Cargando datos…</p> : options && <>
-      {options.empresas.length > 1 && <label>Empresa del comprobante<select value={company} disabled={sending} onChange={e => setCompany(e.target.value)}>
-        <option value="">Selecciona la empresa</option>{options.empresas.map(v => <option key={v.id} value={v.id}>{v.nombre}</option>)}
-      </select></label>}
-      {!options.empresas.length && <p role="alert">No hay una empresa configurada para el comprobante.</p>}
-      {options.telefono?.trim() ? <p className="wa-receipt-destination">Enviar a <strong>{options.telefono}</strong></p> : <label>
-        Número de teléfono<input ref={phoneInput} type="tel" inputMode="tel" autoComplete="off" maxLength={30} value={phone} disabled={sending}
-          placeholder="Ej. 5555 1234" onChange={e => setPhone(e.target.value)} />
-        <small>{mode === 'registro' ? 'Se guardará en los datos del cliente.' : 'Solo para este envío. No se guardará en la venta ni en el cliente.'}</small>
-      </label>}
-    </>}
-    {error && <p className="wa-receipt-error" role="alert">{error}</p>}
-    {!loading && !options && <button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar carga</button>}
-    {response && <p className={response.huboFallo ? 'wa-receipt-error' : 'wa-receipt-status'} role={response.huboFallo ? 'alert' : 'status'}>{response.mensaje}</p>}
+    <header className="receipt-dialog-heading">
+      <span className="receipt-success-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
+      <div><h2 id={title}>{mode === 'registro' ? `Venta #${saleId} registrada` : `Comprobante de venta #${saleId}`}</h2>
+        <p>{mode === 'registro' ? 'Certifica la factura y envía el comprobante al cliente.' : 'Envía el comprobante al cliente por WhatsApp.'}</p></div>
+    </header>
     {mode === 'registro' && <CertifySalePanel saleId={saleId} token={token} active={certificationOpen}
+      onToggle={() => setCertificationOpen(value => !value)} disabled={sending}
       onBusy={setCertifying} onUnauthorized={certUnauthorized} />}
-    <div className="wa-receipt-actions">
-      <button type="button" disabled={sending || certifying} onClick={onClose}>{response ? 'Cerrar' : 'Ahora no'}</button>
-      <button type="button" className="wa-send-button" disabled={loading || sending || certifying || !options || !options.empresas.length} onClick={() => { void send() }}>
-        <WhatsAppIcon />{sending ? 'Enviando…' : 'Enviar comprobante'}
-      </button>
-      {mode === 'registro' && <button type="button" className="fel-certify-button"
-        disabled={sending || certifying} aria-expanded={certificationOpen}
-        onClick={() => setCertificationOpen(value => !value)}>
-        {certifying ? 'Certificando…' : certificationOpen ? 'Ocultar certificación' : 'Certificar factura'}
-      </button>}
-    </div>
+    <section className="wa-share-card" aria-label="Comprobante por WhatsApp">
+      <div className="wa-share-header">
+        <span className="wa-share-icon"><WhatsAppIcon /></span>
+        <div className="wa-share-heading"><h3>Enviar comprobante por WhatsApp</h3>
+          {options?.telefono?.trim() ? <p>Al <strong>{options.telefono}</strong></p> : <p>Ingresa el número del cliente.</p>}
+        </div>
+        <button type="button" className="wa-send-button" disabled={loading || sending || certifying || !options || !options.empresas.length} onClick={() => { void send() }}>
+          {sending ? 'Enviando…' : 'Enviar'}
+        </button>
+      </div>
+      {loading ? <p role="status">Cargando datos…</p> : options && <>
+        {options.empresas.length > 1 && <label>Empresa del comprobante<select value={company} disabled={sending || certifying} onChange={e => setCompany(e.target.value)}>
+          <option value="">Selecciona la empresa</option>{options.empresas.map(v => <option key={v.id} value={v.id}>{v.nombre}</option>)}
+        </select></label>}
+        {!options.empresas.length && <p role="alert">No hay una empresa configurada para el comprobante.</p>}
+        {!options.telefono?.trim() && <label>Número de teléfono
+          <input ref={phoneInput} type="tel" inputMode="tel" autoComplete="off" maxLength={30} value={phone} disabled={sending || certifying}
+            placeholder="Ej. 5555 1234" onChange={e => setPhone(e.target.value)} />
+          <small>{mode === 'registro' ? 'Se guardará en los datos del cliente.' : 'Solo para este envío. No se guardará en la venta ni en el cliente.'}</small>
+        </label>}
+      </>}
+      {error && <p className="wa-receipt-error" role="alert">{error}</p>}
+      {!loading && !options && <button className="fel-secondary-button" type="button" onClick={() => setRevision(v => v + 1)}>Reintentar carga</button>}
+      {response && <p className={response.huboFallo ? 'wa-receipt-error' : 'wa-receipt-status'} role={response.huboFallo ? 'alert' : 'status'}>{response.mensaje}</p>}
+    </section>
+    <footer className="receipt-dialog-footer"><button type="button" disabled={sending || certifying} onClick={onClose}>{response ? 'Cerrar' : 'Ahora no'}</button></footer>
   </dialog>, document.body)
 }

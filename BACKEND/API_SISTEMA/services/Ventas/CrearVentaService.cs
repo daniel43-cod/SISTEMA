@@ -75,7 +75,7 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
             detalles.Add(VentaReglas.Calcular(producto, pr, d.cantidad, d.descuento));
         }
         var total = detalles.Sum(d => d.subtotal);
-        var receptorFiscal = ReceptorVentaReglas.Validar(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
+        var receptorFiscal = ReceptorVentaReglas.ValidarOpcional(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
         var descuento = detalles.Sum(d => d.descuento ?? 0);
         VentaReglas.Monto(total, false); VentaReglas.Monto(total + descuento);
         var pagado = dto.pago?.monto ?? 0m;
@@ -92,8 +92,8 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
         var ahora = DateTime.Now;
         var venta = new API_SISTEMA.Models.Ventas { cliente = cliente, id_usuario = idUsuario, id_sesion_caja = caja.id_sesion_caja,
             fecha_venta = ahora, origen = dto.origen?.Trim() ?? "MOSTRADOR", observacion = dto.observacion?.Trim(),
-            tipo_identificacion_receptor = receptorFiscal.Tipo, identificacion_receptor = receptorFiscal.Identificacion,
-            nombre_receptor = receptorFiscal.Nombre,
+            tipo_identificacion_receptor = receptorFiscal?.Tipo, identificacion_receptor = receptorFiscal?.Identificacion,
+            nombre_receptor = receptorFiscal?.Nombre,
             subtotal = total + descuento, descuento = descuento, impuesto = detalles.Sum(d => d.impuesto ?? 0m), total = total, monto_pagado = pagado,
             saldo_pendiente = total - pagado, ganancia_total = detalles.Sum(d => d.ganancia), id_estado_venta = pagado == total ? 1 : 2,
             DetalleVentas = detalles };

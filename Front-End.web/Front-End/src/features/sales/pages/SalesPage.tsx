@@ -15,8 +15,6 @@ import { saleOptions } from '../utils/saleSearch'
 import type { SaleDraft, SaleOption } from '../utils/saleSearch'
 import { cashCents, saleLineTotal, saleTotals } from '../utils/saleValidation'
 import type { SaleLine, SaleProduct } from '../utils/saleValidation'
-import { receiverDocumentInput, saleReceiver } from '../utils/saleReceiver'
-import type { ReceiverType } from '../utils/saleReceiver'
 import './SalesPage.css'
 import type { OrderDetail } from '../../orders/api/ordersApi'
 import { confirmOrderSale } from '../../orders/api/ordersApi'
@@ -39,7 +37,6 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     paymentConfirmation.current = null
   }
   const surnameRef = useRef<HTMLInputElement>(null)
-  const receiverTypeRef = useRef<HTMLSelectElement>(null)
   const telRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const addressRef = useRef<HTMLInputElement>(null)
@@ -80,12 +77,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const [customerId, setCustomerId] = useState('')
   const [name, setName] = useState(order?.nombreCliente ?? '')
   const [surname, setSurname] = useState('')
-  const [nit, setNit] = useState('')
   const [address, setAddress] = useState(order?.direccion ?? '')
-  const [dpi, setDpi] = useState('')
-  const [receiverType, setReceiverType] = useState<ReceiverType>('')
-  const [receiverDocument, setReceiverDocument] = useState('')
-  const [fiscalName, setFiscalName] = useState<string | null>(null)
   const [phone, setPhone] = useState(order?.telefono ?? '')
   const [email, setEmail] = useState('')
   const [customerPending, setCustomerPending] = useState(false)
@@ -145,10 +137,8 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     setCustomerCollapsed(!!customer && window.matchMedia('(max-width: 800px)').matches)
     setCustomerSelectionFailed(false)
     setCustomerId(customer ? String(customer.id_cliente) : '')
-    setReceiverDocument(receiverType === 'NIT' ? receiverDocumentInput('NIT', customer?.nit ?? '') : receiverType === 'CUI' ? receiverDocumentInput('CUI', customer?.dpi ?? '') : '')
-    setFiscalName(null)
-    setName(customer?.nombre ?? ''); setSurname(customer?.apellido ?? ''); setNit(customer?.nit ?? '')
-    setAddress(customer?.direccion ?? ''); setDpi(customer?.dpi ?? ''); setPhone(customer?.telefono ?? ''); setEmail(customer?.correo_electronico ?? '')
+    setName(customer?.nombre ?? ''); setSurname(customer?.apellido ?? '')
+    setAddress(customer?.direccion ?? ''); setPhone(customer?.telefono ?? ''); setEmail(customer?.correo_electronico ?? '')
   }
   function changeCustomerName(value: string) {
     changeCustomerField(setName, value)
@@ -271,11 +261,9 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     if (!order && !customerId && !name.trim()) { focusCustomerName(); return }
     setError('')
     let total: number
-    let receiver: ReturnType<typeof saleReceiver>
     try {
       if (rows.some(row => (row.text.trim() || row.barcode?.trim()) && !row.selection)) throw new Error('Selecciona un producto y presentación en cada fila que hayas escrito.')
       total = saleTotals(lines)
-      receiver = saleReceiver(receiverType, receiverDocument, fiscalName ?? [name, surname].filter(Boolean).join(' '), total)
       if (receivedCents === null) throw new Error('Ingresa un pago inicial válido, con hasta dos decimales.')
       if (!order && (newCustomer ? !name.trim() : !customers.some(c => String(c.id_cliente) === customerId))) throw new Error('Selecciona un cliente o ingresa su nombre.')
     } catch (failure) { setError((failure as Error).message); return }
@@ -292,18 +280,16 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       if (order) {
         const registered = await confirmOrderSale(order.idPedido, { idOperacion: operationId.current, totalEsperado: total / 100,
           pagoInicial: Math.min(receivedCents!, total) / 100,
-          tipoIdentificacionReceptor: receiver.tipo_identificacion_receptor, identificacionReceptor: receiver.identificacion_receptor, nombreReceptor: receiver.nombre_receptor,
           detalles: lines.map(l => ({ idProductoPresentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })) }, token)
         setReceiptSaleId(registered.id); return
       }
-      const registered = await createSale({ ...receiver, id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
-        ...(newCustomer ? { clienteNuevo: { nombre: name.trim(), apellido: surname.trim() || null, nit: receiverType === 'NIT' ? receiver.identificacion_receptor : null,
-          direccion: address.trim() || null, dpi: receiverType === 'CUI' ? receiver.identificacion_receptor : null, telefono: phone.trim() || null, correo_electronico: email.trim() || null } } : {}),
+      const registered = await createSale({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
+        ...(newCustomer ? { clienteNuevo: { nombre: name.trim(), apellido: surname.trim() || null, nit: null,
+          direccion: address.trim() || null, dpi: null, telefono: phone.trim() || null, correo_electronico: email.trim() || null } } : {}),
         origen: 'MOSTRADOR', observacion: note.trim() || null,
         detalles: lines.map(l => ({ id_producto: l.product.id_producto, id_producto_presentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })),
         pago: { monto: Math.min(receivedCents!, total) / 100, metodo_pago: 'EFECTIVO' } }, token)
       operationId.current = createOperationId()
-      setReceiverType(''); setReceiverDocument(''); setFiscalName(null)
       setRows([{ key: nextRowKey.current++, text: '', selection: null }]); setPendingRows(new Set()); setReceived(''); setNote(''); selectCustomer(null); setCustomerReset(v => v + 1)
       setRevision(v => v + 1)
       setReceiptSaleId(registered.id)
@@ -315,30 +301,6 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
         : failure instanceof ApiError && failure.status === 400 ? 'No se pudo registrar. Verifica caja abierta, permiso para vender, presentación activa y existencias; actualiza antes de continuar.' : (failure as Error).message)
     } finally { busy.current = false; setPending(false) }
   }
-  const receiverFields = <>
-    <label>Tipo de venta<select ref={receiverTypeRef} form={saleFormId} required value={receiverType}
-      disabled={blocked || customerPending} onChange={event => {
-        const type = event.target.value as ReceiverType
-        setReceiverType(type)
-        setReceiverDocument(type === 'NIT' ? receiverDocumentInput(type, nit) : type === 'CUI' ? receiverDocumentInput(type, dpi) : '')
-        setFiscalName(null)
-      }}>
-      <option value="" disabled>Seleccionar tipo de venta</option>
-      <option value="CF" disabled={estimated !== null && estimated >= 250000}>Consumidor final</option>
-      <option value="CUI">CUI</option>
-      <option value="NIT">NIT</option>
-    </select></label>
-    {(receiverType === 'CUI' || receiverType === 'NIT') && <>
-      <label>{receiverType}<input form={saleFormId} required value={receiverDocument} disabled={blocked || customerPending}
-        inputMode={receiverType === 'CUI' ? 'numeric' : 'text'} autoCapitalize="characters"
-        minLength={receiverType === 'CUI' ? 13 : 2} maxLength={receiverType === 'CUI' ? 13 : 20}
-        pattern={receiverType === 'CUI' ? '[0-9]{13}' : '[0-9]+[0-9K]'}
-        title={receiverType === 'CUI' ? 'Ingresa exactamente 13 números.' : 'Ingresa el NIT con números y K cuando corresponda.'}
-        placeholder={receiverType === 'CUI' ? 'CUI de 13 dígitos' : 'NIT del comprador'}
-        onChange={event => setReceiverDocument(receiverDocumentInput(receiverType, event.target.value))} /></label>
-    </>}
-    {estimated !== null && estimated >= 250000 && <p role="status">Desde Q2,500.00 debes seleccionar NIT o CUI.</p>}
-  </>
   const customerFields = order ? (
     <>
     <fieldset id={customerFieldsId} className="sales-page sales-customer sales-customer-header" disabled>
@@ -349,7 +311,6 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       {order.referencias && <label>Referencias<input value={order.referencias} readOnly /></label>}
       {order.observacion && <label>Observación del cliente<input value={order.observacion} readOnly /></label>}
     </fieldset>
-    <fieldset disabled={blocked} className="sales-page sales-customer sales-customer-header"><div className="sales-customer-group sales-customer-documents"><h3>Datos de facturación</h3>{receiverFields}</div></fieldset>
     </>
   ) : (
 <fieldset id={customerFieldsId} disabled={blocked} className={`sales-page sales-customer sales-customer-header sales-customer-form${customerCollapsed ? ' sales-customer-collapsed' : ''}`} onFocusCapture={() => { productsInView.current = false }}>
@@ -363,13 +324,10 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
             onKeyDown={event =>{
               if(event.key=='Enter' && !event.nativeEvent.isComposing){
                 event.preventDefault()
-                receiverTypeRef.current?.focus()
+                telRef.current?.focus()
               }
             }}
             /></label>
-            </div>
-            <div className="sales-customer-group sales-customer-documents"><h3>Documentos</h3>
-            {receiverFields}
             </div>
             <div className="sales-customer-group sales-customer-contact"><h3>Contacto</h3>
             <label>Teléfono<span className="sales-customer-optional">opcional</span><input ref={telRef} form={saleFormId} value={phone} disabled={customerPending} maxLength={30} onChange={e => changeCustomerField(setPhone, e.target.value)} placeholder="Teléfono (opcional)"

@@ -21,7 +21,15 @@ public sealed class FacturaFelController(CertificarVentaService servicio) : Cont
 
     [HttpPost("certificar")]
     public async Task<IActionResult> Certificar(int idVenta, CertificarVentaDto dto, CancellationToken ct)
-        => Ok(await servicio.Certificar(idVenta, dto, Usuario(), ct));
+    {
+        try { return Ok(await servicio.Certificar(idVenta, dto, Usuario(), ct)); }
+        catch (ConsultaReceptorNoDisponibleException)
+        { return StatusCode(502, new { mensaje = "No se pudo verificar el receptor en INFILE. La venta sigue registrada; vuelve a consultar el documento." }); }
+    }
+
+    [HttpGet("fel/preparacion")]
+    public async Task<IActionResult> Preparar(int idVenta, CancellationToken ct)
+        => Ok(await servicio.Preparar(idVenta, Usuario(), ct));
 
     [HttpGet("fel")]
     public async Task<IActionResult> Consultar(int idVenta, CancellationToken ct)

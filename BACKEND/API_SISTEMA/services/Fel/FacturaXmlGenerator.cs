@@ -7,7 +7,7 @@ using API_SISTEMA.Services.Ventas;
 namespace API_SISTEMA.Services.Fel;
 
 public sealed record DireccionFel(string Direccion, string CodigoPostal, string Municipio, string Departamento, string Pais);
-public sealed record ReceptorFel(string Identificacion, string Nombre, DireccionFel Direccion, string? Correo = null,
+public sealed record ReceptorFel(string Identificacion, string Nombre, DireccionFel? Direccion, string? Correo = null,
     string TipoIdentificacion = "NIT");
 public sealed record LineaFacturaFel(string Descripcion, int Cantidad, decimal PrecioUnitario, decimal Descuento,
     string UnidadMedida, string BienOServicio, decimal? Impuesto = null);
@@ -94,7 +94,7 @@ public static class FacturaXmlGenerator
                 identidad.Tipo == "CUI" ? new XAttribute("TipoEspecial", "CUI") : null,
                 new XAttribute("NombreReceptor", Texto(receptor.Nombre, "nombre del receptor")),
                 string.IsNullOrWhiteSpace(receptor.Correo) ? null : new XAttribute("CorreoReceptor", receptor.Correo.Trim()),
-                Direccion("DireccionReceptor", receptor.Direccion)),
+                identidad.Identificacion == "CF" || receptor.Direccion is null ? null : Direccion("DireccionReceptor", receptor.Direccion)),
             new XElement(Dte + "Frases", frases.Select(f => new XElement(Dte + "Frase",
                 new XAttribute("TipoFrase", f.Tipo), new XAttribute("CodigoEscenario", f.Escenario)))),
             items, new XElement(Dte + "Totales", new XElement(Dte + "TotalImpuestos",
