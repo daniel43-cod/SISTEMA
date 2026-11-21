@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Services.Ventas;
 using API_SISTEMA.Utilidades;
@@ -60,7 +60,7 @@ public class VentaController(VentaService consulta, AbonarSaldoVentaService abon
     public async Task<IActionResult> AbonarVenta([FromBody] AbonarSaldoVentaDto dto, CancellationToken ct = default)
     {
         var pago = await abonos.AbonarVenta(dto, Usuario(), ct);
-        return Ok(new { mensaje = "Abono registrado correctamente.", pago.id_pago, pago.id_venta, pago.monto, pago.fecha_pago, pago.id_sesion_caja });
+        return Ok(new { mensaje = "Abono registrado correctamente.", pago.id_pago, pago.id_operacion, pago.id_venta, pago.monto, pago.fecha_pago, pago.id_sesion_caja });
     }
 
     [HttpGet("caja-activa/cliente/{idCliente:int:min(1)}")]

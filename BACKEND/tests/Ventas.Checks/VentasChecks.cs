@@ -138,7 +138,7 @@ await using (var db = new CheckDb(options)) {
     var precio = await db.producto_presentaciones.SingleAsync(); precio.precio = 130; await db.SaveChangesAsync();
     Check((await new DetalleVentaService(db).ListarDetalleVenta(venta.id_ventas)).Single().precio == 120m, "El detalle conserva el precio original");
     var abono = new AbonarSaldoVentaService(db, new MovimientoCajaService(db), Auditoria(db));
-    await abono.AbonarVenta(new() { id_venta = venta.id_ventas, monto = 51, observacion = "Prueba" }, 1);
+    await abono.AbonarVenta(new() { id_operacion = Guid.NewGuid(), id_venta = venta.id_ventas, monto = 51, observacion = "Prueba" }, 1);
     var pagada = await db.ventas.SingleAsync();
     Check(pagada.monto_pagado == 101 && pagada.saldo_pendiente == 0 && pagada.id_estado_venta == 1, "Abono actualiza monto pagado, saldo y estado");
 }
@@ -167,13 +167,50 @@ await using (var db = new CheckDb(options)) {
         "Rollback conserva inventario y no deja venta/pago/clave parciales");
     await db.Database.ExecuteSqlRawAsync("DROP TRIGGER rechazo_movimiento;");
 }
+Guid claveAbono;
+await using (var db = new CheckDb(options)) claveAbono = (await db.pagos.SingleAsync(p => p.id_venta == venta.id_ventas && p.id_operacion != null)).id_operacion!.Value;
+async Task<Pagos> RepetirAbono(Guid clave, int usuario = 1, decimal monto = 51, string? nota = "Prueba", int? ventaId = null)
+{
+    await using var db = new CheckDb(options);
+    return await new AbonarSaldoVentaService(db, new MovimientoCajaService(db), Auditoria(db)).AbonarVenta(
+        new() { id_operacion = clave, id_venta = ventaId ?? venta.id_ventas, monto = monto, observacion = nota }, usuario);
+}
+var originalAbono = await RepetirAbono(claveAbono);
+var repetidoAbono = await RepetirAbono(claveAbono, nota: "  Prueba  ");
+Check(originalAbono.id_pago == repetidoAbono.id_pago, "Reintento devuelve el pago original");
+await using (var db = new CheckDb(options))
+{
+    Check(await db.pagos.CountAsync(p => p.id_operacion == claveAbono) == 1 &&
+        await db.movimientocaja.CountAsync(m => m.id_pago_venta == originalAbono.id_pago) == 1,
+        "Reintento no duplica pago ni movimiento");
+}
+foreach (var cambio in new Func<Task<Pagos>>[] {
+    () => RepetirAbono(claveAbono, monto: 11), () => RepetirAbono(claveAbono, usuario: 2),
+    () => RepetirAbono(claveAbono, nota: "Otra"), () => RepetirAbono(claveAbono, ventaId: int.MaxValue) })
+{
+    try { await cambio(); throw new Exception("Clave reutilizada con otros datos aceptada"); }
+    catch (VentaConflictoException) { Check(true, "Clave con otros datos rechazada como conflicto"); }
+}
+try { await RepetirAbono(Guid.Empty); throw new Exception("Clave vacía aceptada"); }
+catch (ValidationException) { Check(true, "Abono exige clave de operación"); }
+
+await using (var db = new CheckDb(options))
+{
+    var indice = db.Model.FindEntityType(typeof(Pagos))!.GetIndexes().Single(i => i.Properties.Any(p => p.Name == "id_operacion"));
+    Check(indice.IsUnique && indice.GetFilter() == "[id_operacion] IS NOT NULL", "Índice único permite pagos históricos sin clave");
+    await db.sesioncaja.ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, DateTime.Now));
+}
+Check((await RepetirAbono(claveAbono)).id_pago == originalAbono.id_pago, "Reintento recupera abono aun con caja cerrada y venta pagada");
+await using (var db = new CheckDb(options))
+    await db.sesioncaja.ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, (DateTime?)null));
+
 var credito = await Sell(Dto());
 Check(credito.saldo_pendiente == credito.total && credito.monto_pagado == 0, "Crédito total permitido sin pago inicial");
 async Task Abonar(int idVenta, decimal monto)
 {
     await using var db = new CheckDb(options);
     await new AbonarSaldoVentaService(db, new MovimientoCajaService(db), Auditoria(db)).AbonarVenta(
-        new() { id_venta = idVenta, monto = monto, observacion = "Prueba abonos" }, 1);
+        new() { id_operacion = Guid.NewGuid(), id_venta = idVenta, monto = monto, observacion = "Prueba abonos" }, 1);
 }
 foreach (var monto in new[] { 0m, -1m, 0.001m, credito.total + 1 })
 {

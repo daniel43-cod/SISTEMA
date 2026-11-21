@@ -54,9 +54,9 @@ export async function loadSaleDetails(saleId: number, token: string, signal?: Ab
     throw new ApiError('El detalle de venta no tiene el formato esperado.')
   return result as SaleDetail[]
 }
-export async function paySale(saleId: number, monto: number, observacion: string, token: string) {
+export async function paySale(saleId: number, monto: number, observacion: string, token: string, operationId: string) {
   const result = await requestJson('/Venta/AbonarVenta', { method: 'POST', token, validationMessages: true,
-    body: { id_venta: saleId, monto, observacion } })
+    body: { id_operacion: operationId, id_venta: saleId, monto, observacion } })
   if (!record(result) || !id(result.id_pago) || result.id_venta !== saleId || result.monto !== monto)
     throw new ApiError('No se pudo confirmar la respuesta del abono.', 200)
 }

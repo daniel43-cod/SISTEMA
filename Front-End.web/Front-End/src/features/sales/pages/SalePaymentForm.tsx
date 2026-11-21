@@ -25,17 +25,26 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   const certificationBusy = useCallback((value: boolean) => { setCertifying(value); onSaving(value) }, [onSaving])
   const certificationUnauthorized = useCallback(() => logout('La sesión ya no es válida.'), [logout])
   const heading = useRef<HTMLHeadingElement>(null)
+  const paymentStorageKey = 'sale-payment-' + session?.user.id + '-' + sale.id_ventas
+  const [pending] = useState<{ id: string; amount: number; note: string } | null>(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(paymentStorageKey) || 'null')
+      return saved && typeof saved.id === 'string' && /^[0-9a-f-]{36}$/i.test(saved.id) &&
+        typeof saved.amount === 'number' && Number.isFinite(saved.amount) && saved.amount > 0 && typeof saved.note === 'string' ? saved : null
+    } catch { return null }
+  })
+  const pendingPayment = useRef(pending)
   const busy = useRef(false)
   const alive = useRef(true)
   const [details, setDetails] = useState<SaleDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [detailError, setDetailError] = useState('')
   const [revision, setRevision] = useState(0)
-  const [amount, setAmount] = useState('')
-  const [note, setNote] = useState('')
+  const [amount, setAmount] = useState(pending ? String(pending.amount) : '')
+  const [note, setNote] = useState(pending?.note ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [uncertain, setUncertain] = useState(false)
+  const [uncertain, setUncertain] = useState(!!pending)
   useEffect(() => {
     alive.current = true
     const panel = dialog.current
@@ -74,24 +83,29 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!token || busy.current || uncertain) return
+    if (!token || busy.current) return
     setError('')
     const input = amount.trim().replace(',', '.')
-    const value = Number(input)
-    if (!/^\d+(\.\d{1,2})?$/.test(input) || value <= 0 || Math.round(value * 100) > Math.round(sale.saldo_pendiente * 100)) {
+    const value = pendingPayment.current?.amount ?? Number(input)
+    if (!pendingPayment.current && (!/^\d+(\.\d{1,2})?$/.test(input) || value <= 0 || Math.round(value * 100) > Math.round(sale.saldo_pendiente * 100))) {
       setError('Ingresa un monto mayor a cero, con hasta dos decimales y que no supere el saldo.'); return
     }
+    pendingPayment.current ??= { id: crypto.randomUUID(), amount: value, note: note.trim() }
+    try { sessionStorage.setItem(paymentStorageKey, JSON.stringify(pendingPayment.current)) }
+    catch { setError("No se pudo conservar la operación. Habilita el almacenamiento del navegador antes de abonar."); return }
     busy.current = true; setSaving(true); onSaving(true)
     try {
-      await paySale(sale.id_ventas, value, note.trim(), token)
+      await paySale(sale.id_ventas, pendingPayment.current.amount, pendingPayment.current.note, token, pendingPayment.current.id)
+      sessionStorage.removeItem(paymentStorageKey); pendingPayment.current = null; setUncertain(false)
       if (alive.current) onPaid()
     } catch (failure) {
       if (!alive.current) return
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
       else {
         const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status === 200 || failure.status >= 500
-        setUncertain(ambiguous)
-        setError(ambiguous ? 'No se pudo confirmar el abono. Actualiza el listado y verifica el saldo antes de volver a abonar.' : failure instanceof Error ? failure.message : 'No se pudo registrar el abono.')
+        if (!ambiguous && !(failure instanceof ApiError && failure.status === 409)) { sessionStorage.removeItem(paymentStorageKey); pendingPayment.current = null }
+        setUncertain(ambiguous || (failure instanceof ApiError && failure.status === 409))
+        setError(ambiguous ? 'No se pudo confirmar el abono. Reintenta la misma operación: no se registrará un segundo pago.' : failure instanceof Error ? failure.message : 'No se pudo registrar el abono.')
       }
     } finally { busy.current = false; onSaving(false); if (alive.current) setSaving(false) }
   }
@@ -141,7 +155,7 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
       </div>
       <p>Saldo pendiente: <strong>{money.format(sale.saldo_pendiente)}</strong></p>
     <SalePaymentsHistory saleId={sale.id_ventas} />
-    {sale.saldo_pendiente > 0 && <form onSubmit={submit}>
+    {(sale.saldo_pendiente > 0 || uncertain) && <form onSubmit={submit}>
       <fieldset className="sales-fields" disabled={saving || uncertain || loading || !!detailError}>
         <legend>Registrar abono en efectivo</legend><div className="sale-payment-fields">
           <label>Monto (Q)<input ref={paymentAmount} inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} required maxLength={12} placeholder="0.00" /></label>
@@ -149,7 +163,7 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
         </div><button type="submit">{saving ? 'Registrando abono…' : 'Registrar abono'}</button>
       </fieldset>
       {error && <p role="alert">{error}</p>}
-      {uncertain && <button type="button" onClick={onClose}>Cerrar y actualizar listado</button>}
+      {uncertain && <button type="submit" disabled={saving}>{saving ? "Consultando abono…" : "Reintentar el mismo abono"}</button>}
     </form>}
     </section>
   </dialog>}

@@ -144,6 +144,7 @@ namespace API_SISTEMA.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Pagos>().ToTable("pagos");
+            modelBuilder.Entity<Pagos>().HasIndex(p => p.id_operacion).IsUnique().HasDatabaseName("UX_pagos_id_operacion").HasFilter("[id_operacion] IS NOT NULL");
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<TipoCliente>().ToTable("tipo_cliente");

@@ -217,3 +217,19 @@ test('Resumen de PC envía cliente, búsqueda y estado junto al responsable y co
   assert.equal(summary.cantidadPendientes, 0)
   assert.deepEqual(summary.clientesCajaActiva, [{ idCliente: 9, nombre: 'Cliente' }])
 })
+import { paySale } from '../src/features/sales/api/salesApi.ts'
+test('Abono conserva la clave y los datos al repetir la solicitud', async t => {
+  const operationId = '11111111-1111-4111-8111-111111111111'
+  const requests: unknown[] = []
+  t.mock.method(globalThis, 'fetch', async (_url: string, options: RequestInit) => {
+    requests.push(JSON.parse(options.body as string))
+    if (requests.length === 1) throw new TypeError('Respuesta perdida')
+    return Response.json({ id_pago: 9, id_venta: 12, monto: 100, id_operacion: operationId })
+  })
+  await assert.rejects(() => paySale(12, 100, 'Abono', 'test', operationId))
+  await paySale(12, 100, 'Abono', 'test', operationId)
+  assert.deepEqual(requests, [
+    { id_operacion: operationId, id_venta: 12, monto: 100, observacion: 'Abono' },
+    { id_operacion: operationId, id_venta: 12, monto: 100, observacion: 'Abono' },
+  ])
+})

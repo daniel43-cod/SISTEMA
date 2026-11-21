@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_SISTEMA.Models
 {
@@ -6,6 +6,7 @@ namespace API_SISTEMA.Models
     {
         [Key]
         public int id_pago {  get; set; }
+        public Guid? id_operacion { get; set; }
         public int id_venta { get; set; }
         public int id_usuario { get; set; }
         public decimal monto { get; set; }
