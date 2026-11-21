@@ -9,7 +9,7 @@ import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { loadSaleSummary } from '../api/saleSummaryApi'
 import { loadSaleHistory } from '../api/salesApi'
 import type { SaleHistory } from '../api/salesApi'
-import { WhatsAppIcon, WhatsAppReceiptDialog } from '../components/WhatsAppReceipt'
+
 import './SalesPage.css'
 import './SaleListPage.css'
 
@@ -45,7 +45,7 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState('')
   const [selected, setSelected] = useState<SaleHistory | null>(null)
-  const [receiptSaleId, setReceiptSaleId] = useState<number | null>(null)
+
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
   const [page, setPage] = useState(1)
@@ -136,7 +136,7 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   )
   return <section className="sales-page sale-list-page sale-list-view" aria-label={isAdmin && range ? 'Historial de ventas por fechas' : 'Ventas de la caja abierta'}>
     {success && <p role="status">{success}</p>}
-    {receiptSaleId !== null && <WhatsAppReceiptDialog saleId={receiptSaleId} mode="historial" onClose={() => setReceiptSaleId(null)} />}
+
     {selected && <SalePaymentForm key={selected.id_ventas} sale={selected} onSaving={setSaving}
       onClose={() => { setSelected(null); setRevision(v => v + 1) }}
       onPaid={() => { setSuccess('Abono registrado correctamente.'); setSelected(null); setRevision(v => v + 1) }} />}
@@ -232,41 +232,42 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
           <p role="status">{isAdmin && range ? 'No hay ventas para los filtros de esa fecha.' : 'No hay ventas para mostrar. La caja puede estar cerrada o aún no tener ventas.'}</p> : !error && <>
             {!mobileRows.length && <p className="sale-mobile-empty" role="status">No hay ventas que coincidan en esta página.</p>}
             <ul className="sale-mobile-cards" aria-label="Ventas">
-              {mobileRows.map(sale => <li key={sale.id_ventas}>
-                <button type="button" className={`sale-mobile-card${sale.saldo_pendiente > 0 ? ' is-pending' : ''}${selected?.id_ventas === sale.id_ventas ? ' is-selected' : ''}`}
-                  disabled={saving} aria-label={`Ver detalle de venta ${sale.id_ventas}, cliente ${sale.cliente}`}
+              {mobileRows.map(sale => <li key={sale.id_ventas} className={`sale-mobile-sale${sale.saldo_pendiente > 0 ? ' is-pending' : ''}${selected?.id_ventas === sale.id_ventas ? ' is-selected' : ''}`}>
+                <button type="button" className="sale-mobile-card"
+                  disabled={saving} aria-label={`Ver detalle de la venta de ${sale.cliente}`}
                   aria-expanded={selected?.id_ventas === sale.id_ventas}
                   onClick={() => { setSelected(sale); setSuccess('') }}>
                   <span className="sale-mobile-card-top">
-                    <strong className="sale-mobile-card-client">{sale.cliente}</strong>
-                    <strong className="sale-mobile-card-total">{money.format(sale.total)}</strong>
-                  </span>
-                  <span className="sale-mobile-card-date">Venta #{sale.id_ventas} · {sale.usuario}</span>
-                  <span className="sale-mobile-card-bottom">
+                    <strong className="sale-mobile-card-client" title={sale.cliente}>{sale.cliente}</strong>
                     <span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
-                    {sale.saldo_pendiente > 0 && <span className="sale-mobile-card-balance">Debe <strong>{money.format(sale.saldo_pendiente)}</strong></span>}
                   </span>
+                  <strong className="sale-mobile-card-total">{money.format(sale.total)}</strong>
+                  {sale.saldo_pendiente > 0 && <span className="sale-mobile-card-balance">Saldo <strong>{money.format(sale.saldo_pendiente)}</strong></span>}
                 </button>
-                <button type="button" className="wa-send-button" disabled={saving}
-                  aria-label={`Enviar comprobante de venta ${sale.id_ventas} por WhatsApp`}
-                  onClick={() => setReceiptSaleId(sale.id_ventas)}><WhatsAppIcon />Enviar comprobante</button>
+                <div className="sale-mobile-card-options">
+                  <span className="sale-mobile-card-seller" title={sale.usuario}>{sale.usuario}</span>
+                  <button type="button" className="sale-more-button" disabled={saving} aria-haspopup="dialog"
+                    aria-label={`Ver detalle y opciones de la venta de ${sale.cliente}`} title="Detalle y opciones"
+                    onClick={() => { setSelected(sale); setSuccess('') }}><span aria-hidden="true">⋮</span></button>
+                  <span className="sale-mobile-card-time">{Number.isNaN(Date.parse(sale.fecha_venta)) ? 'Hora no disponible' : new Intl.DateTimeFormat('es-GT', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(sale.fecha_venta))}</span>
+                </div>
               </li>)}
             </ul>
             <div className="sales-table-scroll" role="region" aria-label="Listado de ventas" tabIndex={0}>
               <table><caption className="sr-only">{isAdmin && range ? 'Ventas de la fecha seleccionada, de todas las sesiones de caja' : 'Ventas registradas en la sesión de caja abierta'}</caption>
-                <thead><tr><th scope="col" className="sale-desktop-number">Venta</th><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th>{isAdmin && <th scope="col" className="sale-list-money">Ganancia</th>}<th scope="col" className="sale-list-money">Saldo pendiente</th><th scope="col">Estado</th><th scope="col">Comprobante</th></tr></thead>
+                <thead><tr><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th><th scope="col" className="sale-list-money">Saldo</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Opciones</span></th></tr></thead>
                 <tbody>{rows.map(sale => <tr key={sale.id_ventas} className={selected?.id_ventas === sale.id_ventas ? 'sale-list-row is-selected' : 'sale-list-row'}
                   tabIndex={saving ? -1 : 0} aria-label={'Ver detalle de la venta de ' + sale.cliente} aria-expanded={selected?.id_ventas === sale.id_ventas}
                   onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(sale); setSuccess('') } }}
                   onClick={() => { if (!saving) { setSelected(sale); setSuccess('') } }}>
-                  <td className="sale-desktop-number"><strong>#{sale.id_ventas}</strong></td><td>{sale.cliente}</td><td>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
-                  {isAdmin && <td className="sale-list-money">{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</td>}
+                  <td>{sale.cliente}</td><td>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
+
                   <td className="sale-list-money">{money.format(sale.saldo_pendiente)}</td>
                   <td><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span></td>
-                  <td><button type="button" className="wa-send-button" disabled={saving}
-                    aria-label={`Enviar comprobante de venta ${sale.id_ventas} por WhatsApp`}
+                  <td><button type="button" className="sale-more-button" disabled={saving} aria-haspopup="dialog"
+                    aria-label={`Ver detalle y opciones de venta ${sale.id_ventas}`} title="Detalle y opciones"
                     onKeyDown={e => e.stopPropagation()}
-                    onClick={e => { e.stopPropagation(); setReceiptSaleId(sale.id_ventas) }}><WhatsAppIcon />Enviar</button></td>
+                    onClick={e => { e.stopPropagation(); setSelected(sale); setSuccess('') }}><span aria-hidden="true">⋮</span></button></td>
                 </tr>)}</tbody>
               </table>
             </div>

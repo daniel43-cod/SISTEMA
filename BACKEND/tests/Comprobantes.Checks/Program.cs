@@ -30,3 +30,27 @@ foreach (var cantidad in new[] { 0, 2, 100 })
     }
     Console.WriteLine($"OK: {cantidad} detalles, {paginas.Count} página(s), sin pérdida de filas.");
 }
+
+foreach (var cantidad in new[] { 2, 100 })
+{
+    var pagos = Enumerable.Range(1, cantidad).Reverse().Select(i => new API_SISTEMA.Dtos.Pagos.PagoVentaHistorialDto {
+        IdPago = i, FechaPago = new DateTime(2026, 11, 1).AddMinutes(i), Monto = i,
+        Usuario = i == 1 ? "Encargado con nombre extenso para comprobar el ajuste de texto en el historial" : "Daniel Coy"
+    }).ToList();
+    var paginas = ComprobanteImagen.PlanificarPagos(venta, empresa, pagos);
+    if (paginas.Sum(p => p.Filas.Count) != cantidad || paginas[0].Filas[0].Celdas[2] != "Q1.00")
+        throw new Exception("El historial perdió pagos o alteró el orden cronológico.");
+    if (cantidad == 100 && paginas.Count < 2) throw new Exception("El historial largo no se paginó.");
+    foreach (var saldo in new[] { 0m, 35m })
+    {
+        venta.saldo_pendiente = saldo;
+        for (int p = 1; p <= paginas.Count; p++)
+        {
+            var png = ComprobanteImagen.Generar(venta, empresa, paginas, p, true);
+            using var imagen = Image.Load(png);
+            if (imagen.Height > 2400 || png.Length > 5 * 1024 * 1024) throw new Exception("Historial fuera de límites.");
+            File.WriteAllBytes(Path.Combine(salida, $"pagos-{cantidad}-saldo-{saldo}-{p}.png"), png);
+        }
+    }
+    Console.WriteLine($"OK: historial de {cantidad} pagos, orden y paginación correctos.");
+}

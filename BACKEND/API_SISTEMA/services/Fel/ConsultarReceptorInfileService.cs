@@ -11,8 +11,13 @@ public sealed record ConsultaReceptorResultado(bool resultado, string tipo, stri
     string? nombre, string? estatus, string? descripcion);
 public sealed class ConsultaReceptorNoDisponibleException : Exception;
 
+public interface IConsultaReceptorFel
+{
+    Task<ConsultaReceptorResultado> Consultar(string tipo, string identificacion, CancellationToken ct = default);
+}
+
 // El token de INFILE se comparte entre solicitudes; no es el JWT de usuarios del sistema.
-public sealed class ConsultarReceptorInfileService(IHttpClientFactory factory, IOptions<InfileOptions> options, TimeProvider reloj)
+public sealed class ConsultarReceptorInfileService(IHttpClientFactory factory, IOptions<InfileOptions> options, TimeProvider reloj) : IConsultaReceptorFel
 {
     private readonly SemaphoreSlim tokenLock = new(1, 1);
     private string? token;
@@ -74,6 +79,13 @@ public sealed class ConsultarReceptorInfileService(IHttpClientFactory factory, I
             var estatus = Texto(datos, "estatus")?.Trim().ToUpperInvariant();
             var existeResultado = respuesta.TryGetProperty("resultado", out _);
             var exitoso = Exito(respuesta);
+            // Si INFILE devuelve la identificación, debe corresponder a lo solicitado,
+            // incluso en los formatos que también incluyen una bandera resultado.
+            var documentoRetornado = Texto(datos, tipo == "NIT" ? "nit" : "cui");
+            if (documentoRetornado is not null)
+                exitoso = exitoso && (tipo == "NIT"
+                    ? documentoRetornado.Trim().Replace("-", "").ToUpperInvariant()
+                    : documentoRetornado.Trim()) == normalizado.Identificacion;
             if (tipo == "NIT" && !existeResultado)
             {
                 // Formato real: { nit, nombre, mensaje }, sin bandera resultado.

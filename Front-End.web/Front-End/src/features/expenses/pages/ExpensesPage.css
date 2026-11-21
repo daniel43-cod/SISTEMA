@@ -147,3 +147,22 @@
 @media (min-width: 801px) {
   .expense-desktop-filters .expense-create-desktop { margin-left: auto; }
 }
+@media (max-width: 800px) {
+  .expense-mobile-cards { display: grid; align-content: start; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .expense-mobile-cards > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(82px, 28%); align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: #fff; box-shadow: 0 2px 4px #0f172a0a; }
+  .expense-mobile-info { display: grid; gap: 5px; min-width: 0; }
+  .expense-mobile-description { color: #075b96; font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .expense-mobile-total { color: #075b96; font-size: .9rem; overflow-wrap: anywhere; }
+  .expense-mobile-options { display: grid; justify-items: center; align-content: center; gap: 1px; min-width: 0; }
+  .expense-mobile-person { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .72rem; color: #075b96; font-weight: 600; }
+  .expense-panel .expense-mobile-options button.catalog-row-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #075b96; font-size: 28px; line-height: 1; }
+  .expense-panel .expense-mobile-options button.catalog-row-more:hover:not(:disabled) { background: #eaf4fe; }
+  .expense-panel .expense-mobile-options button.catalog-row-more:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+  .expense-mobile-time { color: #7a8492; font-size: .65rem; white-space: nowrap; }
+}
+
+.expense-panel > .expense-pagination { margin-top: auto; flex-shrink: 0; padding-top: 8px; }
+.expense-pagination button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+@media (max-width: 800px) {
+  .expense-panel > .expense-pagination { padding-right: 72px; gap: 6px; font-size: .75rem; }
+}

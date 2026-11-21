@@ -1,9 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.Globalization;
-using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Ventas;
 using API_SISTEMA.Models;
@@ -19,6 +16,9 @@ public sealed record EstadoFacturaFel(int id_documento_fel, int id_venta, string
 {
     public long? id_intento { get; init; }
     public string? descripcion { get; init; }
+    public bool puede_recuperar { get; init; }
+    public DateTimeOffset? procesamiento_vence { get; init; }
+    public int recuperaciones { get; init; }
     public IReadOnlyList<MensajeFel> errores { get; init; } = [];
     public IReadOnlyList<MensajeFel> alertas { get; init; } = [];
 }
@@ -26,7 +26,7 @@ public sealed record MensajeFel(string? fuente, string? categoria, string? numer
 
 public sealed class CertificarVentaService(SistemaDbContext db, InfileClient infile,
     IOptions<InfileOptions> options, PermisoUsuarioService permisos, FacturaXsdValidator validador,
-    ConsultarReceptorInfileService consultaReceptor)
+    VerificarReceptorFelService verificacionReceptor, TimeProvider reloj)
 {
     private static EstadoFacturaFel Resumen(DocumentoFel d) => new(d.id_documento_fel, d.id_venta, d.ambiente,
         d.estado, d.uuid, d.serie, d.numero, d.fecha_certificacion,
@@ -39,6 +39,9 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
         return Resumen(documento) with
         {
             id_intento = intento?.id_intento, descripcion = intento?.descripcion,
+            puede_recuperar = RecuperacionFelReglas.PuedeRecuperar(documento.estado, intento, documento.fecha_creacion, reloj.GetUtcNow()),
+            procesamiento_vence = documento.estado == "EN_PROCESO" ? RecuperacionFelReglas.Vence(intento, documento.fecha_creacion) : null,
+            recuperaciones = intento?.recuperaciones ?? 0,
             errores = intento?.Errores.OrderBy(e => e.orden).Select(e => new MensajeFel(e.fuente, e.categoria, e.numeral, e.validacion, e.mensaje)).ToArray() ?? [],
             alertas = intento?.Alertas.OrderBy(a => a.origen).ThenBy(a => a.orden).Select(a => new MensajeFel(a.origen, a.categoria, a.numeral, a.validacion, a.mensaje)).ToArray() ?? []
         };
@@ -67,7 +70,13 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
             .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
     }
 
-    public async Task<EstadoFacturaFel> Certificar(int idVenta, CertificarVentaDto dto, int usuario, CancellationToken ct)
+    public Task<EstadoFacturaFel> Certificar(int idVenta, CertificarVentaDto dto, int usuario, CancellationToken ct)
+        => Procesar(idVenta, dto, usuario, false, ct);
+
+    public Task<EstadoFacturaFel> Recuperar(int idVenta, int usuario, CancellationToken ct)
+        => Procesar(idVenta, new CertificarVentaDto { confirmar_bienes_gravados = true }, usuario, true, ct);
+
+    private async Task<EstadoFacturaFel> Procesar(int idVenta, CertificarVentaDto dto, int usuario, bool recuperar, CancellationToken ct)
     {
         await Autorizar(usuario);
         var config = options.Value;
@@ -77,15 +86,19 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
         // Consultar fuera de la transacción SQL. En reconciliación se respeta el XML anterior.
         var estadoAnterior = await db.DocumentosFel.AsNoTracking()
             .Where(d => d.id_venta == idVenta && d.ambiente == config.Ambiente).Select(d => d.estado).SingleOrDefaultAsync(ct);
-        string? nombreConsultado = null;
-        if ((estadoAnterior is null or "RECHAZADA") && (dto.tipo_identificacion_receptor is "NIT" or "CUI"))
+        API_SISTEMA.Services.Ventas.DatosReceptorVenta? receptorVerificado = null;
+        if (!recuperar && (estadoAnterior is null or "RECHAZADA"))
         {
-            var consulta = await consultaReceptor.Consultar(dto.tipo_identificacion_receptor, dto.identificacion_receptor ?? "", ct);
-            if (!consulta.resultado) throw new ValidationException(consulta.descripcion ?? "No se pudo validar al receptor.");
-            nombreConsultado = consulta.nombre;
+            Validator.ValidateObject(dto, new ValidationContext(dto), true);
+            var datosVenta = await db.ventas.AsNoTracking().Where(v => v.id_ventas == idVenta)
+                .Select(v => new { v.tipo_identificacion_receptor, v.identificacion_receptor, v.total })
+                .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
+            receptorVerificado = await verificacionReceptor.Verificar(dto.tipo_identificacion_receptor, dto.identificacion_receptor,
+                datosVenta.tipo_identificacion_receptor, datosVenta.identificacion_receptor, datosVenta.total, ct);
         }
         DocumentoFel documento;
         DocumentoFelIntento intento;
+        Guid tokenSolicitud;
         await using (var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct))
         {
             // Comparte el bloqueo de la venta con su edición; no mantiene SQL abierto durante HTTP.
@@ -93,10 +106,23 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
                 .Include(v => v.DetalleVentas).ThenInclude(d => d.Producto)
                 .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
             var existente = await db.DocumentosFel.SingleOrDefaultAsync(d => d.id_venta == idVenta && d.ambiente == config.Ambiente, ct);
+            if (recuperar && existente is null) throw new KeyNotFoundException("La venta no tiene una certificación para recuperar.");
+            var esReconciliacion = existente?.estado is "POR_CONFIRMAR" or "EN_PROCESO";
+            DocumentoFelIntento? intentoAnterior = null;
             if (existente is not null)
             {
                 if (existente.estado == "CERTIFICADA") return await ResumenConMensajes(existente, ct);
-                if (existente.estado is not ("POR_CONFIRMAR" or "RECHAZADA"))
+                if (recuperar && !esReconciliacion)
+                    throw new VentaConflictoException("Solo se recuperan envíos en proceso o por confirmar. Un rechazo requiere corregir y certificar nuevamente.");
+                intentoAnterior = await db.DocumentosFelIntentos.Include(i => i.Errores).Include(i => i.Alertas)
+                    .SingleOrDefaultAsync(i => i.identificador == existente.identificador, ct);
+                if (existente.estado == "EN_PROCESO")
+                {
+                    if (!recuperar) throw new VentaConflictoException("La certificación está en proceso. Consulta su estado y usa Recuperar cuando venza el plazo.");
+                    if (!RecuperacionFelReglas.PuedeRecuperar(existente.estado, intentoAnterior, existente.fecha_creacion, reloj.GetUtcNow()))
+                        throw new VentaConflictoException("La certificación todavía tiene un procesamiento vigente. Espera y consulta el estado antes de recuperar.");
+                }
+                if (existente.estado is not ("POR_CONFIRMAR" or "RECHAZADA" or "EN_PROCESO"))
                     throw new VentaConflictoException("El documento ya está registrado. Consulta su estado antes de continuar.");
                 // Ignorar cambios del cuerpo en un reintento: se conserva el XML original.
                 documento = existente;
@@ -110,11 +136,11 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
                 if (!dto.confirmar_bienes_gravados) throw new ValidationException("Confirma la clasificación fiscal de los productos.");
                 var empresas = await db.empresa.AsNoTracking().Take(2).ToListAsync(ct);
                 if (empresas.Count != 1) throw new ValidationException("Debe existir exactamente una empresa configurada.");
-                var fecha = DateTimeOffset.UtcNow;
-                var identidad = API_SISTEMA.Services.Ventas.ReceptorVentaReglas.Validar(
-                    dto.tipo_identificacion_receptor ?? venta.tipo_identificacion_receptor,
-                    dto.tipo_identificacion_receptor is null ? venta.identificacion_receptor : dto.identificacion_receptor,
-                    dto.tipo_identificacion_receptor is null ? venta.nombre_receptor : nombreConsultado, venta.total);
+                var fecha = reloj.GetUtcNow();
+                // Comprobar de nuevo bajo bloqueo: no usar una consulta de otro receptor si la venta cambió.
+                VerificarReceptorFelService.Confirmar(receptorVerificado, dto.tipo_identificacion_receptor, dto.identificacion_receptor,
+                    venta.tipo_identificacion_receptor, venta.identificacion_receptor, venta.total);
+                var identidad = receptorVerificado!;
                 venta.tipo_identificacion_receptor = identidad.Tipo;
                 venta.identificacion_receptor = identidad.Identificacion;
                 venta.nombre_receptor = identidad.Nombre;
@@ -134,20 +160,21 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
                 if (existente is null) db.DocumentosFel.Add(documento);
             }
             else documento = existente!;
-            validador.ValidarAntesDeFirma(documento.xml_enviado);
+            // La recuperación respeta incluso el XML emitido con una versión anterior del XSD.
+            if (!esReconciliacion) validador.ValidarAntesDeFirma(documento.xml_enviado);
             documento.estado = "EN_PROCESO";
             await db.SaveChangesAsync(ct);
-            intento = await db.DocumentosFelIntentos.Include(i => i.Errores).Include(i => i.Alertas)
-                .SingleOrDefaultAsync(i => i.identificador == documento.identificador, ct)
+            intento = (esReconciliacion ? intentoAnterior : null)
                 ?? new DocumentoFelIntento { id_documento_fel = documento.id_documento_fel, id_usuario = usuario,
                     identificador = documento.identificador, fecha_emision = documento.fecha_emision, xml_enviado = documento.xml_enviado };
             if (intento.id_intento == 0) db.DocumentosFelIntentos.Add(intento);
-            intento.estado = "EN_PROCESO";
+            tokenSolicitud = RecuperacionFelReglas.Tomar(intento, reloj.GetUtcNow(), esReconciliacion);
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
         }
 
         InfileRespuesta? respuestaRecibida = null;
+        ValidacionCertificadoFel? validacionCertificado = null;
         try
         {
             var respuesta = await infile.EnviarAsync(documento.xml_enviado, documento.identificador, ct);
@@ -156,16 +183,32 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
             if ((int)respuesta.EstadoHttp is >= 200 and < 300)
             {
                 if (respuesta.Resultado == false) documento.estado = "RECHAZADA";
-                else if (respuesta.Resultado == true) AplicarCertificacion(documento, respuesta);
+                else if (respuesta.Resultado == true)
+                {
+                    validacionCertificado = ValidarCertificadoFel.Evaluar(documento.xml_enviado, respuesta);
+                    if (validacionCertificado.Valido) AplicarCertificacion(documento, respuesta, validacionCertificado);
+                }
             }
         }
-        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or FormatException or XmlException)
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or FormatException or XmlException or InvalidOperationException)
         {
             documento.estado = "POR_CONFIRMAR";
         }
         // Persistir el resultado aunque el navegador haya cancelado la solicitud.
         using var guardar = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         await using var resultadoTx = await db.Database.BeginTransactionAsync(guardar.Token);
+        // La misma fila de venta serializa toma y finalización. No se mantiene bloqueada durante HTTP.
+        await db.ventas.FromSqlInterpolated($"SELECT * FROM dbo.ventas WITH (UPDLOCK, HOLDLOCK) WHERE id_ventas = {idVenta}")
+            .AsNoTracking().Select(v => v.id_ventas).SingleAsync(guardar.Token);
+        var controlActual = await db.DocumentosFelIntentos.AsNoTracking().Where(i => i.id_intento == intento.id_intento)
+            .Select(i => new { i.estado, i.procesamiento_token }).SingleAsync(guardar.Token);
+        if (!RecuperacionFelReglas.ConservaControl(controlActual.estado, controlActual.procesamiento_token, tokenSolicitud))
+        {
+            // Una recuperación más reciente tiene el control: esta respuesta tardía no debe escribir.
+            await resultadoTx.RollbackAsync(guardar.Token);
+            var actual = await db.DocumentosFel.AsNoTracking().SingleAsync(d => d.id_documento_fel == documento.id_documento_fel, guardar.Token);
+            return await ResumenConMensajes(actual, guardar.Token);
+        }
         if (respuestaRecibida is not null)
         {
             // Reconciliar el mismo identificador actualiza sus mensajes; no crea otro intento.
@@ -175,32 +218,27 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
             intento.Alertas.Clear();
             await db.SaveChangesAsync(guardar.Token);
             NormalizarRespuestaFel.Aplicar(intento, respuestaRecibida);
+            if (validacionCertificado is { Valido: false })
+                intento.descripcion = validacionCertificado.Error;
         }
         else intento.descripcion = "No se recibió una respuesta confirmada de INFILE. Reintenta con el mismo identificador.";
         intento.estado = documento.estado;
-        intento.xml_certificado = documento.xml_certificado;
+        // Conservar el XML recibido para revisión, aunque no autorice marcar CERTIFICADA.
+        intento.xml_certificado = validacionCertificado?.Xml ?? documento.xml_certificado ?? intento.xml_certificado;
+        intento.procesamiento_token = null;
+        intento.procesamiento_vence = null;
         await db.SaveChangesAsync(guardar.Token);
         await resultadoTx.CommitAsync(guardar.Token);
         return await ResumenConMensajes(documento, guardar.Token);
     }
 
-    private static void AplicarCertificacion(DocumentoFel documento, InfileRespuesta respuesta)
+    private static void AplicarCertificacion(DocumentoFel documento, InfileRespuesta respuesta, ValidacionCertificadoFel validacion)
     {
-        if (!Guid.TryParse(respuesta.Uuid, out _) || respuesta.Serie?.Length is not (>= 1 and <= 20) ||
-            respuesta.Numero?.Length is not (>= 1 and <= 30) || string.IsNullOrWhiteSpace(respuesta.XmlCertificadoBase64)) return;
-        var xml = Encoding.UTF8.GetString(Convert.FromBase64String(respuesta.XmlCertificadoBase64));
-        using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
-        var certificado = XDocument.Load(reader);
-        XNamespace ns = "http://www.sat.gob.gt/dte/fel/0.2.0";
-        var autorizacion = certificado.Descendants(ns + "NumeroAutorizacion").SingleOrDefault();
-        var fecha = certificado.Descendants(ns + "FechaHoraCertificacion").SingleOrDefault()?.Value;
-        if (!string.Equals(autorizacion?.Value.Trim(), respuesta.Uuid, StringComparison.OrdinalIgnoreCase) ||
-            !DateTimeOffset.TryParse(fecha, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fechaCertificada)) return;
         documento.uuid = respuesta.Uuid;
         documento.serie = respuesta.Serie;
         documento.numero = respuesta.Numero;
-        documento.xml_certificado = xml;
-        documento.fecha_certificacion = fechaCertificada;
+        documento.xml_certificado = validacion.Xml;
+        documento.fecha_certificacion = validacion.Fecha;
         documento.estado = "CERTIFICADA";
     }
 }

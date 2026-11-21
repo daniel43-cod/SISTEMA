@@ -8,7 +8,7 @@ import { requestJson } from '../../../shared/api/httpClient'
 import { parseCashSession } from '../../cash/api/cashApi'
 import { loadProductNames } from '../../products/api/searchProducts'
 import type { ProductSuggestion } from '../../products/api/searchProducts'
-import { createPurchase, listPurchases, listSuppliers, getPurchaseSummary } from '../api/purchasesApi'
+import { createPurchase, listSuppliers, getPurchaseSummary } from '../api/purchasesApi'
 import { amountCents, buildPurchase } from '../utils/purchaseValidation'
 import { PurchaseProductRow } from '../components/PurchaseProductRow'
 import { PurchaseDetails } from '../components/PurchaseDetails'
@@ -70,10 +70,10 @@ export function PurchasesPage() {
       try {
         const [supplierRows, productRows, cash, history] = await Promise.all([
           listSuppliers(token!, controller.signal), loadProductNames(token!, controller.signal),
-          requestJson('/Caja/actual', { token, signal: controller.signal }), desktopView ? getPurchaseSummary(token!, page, searchApplied, statusFilter, controller.signal) : listPurchases(token!, page, controller.signal),
+          requestJson('/Caja/actual', { token, signal: controller.signal }), getPurchaseSummary(token!, page, searchApplied, statusFilter, controller.signal),
         ])
         if (!controller.signal.aborted) {
-          setSuppliers(supplierRows); setProducts(productRows); setCashOpen(parseCashSession(cash) !== null); setPurchases(Array.isArray(history) ? history : history.items); setSummary(Array.isArray(history) ? null : history)
+          setSuppliers(supplierRows); setProducts(productRows); setCashOpen(parseCashSession(cash) !== null); setPurchases(history.items); setSummary(history)
         }
       } catch (failure) {
         if (controller.signal.aborted) return
@@ -168,12 +168,18 @@ export function PurchasesPage() {
         Ya revisé el historial y la compra no se registró
       </button>}
     </section>}
-    {(!open || uncertain) && <section className="purchase-panel purchase-history-panel" aria-labelledby="purchase-history-title">
-      <div className="purchase-panel-heading purchase-history-heading">
-                <div><h2 id="purchase-history-title" className={desktopView ? "purchase-sr-only" : undefined}>Historial de compras</h2></div>
-
-        <RefreshButton label="Actualizar historial de compras" loading={saving || loading} onClick={() => setRevision(v => v + 1)} />
-      </div>
+    {(!open || uncertain) && <section className="purchase-panel purchase-history-panel" aria-label="Compras de la caja activa">
+      {!desktopView && <>
+        <section className="purchase-mobile-summary" aria-label="Resumen de compras de la caja activa">
+          <div><span>Total de compras</span><strong>{summary ? money.format(summary.totalComprado) : '—'}</strong><small>{summary ? summary.totalRegistros + (summary.totalRegistros === 1 ? ' compra' : ' compras') : '—'}</small></div>
+          <div><span>Por pagar</span><strong>{summary ? money.format(summary.totalPorPagar) : '—'}</strong><small>Caja activa</small></div>
+        </section>
+        <div className="purchase-mobile-status-tabs" role="group" aria-label="Filtrar compras de la caja activa">
+          <button type="button" disabled={loading || saving} aria-pressed={statusFilter === ''} onClick={() => { setStatusFilter(''); setPage(1) }}>Todas ({summary ? summary.cantidadPendientes + summary.cantidadPagadas : '—'})</button>
+          <button type="button" disabled={loading || saving} aria-pressed={statusFilter === 'pendientes'} onClick={() => { setStatusFilter('pendientes'); setPage(1) }}>Pendientes ({summary?.cantidadPendientes ?? '—'})</button>
+          <button type="button" disabled={loading || saving} aria-pressed={statusFilter === 'pagadas'} onClick={() => { setStatusFilter('pagadas'); setPage(1) }}>Pagadas ({summary?.cantidadPagadas ?? '—'})</button>
+        </div>
+      </>}
       {desktopView && <>
         <div className="purchase-history-metrics">
           <article><span>Total comprado</span><strong>{summary ? money.format(summary.totalComprado) : '—'}</strong><small>{summary ? summary.totalRegistros + (summary.totalRegistros === 1 ? ' compra' : ' compras') : '—'}</small></article>
@@ -188,12 +194,31 @@ export function PurchasesPage() {
         </div>
         <div className="purchase-history-tabs" role="group" aria-label="Filtrar compras por estado">
           <button type="button" aria-pressed={statusFilter === ''} onClick={() => { setStatusFilter(''); setPage(1) }}>Todas ({summary ? summary.cantidadPendientes + summary.cantidadPagadas : '—'})</button>
-          <button type="button" aria-pressed={statusFilter === 'pendientes'} onClick={() => { setStatusFilter('pendientes'); setPage(1) }}>Con saldo ({summary?.cantidadPendientes ?? '—'})</button>
+          <button type="button" aria-pressed={statusFilter === 'pendientes'} onClick={() => { setStatusFilter('pendientes'); setPage(1) }}>Pendientes ({summary?.cantidadPendientes ?? '—'})</button>
           <button type="button" aria-pressed={statusFilter === 'pagadas'} onClick={() => { setStatusFilter('pagadas'); setPage(1) }}>Pagadas ({summary?.cantidadPagadas ?? '—'})</button>
         </div>
       </>}
       {loading ? <p role="status">Cargando compras…</p> : error ? <p>Actualiza para consultar el historial.</p>
-        : !purchases.length ? <p>No hay compras en esta página.</p> : <div className="purchase-table-scroll purchase-history-cards"><table>
+        : !purchases.length ? <p>No hay compras en esta página.</p> : !desktopView ? <ul className="purchase-mobile-history" aria-label="Compras">
+          {purchases.map(p => <li key={p.id_compra} className={p.saldo_pendiente > 0 ? 'is-pending' : undefined}>
+            <button type="button" className="purchase-mobile-main" disabled={saving}
+              aria-label={`Ver detalle de compra de ${p.nombre_proveedor}`} aria-haspopup="dialog"
+              onClick={() => setSelected(p)}>
+              <span className="purchase-mobile-name-row"><strong title={p.nombre_proveedor}>{p.nombre_proveedor}</strong>
+                <span className={p.saldo_pendiente > 0 ? 'purchase-mobile-status is-pending' : 'purchase-mobile-status is-paid'}>{p.saldo_pendiente > 0 ? 'Pendiente' : 'Pagada'}</span>
+              </span>
+              <strong className="purchase-mobile-total">{money.format(p.total_compra)}</strong>
+              {p.saldo_pendiente > 0 && <span className="purchase-mobile-balance">Saldo <strong>{money.format(p.saldo_pendiente)}</strong></span>}
+            </button>
+            <div className="purchase-mobile-options">
+              <span className="purchase-mobile-seller" title={p.nombre_usuario}>{p.nombre_usuario}</span>
+              <button type="button" className="purchase-mobile-more" disabled={saving} aria-haspopup="dialog"
+                aria-label={`Ver detalle y opciones de compra de ${p.nombre_proveedor}`} title="Detalle y opciones"
+                onClick={() => setSelected(p)}><span aria-hidden="true">⋮</span></button>
+              <span className="purchase-mobile-time">{Number.isNaN(Date.parse(p.fecha_ingreso)) ? 'Hora no disponible' : new Intl.DateTimeFormat('es-GT', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(p.fecha_ingreso))}</span>
+            </div>
+          </li>)}
+        </ul> : <div className="purchase-table-scroll purchase-history-cards"><table>
           <thead><tr>{desktopView && <th scope="col">Compra</th>}<th scope="col">Distribuidor</th><th scope="col">Usuario</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col" className="purchase-history-date">Fecha y hora</th>{desktopView && <th scope="col">Acciones</th>}</tr></thead>
           <tbody>{purchases.map(p => <tr key={p.id_compra} className="purchase-history-row" tabIndex={saving ? -1 : 0} aria-label={`Ver compra de ${p.nombre_proveedor}`} onClick={() => { if (!saving) setSelected(p) }} onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(p) } }}>
                         {desktopView && <td><strong>{p.id_compra}</strong><small className="purchase-history-row-date">{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</small></td>}
@@ -205,7 +230,7 @@ export function PurchasesPage() {
         </table></div>}
       <nav className="purchase-pagination" aria-label="Páginas de compras">
         <button type="button" disabled={loading || saving || page === 1} onClick={() => { setSelected(null); setPage(p => p - 1) }}>Anterior</button>
-        <span>Página {page}</span><button type="button" disabled={loading || saving || !!error || (desktopView ? !summary?.hayMas : purchases.length < 20)}
+        <span>Página {page}</span><button type="button" disabled={loading || saving || !!error || !summary?.hayMas}
           onClick={() => { setSelected(null); setPage(p => p + 1) }}>Siguiente</button>
       </nav>
     </section>}

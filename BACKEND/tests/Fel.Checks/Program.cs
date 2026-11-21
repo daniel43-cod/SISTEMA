@@ -167,6 +167,9 @@ NormalizarRespuestaFel.Aplicar(invalidoNormalizado, new(HttpStatusCode.BadGatewa
 Verificar(invalidoNormalizado.resultado is null && invalidoNormalizado.codigo_http == 502 &&
     invalidoNormalizado.descripcion!.Contains("JSON"), "Respuesta no JSON mal clasificada.");
 await ReceptorLookupChecks.Run();
+RecuperacionFelChecks.Run();
+await VerificarReceptorFelChecks.Run();
+CertificadoFelChecks.Run(xml);
 Console.WriteLine("FEL: XML, IVA, límite CF, CUI, HTTP simulado y normalización de éxito/rechazo/alertas correctos. Sin llamadas reales.");
 
 sealed class ServidorSimulado(Guid identificador) : HttpMessageHandler

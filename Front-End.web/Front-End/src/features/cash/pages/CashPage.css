@@ -331,3 +331,21 @@
   .cash-desktop-equation .cash-desktop-expected { padding: 8px 14px; }
   .cash-desktop-expected strong { font-size: clamp(1.2rem, 1.8vw, 1.7rem); }
 }
+/* Tarjetas móviles con el mismo tratamiento visual que el historial de ventas. */
+@media (max-width: 800px) {
+  .cash-mobile-balance { padding: 16px 12px; border: 1px solid #d3deed; border-radius: 16px; background: #fff; }
+  .cash-mobile-balance dl.cash-mobile-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; margin: 0; padding: 0; border: 0; }
+  .cash-mobile-summary-grid > div { display: grid; align-content: start; min-width: 0; gap: 6px; }
+  .cash-mobile-balance .cash-mobile-summary-grid dt { color: #526477; font-size: .75rem; }
+  .cash-mobile-balance .cash-mobile-summary-grid dd { margin: 0; font-size: clamp(.9rem, 4vw, 1.2rem); font-weight: 700; overflow-wrap: anywhere; }
+  .cash-mobile-summary-grid .cash-mobile-expected { color: #075b96; }
+  .cash-mobile-balance .cash-mobile-opening-person { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; padding-top: 12px; margin-top: 14px; border-top: 1px solid #edf2f7; text-align: left; font-size: .7rem; }
+  .cash-mobile-opening-person strong { color: #075b96; overflow-wrap: anywhere; }
+  .cash-mobile-day ul { display: grid; gap: 8px; margin: 0; padding: 0 0 12px; }
+  .cash-mobile-movement { gap: 10px; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: #fff; box-shadow: 0 2px 4px #0f172a0a; min-width: 0; }
+  .cash-mobile-arrow { width: 38px; height: 38px; font-size: 1.1rem; }
+  .cash-mobile-movement > div { gap: 5px; }
+  .cash-mobile-movement > div > strong { font-size: .84rem; color: #075b96; }
+  .cash-mobile-movement small { font-size: .7rem; color: #7a8492; }
+  .cash-mobile-movement > strong { flex: 0 1 auto; min-width: 0; max-width: 40%; text-align: right; overflow-wrap: anywhere; font-size: .9rem; }
+}

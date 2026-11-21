@@ -285,3 +285,44 @@
   .purchase-history-filters .purchase-create-desktop { margin-left: auto; }
 }
 @media (min-width: 801px) { .purchase-history-panel > .purchase-history-heading { display: none; } }
+
+@media (max-width: 800px) {
+  .purchase-mobile-history { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0 0 12px; }
+  .purchase-mobile-history > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(82px, 28%); align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: #fff; box-shadow: 0 2px 4px #0f172a0a; }
+  .purchase-mobile-history > li.is-pending { border-left: 4px solid #f59e0b; }
+  .purchases-page button.purchase-mobile-main { display: grid; align-content: center; gap: 5px; padding: 0; border: 0; border-radius: 6px; background: transparent; box-shadow: none; min-width: 0; min-height: 64px; text-align: left; }
+  .purchase-mobile-name-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .purchase-mobile-name-row > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #075b96; font-size: .84rem; }
+  .purchase-mobile-status { flex-shrink: 0; padding: 3px 6px; border-radius: 6px; font-size: .65rem; }
+  .purchase-mobile-status.is-paid { color: #166534; background: #e1f5eb; }
+  .purchase-mobile-status.is-pending { color: #9a3412; background: #fff4df; }
+  .purchase-mobile-total { color: #075b96; font-size: .9rem; }
+  .purchase-mobile-balance { font-size: .72rem; color: #526477; }
+  .purchase-mobile-options { display: grid; justify-items: center; align-content: center; gap: 1px; min-width: 0; }
+  .purchase-mobile-seller { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #075b96; font-size: .72rem; font-weight: 600; }
+  .purchases-page button.purchase-mobile-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #075b96; font-size: 28px; line-height: 1; }
+  .purchases-page button.purchase-mobile-more:hover:not(:disabled) { background: #eaf4fe; }
+  .purchase-mobile-time { font-size: .65rem; color: #7a8492; white-space: nowrap; }
+  .purchase-mobile-history button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+}
+
+@media (max-width: 800px) {
+  .purchase-mobile-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px 12px; margin-bottom: 12px; border: 1px solid #d3deed; border-radius: 16px; background: #fff; }
+  .purchase-mobile-summary > div { display: grid; min-width: 0; gap: 6px; }
+  .purchase-mobile-summary span { color: #526477; font-size: .75rem; }
+  .purchase-mobile-summary strong { font-size: clamp(.9rem, 4vw, 1.2rem); overflow-wrap: anywhere; }
+  .purchase-mobile-summary small { color: #7a8492; font-size: .7rem; }
+  .purchase-mobile-status-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .purchases-page .purchase-mobile-status-tabs button { min-height: 44px; padding: 8px 12px; border: 1px solid #d3deed; border-radius: 24px; background: #fff; color: #526477; font-size: .75rem; }
+  .purchases-page .purchase-mobile-status-tabs button[aria-pressed=true] { color: #fff; background: #075b96; border-color: #075b96; font-weight: 650; }
+}
+
+@media (max-width: 800px) {
+  .staff-shell-purchases .staff-content:has(.purchases-page:not(.purchases-page-editing)) { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .purchases-page:not(.purchases-page-editing) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; box-sizing: border-box; gap: 8px; }
+  .purchases-page:not(.purchases-page-editing) > .purchase-toolbar { flex-shrink: 0; }
+  .purchases-page:not(.purchases-page-editing) > .purchase-history-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+  .purchases-page:not(.purchases-page-editing) .purchase-history-panel > * { flex-shrink: 0; }
+  .purchases-page:not(.purchases-page-editing) .purchase-history-panel > .purchase-mobile-history { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; align-content: start; padding-bottom: 12px; }
+  .purchases-page:not(.purchases-page-editing) .purchase-history-panel > .purchase-pagination { margin-top: 8px; }
+}

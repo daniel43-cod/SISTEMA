@@ -1,4 +1,4 @@
-import { RefreshButton } from '../../../shared/ui/RefreshButton'
+
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
@@ -149,7 +149,7 @@ export function UsersPage() {
         {roleTabs.map(role => <button type="button" key={role.id_rol} aria-pressed={roleFilter === role.id_rol}
           onClick={() => setRoleFilter(role.id_rol)}>{roleLabel(role.nombre, true)} ({items.filter(item => item.id_rol === role.id_rol).length})</button>)}
       </div>
-      <div className="users-header-actions"><RefreshButton label="Actualizar usuarios" loading={loading || saving} onClick={() => setRevision(v => v + 1)} /><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
+      <div className="users-header-actions"><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
       aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
       onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
@@ -200,14 +200,19 @@ export function UsersPage() {
         })}
       </div>}
     {!loading && !error && filteredUsers.length > 0 && <div className="users-mobile-cards" aria-label="Lista de usuarios">
-      {filteredUsers.map(item => <button type="button" key={item.id_usuario} className="users-mobile-card"
-        aria-label={'Ver detalles de ' + item.nombre + ' ' + item.apellido} aria-haspopup="dialog"
-        aria-controls="users-details-dialog" disabled={saving} onClick={() => setSelectedId(item.id_usuario)}>
-        <strong>{[item.nombre, item.apellido].filter(Boolean).join(' ')}</strong>
-        <span className={item.estado ? 'users-active' : 'users-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
-        <span className="users-card-phone"><small>Teléfono</small>{item.telefono || '—'}</span>
-        <span className="users-card-role"><small>Rol</small>{roles.find(role => role.id_rol === item.id_rol)?.nombre ?? 'Rol #' + item.id_rol}</span>
-      </button>)}
+      {filteredUsers.map(item => <article key={item.id_usuario} className="users-mobile-entry">
+        <div className="users-mobile-info">
+          <div className="users-mobile-name-row">
+            <strong>{[item.nombre, item.apellido].filter(Boolean).join(' ')}</strong>
+            <span className={item.estado ? 'users-active' : 'users-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
+          </div>
+          <span><span className="sr-only">Teléfono: </span>{item.telefono || 'Sin teléfono'}</span>
+          <span><span className="sr-only">Rol: </span>{roleLabel(roles.find(role => role.id_rol === item.id_rol)?.nombre ?? 'Rol #' + item.id_rol)}</span>
+        </div>
+        <button type="button" className="users-mobile-more" disabled={saving} aria-haspopup="dialog" aria-controls="users-details-dialog"
+          aria-label={'Ver detalles y editar ' + [item.nombre, item.apellido].filter(Boolean).join(' ')}
+          onClick={() => setSelectedId(item.id_usuario)}><span aria-hidden="true">⋮</span></button>
+      </article>)}
     </div>}
     <dialog ref={detailsRef} id="users-details-dialog" className="users-dialog users-details-dialog" aria-labelledby="users-details-title"
       onCancel={event => { if (saving) event.preventDefault(); else setSelectedId(null) }}>

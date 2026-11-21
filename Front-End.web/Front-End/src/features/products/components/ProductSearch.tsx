@@ -1,4 +1,5 @@
 ﻿import { createPortal } from 'react-dom'
+import type { ReactNode } from 'react'
 import { useId, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
 import { filterProductNames } from '../api/searchProducts'
@@ -6,7 +7,8 @@ import { useProductNames } from '../hooks/useProductNames'
 
 import { ProductListPage } from '../pages/ProductListPage'
 
-export function ProductSearch({ onResult, namesRevision, onNamesRefresh, onBack, backLabel }: {
+export function ProductSearch({ onResult, namesRevision, onNamesRefresh, onBack, backLabel, createAction }: {
+  createAction?: ReactNode
   onResult: (active: boolean) => void; namesRevision: number; onNamesRefresh: () => void; onBack?: () => void; backLabel?: string
 }) {
   const { session } = useAuth()
@@ -67,6 +69,6 @@ export function ProductSearch({ onResult, namesRevision, onNamesRefresh, onBack,
   </section>
   return <>
     {headerTarget ? createPortal(search, headerTarget) : search}
-    {selected !== null && <ProductListPage key={selected} productId={selected} onProductSaved={onNamesRefresh} />}
+    {selected !== null && <ProductListPage key={selected} createAction={createAction} productId={selected} onProductSaved={onNamesRefresh} />}
   </>
 }

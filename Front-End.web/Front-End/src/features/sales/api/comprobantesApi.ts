@@ -23,14 +23,15 @@ export async function receiptOptions(saleId: number, token: string, signal?: Abo
   return v as ReceiptOptions
 }
 export async function sendReceipt(saleId: number, companyId: number, registeredPhone: string | null,
-  enteredPhone: string, mode: 'registro' | 'historial', token: string, signal?: AbortSignal): Promise<ReceiptResult> {
+  enteredPhone: string, mode: 'registro' | 'historial' | 'pagos', token: string, signal?: AbortSignal): Promise<ReceiptResult> {
   if (!id(saleId) || !id(companyId)) throw new Error('Selecciona la empresa del comprobante.')
   const saved = !!registeredPhone?.trim()
   const phone = saved ? registeredPhone! : enteredPhone.trim()
   if (!phone.trim()) throw new Error('Ingresa el número de teléfono primero.')
   if (!validReceiptPhone(phone)) throw new Error('Ingresa un número de teléfono válido.')
   const suffix = saved ? '' : `/${mode}`
-  return result(await requestJson(`/comprobantes/ventas/${saleId}/whatsapp${suffix}?idEmpresa=${companyId}`, {
+  const route = mode === 'pagos' ? `/comprobantes/ventas/${saleId}/pagos/whatsapp` : `/comprobantes/ventas/${saleId}/whatsapp${suffix}`
+  return result(await requestJson(`${route}?idEmpresa=${companyId}`, {
     method: 'POST', token, signal, validationMessages: true, timeoutMs: 180000,
     ...(saved ? {} : { body: { telefono: enteredPhone.trim() } }),
   }), saleId)

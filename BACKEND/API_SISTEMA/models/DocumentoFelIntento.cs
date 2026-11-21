@@ -14,6 +14,13 @@ public sealed class DocumentoFelIntento
     public DateTimeOffset fecha_creacion { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset fecha_emision { get; set; }
     public DateTimeOffset? fecha_respuesta { get; set; }
+    // Control de procesamiento local, separado del identificador enviado a INFILE.
+    // NULL en intentos anteriores: todavía no tenían este mecanismo.
+    public DateTimeOffset? procesamiento_inicio { get; set; }
+    public DateTimeOffset? procesamiento_vence { get; set; }
+    public Guid? procesamiento_token { get; set; }
+    public int recuperaciones { get; set; }
+    public DateTimeOffset? ultima_recuperacion { get; set; }
     public short? codigo_http { get; set; }
     public bool? resultado { get; set; }
     public string? origen { get; set; }

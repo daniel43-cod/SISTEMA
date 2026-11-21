@@ -49,16 +49,23 @@ export function ProductCatalogBrowser({ createAction }: { createAction?: ReactNo
   const refreshNames = useCallback(() => setNamesRevision(value => value + 1), [])
   const [searchActive, setSearchActive] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
+  const [desktop, setDesktop] = useState(() => window.matchMedia('(min-width: 801px)').matches)
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 801px)')
+    const update = () => setDesktop(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   useEffect(() => { title.current?.focus() }, [category, brand])
   if (session?.user.role !== 'ADMINISTRADOR') return null
   const selectedBrands = brands.items.filter(item => item.idCategoria === category?.idCategoria && item.estado)
   return <div className="product-catalog-browser">
-    <ProductSearch onResult={setSearchActive} namesRevision={namesRevision} onNamesRefresh={refreshNames}
+    <ProductSearch createAction={desktop ? createAction : undefined} onResult={setSearchActive} namesRevision={namesRevision} onNamesRefresh={refreshNames}
       onBack={category ? () => { if (brand) setBrand(null); else setCategory(null) } : undefined}
       backLabel={brand ? 'Volver a las marcas' : 'Volver a las categorías'} />
-    {searchActive && <div className="product-catalog-heading"><h2>Productos</h2>{createAction}</div>}
+    {searchActive && !desktop && <div className="product-catalog-heading"><h2>Productos</h2>{createAction}</div>}
     {!searchActive && <>
-    <div className="product-catalog-heading"><h2 ref={title} tabIndex={-1} className={category ? 'product-navigation-title' : undefined}>{category ? (brand ? 'Productos' : 'Marcas') : 'Categorías'}</h2>{createAction}</div>
+    {(!desktop || !brand) && <div className="product-catalog-heading"><h2 ref={title} tabIndex={-1} className={category ? 'product-navigation-title' : undefined}>{category ? (brand ? 'Productos' : 'Marcas') : 'Categorías'}</h2>{createAction}</div>}
     {!category && <>
       {categories.loading && <p role="status">Cargando categorías…</p>}
       {categories.error && <><p role="alert" className="product-error">{categories.error}</p><button type="button" onClick={categories.reload}>Reintentar</button></>}
@@ -82,7 +89,7 @@ export function ProductCatalogBrowser({ createAction }: { createAction?: ReactNo
             <span className="product-brand-category">{category.nombre}</span></button></li>)}
       </ul>}
     </>}
-    {brand && category && <ProductListPage key={`${category.idCategoria}:${brand.idMarca}`} idMarca={brand.idMarca} idCategoria={category.idCategoria} onProductSaved={refreshNames} />}
+    {brand && category && <ProductListPage createAction={desktop ? createAction : undefined} key={`${category.idCategoria}:${brand.idMarca}`} idMarca={brand.idMarca} idCategoria={category.idCategoria} onProductSaved={refreshNames} />}
     </>}
   </div>
 }

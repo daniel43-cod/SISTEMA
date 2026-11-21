@@ -572,8 +572,11 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
         base.OnModelCreating(b);
         var keep = new HashSet<Type> { typeof(ZonaEntrega), typeof(PedidoCatalogo), typeof(DetallePedidoCatalogo), typeof(Usuario), typeof(Rol), typeof(RolPermiso), typeof(TablaPermiso), typeof(UsuarioPermiso),
             typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion), typeof(Cliente),
-            typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle) };
+            typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle), typeof(DocumentoFel) };
         foreach (var e in b.Model.GetEntityTypes().ToArray()) if (!keep.Contains(e.ClrType)) b.Ignore(e.ClrType);
+        // SQLite no genera rowversion; esta adaptación solo permite preparar los fixtures.
+        // La concurrencia de SQL Server se comprueba por separado.
+        b.Entity<DocumentoFel>().Property(d => d.version).HasDefaultValueSql("X''");
         var detalle = b.Entity<AuditoriaEventoDetalle>();
         foreach (var constraint in detalle.Metadata.GetCheckConstraints().ToArray())
             detalle.Metadata.RemoveCheckConstraint(constraint.Name);

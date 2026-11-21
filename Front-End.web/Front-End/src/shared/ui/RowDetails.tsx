@@ -1,8 +1,9 @@
 ﻿import { useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import './catalog-row.css'
 
-export function RowDetails({ name, type, fields, image, disabled }: {
-  name: string; type: string; fields: { label: string; value: string }[]; image?: string | null; disabled: boolean
+export function RowDetails({ name, type, fields, image, disabled, compact = false, onEdit, editDisabled = false, actions }: {
+  name: string; type: string; fields: { label: string; value: string }[]; image?: string | null; disabled: boolean; compact?: boolean; onEdit?: () => void; editDisabled?: boolean; actions?: ReactNode
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [failed, setFailed] = useState(false)
@@ -13,8 +14,8 @@ export function RowDetails({ name, type, fields, image, disabled }: {
     catch { safe = false }
   }
   return <>
-    <button type="button" className="catalog-row-open" disabled={disabled}
-      aria-label={`Ver detalles de ${name}`} aria-haspopup="dialog" onClick={() => dialog.current?.showModal()} />
+    <button type="button" className={compact ? "catalog-row-more" : "catalog-row-open"} disabled={disabled}
+      aria-label={`Ver detalles de ${name}`} aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>{compact && <span aria-hidden="true">⋮</span>}</button>
     <dialog ref={dialog} className="catalog-row-dialog" aria-label={`Detalles de ${type}: ${name}`}>
       <div className="catalog-row-dialog-heading"><h2>Detalles de {type}</h2>
         <button type="button" autoFocus onClick={() => dialog.current?.close()} aria-label="Cerrar detalles">×</button></div>
@@ -23,6 +24,8 @@ export function RowDetails({ name, type, fields, image, disabled }: {
         ? <img key={source} className="catalog-row-dialog-image" src={source} alt={`Imagen de ${name}`} referrerPolicy="no-referrer" onError={() => setFailed(true)} />
         : <p>Sin imagen</p>)}
       <dl>{fields.map(field => <div key={field.label}><dt>{field.label}</dt><dd>{field.value}</dd></div>)}</dl>
+      {onEdit && <button type="button" disabled={disabled || editDisabled} onClick={() => { dialog.current?.close(); onEdit() }}>Editar</button>}
+      {actions}
       <button type="button" onClick={() => dialog.current?.close()}>Cerrar</button>
     </dialog>
   </>

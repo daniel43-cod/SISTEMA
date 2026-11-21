@@ -1,3 +1,4 @@
+import { RowDetails } from '../../../shared/ui/RowDetails'
 import { listUsers } from '../../users/api/usersApi'
 import type { StaffUser } from '../../users/api/usersApi'
 import { getExpensesReport } from '../../reports/api/reportsApi'
@@ -228,6 +229,27 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     {historyLoading ? <p role="status">Cargando gastos…</p>
       : historyError ? <p className="expense-error" role="alert">{historyError}</p>
       : !history?.items.length ? <p role="status">No hay gastos para mostrar con este filtro.</p>
+      : !desktopView ? <div className="expense-table-scroll"><ul className="expense-mobile-cards" aria-label="Gastos">
+        {history.items.map(item => <li key={item.idGasto}>
+          <div className="expense-mobile-info">
+            <strong className="expense-mobile-description" title={item.descripcion}>{item.descripcion}</strong>
+            <strong className="expense-mobile-total">{new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(item.monto)}</strong>
+          </div>
+          <div className="expense-mobile-options">
+            <span className="expense-mobile-person" title={item.encargado}>{item.encargado}</span>
+            <RowDetails compact name={item.descripcion} type="gasto" disabled={saving}
+              fields={[
+                { label: 'Número de gasto', value: String(item.idGasto) },
+                { label: 'Total', value: new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(item.monto) },
+                { label: 'Encargado', value: item.encargado },
+                { label: 'Fecha y hora', value: new Date(item.fecha).toLocaleString('es-GT') },
+                { label: 'Observación', value: item.observacion || 'Sin observación' },
+                { label: 'Sesión de caja', value: history.idSesionCaja === null ? 'No disponible' : String(history.idSesionCaja) },
+              ]} />
+            <time className="expense-mobile-time" dateTime={item.fecha}>{new Intl.DateTimeFormat('es-GT', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(item.fecha))}</time>
+          </div>
+        </li>)}
+      </ul></div>
       : <div className="expense-table-scroll"><table className="expense-table">
         <thead><tr><th>Descripción</th><th>Monto</th><th>Observación</th><th>Encargado</th><th>Fecha y hora</th></tr></thead>
         <tbody>{history.items.map(item => <tr key={item.idGasto}>
@@ -238,10 +260,10 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
         </tr>)}</tbody>
       </table></div>}
     {!historyLoading && !historyError && history && history.total > 25 && <nav className="expense-pagination" aria-label="Páginas de gastos">
-      <button type="button" disabled={historyLoading || page === 1} onClick={() => setPage(v => v - 1)}>Anterior</button>
+      <button type="button" disabled={historyLoading || page === 1} aria-label="Página anterior" title="Página anterior" onClick={() => setPage(v => v - 1)}><span aria-hidden="true">←</span></button>
       <span>Página {page} de {Math.max(1, Math.ceil((history?.total ?? 0) / 25))}</span>
       <button type="button" disabled={historyLoading || !!historyError || !history || page * 25 >= history.total}
-        onClick={() => setPage(v => v + 1)}>Siguiente</button>
+        aria-label="Página siguiente" title="Página siguiente" onClick={() => setPage(v => v + 1)}><span aria-hidden="true">→</span></button>
     </nav>}
     <button type="button" className="expense-create-floating" title="Registrar nuevo gasto"
       aria-label="Registrar nuevo gasto" aria-haspopup="dialog" aria-controls="expense-create-dialog"

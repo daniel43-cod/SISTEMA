@@ -383,3 +383,37 @@
   .product-list-card .product-table td:last-child button { min-height: 44px; padding: 8px 12px; border: 0; background: #eff6ff; border-radius: 8px; color: #075b96; }
   .product-list-card .product-table .product-stock-status { white-space: normal; font-size: .75rem; }
 }
+
+.product-mobile-cards { display: none; }
+@media (max-width: 800px) {
+  .product-list-card > .product-table-scroll { display: none; }
+  .product-mobile-cards { display: grid; gap: 8px; list-style: none; margin: 12px 0 0; padding: 0 0 12px; }
+  .product-mobile-cards > li { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: #fff; box-shadow: 0 2px 4px #0f172a0a; }
+  .product-mobile-card-info { display: grid; min-width: 0; gap: 5px; }
+  .product-mobile-card-info > strong { font-size: .84rem; color: #075b96; overflow-wrap: anywhere; }
+  .product-mobile-card-info > span { font-size: .72rem; color: #7a8492; overflow-wrap: anywhere; }
+  .product-list-card button.product-mobile-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #075b96; font-size: 28px; line-height: 1; cursor: pointer; }
+  .product-list-card button.product-mobile-more:hover:not(:disabled) { background: #eaf4fe; }
+  .product-list-card button.product-mobile-more:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+}
+
+@media (max-width: 800px) {
+  .product-browser > .product-card.product-list-card { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+}
+
+@media (max-width: 800px) {
+  .product-card.product-create-panel { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+}
+
+.product-list-card > .product-list-heading { margin: 0 0 6px; }
+.product-list-card > .product-list-heading h2 { margin: 0; padding-right: 0; }
+@media (max-width: 800px) {
+  .product-catalog-heading { margin-top: 0; margin-bottom: 6px; }
+  .product-list-card > .product-mobile-cards { margin-top: 6px; }
+}
+
+.product-list-header-actions { display: flex; align-items: center; gap: 10px; }
+@media (min-width: 801px) {
+  .product-list-card > .product-list-heading { justify-content: flex-start; gap: 14px; }
+  .product-list-header-actions .catalog-add-button.catalog-create-responsive { min-height: 44px; padding: 8px 14px; }
+}

@@ -1,6 +1,8 @@
 import { SalePaymentsHistory } from '../components/SalePaymentsHistory'
 import { createPortal } from 'react-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { CertifySalePanel } from '../components/CertifySalePanel'
+import { WhatsAppIcon, WhatsAppReceiptDialog } from '../components/WhatsAppReceipt'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
@@ -17,6 +19,11 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   const paymentHeading = useRef<HTMLHeadingElement>(null)
   const paymentAmount = useRef<HTMLInputElement>(null)
   const [paymentOpen, setPaymentOpen] = useState(false)
+  const [sharing, setSharing] = useState(false)
+  const [certificationOpen, setCertificationOpen] = useState(false)
+  const [certifying, setCertifying] = useState(false)
+  const certificationBusy = useCallback((value: boolean) => { setCertifying(value); onSaving(value) }, [onSaving])
+  const certificationUnauthorized = useCallback(() => logout('La sesión ya no es válida.'), [logout])
   const heading = useRef<HTMLHeadingElement>(null)
   const busy = useRef(false)
   const alive = useRef(true)
@@ -89,19 +96,19 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
     } finally { busy.current = false; onSaving(false); if (alive.current) setSaving(false) }
   }
   return createPortal(<><dialog ref={dialog} className="sales-page sale-list-page sale-payment-dialog" aria-labelledby="sale-payment-title"
-    onCancel={event => { event.preventDefault(); if (!busy.current) onClose() }}>
+    onCancel={event => { event.preventDefault(); if (!busy.current && !certifying) onClose() }}>
     <section className="sales-card sale-payment">
     <header className="sale-detail-header">
       <div className="sale-detail-title-row">
         <h2 id="sale-payment-title" ref={heading} tabIndex={-1}>Cliente: {sale.cliente}</h2>
         
-        <button type="button" className="sale-detail-close" disabled={saving} onClick={onClose} aria-label="Cerrar detalle de venta" title="Cerrar">×</button>
+        <button type="button" className="sale-detail-close" disabled={saving || certifying} onClick={onClose} aria-label="Cerrar detalle de venta" title="Cerrar">×</button>
       </div>
       <p className="sale-detail-metadata"><span>Usuario: <strong>{sale.usuario}</strong></span><span>{Number.isNaN(Date.parse(sale.fecha_venta)) ? 'Fecha no disponible' :
         new Intl.DateTimeFormat('es-GT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(sale.fecha_venta)) + ' · ' +
         new Intl.DateTimeFormat('es-GT', { hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(sale.fecha_venta))}</span>
         <span className="sale-detail-payment-action"><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
-          <button ref={paymentButton} type="button" disabled={saving}
+          <button ref={paymentButton} type="button" disabled={saving || certifying}
             onClick={() => setPaymentOpen(true)} aria-haspopup="dialog">{sale.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'}</button>
         </span></p>
     </header>
@@ -116,9 +123,16 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
       <div><dt>Saldo pendiente</dt><dd>{money.format(sale.saldo_pendiente)}</dd></div>
       {session?.user.role === 'ADMINISTRADOR' && <div className="sale-receipt-profit"><dt>Ganancia</dt><dd>{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</dd></div>}
     </dl>
+    <div className="sale-detail-actions">
+      <button type="button" className="wa-send-button" disabled={saving || certifying} onClick={() => setSharing(true)} aria-haspopup="dialog"><WhatsAppIcon />Compartir por WhatsApp</button>
+      <button type="button" className="fel-secondary-button" disabled={saving || certifying} aria-expanded={certificationOpen} onClick={() => setCertificationOpen(value => !value)}>{certificationOpen ? 'Ocultar certificación' : 'Certificar / ver factura'}</button>
+    </div>
+    {certificationOpen && <CertifySalePanel saleId={sale.id_ventas} token={token ?? ''} active={true}
+      onToggle={() => setCertificationOpen(false)} disabled={saving} onBusy={certificationBusy} onUnauthorized={certificationUnauthorized} />}
 
     </section>
   </dialog>
+  {sharing && <WhatsAppReceiptDialog saleId={sale.id_ventas} mode="historial" showCertification={false} onClose={() => setSharing(false)} />}
   {paymentOpen && <dialog ref={paymentDialog} className="sales-page sale-list-page sale-payment-dialog sale-abono-dialog"
     aria-labelledby="sale-abono-title" onCancel={event => { event.preventDefault(); if (!busy.current) setPaymentOpen(false) }}>
     <section className="sales-card sale-payment">

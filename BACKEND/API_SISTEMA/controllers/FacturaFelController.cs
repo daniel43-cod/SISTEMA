@@ -31,6 +31,10 @@ public sealed class FacturaFelController(CertificarVentaService servicio) : Cont
     public async Task<IActionResult> Preparar(int idVenta, CancellationToken ct)
         => Ok(await servicio.Preparar(idVenta, Usuario(), ct));
 
+    [HttpPost("fel/recuperar")]
+    public async Task<IActionResult> Recuperar(int idVenta, CancellationToken ct)
+        => Ok(await servicio.Recuperar(idVenta, Usuario(), ct));
+
     [HttpGet("fel")]
     public async Task<IActionResult> Consultar(int idVenta, CancellationToken ct)
         => Ok(new { documento = await servicio.Consultar(idVenta, Usuario(), ct) });

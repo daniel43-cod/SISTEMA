@@ -47,9 +47,24 @@ public sealed class WhatsAppHistorialService(SistemaDbContext db, WhatsAppClient
 
     public async Task<WhatsAppHistorialResultado> Iniciar(Models.Ventas venta, Empresa empresa, int usuario, CancellationToken ct, string? telefonoTemporal = null)
     {
+        return await IniciarImagenes(venta, empresa, usuario, ct, telefonoTemporal,
+            ComprobanteImagen.Planificar(venta, empresa), false);
+    }
+
+    public async Task<WhatsAppHistorialResultado> IniciarPagos(Models.Ventas venta, Empresa empresa, int usuario,
+        CancellationToken ct, string? telefonoTemporal = null)
+    {
+        var pagos = await new PagoService(db).ListarPorVenta(venta.id_ventas, ct);
+        if (pagos.Count == 0) throw new ValidationException("Esta venta aún no tiene pagos registrados.");
+        return await IniciarImagenes(venta, empresa, usuario, ct, telefonoTemporal,
+            ComprobanteImagen.PlanificarPagos(venta, empresa, pagos), true);
+    }
+
+    private async Task<WhatsAppHistorialResultado> IniciarImagenes(Models.Ventas venta, Empresa empresa, int usuario,
+        CancellationToken ct, string? telefonoTemporal, List<ComprobanteImagen.Pagina> paginas, bool historialPagos)
+    {
         cliente.ValidarConfiguracion();
         var telefono = ResolverTelefono(venta, telefonoTemporal);
-        var paginas = ComprobanteImagen.Planificar(venta, empresa);
         var config = options.Value;
         var envio = new WhatsAppEnvio { id_envio = Guid.NewGuid(), id_venta = venta.id_ventas,
             id_empresa = empresa.id_empresa, id_usuario = usuario, telefono = telefono,
@@ -69,7 +84,7 @@ public sealed class WhatsAppHistorialService(SistemaDbContext db, WhatsAppClient
             try
             {
                 // Se usan datos actuales en memoria; no se guardan PNG ni copias JSON.
-                var png = ComprobanteImagen.Generar(venta, empresa, paginas, pagina.pagina);
+                var png = ComprobanteImagen.Generar(venta, empresa, paginas, pagina.pagina, historialPagos);
                 pagina.etapa = intento.etapa = "subida";
                 pagina.actualizado_utc = DateTime.UtcNow;
                 await db.SaveChangesAsync(ct);

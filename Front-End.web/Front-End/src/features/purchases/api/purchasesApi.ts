@@ -59,6 +59,8 @@ export type PurchaseSummary = {
   totalComprado: number; totalPorPagar: number; totalPagado: number; hayMas: boolean; items: Purchase[]
 }
 export async function getPurchaseSummary(token: string, page: number, search: string, status: string, signal?: AbortSignal): Promise<PurchaseSummary> {
+  if (!Number.isSafeInteger(page) || page < 1 || page > 100000 || search.length > 100 || !['', 'pendientes', 'pagadas'].includes(status))
+    throw new ApiError('Filtro de compras inválido.', 400)
   const params = new URLSearchParams({ pagina: String(page), tamanoPagina: '20' })
   if (search.trim()) params.set('buscar', search.trim())
   if (status) params.set('estadoPago', status)

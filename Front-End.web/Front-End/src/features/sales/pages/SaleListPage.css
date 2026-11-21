@@ -289,3 +289,25 @@
 @media (min-width: 801px) {
   .sale-list-view .sale-list-body table td { padding-block: 6px; }
 }
+.sale-list-page button.sale-more-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #526477; font-size: 28px; line-height: 1; }
+.sale-list-page button.sale-more-button:hover { background: #eaf4fe; color: #075b96; }
+.sale-list-page button.sale-more-button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+.sale-detail-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.sale-detail-actions > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+@media (max-width: 800px) {
+  .sale-mobile-cards { gap: 8px; }
+  .sale-mobile-cards > .sale-mobile-sale { display: grid; grid-template-columns: minmax(0, 1fr) minmax(82px, 28%); align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: white; box-shadow: 0 2px 4px #0f172a0a; }
+  .sale-mobile-cards > .sale-mobile-sale.is-pending { border-left: 4px solid #f59e0b; }
+  .sale-mobile-cards > .sale-mobile-sale.is-selected { border-color: #93c5fd; background: #f8fbff; }
+  .sales-page.sale-list-view .sale-mobile-sale button.sale-mobile-card { display: grid; align-content: center; gap: 5px; padding: 0; border: 0; border-radius: 6px; background: transparent; box-shadow: none; min-width: 0; min-height: 64px; text-align: left; }
+  .sale-mobile-sale .sale-mobile-card-top { justify-content: flex-start; gap: 7px; min-width: 0; }
+  .sale-mobile-sale .sale-mobile-card-client { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .84rem; color: #075b96; }
+  .sale-mobile-sale .sale-list-status { flex-shrink: 0; font-size: .65rem; padding: 3px 6px; }
+  .sale-mobile-sale .sale-mobile-card-total { font-size: .9rem; }
+  .sale-mobile-sale .sale-mobile-card-balance { margin-left: 0; font-size: .72rem; }
+  .sale-mobile-card-options { display: grid; justify-items: center; align-content: center; min-width: 0; gap: 1px; }
+  .sale-mobile-card-seller { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #075b96; font-size: .72rem; font-weight: 600; }
+  .sale-mobile-card-time { font-size: .65rem; color: #7a8492; white-space: nowrap; }
+  .sale-mobile-card-options button.sale-more-button { width: 44px; min-height: 44px; color: #075b96; }
+}

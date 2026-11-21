@@ -1,3 +1,4 @@
+import '../../../shared/ui/mobile-catalog-cards.css'
 import type { ReactNode } from 'react'
 ﻿import { RowDetails } from '../../../shared/ui/RowDetails'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -25,6 +26,18 @@ export function PresentationList({ items, loading, error, onReload, onEdit, onSt
       items.length === 0 ? <p className="presentation-description" role="status">No hay presentaciones para mostrar.</p> :
       <>
         <p className="presentation-hint" role="status">{items.length} presentaciones</p>
+    <ul className="mobile-catalog-cards" aria-label="Presentaciones">
+      {items.map(item => <li key={item.idPresentacion}>
+        <div className="mobile-catalog-card-info">
+          <strong>{item.descripcion}</strong>
+          <span className={item.estado ? 'mobile-catalog-status is-active' : 'mobile-catalog-status is-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <RowDetails compact name={item.descripcion} type="presentación"  disabled={editing || loading || pending}
+          fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}
+          onEdit={onEdit ? () => onEdit(item) : undefined} editDisabled={!item.estado}
+          actions={onStateChange && <button type="button" disabled={editing || loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar presentación' : 'Activar presentación'}</button>} />
+      </li>)}
+    </ul>
         <ul className="presentation-list-items">
           {items.map(item => <li key={item.idPresentacion} className="catalog-clickable-row">
         <RowDetails name={item.descripcion} type="presentación" fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}  disabled={editing || loading || pending} />

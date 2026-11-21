@@ -135,3 +135,15 @@
   .users-browse-toolbar > .users-header-actions { grid-column: 2; grid-row: 1; margin-left: 0; }
   .users-browse-toolbar > .users-role-tabs { grid-column: 1 / -1; grid-row: 2; }
 }
+@media (max-width: 800px) {
+  .users-mobile-cards { gap: 8px; }
+  .users-mobile-entry { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: #fff; box-shadow: 0 2px 4px #0f172a0a; }
+  .users-mobile-info { display: grid; gap: 5px; min-width: 0; }
+  .users-mobile-name-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .users-mobile-name-row > strong { min-width: 0; font-size: .84rem; color: #075b96; overflow-wrap: anywhere; }
+  .users-mobile-name-row > span { flex-shrink: 0; font-size: .65rem; padding: 3px 6px; width: auto; }
+  .users-mobile-info > span { color: #7a8492; font-size: .72rem; overflow-wrap: anywhere; }
+  .users-panel button.users-mobile-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #075b96; font-size: 28px; line-height: 1; }
+  .users-panel button.users-mobile-more:hover:not(:disabled) { background: #eaf4fe; }
+  .users-panel button.users-mobile-more:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+}

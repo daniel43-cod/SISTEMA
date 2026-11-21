@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import type { ReactNode } from 'react'
 import '../../../shared/ui/catalog-row.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
@@ -12,7 +13,7 @@ import './ProductsPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 
-export function ProductListPage({ idMarca, idCategoria, productId, onProductSaved }: { idMarca?: number; idCategoria?: number; productId?: number; onProductSaved?: () => void } = {}) {
+export function ProductListPage({ idMarca, idCategoria, productId, onProductSaved, createAction }: { createAction?: ReactNode; idMarca?: number; idCategoria?: number; productId?: number; onProductSaved?: () => void } = {}) {
   const { session, logout } = useAuth()
   const [editing, setEditing] = useState(false)
   const [focusPresentations, setFocusPresentations] = useState(false)
@@ -113,13 +114,30 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
     <section className="product-card product-list-card" aria-labelledby="product-list-title" aria-busy={loading}>
       <div className="product-list-heading">
         <h2 id="product-list-title">Productos</h2>
-        <RefreshButton loading={busy} onClick={() => setRevision(value => value + 1)} label="Actualizar productos" />
+        <div className="product-list-header-actions">{createAction}<RefreshButton loading={busy} onClick={() => setRevision(value => value + 1)} label="Actualizar productos" /></div>
       </div>
       {waiting > 0 && <p role="status">Espera {waiting} segundos antes de volver a consultar.</p>}
       {loading && <p role="status">Cargando productos…</p>}
       {error && <p role="alert" className="product-error">{error}</p>}
       {data && !data.items.length && <p>No hay productos registrados.</p>}
       {data && <>
+        <ul className="product-mobile-cards" aria-label="Productos">
+          {data.items.map(product => <li key={product.idProducto}>
+            <div className="product-mobile-card-info">
+              <strong>{product.nombre}</strong>
+              <span><span className="sr-only">Marca: </span>{product.marca}</span>
+              <span><span className="sr-only">Categoría: </span>{product.categoria}</span>
+            </div>
+            <button type="button" className="product-mobile-more" disabled={busy} aria-haspopup="dialog"
+              aria-label={`Ver detalles y editar ${product.nombre}`} aria-controls="product-detail" aria-expanded={selected === product.idProducto}
+              onClick={event => {
+                trigger.current = event.currentTarget
+                setNotice(''); setEditing(false); setFocusPresentations(false)
+                if (selected !== product.idProducto) setDetail(null)
+                setSelected(product.idProducto)
+              }}><span aria-hidden="true">⋮</span></button>
+          </li>)}
+        </ul>
         <div className="product-table-scroll">
           <table className="product-table">
             <thead><tr><th scope="col">Producto</th><th scope="col">Marca</th><th scope="col">Estado</th><th scope="col">Editar</th></tr></thead>

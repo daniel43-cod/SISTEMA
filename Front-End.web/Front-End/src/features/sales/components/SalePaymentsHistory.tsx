@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { WhatsAppIcon, WhatsAppReceiptDialog } from './WhatsAppReceipt'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { loadSalePayments } from '../api/salePaymentsApi'
@@ -13,6 +14,7 @@ export function SalePaymentsHistory({ saleId }: { saleId: number }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
+  const [sharing, setSharing] = useState(false)
   useEffect(() => {
     if (!token) return
     const controller = new AbortController()
@@ -27,6 +29,8 @@ export function SalePaymentsHistory({ saleId }: { saleId: number }) {
   }, [saleId, token, logout, revision])
   return <section className="sale-payments-history" aria-label="Historial de pagos" aria-busy={loading}>
     <h3>Historial de pagos</h3>
+    <button type="button" className="wa-send-button" disabled={loading || !!error || items.length === 0} onClick={() => setSharing(true)}><WhatsAppIcon /> Compartir historial por WhatsApp</button>
+    {sharing && <WhatsAppReceiptDialog saleId={saleId} mode="pagos" onClose={() => setSharing(false)} />}
     {loading ? <p role="status">Cargando pagos…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> :
       items.length === 0 ? <p role="status">Esta venta aún no tiene pagos registrados.</p> :
       <div className="sales-table-scroll" role="region" aria-label="Pagos de la venta" tabIndex={0}>

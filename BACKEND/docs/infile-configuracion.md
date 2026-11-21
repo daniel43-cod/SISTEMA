@@ -112,6 +112,11 @@ Al pulsar Certificar después de registrar una venta: elegir NIT/CUI, escribir d
 Consultar (o Enter en ese campo). El nombre registrado aparece de solo lectura.
 Cambiar documento o tipo invalida el nombre consultado. Certificar NIT/CUI exige una consulta
 exitosa y el backend vuelve a verificar el documento; no confía en un nombre enviado por el navegador.
+La misma verificación aplica si la petición omite tipo y documento y utiliza los guardados en la venta.
+El nombre guardado manualmente no se usa como fuente para una nueva certificación NIT/CUI.
+Después de la consulta, se comprueba nuevamente la identidad efectiva bajo bloqueo SQL; si cambió
+durante la consulta se rechaza la operación, sin preparar ni enviar otro documento.
+Recuperar o reconciliar un XML previamente enviado no vuelve a consultar ni modifica al receptor.
 Los datos personales del cliente no se sobrescriben al consultar. La consulta no obtiene dirección.
 Las pruebas automatizadas usan INFILE simulado; probar consultas reales con las credenciales habilitadas.
 Se verificaron además estos formatos reales del servicio: NIT devuelve `{nit,nombre,mensaje}` sin
@@ -151,5 +156,35 @@ se exige el bloque completo para evitar XML incompleto. No se utiliza la direcci
 como dirección del comprador. La aceptación por INFILE sin dirección se debe comprobar en Sandbox.
 Los reintentos POR_CONFIRMAR conservan el XML ya enviado, sin regenerarlo para quitar la dirección.
 Un intento corresponde a un identificador y XML; la reconciliación del mismo identificador actualiza
-sus mensajes. Una corrección tras rechazo crea otro intento. El flujo aún no recupera automáticamente
-operaciones que quedaron EN_PROCESO al detenerse el servidor.
+sus mensajes. Una corrección tras rechazo crea otro intento. La recuperación manual de EN_PROCESO
+queda disponible al vencer el plazo de procesamiento; requiere `documento-fel-recuperacion.sql`.
+
+La certificación nueva y la corrección de un rechazo verifican siempre el receptor efectivo con
+INFILE, aunque el cuerpo omita el tipo y se utilice el NIT/CUI guardado en la venta. El nombre
+manual guardado no sustituye esta consulta. Solo se acepta el nombre oficial de la identificación
+consultada y un CUI activo. Si la consulta falla, no se inicia un envío de certificación.
+La comprobación del receptor se repite bajo el bloqueo de la venta para detectar cambios
+concurrentes de identificación o un nuevo total que ya no permita CF. La reconciliación conserva
+el receptor y el XML originales; no consulta otro receptor ni genera un documento diferente.
+
+Pruebas locales: `dotnet run --project tests/Fel.Checks/Fel.Checks.csproj` usa un proveedor HTTP
+simulado. Incluye receptores guardados y explícitos, límites CF, nombres vacíos/incorrectos,
+documentos inválidos, CUI inactivo, respuestas para otra identificación, cancelación y errores
+de autenticación. Las reglas de recuperación comprueban vencimiento y propiedad del intento;
+no sustituyen una prueba de bloqueos y caídas del proceso contra SQL Server aislado.
+
+Antes de marcar CERTIFICADA, `ValidarCertificadoFel` compara el bloque DatosEmision del XML
+original almacenado con el certificado recibido: emisor, receptor, fecha, tipo, moneda, frases,
+líneas, precios, descuentos, impuestos y totales. Compara números exactamente, aceptando ceros
+decimales equivalentes, e ignora prefijos XML, declaraciones de espacios de nombres, comentarios,
+indentación y orden de atributos. La estructura y el orden de las líneas deben coincidir.
+UUID, serie y número deben corresponder a NumeroAutorizacion y se requiere fecha de certificación.
+Se prohíben DTD y resolución externa, y el XML recibido se limita a 10 MB antes de procesarlo.
+
+Si la respuesta declara éxito pero falla esta comprobación, el estado sigue POR_CONFIRMAR.
+El intento conserva el XML recibido cuando se puede decodificar de forma segura, los metadatos
+normalizados de INFILE y una descripción del fallo local. No modifica los datos originales ni
+genera un nuevo identificador. Una recuperación sin respuesta conserva ese XML para revisión.
+No requiere cambios de esquema. Esta comparación no constituye verificación criptográfica de
+las firmas. `CertificadoFelChecks` cubre alteraciones, campos faltantes, duplicados y formatos
+equivalentes con respuestas simuladas; la prueba integral contra SQL Server sigue pendiente.

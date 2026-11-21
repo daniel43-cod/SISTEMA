@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { ApiError } from '../../../shared/api/ApiError'
-import { certifySale, loadFel, loadFelPreparation } from '../api/felApi'
+import { certifySale, loadFel, loadFelPreparation, recoverFel } from '../api/felApi'
 import type { FelDocument } from '../api/felApi'
 import { lookupReceiver } from '../api/receptorLookupApi'
 import { receiverDocumentInput } from '../utils/saleReceiver'
@@ -35,7 +35,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
   useEffect(() => { alive.current = true; return () => { alive.current = false; lookupController.current?.abort() } }, [])
   useEffect(() => {
     const controller = new AbortController()
-    setLoading(true)
+    setLoading(true); setTotal(null)
     void Promise.all([loadFel(saleId, token, controller.signal), loadFelPreparation(saleId, token, controller.signal)]).then(([invoice, sale]) => {
       if (controller.signal.aborted) return
       setDocument(invoice); setTotal(sale.total); setError('')
@@ -70,7 +70,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
   }
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy.current || loading || total === null || document?.estado === 'CERTIFICADA' || document?.estado === 'EN_PROCESO') return
+    if (busy.current || disabled || loading || total === null || document?.estado === 'CERTIFICADA' || document?.estado === 'EN_PROCESO') return
     if (!reconciliation) {
       if (!type) { setError('Elegí una opción: consumidor final, NIT o CUI.'); return }
       if (type === 'CF' && total >= 2500) { setError('Desde Q2,500.00 debes seleccionar NIT o CUI.'); return }
@@ -78,7 +78,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
     }
     busy.current = true; setSending(true); onBusy(true); setError('')
     try {
-      const result = await certifySale(saleId, {
+      const result = reconciliation ? await recoverFel(saleId, token) : await certifySale(saleId, {
         ...(reconciliation ? {} : { tipo_identificacion_receptor: type || undefined, identificacion_receptor: type === 'CF' ? 'CF' : identification }),
         ...(!reconciliation && type !== 'CF' && hasAddress ? { direccion: address.trim(), codigo_postal: postal, municipio: municipality.trim(), departamento: department.trim(), pais: country } : {}),
         confirmar_bienes_gravados: true,
@@ -90,12 +90,24 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
       else setError((e instanceof Error ? e.message : 'No se pudo confirmar el envío.') + ' Consulta el estado antes de volver a enviar.')
     } finally { busy.current = false; if (alive.current) { setSending(false); onBusy(false) } }
   }
+  async function recover() {
+    if (busy.current || disabled || !document?.puede_recuperar) return
+    busy.current = true; setSending(true); onBusy(true); setError('')
+    try {
+      const result = await recoverFel(saleId, token)
+      if (alive.current) setDocument(result)
+    } catch (e) {
+      if (!alive.current) return
+      if (e instanceof ApiError && e.status === 401) onUnauthorized()
+      else setError('No se pudo completar la recuperación. Consulta el estado; no registres otra factura.')
+    } finally { busy.current = false; if (alive.current) { setSending(false); onBusy(false) } }
+  }
   return <section className="fel-certification-panel" aria-labelledby={titleId}>
     <header className="fel-card-header">
       <span className="fel-card-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg></span>
       <div className="fel-card-heading"><h3 id={titleId}>Certificar factura</h3><p>Venta #{saleId}</p></div>
       <span className={document?.estado === 'CERTIFICADA' ? 'fel-badge fel-badge-success' : document?.estado === 'RECHAZADA' ? 'fel-badge fel-badge-error' : 'fel-badge'}>
-        {document?.estado === 'CERTIFICADA' ? 'Certificada' : document?.estado === 'RECHAZADA' ? 'Rechazada' : document ? 'Por confirmar' : 'Sin certificar'}
+        {document?.estado === 'CERTIFICADA' ? 'Certificada' : document?.estado === 'RECHAZADA' ? 'Rechazada' : document?.estado === 'EN_PROCESO' ? 'En proceso' : document ? 'Por confirmar' : 'Sin certificar'}
       </span>
       <button className="fel-toggle" type="button" disabled={disabled || sending} aria-expanded={active} aria-controls={titleId + '-body'} onClick={onToggle}>{active ? 'Ocultar' : 'Mostrar'}</button>
     </header>
@@ -104,10 +116,16 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
     {document && <p role="status">{document.estado === 'CERTIFICADA' ? 'Factura certificada' : `Estado: ${document.estado.replaceAll('_', ' ').toLowerCase()}`} · {document.ambiente}</p>}
     {document?.ambiente === 'PRUEBAS' && <p>Documento de pruebas, sin validez fiscal.</p>}
     {document?.descripcion && <p>{document.descripcion}</p>}
+    {document?.estado === 'EN_PROCESO' && <div className="fel-recovery-notice" role="status">
+      {document.puede_recuperar ? <>
+        <p>El plazo de procesamiento venció. Puedes recuperar el resultado sin crear otra factura.</p>
+        <button className="fel-primary-button" type="button" disabled={sending || disabled} onClick={() => { void recover() }}>{sending ? 'Recuperando…' : 'Recuperar certificación'}</button>
+      </> : <p>La certificación sigue en proceso. {document.procesamiento_vence && <>Puedes volver a consultar después de {new Date(document.procesamiento_vence).toLocaleTimeString('es-GT', { timeZone: 'America/Guatemala' })}.</>}</p>}
+    </div>}
     {document?.errores.map((e, i) => <p key={i} className="wa-receipt-error" role="alert">{e.mensaje}</p>)}
     {document?.alertas.map((a, i) => <p key={i}>{a.mensaje}</p>)}
     {error && <p className="wa-receipt-error" role="alert">{error}</p>}
-    {document?.estado === 'CERTIFICADA' && <><p>Serie: {document.serie} · Número: {document.numero}</p>
+    {document?.estado === 'CERTIFICADA' && <><button className="fel-primary-button" type="button" disabled>Factura ya certificada</button><p>Serie: {document.serie} · Número: {document.numero}</p>
       {document.pdf && <a className="fel-pdf-link" href={document.pdf} target="_blank" rel="noopener noreferrer">Ver factura PDF</a>}</>}
     {!loading && total !== null && document?.estado !== 'CERTIFICADA' && document?.estado !== 'EN_PROCESO' && <form onSubmit={e => { void send(e) }}>
       <fieldset disabled={sending || disabled}>
@@ -135,7 +153,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
         </>}
         <div className="fel-card-actions">
         <button className="fel-primary-button" type="submit" disabled={sending || (!reconciliation && (!type || (type === 'CF' ? total >= 2500 : lookupPending || verified?.key !== currentKey.current)))}>
-          {sending ? 'Certificando…' : reconciliation ? 'Confirmar envío anterior' : 'Certificar factura'}
+          {sending ? 'Certificando…' : reconciliation ? 'Recuperar certificación' : 'Certificar factura'}
         </button>
         <button className="fel-secondary-button" type="button" disabled={loading || sending || disabled} onClick={() => setRevision(v => v + 1)}>Consultar estado</button>
         </div>

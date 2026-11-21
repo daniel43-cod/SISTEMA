@@ -54,6 +54,26 @@ public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
         return Ok(resultado);
     }
 
+    [HttpPost("ventas/{idVenta:int:min(1)}/pagos/whatsapp")]
+    public async Task<IActionResult> EnviarPagos(int idVenta, [FromQuery] int idEmpresa,
+        [FromServices] API_SISTEMA.Services.WhatsApp.WhatsAppHistorialService servicio, CancellationToken ct,
+        [FromBody] API_SISTEMA.Dtos.Ventas.EnviarComprobanteTelefonoDto? dto = null)
+    {
+        var datos = await Consultar(idVenta, idEmpresa, ct);
+        return Ok(await servicio.IniciarPagos(datos.Venta, datos.Empresa, Usuario(), ct, dto?.Telefono));
+    }
+
+    [HttpGet("ventas/{idVenta:int:min(1)}/pagos/imagen")]
+    public async Task<IActionResult> ImagenPagos(int idVenta, [FromQuery] int idEmpresa,
+        [FromQuery] int pagina = 1, CancellationToken ct = default)
+    {
+        var datos = await Consultar(idVenta, idEmpresa, ct);
+        var pagos = await new API_SISTEMA.Services.PagoService(db).ListarPorVenta(idVenta, ct);
+        var paginas = ComprobanteImagen.PlanificarPagos(datos.Venta, datos.Empresa, pagos);
+        if (pagina < 1 || pagina > paginas.Count) return NotFound(new { mensaje = "La página no existe." });
+        return File(ComprobanteImagen.Generar(datos.Venta, datos.Empresa, paginas, pagina, true), "image/png");
+    }
+
     private int Usuario() => int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var id) && id > 0
         ? id : throw new UnauthorizedAccessException("No se pudo identificar al usuario.");
 

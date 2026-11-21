@@ -73,3 +73,20 @@
   .brand-list-card .brand-table-action button { min-height: 44px; }
   .brand-list-card .brand-table .catalog-row-open { border-radius: 8px; }
 }
+
+.brand-mobile-cards { display: none; }
+@media (max-width: 800px) {
+  .brand-card.brand-list-card { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .brand-list-card > .brand-table-scroll { display: none; }
+  .brand-mobile-cards { display: grid; gap: 8px; list-style: none; padding: 0 0 12px; margin: 12px 0 0; }
+  .brand-mobile-cards > li { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid #dce3eb; border-radius: 14px; background: white; box-shadow: 0 2px 4px #0f172a0a; }
+  .brand-mobile-card-info { display: grid; gap: 5px; min-width: 0; }
+  .brand-mobile-card-info > strong { font-size: .84rem; color: #075b96; overflow-wrap: anywhere; }
+  .brand-mobile-card-info > span { font-size: .72rem; color: #7a8492; overflow-wrap: anywhere; }
+  .brand-mobile-card-info .brand-mobile-status { justify-self: start; border-radius: 6px; padding: 3px 6px; font-size: .65rem; }
+  .brand-mobile-status.is-active { color: #166534; background: #e1f5eb; }
+  .brand-mobile-status.is-inactive { color: #9a3412; background: #fff4df; }
+  .brand-list-card button.catalog-row-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #075b96; font-size: 28px; line-height: 1; cursor: pointer; }
+  .brand-list-card button.catalog-row-more:hover:not(:disabled) { background: #eaf4fe; }
+  .brand-list-card button.catalog-row-more:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+}

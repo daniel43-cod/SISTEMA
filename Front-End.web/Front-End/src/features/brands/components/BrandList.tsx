@@ -16,6 +16,19 @@ export function BrandList({ createAction, items, loading, error, reload, onEdit,
     {loading && <p role="status">Cargando marcas…</p>}
     {error && <p className="brand-error" role="alert">{error}</p>}
     {!loading && !error && items.length === 0 && <p>No hay marcas para mostrar. Usa el botón + para crear una.</p>}
+    <ul className="brand-mobile-cards" aria-label="Marcas">
+      {items.map(item => <li key={item.idMarca}>
+        <div className="brand-mobile-card-info">
+          <strong>{item.nombre}</strong>
+          <span><span className="sr-only">Categoría: </span>{item.nombreCategoria || 'No disponible'}</span>
+          <span className={item.estado ? 'brand-mobile-status is-active' : 'brand-mobile-status is-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <RowDetails compact name={item.nombre} type="marca" image={item.urlImagen ?? null} disabled={loading || pending}
+          fields={[{ label: 'Categoría', value: item.nombreCategoria || 'No disponible' }, { label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}
+          onEdit={onEdit ? () => onEdit(item) : undefined} editDisabled={!item.estado}
+          actions={onStateChange && <button type="button" disabled={loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar marca' : 'Activar marca'}</button>} />
+      </li>)}
+    </ul>
     <div className="brand-table-scroll"><table className="brand-table">
       <thead><tr><th scope="col">Marca</th><th scope="col">Categoría</th><th scope="col">Editar</th><th scope="col">Estado</th></tr></thead><tbody>
       {items.map(item => <tr key={item.idMarca}><td className="catalog-clickable-row">

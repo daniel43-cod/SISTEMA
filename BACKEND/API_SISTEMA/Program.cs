@@ -23,6 +23,9 @@ using API_SISTEMA.Services.CatalogoPublico;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<API_SISTEMA.Services.Fel.ConsultarReceptorInfileService>();
+builder.Services.AddSingleton<API_SISTEMA.Services.Fel.IConsultaReceptorFel>(services =>
+    services.GetRequiredService<API_SISTEMA.Services.Fel.ConsultarReceptorInfileService>());
+builder.Services.AddScoped<API_SISTEMA.Services.Fel.VerificarReceptorFelService>();
 builder.Services.AddHttpClient("infile-receptores", client => client.Timeout = TimeSpan.FromSeconds(25))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
     .RedactLoggedHeaders(new[] { "Authorization" });

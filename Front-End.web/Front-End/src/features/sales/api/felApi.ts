@@ -5,7 +5,7 @@ export type FelMessage = { fuente: string | null; mensaje: string | null }
 export type FelDocument = {
   id_documento_fel: number; id_venta: number; ambiente: string; estado: string
   uuid: string | null; serie: string | null; numero: string | null; pdf: string | null
-  descripcion?: string | null; errores: FelMessage[]; alertas: FelMessage[]
+  descripcion?: string | null; puede_recuperar?: boolean; procesamiento_vence?: string | null; recuperaciones?: number; errores: FelMessage[]; alertas: FelMessage[]
 }
 export type FelAddress = {
   tipo_identificacion_receptor?: 'CF' | 'NIT' | 'CUI'; identificacion_receptor?: string
@@ -45,4 +45,11 @@ export async function loadFelPreparation(saleId: number, token: string, signal?:
   if (!record(result) || typeof result.total !== 'number' || !Number.isFinite(result.total) || result.total <= 0)
     throw new ApiError('No se pudo obtener el total de la venta para certificar.')
   return { total: result.total }
+}
+
+export async function recoverFel(saleId: number, token: string) {
+  const result = await requestJson(`/Venta/${saleId}/fel/recuperar`, {
+    method: 'POST', token, timeoutMs: 90000,
+  })
+  return parseFelDocument(result, saleId)
 }

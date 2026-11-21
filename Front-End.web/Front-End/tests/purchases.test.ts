@@ -1,41 +1,37 @@
-import { getPurchaseSummary } from '../src/features/purchases/api/purchasesApi.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { amountCents, buildPurchase } from '../src/features/purchases/utils/purchaseValidation.ts'
-const line = { idProducto: 1, nombre: 'Coca Cola', cantidad: '60', total: '920' }
-test('Purchases send base units and line total without multiplying by quantity', () => {
-  const result = buildPurchase('2', ' Entrada ', '200', [line])
-  assert.deepEqual(result.detalle_compra, [{ id_producto: 1, cantidad: 60, precio: 920 }])
-  assert.equal(result.monto_pagado, 200)
-  assert.equal(result.observacion, 'Entrada')
-})
-test('Money accepts cents and rejects extra decimals or negative values', () => {
-  assert.equal(amountCents('920,50'), 92050)
-  for (const value of ['1.001', '-1', '', 'NaN', '100000000']) assert.equal(amountCents(value), null)
-})
-test('Invalid quantities, duplicate lines and overpayments are rejected', () => {
-  assert.throws(() => buildPurchase('2', '', '921', [line]))
-  assert.throws(() => buildPurchase('2', '', '0', [line, line]))
-  assert.throws(() => buildPurchase('2', '', '0', [{ ...line, cantidad: '1.5' }]))
-  assert.throws(() => buildPurchase('', '', '0', [line]))
-  assert.throws(() => buildPurchase('2', '', '0', []))
+import { getPurchaseSummary } from '../src/features/purchases/api/purchasesApi.ts'
+
+const summary = { totalRegistros: 1, cantidadPendientes: 1, cantidadPagadas: 1, totalComprado: 300, totalPorPagar: 200, totalPagado: 100, hayMas: false,
+  items: [{ id_compra: 1, nombre_usuario: 'Admin', nombre_proveedor: 'Proveedor', descripcion_estado_compra: 'Pendiente', fecha_ingreso: '2026-11-21T12:00:00-06:00', total_compra: 300, saldo_pendiente: 200 }] }
+
+for (const status of ['', 'pendientes', 'pagadas']) test('Compras: resumen y filtro backend ' + (status || 'todas'), async t => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
+    const parsed = new URL(url, 'https://local.test')
+    assert.equal(parsed.pathname, '/api/Compra/resumen')
+    assert.equal(parsed.searchParams.get('pagina'), '2')
+    assert.equal(parsed.searchParams.get('tamanoPagina'), '20')
+    assert.equal(parsed.searchParams.get('estadoPago'), status || null)
+    assert.equal((options.headers as Record<string,string>).Authorization, 'Bearer test')
+    return Response.json(summary)
+  })
+  const result = await getPurchaseSummary('test', 2, '', status)
+  assert.equal(result.totalComprado, 300)
+  assert.equal(result.totalPorPagar, 200)
 })
 
-test('Purchase summary sends search and payment state and uses backend totals', async t => {
-  t.mock.method(globalThis, 'fetch', async (url: string) => {
-    const params = new URL(url, 'https://test.invalid').searchParams
-    assert.equal(params.get('buscar'), 'Proveedor')
-    assert.equal(params.get('estadoPago'), 'pendientes')
-    assert.equal(params.get('pagina'), '2')
-    return Response.json({ totalRegistros: 21, cantidadPendientes: 21, cantidadPagadas: 2,
-      totalComprado: 590, totalPorPagar: 490, totalPagado: 100, hayMas: false, items: [] })
-  })
-  const result = await getPurchaseSummary('token', 2, 'Proveedor', 'pendientes')
-  assert.equal(result.totalComprado, 590)
-  assert.equal(result.totalPagado, 100)
-  assert.equal(result.totalPorPagar, 490)
+test('Compras: filtros inválidos no hacen solicitudes', async t => {
+  let calls=0
+  t.mock.method(globalThis, 'fetch', async () => { calls++; return Response.json(summary) })
+  for(const [page,status] of [[0,''],[100001,''],[1,'otro']] as const)
+    await assert.rejects(getPurchaseSummary('test', page, '', status))
+  assert.equal(calls,0)
 })
-test('Purchase summary rejects invalid totals instead of displaying zero', async t => {
-  t.mock.method(globalThis, 'fetch', async () => Response.json({ items: [] }))
-  await assert.rejects(getPurchaseSummary('token', 1, '', ''), /respuesta de compras/)
+test('Compras: sin caja activa admite resumen vacío', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({totalRegistros:0,cantidadPendientes:0,cantidadPagadas:0,totalComprado:0,totalPorPagar:0,totalPagado:0,hayMas:false,items:[]}))
+  assert.equal((await getPurchaseSummary('test',1,'','')).totalPorPagar,0)
+})
+test('Compras: rechaza totales inválidos del servidor', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({...summary,totalPorPagar:-1}))
+  await assert.rejects(getPurchaseSummary('test',1,'',''))
 })

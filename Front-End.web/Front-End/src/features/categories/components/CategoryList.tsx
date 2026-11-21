@@ -1,3 +1,4 @@
+import '../../../shared/ui/mobile-catalog-cards.css'
 import type { ReactNode } from 'react'
 ﻿import { RowDetails } from '../../../shared/ui/RowDetails'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -23,6 +24,18 @@ export function CategoryList({ createAction, items, loading, error, reload, onEd
     {loading && <p role="status">Cargando categorías…</p>}
     {error && <p className="category-error" role="alert">{error}</p>}
     {!loading && !error && !items.length && <p>No hay categorías para mostrar.</p>}
+    <ul className="mobile-catalog-cards" aria-label="Categorías">
+      {items.map(item => <li key={item.idCategoria}>
+        <div className="mobile-catalog-card-info">
+          <strong>{item.nombre}</strong>
+          <span className={item.estado ? 'mobile-catalog-status is-active' : 'mobile-catalog-status is-inactive'}>{item.estado ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <RowDetails compact name={item.nombre} type="categoría" image={item.urlImagen ?? null} disabled={editing || loading || pending}
+          fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}
+          onEdit={onEdit ? () => onEdit(item) : undefined} editDisabled={!item.estado}
+          actions={onStateChange && <button type="button" disabled={editing || loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar categoría' : 'Activar categoría'}</button>} />
+      </li>)}
+    </ul>
     <div className="category-table-scroll"><table className="category-table"><thead><tr><th scope="col">Categorías</th><th scope="col">Editar</th><th scope="col">Estado</th></tr></thead><tbody>
       {items.map(item => <tr key={item.idCategoria}><td className="catalog-clickable-row"><div className="category-table-name">
         <RowDetails name={item.nombre} type="categoría" fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]} image={item.urlImagen ?? null} disabled={editing || loading || pending} />

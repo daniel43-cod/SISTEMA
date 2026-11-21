@@ -3,6 +3,7 @@ using API_SISTEMA.Models;
 using API_SISTEMA.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 await using var connection = new SqliteConnection("Data Source=:memory:");
 await connection.OpenAsync();
 var options = new DbContextOptionsBuilder<SistemaDbContext>().UseSqlite(connection).Options;
@@ -36,9 +37,39 @@ var paid = await service.Resumen(new() { EstadoPago = "pagadas" });
 Check(paid.TotalRegistros == 1 && paid.TotalPagado == 100 && paid.CantidadPendientes == 1 && paid.CantidadPagadas == 1, "Pagadas y conteos de pestañas");
 Check((await service.Resumen(new() { Buscar = "Proveedor A" })).TotalComprado == 300 &&
  (await service.Resumen(new() { Buscar = "C-0002" })).Items.Single().id_compra == 2, "Búsqueda por proveedor o identificador");
+var fueraPagina = await service.Resumen(new() { Pagina = 10, TamanoPagina = 1 });
+Check(fueraPagina.Items.Count == 0 && !fueraPagina.HayMas && fueraPagina.TotalComprado == 400 && fueraPagina.TotalPorPagar == 200,
+ "Página vacía conserva los totales de toda la caja");
+var sinCoincidencias = await service.Resumen(new() { Buscar = "NO EXISTE", EstadoPago = "pendientes" });
+Check(sinCoincidencias.Items.Count == 0 && sinCoincidencias.TotalComprado == 0 && sinCoincidencias.TotalPorPagar == 0,
+ "Búsqueda sin coincidencias retorna ceros");
+foreach (var filtro in new API_SISTEMA.Dtos.Compras.FiltroResumenComprasDto[]
+ { new() { Pagina = 0 }, new() { TamanoPagina = 0 }, new() { TamanoPagina = 101 },
+   new() { EstadoPago = "otro" }, new() { Buscar = new string('x', 101) } })
+{
+ try { await service.Resumen(filtro); throw new Exception("Filtro inválido aceptado"); }
+ catch (ValidationException) { Console.WriteLine("OK Filtro inválido rechazado por backend"); }
+}
+using (var cancelacion = new CancellationTokenSource())
+{
+ cancelacion.Cancel();
+ try { await service.Resumen(new(), cancelacion.Token); throw new Exception("Cancelación ignorada"); }
+ catch (OperationCanceledException) { Console.WriteLine("OK Cancelación respetada"); }
+}
+await db.registroCompras.Where(c => c.IdCompra == 1).ExecuteUpdateAsync(s => s.SetProperty(c => c.SaldoPendiente, 0m));
+var pagadasActualizadas = await service.Resumen(new() { EstadoPago = "pagadas" });
+Check(pagadasActualizadas.CantidadPagadas == 2 && pagadasActualizadas.TotalPorPagar == 0 && pagadasActualizadas.TotalComprado == 400,
+ "Liquidar el saldo mueve la compra a pagadas y actualiza el resumen");
+Check((await service.Resumen(new() { EstadoPago = "pendientes" })).Items.Count == 0, "Pendientes queda vacío después del pago");
 await db.sesioncaja.Where(c => c.id_sesion_caja == 1).ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, (DateTime?)DateTime.Now));
 Check((await service.Resumen(new())).TotalRegistros == 0, "Sin caja activa retorna resumen vacío");
-Console.WriteLine("6 comprobaciones de compras aprobadas.");
+db.sesioncaja.Add(new SesionCaja { id_sesion_caja = 3, id_caja = 1, id_usuario_apertura = 1, fecha_apertura = DateTime.Now, monto_inicial = 0 });
+db.registroCompras.Add(new RegistroCompras { IdCompra = 4, IdProveedor = 1, IdUsuario = 1, IdSesionCaja = 3, IdEstadoCompra = 1, FechaIngreso = DateTime.Now, TotalCompra = 50, SaldoPendiente = 25 });
+await db.SaveChangesAsync();
+var nuevaCaja = await service.Resumen(new());
+Check(nuevaCaja.TotalRegistros == 1 && nuevaCaja.TotalComprado == 50 && nuevaCaja.TotalPorPagar == 25 && nuevaCaja.Items.Single().id_compra == 4,
+ "Abrir otro turno excluye todas las compras de los turnos anteriores");
+Console.WriteLine("Resumen de compras: filtros, totales, paginación, pagos, cancelación y cambios de caja aprobados.");
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)
 {
  protected override void OnModelCreating(ModelBuilder b)
