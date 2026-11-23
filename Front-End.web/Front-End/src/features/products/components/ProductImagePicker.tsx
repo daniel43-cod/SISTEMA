@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Input } from '../../../shared/ui/Input'
 
-export function ProductImagePicker({ url, file, onChange, disabled, currentImage }: {
-  currentImage?: string; url: string; file?: File; onChange: (url: string, file?: File) => void; disabled: boolean
+export function ProductImagePicker({ url, file, onChange, disabled, currentImage, action }: {
+  action?: ReactNode; currentImage?: string; url: string; file?: File; onChange: (url: string, file?: File) => void; disabled: boolean
 }) {
   const [preview, setPreview] = useState('')
   const [failed, setFailed] = useState(false)
@@ -26,6 +27,7 @@ export function ProductImagePicker({ url, file, onChange, disabled, currentImage
     </button>
     <div className="product-actions">
       <button type="button" onClick={() => { if (upload.current) { upload.current.value = ''; upload.current.click() } }}>Importar imagen</button>
+      {action}
       {(url || file || currentImage) && <button type="button" onClick={() => { setPreview(''); setFailed(false); onChange('') }}>Quitar imagen</button>}
     </div>
     <input hidden ref={upload} type="file" accept="image/jpeg,image/png,image/webp" onChange={event => select(event.target.files?.[0])} />

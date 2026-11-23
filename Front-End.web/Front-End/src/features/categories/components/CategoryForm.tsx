@@ -58,6 +58,8 @@ export function CategoryForm({ category, onSaved, onCancel }: { category?: Categ
         onChange={event => selectFile(event.target.files?.[0])} />
       
       {file && <p>{file.name}</p>}
+      {(file || url || existingImage) && <Button className="category-secondary" onClick={clearImage}>Quitar imagen</Button>}
+    </fieldset>
       <div className="category-preview-panel">
         <span className="category-preview-label">Vista previa</span>
         <button type="button" className="category-preview-frame" disabled={pending}
@@ -79,14 +81,13 @@ export function CategoryForm({ category, onSaved, onCancel }: { category?: Categ
               </span>}
         </button>
       </div>
-    
-      {(file || url || existingImage) && <Button className="category-secondary" onClick={clearImage}>Quitar imagen</Button>}
-    </fieldset>
+    <div className="category-form-footer">
     {fieldError && <p className="sr-only" role="alert">{fieldError}</p>}
     {error && <p className="category-error" role="alert">{error}</p>}
     <p className="category-success" role="status">{success}</p>
     <Button type="submit" disabled={pending}>{pending ? 'Guardando…' : category ? 'Guardar cambios' : 'Guardar categoría'}</Button>
     {onCancel && <Button className="category-secondary" disabled={pending} onClick={onCancel}>Cancelar edición</Button>}
+    </div>
   </form>
 }
 

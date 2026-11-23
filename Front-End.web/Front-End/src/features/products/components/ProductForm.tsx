@@ -68,7 +68,10 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
     {listError && <div role="alert"><p>{listError}</p><Button disabled={pending || loading}
       onClick={() => { brands.reload(); presentations.reload() }}>Reintentar</Button></div>}
     {!loading && !listError && unavailable && <p role="status">Primero registra marcas y presentaciones en sus apartados.</p>}
-    <ProductImagePicker url={url} file={file} disabled={pending} onChange={(value, image) => { setUrl(value); setFile(image) }} />
+    <div className="product-image-column">
+    <ProductImagePicker url={url} file={file} disabled={pending} onChange={(value, image) => { setUrl(value); setFile(image) }} action={<Button type="submit" disabled={pending || loading || !!listError || unavailable}>{pending ? 'Guardando…' : 'Guardar producto'}</Button>} />
+
+    </div>
     <fieldset className="product-presentations" disabled={pending || loading || !!listError}>
       <legend>Presentaciones de venta</legend>
       {rows.map((row, index) => <fieldset key={row.key} className="product-row">
@@ -98,6 +101,6 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
       }}>Agregar presentación</Button>
     </fieldset>
     {(validation || error) && <p role="alert" className="product-error">{validation || error}</p>}
-    <Button type="submit" disabled={pending || loading || !!listError || unavailable}>{pending ? 'Guardando…' : 'Guardar producto'}</Button>
+
   </form>
 }

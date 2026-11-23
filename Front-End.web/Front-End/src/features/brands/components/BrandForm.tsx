@@ -34,13 +34,14 @@ export function BrandForm({ onSaved, brand }: { onSaved: () => void; brand?: Bra
         {active.map(item => <option key={item.idCategoria} value={item.idCategoria}>{item.nombre}</option>)}
       </select>
     </div>
-    <BrandImagePicker currentImage={!removeImage ? brand?.urlImagen ?? undefined : undefined} url={imageUrl} file={image} onChange={(url, file) => { setImageUrl(url); setImage(file); setRemoveImage(!url && !file) }} disabled={pending} />
+    <BrandImagePicker currentImage={!removeImage ? brand?.urlImagen ?? undefined : undefined} url={imageUrl} file={image} onChange={(url, file) => { setImageUrl(url); setImage(file); setRemoveImage(!url && !file) }} disabled={pending} footer={<div className="brand-form-footer">
     {listError && <div role="alert"><p>{listError}</p><Button onClick={reload}>Reintentar</Button></div>}
     {!loading && !listError && !active.length && <p role="status">Primero crea una categoría en el apartado Categorías.</p>}
     {error && <p className="brand-error" role="alert">{error}</p>}
     <Button type="submit" disabled={pending || loading || !!listError || !active.some(item => item.idCategoria === Number(category))}>
       {pending ? 'Guardando…' : brand ? 'Guardar cambios' : 'Guardar marca'}
     </Button>
+    </div>} />
   </form>
 }
 

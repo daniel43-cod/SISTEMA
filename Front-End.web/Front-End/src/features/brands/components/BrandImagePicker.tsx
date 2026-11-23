@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react'
 ﻿import { useEffect, useRef, useState } from 'react'
 import { Input } from '../../../shared/ui/Input'
 import { Button } from '../../../shared/ui/Button'
 
-export function BrandImagePicker({ url, file, onChange, disabled, currentImage }: {
-  currentImage?: string; url: string; file?: File; onChange: (url: string, file?: File) => void; disabled: boolean
+export function BrandImagePicker({ url, file, onChange, disabled, currentImage, footer }: {
+  footer?: ReactNode; currentImage?: string; url: string; file?: File; onChange: (url: string, file?: File) => void; disabled: boolean
 }) {
   const [preview, setPreview] = useState('')
   const [failed, setFailed] = useState(false)
@@ -28,6 +29,7 @@ export function BrandImagePicker({ url, file, onChange, disabled, currentImage }
   const existingImage = !url && !file && currentImage && (/^https:\/\//i.test(currentImage) || /^\/uploads\/marcas\/[a-f0-9]{32}\.webp$/.test(currentImage)) ? currentImage : ''
   const previewUrl = preview || existingImage || (/^https:\/\//i.test(url.trim()) ? url.trim() : '')
   return (
+    <>
     <fieldset disabled={disabled} className="brand-image">
       <legend>Imagen (opcional)</legend>
       <Input label="Enlace de la imagen" type="url" value={url} maxLength={2048}
@@ -43,6 +45,11 @@ export function BrandImagePicker({ url, file, onChange, disabled, currentImage }
         onChange={event => selectFile(event.target.files?.[0])} />
       
       {file && <p>{file.name}</p>}
+      {(file || url || existingImage) && <Button className="brand-secondary" onClick={clearImage}>Quitar imagen</Button>}
+      <small>JPEG, PNG o WebP, hasta 5 MB.</small>
+      {error && <p className="brand-error" role="alert">{error}</p>}
+    </fieldset>
+      <div className="brand-preview-column">
       <div className="brand-preview-panel">
         <span className="brand-preview-label">Vista previa</span>
         <button type="button" className="brand-preview-frame" disabled={disabled}
@@ -64,11 +71,9 @@ export function BrandImagePicker({ url, file, onChange, disabled, currentImage }
               </span>}
         </button>
       </div>
-    
-      {(file || url || existingImage) && <Button className="brand-secondary" onClick={clearImage}>Quitar imagen</Button>}
-      <small>JPEG, PNG o WebP, hasta 5 MB.</small>
-      {error && <p className="brand-error" role="alert">{error}</p>}
-    </fieldset>
+      {footer}
+      </div>
+    </>
   )
 }
 
