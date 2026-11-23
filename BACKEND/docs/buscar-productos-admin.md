@@ -7,7 +7,7 @@ Solo ADMINISTRADOR con JWT vigente. No cambia la búsqueda de ventas.
 
 Enviar uno de los dos parámetros. Nombre: 3–200 caracteres; código: hasta 100,
 sin espacios internos ni controles. Se recortan espacios exteriores.
-Coincidencias de mayúsculas y acentos dependen de la intercalación SQL Server.
+Coincidencias de mayúsculas y acentos dependen de la intercalación PostgreSQL.
 `coca c` coincide con nombres que comiencen por ese texto, no con `Coca 3 litros`.
 Devuelve hasta 10 productos únicos, ordenados por nombre e ID:
 
@@ -25,5 +25,5 @@ o categoría ni exclusión de inactivos, por ser administrativa.
 El frontend debe esperar 350 ms sin escritura, exigir tres caracteres para
 nombre, cancelar solicitudes anteriores y reutilizar brevemente búsquedas iguales.
 Código: buscar con Enter o al completar el escaneo. Eso aún no se implementa aquí.
-Verificar índices de nombre/código y plan de ejecución en SQL Server antes de
+Verificar índices de nombre/código y plan de ejecución en PostgreSQL antes de
 afirmar tiempos de respuesta; no se cambió el esquema ni se midió la base real.

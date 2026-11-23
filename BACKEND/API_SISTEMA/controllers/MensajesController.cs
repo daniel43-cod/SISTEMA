@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API_SISTEMA.Controllers
 {
+    // Módulo fuera de uso: no publicar sus rutas ni incluirlo en Swagger.
+    [NonController]
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "CLIENTE")]

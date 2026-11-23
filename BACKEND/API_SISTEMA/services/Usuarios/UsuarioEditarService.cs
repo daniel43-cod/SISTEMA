@@ -4,7 +4,7 @@ using API_SISTEMA.Dtos.Login;
 using API_SISTEMA.Models;
 using API_SISTEMA.Services.Auditoria;
 using API_SISTEMA.Utilidades;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Usuarios;
@@ -48,7 +48,7 @@ public sealed class UsuarioEditarService(SistemaDbContext context, CatalogoAudit
             await context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqlException sql && sql.Number is 2601 or 2627)
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException sql && sql.SqlState == PostgresErrorCodes.UniqueViolation)
         {
             throw new UsuarioConflictException("Ya existe otro usuario con ese usuario, correo o teléfono.");
         }

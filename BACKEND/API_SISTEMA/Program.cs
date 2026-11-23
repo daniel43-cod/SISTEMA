@@ -1,9 +1,9 @@
 using API_SISTEMA.Data;
 using API_SISTEMA.Services;
 using API_SISTEMA.Services.Caja;
-using API_SISTEMA.Services.IA;
-using API_SISTEMA.Services.Conversacion;
-using API_SISTEMA.Services.CuentaCliente;
+
+
+
 using API_SISTEMA.Services.Compras;
 using API_SISTEMA.Services.Gastos;
 using API_SISTEMA.Services.MovimientoCaja;
@@ -21,6 +21,8 @@ using System.Text;
 using API_SISTEMA.Services.CatalogoPublico;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<API_SISTEMA.Services.Fel.ConsultarEstadosFelService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Comprobantes.TicketPosService>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddSingleton<API_SISTEMA.Services.Fel.ConsultarReceptorInfileService>();
 builder.Services.AddSingleton<API_SISTEMA.Services.Fel.IConsultaReceptorFel>(services =>
@@ -56,8 +58,11 @@ builder.Services.AddOptions<API_SISTEMA.Services.Fel.InfileOptions>()
         "Configura las cuatro credenciales privadas de INFILE antes de habilitar FEL.")
     .ValidateOnStart();
 //agregue la coneciom del appsetings
+var conexionPostgres = builder.Configuration.GetConnectionString("ConexionPostgres");
+if (string.IsNullOrWhiteSpace(conexionPostgres))
+    throw new InvalidOperationException("Configura ConnectionStrings:ConexionPostgres.");
 builder.Services.AddDbContext<SistemaDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSQL")));
+    options.UseNpgsql(conexionPostgres, postgres => postgres.SetPostgresVersion(18, 0)));
 builder.Services.AddOptions<JwtSettings>()
     .Bind(builder.Configuration.GetSection("Jwt"))
     .Validate(settings => Encoding.UTF8.GetByteCount(settings.Key) >= 32,
@@ -142,7 +147,7 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 // agregue la clase conexion
-builder.Services.AddSingleton<ConexionDbContext>();
+
 //agregue el services del usuario
 builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<API_SISTEMA.Services.CatalogoPublico.CatalogoPublicoService>();
@@ -151,20 +156,20 @@ builder.Services.AddScoped<ListarPresentacionService>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
 builder.Services.AddScoped<EstadoPresentacionService>();
 builder.Services.AddScoped<ClienteService>();
-builder.Services.AddScoped<RegistroCuentaClienteService>();
-builder.Services.AddScoped<InicioSesionService>();
-builder.Services.AddScoped<ConversacionService>();
-builder.Services.AddScoped<ConversacionListarService>();
-builder.Services.AddScoped<ConversacionEliminarService>();
-builder.Services.AddScoped<CatalogoIAService>();
-builder.Services.AddHttpClient<OpenAIService>(client => client.Timeout = TimeSpan.FromSeconds(65));
+
+
+
+
+
+
+
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<VentaService>();
 builder.Services.AddScoped<FiltrarVentasUsuarioService>();
 builder.Services.AddScoped<HistorialVentasFechaService>();
 builder.Services.AddScoped<ResumenVentasService>();
 builder.Services.AddScoped<ReporteVentasIntervaloService>();
-builder.Services.AddSingleton(TimeProvider.System);
+
 builder.Services.AddScoped<DetalleVentaService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<API_SISTEMA.Services.Usuarios.UsuarioCrearService>();

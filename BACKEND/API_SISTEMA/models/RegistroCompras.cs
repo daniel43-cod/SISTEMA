@@ -40,7 +40,7 @@ namespace API_SISTEMA.Models
         [Column("saldo_pendiente")]
         public decimal SaldoPendiente { get; set; }
 
-         [Column("observacion", TypeName ="nvarchar(100)")]
+         [Column("observacion", TypeName = "character varying(100)")]
         public string? Observacion { get; set; } 
         public Usuario Usuario { get; set; } = null!;
         public Proveedores Proveedores { get; set; }  = null!;

@@ -41,10 +41,7 @@ public sealed class ReporteGastosService(
             return null;
         }
 
-        var hasta = TimeZoneInfo.ConvertTime(
-            reloj.GetUtcNow(),
-            TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala")
-        ).DateTime;
+        var hasta = RelojNegocio.Ahora(reloj);
 
         // Recupera cada gasto de la sesión, sin acumular sus importes.
         var consulta = context.gastos

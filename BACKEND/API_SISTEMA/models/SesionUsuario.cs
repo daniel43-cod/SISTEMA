@@ -17,29 +17,29 @@ public class SesionUsuario
 
     // Almacena SHA-256 del JWT emitido, nunca el token original.
     [Required]
-    [Column("token_hash", TypeName = "binary(32)")]
+    [Column("token_hash", TypeName = "bytea")]
     [JsonIgnore]
     public byte[] TokenHash { get; set; } = Array.Empty<byte>();
 
     // El servicio de autenticación asignará estas fechas en UTC.
-    [Column("fecha_creacion", TypeName = "datetime2")]
+    [Column("fecha_creacion", TypeName = "timestamp with time zone")]
     public DateTime FechaCreacion { get; set; }
 
-    [Column("fecha_vencimiento", TypeName = "datetime2")]
+    [Column("fecha_vencimiento", TypeName = "timestamp with time zone")]
     public DateTime FechaVencimiento { get; set; }
 
-    [Column("fecha_revocacion", TypeName = "datetime2")]
+    [Column("fecha_revocacion", TypeName = "timestamp with time zone")]
     public DateTime? FechaRevocacion { get; set; }
 
     [MaxLength(20)]
     [Column("motivo_cierre", TypeName = "varchar(20)")]
     public string? MotivoCierre { get; set; }
 
-    // SQL Server genera este valor para detectar actualizaciones simultáneas.
+    // xmin cambia en cada actualización y permite detectar escrituras simultáneas.
     [Timestamp]
-    [Column("row_version")]
+    [Column("xmin")]
     [JsonIgnore]
-    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+    public uint RowVersion { get; set; }
 
     [JsonIgnore]
     public Usuario Usuario { get; set; } = null!;

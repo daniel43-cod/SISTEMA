@@ -12,7 +12,7 @@ namespace API_SISTEMA.Models
         public decimal monto { get; set; }
         public required string metodo_pago { get; set; }
         public string? observacion { get; set; }
-        public DateTime fecha_pago { get; set; } =DateTime.Now;
+        public DateTime fecha_pago { get; set; } =API_SISTEMA.Utilidades.RelojNegocio.Ahora();
         public int id_sesion_caja { get; set; }
 
         public SesionCaja sesionCaja { get; set; } = null!;

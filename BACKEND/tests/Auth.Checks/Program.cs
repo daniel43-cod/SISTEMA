@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
-// Base temporal: nunca usa appsettings ni la conexión SQL Server del negocio.
+// Base temporal: nunca usa appsettings ni la conexión PostgreSQL del negocio.
 await using var connection = new SqliteConnection("Data Source=:memory:");
 await connection.OpenAsync();
 var options = new DbContextOptionsBuilder<SistemaDbContext>().UseSqlite(connection).Options;
@@ -127,6 +127,12 @@ void Check(bool condition, string name)
     if (!condition) throw new Exception("FALLÓ: " + name);
     passed++; Console.WriteLine("OK: " + name);
 }
+var acciones = app.Services.GetRequiredService<Microsoft.AspNetCore.Mvc.Infrastructure.IActionDescriptorCollectionProvider>()
+    .ActionDescriptors.Items.OfType<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>().ToArray();
+foreach (var tipo in new[] { typeof(CuentaClienteController), typeof(MensajesController), typeof(ConversacionesController) })
+    Check(!acciones.Any(a => a.ControllerTypeInfo.AsType() == tipo), "Módulo desactivado sin rutas: " + tipo.Name);
+Check(acciones.Any(a => a.ControllerTypeInfo.AsType() == typeof(ClienteController)) &&
+    acciones.Any(a => a.ControllerTypeInfo.AsType() == typeof(CatalogoPublicoController)), "Clientes de ventas y catálogo público siguen disponibles");
 async Task<HttpResponseMessage> Login(string user, string password) =>
     await client.PostAsJsonAsync("/api/Login/Login", new { usuario = user, password });
 async Task<string> Token(HttpResponseMessage response)
@@ -806,8 +812,8 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
             if (entity.ClrType != typeof(RolPermiso) && entity.ClrType != typeof(TablaPermiso) && entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(ProductoPresentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(API_SISTEMA.Models.Caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
                 modelBuilder.Ignore(entity.ClrType);
-        modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(new byte[8]);
-        // Las expresiones SQL Server se prueban en SQL Server; aquí se verifica el flujo HTTP.
+        modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(0u);
+        // Las expresiones PostgreSQL se prueban en PostgreSQL; aquí se verifica el flujo HTTP.
         var detalle = modelBuilder.Entity<AuditoriaEventoDetalle>();
         foreach (var constraint in detalle.Metadata.GetCheckConstraints().ToArray())
             detalle.Metadata.RemoveCheckConstraint(constraint.Name);

@@ -1,6 +1,6 @@
 # Imágenes al crear marcas
 
-Solo administradores. Ejecutar primero `sql/marca-url-imagen.sql` en SISTEMA.
+Solo administradores. Ejecutar primero `docs/postgresql.md` en SISTEMA.
 El script no se ejecuta automáticamente; las marcas existentes quedan sin imagen.
 
 POST /api/Marcas/con-imagen acepta multipart/form-data:

@@ -23,7 +23,7 @@ Las cuentas internas se restringen a roles activos `ADMINISTRADOR` y `VENDEDOR`.
 
 Ambas rutas validan rol, contraseña y duplicados de usuario, correo y teléfono. Comprobación y escritura comparten una transacción `Serializable` para impedir altas simultáneas duplicadas a través de estos servicios. Los hashes se calculan antes de tomar bloqueos. Un conflicto de base de datos puede devolver el error genérico y requerir reintentar.
 
-No se modificó el esquema ni se corrigieron registros existentes. El login rechaza nombres de usuario duplicados existentes. Es recomendable auditar los datos y agregar índices únicos en SQL Server para proteger también escrituras externas a la API. La comparación de identidad sigue la intercalación de la base de datos.
+No se modificó el esquema ni se corrigieron registros existentes. El login rechaza nombres de usuario duplicados existentes. Es recomendable auditar los datos y agregar índices únicos en PostgreSQL para proteger también escrituras externas a la API. La comparación de identidad sigue la intercalación de la base de datos.
 
 ## Despliegue
 
@@ -39,6 +39,6 @@ dotnet build API_SISTEMA/API_SISTEMA.csproj
 dotnet run --project tests/Auth.Checks/Auth.Checks.csproj
 ```
 
-Las comprobaciones levantan HTTP local con controladores, JWT, filtro de errores y limitador reales; usan SQLite en memoria y datos ficticios. No leen credenciales de appsettings ni conectan a SQL Server. Cubren altas por ambas rutas, permisos, duplicados, respuestas, validación de sesiones y errores. No verifican concurrencia, intercalación ni índices contra SQL Server de producción.
+Las comprobaciones levantan HTTP local con controladores, JWT, filtro de errores y limitador reales; usan SQLite en memoria y datos ficticios. No leen credenciales de appsettings ni conectan a PostgreSQL. Cubren altas por ambas rutas, permisos, duplicados, respuestas, validación de sesiones y errores. No verifican concurrencia, intercalación ni índices contra PostgreSQL de producción.
 
 Referencia del limitador: [documentación oficial ASP.NET Core](https://learn.microsoft.com/aspnet/core/performance/rate-limit). Transacciones: [documentación oficial EF Core](https://learn.microsoft.com/ef/core/saving/transactions).

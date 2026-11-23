@@ -1,7 +1,12 @@
-bin/
-obj/
+**/bin/
+**/obj/
 .vs/
 .git/
+.tmp/
+.certs/
+**/wwwroot/uploads/
+.env
+.env.*
 *.user
 *.suo
-.env 
+**/secrets.json

@@ -8,7 +8,7 @@
 - Carpeta: wwwroot/uploads/categorias. Debe persistir entre despliegues y tener copia de seguridad. En producción enrutar /uploads/categorias al backend junto con /api.
 - Los enlaces externos no se descargan en la API.
 - La cámara usa el selector del dispositivo: su disponibilidad depende del navegador. Fotos HEIC necesitan convertirse a JPEG/PNG/WebP.
-- SQL opcional: docs/sql/categoria-url-imagen.sql. No se ejecutó automáticamente.
+- SQL opcional: docs/postgresql.md. No se ejecutó automáticamente.
 - Si falla la base antes de confirmar se limpia el archivo. Si falla la confirmación de la transacción, se conserva porque el resultado puede ser incierto. Una interrupción del proceso también puede dejar archivos sin referencia.
 - Procesamiento: SixLabors.ImageSharp 3.1.12, sujeto a Six Labors Split License: https://github.com/SixLabors/ImageSharp/blob/v3.1.12/LICENSE
 

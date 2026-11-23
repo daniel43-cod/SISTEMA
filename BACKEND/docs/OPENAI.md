@@ -60,7 +60,7 @@ del mismo mensaje. Si falla la persistencia después de obtener la respuesta,
 se devuelve 500. Cancelar una petición no garantiza que el proveedor no la facture.
 
 Entrada máxima: 2000 caracteres; salida aceptada máxima: 8000. Columnas verificadas
-como `nvarchar(max)` y modelo alineado. Hasta tres solicitudes a OpenAI por mensaje,
+como `text` y modelo alineado. Hasta tres solicitudes a OpenAI por mensaje,
 dos rondas de herramientas. Enviar mensajes secuencialmente desde el frontend:
 todavía no hay cola ni serialización distribuida por conversación. El límite de
 llamadas por mensaje no sustituye un límite de solicitudes por cliente para producción.
@@ -73,4 +73,4 @@ dotnet run --project tests/OpenAIService.Checks/OpenAIService.Checks.csproj
 
 Simulan el intercambio de herramientas, autorización del proveedor, cuota,
 fallos de red, JSON inválido, respuesta incompleta, timeout y cancelación.
-No sustituyen una prueba real con tu modelo y SQL Server.
+No sustituyen una prueba real con tu modelo y PostgreSQL.

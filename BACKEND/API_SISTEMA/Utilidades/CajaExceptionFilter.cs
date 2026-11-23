@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Utilidades;
@@ -18,8 +18,8 @@ public sealed class CajaExceptionFilter(ILogger<CajaExceptionFilter> logger) : I
             context.Result = new StatusCodeResult(499);
         }
         else if (context.Exception is DbUpdateConcurrencyException ||
-            (context.Exception.GetBaseException() is SqlException sql &&
-             sql.Number is 1205 or 1222 or 2601 or 2627 or 547))
+            (context.Exception.GetBaseException() is PostgresException sql &&
+             sql.SqlState is PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected or PostgresErrorCodes.LockNotAvailable or PostgresErrorCodes.UniqueViolation or PostgresErrorCodes.ForeignKeyViolation or PostgresErrorCodes.CheckViolation))
         {
             logger.LogWarning(context.Exception, "Conflicto en caja. Referencia: {TraceId}", context.HttpContext.TraceIdentifier);
             context.Result = new ConflictObjectResult(new

@@ -17,7 +17,7 @@ namespace API_SISTEMA.Models
             public string? correo_electronico { get; set; }
             public string? direccion { get; set; }
 
-            public DateTime fecha_Creacion { get; set; } = DateTime.Now;
+            public DateTime fecha_Creacion { get; set; } = API_SISTEMA.Utilidades.RelojNegocio.Ahora();
           //  public int id_tipo_cliente { get; set; }
             public decimal limite_Credito { get; set; }
             public bool estado { get; set; }

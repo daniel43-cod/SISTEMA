@@ -8,7 +8,7 @@ public sealed class DocumentoFelConfiguration : IEntityTypeConfiguration<Documen
 {
     public void Configure(EntityTypeBuilder<DocumentoFel> b)
     {
-        b.ToTable("documento_fel", "dbo", t =>
+        b.ToTable("documento_fel", "public", t =>
         {
             t.HasCheckConstraint("CK_documento_fel_ambiente", "ambiente IN ('PRUEBAS', 'PRODUCCION')");
             t.HasCheckConstraint("CK_documento_fel_tipo", "tipo_dte = 'FACT'");
@@ -25,7 +25,7 @@ public sealed class DocumentoFelConfiguration : IEntityTypeConfiguration<Documen
         b.Property(d => d.version).IsRowVersion();
         b.HasIndex(d => new { d.id_venta, d.ambiente }).IsUnique().HasDatabaseName("UX_documento_fel_venta_ambiente");
         b.HasIndex(d => d.identificador).IsUnique().HasDatabaseName("UX_documento_fel_identificador");
-        b.HasIndex(d => d.uuid).IsUnique().HasFilter("[uuid] IS NOT NULL").HasDatabaseName("UX_documento_fel_uuid");
+        b.HasIndex(d => d.uuid).IsUnique().HasFilter("uuid IS NOT NULL").HasDatabaseName("UX_documento_fel_uuid");
         b.HasIndex(d => d.id_usuario).HasDatabaseName("IX_documento_fel_usuario");
         b.HasOne(d => d.Venta).WithMany().HasForeignKey(d => d.id_venta).OnDelete(DeleteBehavior.NoAction);
         b.HasOne(d => d.Usuario).WithMany().HasForeignKey(d => d.id_usuario).OnDelete(DeleteBehavior.NoAction);

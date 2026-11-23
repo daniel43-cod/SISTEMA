@@ -14,6 +14,11 @@ using Microsoft.EntityFrameworkCore;
 int passed = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception(name); passed++; Console.WriteLine("OK " + name); }
 void Reject(Action run, string name) { try { run(); } catch (ValidationException) { Check(true, name); return; } throw new Exception("No rechazado: " + name); }
+var cambioDia = RelojNegocio.Ahora(new RelojFijoGuatemala(new DateTimeOffset(2027, 1, 1, 2, 30, 0, TimeSpan.Zero)));
+Check(cambioDia == new DateTime(2026, 12, 31, 20, 30, 0) && cambioDia.Kind == DateTimeKind.Unspecified,
+    "Reloj Guatemala conserva fecha del día anterior al cambiar año UTC");
+Check(RelojNegocio.Ahora(new RelojFijoGuatemala(new DateTimeOffset(2026, 7, 1, 6, 0, 0, TimeSpan.Zero))) == new DateTime(2026, 7, 1),
+    "Medianoche Guatemala es 06:00 UTC también en julio");
 Productos Producto() => new() { IdProducto = 1, Nombre = "Prueba", Stock = 100, PrecioPromedioCompra = 100m };
 API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService Auditoria(SistemaDbContext db)
 {
@@ -118,10 +123,10 @@ await using (var db = new CheckDb(options))
 CrearVentaDto Dto(decimal pago = 0, decimal descuento = 19) => new() { id_operacion = Guid.NewGuid(), id_cliente = 1, origen = "MOSTRADOR",
     detalles = [new() { id_producto = 1, id_producto_presentacion = 1, cantidad = 1, descuento = descuento }],
     pago = new() { monto = pago, metodo_pago = "EFECTIVO" } };
-async Task<API_SISTEMA.Models.Ventas> Sell(CrearVentaDto dto)
+async Task<API_SISTEMA.Models.Ventas> Sell(CrearVentaDto dto, TimeProvider? reloj = null)
 {
     await using var db = new CheckDb(options);
-    return await new CrearVentaService(db, new MovimientoCajaService(db), new PermisoUsuarioService(db)).CrearVenta(dto, 1);
+    return await new CrearVentaService(db, new MovimientoCajaService(db, reloj), new PermisoUsuarioService(db), reloj).CrearVenta(dto, 1);
 }
 async Task Rechazar(CrearVentaDto dto, string mensaje)
 {
@@ -129,7 +134,9 @@ async Task Rechazar(CrearVentaDto dto, string mensaje)
     throw new Exception("No rechazado: " + mensaje);
 }
 var original = Dto(50);
-var venta = await Sell(original);
+var relojVenta = new RelojFijoGuatemala(DateTimeOffset.UtcNow);
+var venta = await Sell(original, relojVenta);
+Check(venta.fecha_venta == RelojNegocio.Ahora(relojVenta) && venta.fecha_venta.Kind == DateTimeKind.Unspecified, "Venta guarda hora Guatemala sin depender de la zona local del reloj");
 Check(venta.total == 101m && venta.monto_pagado == 50m && venta.saldo_pendiente == 51m, "Venta parcial y cliente inactivo permitidos");
 var repetida = await Sell(original);
 Check(repetida.id_ventas == venta.id_ventas, "Reintento devuelve la misma venta");
@@ -137,8 +144,10 @@ await using (var db = new CheckDb(options)) {
     Check(await db.ventas.CountAsync() == 1 && await db.pagos.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.productos.SingleAsync()).Stock == 99, "Sin duplicar inventario, cobro ni movimiento");
     var precio = await db.producto_presentaciones.SingleAsync(); precio.precio = 130; await db.SaveChangesAsync();
     Check((await new DetalleVentaService(db).ListarDetalleVenta(venta.id_ventas)).Single().precio == 120m, "El detalle conserva el precio original");
-    var abono = new AbonarSaldoVentaService(db, new MovimientoCajaService(db), Auditoria(db));
-    await abono.AbonarVenta(new() { id_operacion = Guid.NewGuid(), id_venta = venta.id_ventas, monto = 51, observacion = "Prueba" }, 1);
+    var abono = new AbonarSaldoVentaService(db, new MovimientoCajaService(db, relojVenta), Auditoria(db), relojVenta);
+    var pagoGuatemala = await abono.AbonarVenta(new() { id_operacion = Guid.NewGuid(), id_venta = venta.id_ventas, monto = 51, observacion = "Prueba" }, 1);
+    Check(pagoGuatemala.fecha_pago == RelojNegocio.Ahora(relojVenta), "Abono guarda hora Guatemala del reloj inyectado");
+    Check(await db.movimientocaja.AnyAsync(m => m.id_pago_venta == pagoGuatemala.id_pago && m.fecha_movimiento == pagoGuatemala.fecha_pago), "Movimiento de abono usa el mismo reloj de negocio");
     var pagada = await db.ventas.SingleAsync();
     Check(pagada.monto_pagado == 101 && pagada.saldo_pendiente == 0 && pagada.id_estado_venta == 1, "Abono actualiza monto pagado, saldo y estado");
 }
@@ -197,7 +206,7 @@ catch (ValidationException) { Check(true, "Abono exige clave de operación"); }
 await using (var db = new CheckDb(options))
 {
     var indice = db.Model.FindEntityType(typeof(Pagos))!.GetIndexes().Single(i => i.Properties.Any(p => p.Name == "id_operacion"));
-    Check(indice.IsUnique && indice.GetFilter() == "[id_operacion] IS NOT NULL", "Índice único permite pagos históricos sin clave");
+    Check(indice.IsUnique && indice.GetFilter() == "id_operacion IS NOT NULL", "Índice único permite pagos históricos sin clave");
     await db.sesioncaja.ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, DateTime.Now));
 }
 Check((await RepetirAbono(claveAbono)).id_pago == originalAbono.id_pago, "Reintento recupera abono aun con caja cerrada y venta pagada");
@@ -600,6 +609,49 @@ await using (var db = new CheckDb(options))
     try { await servicio.Consultar(2, new() { IdSesionCaja = int.MaxValue }); throw new Exception("Sesión inexistente"); }
     catch (KeyNotFoundException) { Check(true, "Gráfica: rechaza sesión inexistente"); }
 }
+await using (var db = new CheckDb(options))
+{
+    var estados = new[] { "CERTIFICADA", "RECHAZADA", "EN_PROCESO", "POR_CONFIRMAR", "PENDIENTE", "SIN_CERTIFICAR", "SOLO_PRODUCCION" };
+    var fixtures = estados.Select(_ => new API_SISTEMA.Models.Ventas { origen = "ESTADOS_FEL", id_sesion_caja = 1,
+        id_cliente = 1, id_usuario = 1, id_estado_venta = 1, fecha_venta = DateTime.Now }).ToArray();
+    db.ventas.AddRange(fixtures);
+    await db.SaveChangesAsync();
+    for (var i = 0; i < estados.Length; i++)
+    {
+        if (estados[i] == "SIN_CERTIFICAR") continue;
+        var certificada = estados[i] is "CERTIFICADA" or "SOLO_PRODUCCION";
+        db.DocumentosFel.Add(new DocumentoFel { id_venta = fixtures[i].id_ventas, id_usuario = 1,
+            estado = certificada ? "CERTIFICADA" : estados[i], ambiente = estados[i] == "SOLO_PRODUCCION" ? "PRODUCCION" : "PRUEBAS",
+            uuid = certificada ? Guid.NewGuid().ToString() : null, serie = certificada ? "SERIE" : null,
+            numero = certificada ? "123" : null, xml_certificado = certificada ? "<fixture />" : null,
+            fecha_certificacion = certificada ? DateTimeOffset.UtcNow : null });
+    }
+    await db.SaveChangesAsync();
+    var servicio = new API_SISTEMA.Services.Fel.ConsultarEstadosFelService(db, new PermisoUsuarioService(db),
+        Microsoft.Extensions.Options.Options.Create(new API_SISTEMA.Services.Fel.InfileOptions { Ambiente = "PRUEBAS" }));
+    var ids = fixtures.Select(v => v.id_ventas).ToArray();
+    var resultado = await servicio.Consultar(ids, 1, default);
+    Check(resultado.Select(r => r.estado).SequenceEqual(new[] { "CERTIFICADA", "RECHAZADA", "EN_PROCESO", "POR_CONFIRMAR", "PENDIENTE", "SIN_CERTIFICAR", "SIN_CERTIFICAR" }),
+        "FEL lista: todos los estados, sin documento y separación de ambientes");
+    Check(resultado.All(r => r.ambiente == "PRUEBAS") && resultado.Count == ids.Length, "FEL lista: un resultado por venta y ambiente explícito");
+    var produccion = new API_SISTEMA.Services.Fel.ConsultarEstadosFelService(db, new PermisoUsuarioService(db),
+        Microsoft.Extensions.Options.Options.Create(new API_SISTEMA.Services.Fel.InfileOptions { Ambiente = "PRODUCCION" }));
+    Check((await produccion.Consultar([ids[^1]], 1, default)).Single().estado == "CERTIFICADA", "FEL lista: consulta el ambiente solicitado por configuración");
+    foreach (var invalido in new int[]?[] { null, [], [0], [-1], [ids[0], ids[0]], Enumerable.Range(1, 101).ToArray() })
+    {
+        try { await servicio.Consultar(invalido, 1, default); throw new Exception("Lote inválido aceptado"); }
+        catch (ValidationException) { Check(true, "FEL lista: lote inválido rechazado"); }
+    }
+    try { await servicio.Consultar([int.MaxValue], 1, default); throw new Exception("Venta inexistente aceptada"); }
+    catch (KeyNotFoundException) { Check(true, "FEL lista: venta inexistente no se presenta como sin certificar"); }
+    using var cancelacion = new CancellationTokenSource(); cancelacion.Cancel();
+    try { await servicio.Consultar(ids, 1, cancelacion.Token); throw new Exception("Cancelación ignorada"); }
+    catch (OperationCanceledException) { Check(true, "FEL lista: respeta cancelación"); }
+    db.usuario_permisos.Add(new UsuarioPermiso { id_usuario = 1, id_permiso = 1, permitido = false });
+    await db.SaveChangesAsync();
+    try { await servicio.Consultar(ids, 1, default); throw new Exception("Consulta sin permiso aceptada"); }
+    catch (UnauthorizedAccessException) { Check(true, "FEL lista: exige permiso Vender"); }
+}
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)
@@ -612,8 +664,8 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
             typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle), typeof(DocumentoFel) };
         foreach (var e in b.Model.GetEntityTypes().ToArray()) if (!keep.Contains(e.ClrType)) b.Ignore(e.ClrType);
         // SQLite no genera rowversion; esta adaptación solo permite preparar los fixtures.
-        // La concurrencia de SQL Server se comprueba por separado.
-        b.Entity<DocumentoFel>().Property(d => d.version).HasDefaultValueSql("X''");
+        // La concurrencia de PostgreSQL se comprueba por separado.
+        b.Entity<DocumentoFel>().Property(d => d.version).HasDefaultValue(0u);
         var detalle = b.Entity<AuditoriaEventoDetalle>();
         foreach (var constraint in detalle.Metadata.GetCheckConstraints().ToArray())
             detalle.Metadata.RemoveCheckConstraint(constraint.Name);
@@ -623,7 +675,7 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
         foreach (var constraint in auditoria.Metadata.GetCheckConstraints().ToArray())
             auditoria.Metadata.RemoveCheckConstraint(constraint.Name);
         auditoria.Property(e => e.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
-        // Adaptación de expresiones específicas de SQL Server para la base temporal.
+        // Adaptación de expresiones específicas de PostgreSQL para la base temporal.
         foreach (var type in new[] { typeof(ZonaEntrega), typeof(PedidoCatalogo), typeof(DetallePedidoCatalogo) })
         {
             var entity = b.Entity(type);
@@ -633,4 +685,10 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
         b.Entity<PedidoCatalogo>().Property(p => p.FechaUtc).HasDefaultValueSql("CURRENT_TIMESTAMP");
         b.Entity<DetallePedidoCatalogo>().Property(d => d.Subtotal).HasComputedColumnSql("cantidad * precio_unitario", stored: true);
     }
+}
+
+sealed class RelojFijoGuatemala(DateTimeOffset instante) : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => instante;
+    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.CreateCustomTimeZone("ServidorOtraZona", TimeSpan.FromHours(9), "Otra zona", "Otra zona");
 }

@@ -8,9 +8,11 @@ namespace API_SISTEMA.Services.MovimientoCaja
     public class MovimientoCajaService
     {
         private readonly SistemaDbContext _context;
-        public MovimientoCajaService(SistemaDbContext context)
+        private readonly TimeProvider _reloj;
+        public MovimientoCajaService(SistemaDbContext context, TimeProvider? reloj = null)
         {
             _context = context;
+            _reloj = reloj ?? TimeProvider.System;
         }
 
 
@@ -33,7 +35,7 @@ namespace API_SISTEMA.Services.MovimientoCaja
                 id_usuario = idUsuario,
                 id_tipo_movimiento = idTipoMovimiento,
                 monto = monto,
-                fecha_movimiento = DateTime.Now,
+                fecha_movimiento = RelojNegocio.Ahora(_reloj),
                 descripcion = descripcion,
 
                 id_venta = idVenta,

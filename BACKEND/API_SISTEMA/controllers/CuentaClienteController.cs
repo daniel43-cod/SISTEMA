@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace API_SISTEMA.Controllers
 {
     [Route("api/[controller]")]
+    // Módulo fuera de uso: no publicar sus rutas ni incluirlo en Swagger.
+    [NonController]
     [ApiController]
     public class CuentaClienteController : ControllerBase
     {

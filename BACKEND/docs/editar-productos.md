@@ -18,7 +18,7 @@ Existencia mínima: entero no negativo. No permite enviar campos adicionales.
 
 Nombre y código deben ser únicos entre todos los productos, excluyendo el propio
 ID, ignorando mayúsculas y espacios al inicio/final. La comparación adicional de
-acentos depende de la intercalación de SQL Server. Crear producto también valida
+acentos depende de la intercalación de PostgreSQL. Crear producto también valida
 ahora el nombre para mantener la regla. Verificación y escritura usan una transacción
 serializable; un conflicto de concurrencia o interbloqueo inesperado devuelve un
 error genérico y no se reintenta automáticamente. No se agregaron índices ni se

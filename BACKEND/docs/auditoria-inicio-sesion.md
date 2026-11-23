@@ -1,6 +1,6 @@
 # Auditoría de inicio de sesión interno
 
-Requiere ejecutar previamente `sql/auditoria-eventos.sql` en SISTEMA.
+Requiere ejecutar previamente `docs/postgresql.md` en SISTEMA.
 Cada autenticación exitosa en POST /api/Login/Login guarda SESION_INICIADA con
 responsable obtenido de la cuenta validada, fecha UTC, entidad usuario, resultado
 EXITOSO, TraceId e IP de la conexión. No guarda contraseñas, hashes ni tokens.
@@ -34,4 +34,4 @@ Este cambio no registra cambios de catálogos.
 No se necesitan triggers ni se ejecutan modificaciones de esquema automáticamente.
 
 Verificación: tests/Auth.Checks usa SQLite para probar el flujo; adapta tipos JSON y
-restricciones específicas de SQL Server. No verifica la instalación real en SQL Server.
+restricciones específicas de PostgreSQL. No verifica la instalación real en PostgreSQL.

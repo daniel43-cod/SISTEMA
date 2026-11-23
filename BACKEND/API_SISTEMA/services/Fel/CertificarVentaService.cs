@@ -102,7 +102,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
         await using (var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct))
         {
             // Comparte el bloqueo de la venta con su edición; no mantiene SQL abierto durante HTTP.
-            var venta = await db.ventas.FromSqlInterpolated($"SELECT * FROM dbo.ventas WITH (UPDLOCK, HOLDLOCK) WHERE id_ventas = {idVenta}")
+            var venta = await db.ventas.FromSqlInterpolated($"SELECT * FROM public.ventas WHERE id_ventas = {idVenta} FOR UPDATE")
                 .Include(v => v.DetalleVentas).ThenInclude(d => d.Producto)
                 .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
             var existente = await db.DocumentosFel.SingleOrDefaultAsync(d => d.id_venta == idVenta && d.ambiente == config.Ambiente, ct);
@@ -198,7 +198,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
         using var guardar = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         await using var resultadoTx = await db.Database.BeginTransactionAsync(guardar.Token);
         // La misma fila de venta serializa toma y finalización. No se mantiene bloqueada durante HTTP.
-        await db.ventas.FromSqlInterpolated($"SELECT * FROM dbo.ventas WITH (UPDLOCK, HOLDLOCK) WHERE id_ventas = {idVenta}")
+        await db.ventas.FromSqlInterpolated($"SELECT * FROM public.ventas WHERE id_ventas = {idVenta} FOR UPDATE")
             .AsNoTracking().Select(v => v.id_ventas).SingleAsync(guardar.Token);
         var controlActual = await db.DocumentosFelIntentos.AsNoTracking().Where(i => i.id_intento == intento.id_intento)
             .Select(i => new { i.estado, i.procesamiento_token }).SingleAsync(guardar.Token);

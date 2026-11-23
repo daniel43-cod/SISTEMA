@@ -1,6 +1,22 @@
 name: pos-desarrollo
-
 services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sistema_desarrollo}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Configura POSTGRES_ADMIN_PASSWORD}
+      APP_DATABASE_USER: ${POSTGRES_USER:-sistema_app}
+      APP_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Configura POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./BACKEND/docker/postgres/10-app-user.sh:/docker-entrypoint-initdb.d/10-app-user.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   backend:
     image: mcr.microsoft.com/dotnet/sdk:10.0
     working_dir: /src/API_SISTEMA
@@ -13,10 +29,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://0.0.0.0:8080
-      ConnectionStrings__ConexionSQL: ${SQL_CONNECTION_STRING}
+      ConnectionStrings__ConexionPostgres: ${POSTGRES_CONNECTION_STRING:?Configura POSTGRES_CONNECTION_STRING con Host=postgres}
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
     ports:
       - "127.0.0.1:8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   frontend:
     image: node:22-alpine
@@ -32,8 +51,8 @@ services:
       - "127.0.0.1:5173:5173"
     depends_on:
       - backend
-
 volumes:
+  postgres_data:
   backend_obj:
   backend_bin:
   frontend_node_modules:

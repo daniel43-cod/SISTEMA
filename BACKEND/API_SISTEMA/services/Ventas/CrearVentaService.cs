@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Ventas;
 
-public class CrearVentaService(SistemaDbContext context, MovimientoCajaService movimientos, PermisoUsuarioService permisos)
+public class CrearVentaService(SistemaDbContext context, MovimientoCajaService movimientos, PermisoUsuarioService permisos, TimeProvider? reloj = null)
 {
     public async Task<API_SISTEMA.Models.Ventas> CrearVenta(CrearVentaDto dto, int idUsuario, CancellationToken ct = default)
     {
@@ -80,6 +80,7 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
         VentaReglas.Monto(total, false); VentaReglas.Monto(total + descuento);
         var pagado = dto.pago?.monto ?? 0m;
         if (pagado > total) throw new ValidationException("El pago no puede superar el total de la venta.");
+        var ahora = RelojNegocio.Ahora(reloj);
         Cliente cliente;
         if (dto.id_cliente > 0) cliente = await context.cliente.SingleOrDefaultAsync(c => c.id_cliente == dto.id_cliente, ct)
             ?? throw new ValidationException("El cliente no existe."); // El estado del cliente no bloquea la venta.
@@ -87,9 +88,8 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
         {
             var nuevo = dto.clienteNuevo!;
             cliente = new Cliente { nombre = nuevo.nombre.Trim(), apellido = nuevo.apellido?.Trim(), nit = nuevo.nit?.Trim(), dpi = nuevo.dpi?.Trim(),
-                telefono = nuevo.telefono?.Trim(), correo_electronico = nuevo.correo_electronico?.Trim(), direccion = nuevo.direccion?.Trim(), estado = true };
+                telefono = nuevo.telefono?.Trim(), correo_electronico = nuevo.correo_electronico?.Trim(), direccion = nuevo.direccion?.Trim(), fecha_Creacion = ahora, estado = true };
         }
-        var ahora = DateTime.Now;
         var venta = new API_SISTEMA.Models.Ventas { cliente = cliente, id_usuario = idUsuario, id_sesion_caja = caja.id_sesion_caja,
             fecha_venta = ahora, origen = dto.origen?.Trim() ?? "MOSTRADOR", observacion = dto.observacion?.Trim(),
             tipo_identificacion_receptor = receptorFiscal?.Tipo, identificacion_receptor = receptorFiscal?.Identificacion,

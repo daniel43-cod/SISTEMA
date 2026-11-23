@@ -20,7 +20,7 @@ Contraseña, estado, ID y fecha de creación se conservan.
 Devuelve 200 con UsuarioRespuestaDto sin contraseña ni hash, 400 por validaciones,
 401 sin sesión válida, 403 sin rol administrador, 404 si no existe el usuario y
 409 por usuario, correo o teléfono duplicados. La comprobación de duplicados excluye
-al propio usuario y los índices únicos de SQL Server resuelven las carreras concurrentes.
+al propio usuario y los índices únicos de PostgreSQL resuelven las carreras concurrentes.
 
 Servicio: Services/Usuarios/UsuarioEditarService.cs. Cambios y auditoría USUARIO_EDITADO
 se guardan en una transacción. Guardar sin cambios no genera un evento de auditoría.

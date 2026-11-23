@@ -60,5 +60,5 @@ dotnet run --project tests/Auth.Checks/Auth.Checks.csproj --artifacts-path .arti
 La primera usa SQLite en memoria y HTTP local con JWT firmados de prueba para
 comprobar autorización por rol, validación, paginación, filtros, detalle y errores.
 La segunda comprueba la validación de cuentas y JWT internos existente.
-No consumen la base SQL Server del negocio. El esquema real debe probarse
+No consumen la base PostgreSQL del negocio. El esquema real debe probarse
 manualmente en desarrollo con un administrador antes de publicar.

@@ -124,7 +124,7 @@ bandera resultado; CUI devuelve `{resultado,cui:{cui,nombre,fallecido}}`.
 Se comprueba que el documento retornado coincida con el consultado y que el indicador fallecido
 sea negativo. También se admiten los formatos planos de la documentación inicial.
 
-Ejecutar `docs/sql/ventas-receptor-fiscal.sql` antes de iniciar esta versión del backend.
+Ejecutar `docs/postgresql.md` antes de iniciar esta versión del backend.
 Las ventas históricas conservan las tres columnas en NULL, sin asumir que eran consumidor final.
 Registrar o modificar ventas ya no requiere identificación fiscal. El frontend no incluye ese selector.
 Para certificar una venta nueva como CF se envía:
@@ -171,7 +171,14 @@ Pruebas locales: `dotnet run --project tests/Fel.Checks/Fel.Checks.csproj` usa u
 simulado. Incluye receptores guardados y explícitos, límites CF, nombres vacíos/incorrectos,
 documentos inválidos, CUI inactivo, respuestas para otra identificación, cancelación y errores
 de autenticación. Las reglas de recuperación comprueban vencimiento y propiedad del intento;
-no sustituyen una prueba de bloqueos y caídas del proceso contra SQL Server aislado.
+no sustituyen una prueba de bloqueos y caídas del proceso contra PostgreSQL aislado.
+
+El listado consulta los estados mediante `POST /api/Fel/ventas/estados`, con un arreglo JSON
+de 1 a 100 IDs de venta distintos. Es una consulta de lectura protegida con Administrador/Vendedor
+y permiso Vender. Devuelve solo ID de venta, estado y ambiente configurado; no carga XML,
+respuestas ni intentos, ni llama a INFILE. Las ventas sin documento en ese ambiente se identifican
+como SIN_CERTIFICAR. Las ventas inexistentes producen 404 y no se confunden con ventas pendientes.
+La interfaz diferencia el estado de pago del estado FEL y avisa si no pudo consultar este último.
 
 Antes de marcar CERTIFICADA, `ValidarCertificadoFel` compara el bloque DatosEmision del XML
 original almacenado con el certificado recibido: emisor, receptor, fecha, tipo, moneda, frases,
@@ -187,4 +194,4 @@ normalizados de INFILE y una descripción del fallo local. No modifica los datos
 genera un nuevo identificador. Una recuperación sin respuesta conserva ese XML para revisión.
 No requiere cambios de esquema. Esta comparación no constituye verificación criptográfica de
 las firmas. `CertificadoFelChecks` cubre alteraciones, campos faltantes, duplicados y formatos
-equivalentes con respuestas simuladas; la prueba integral contra SQL Server sigue pendiente.
+equivalentes con respuestas simuladas; la prueba integral contra PostgreSQL sigue pendiente.

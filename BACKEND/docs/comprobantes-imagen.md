@@ -2,7 +2,7 @@
 
 ## Preparación
 
-1. Aplicar `docs/sql/empresa-comprobante.sql` en SQL Server antes de usar Empresa o Comprobantes. No se ejecuta automáticamente.
+1. Aplicar `docs/postgresql.md` en PostgreSQL antes de usar Empresa o Comprobantes. No se ejecuta automáticamente.
 2. Tener una empresa registrada (consultar `GET /api/Empresa/listar`, administrador).
 3. Actualizar su encabezado con JWT de administrador:
 
@@ -42,6 +42,6 @@ dotnet build API_SISTEMA/API_SISTEMA.csproj --no-restore
 dotnet run --project tests/Comprobantes.Checks -- artifacts/comprobantes
 ```
 
-Las pruebas generan ejemplos sintéticos de 0, 2 y 100 detalles y verifican que no se pierdan filas, dimensiones máximas y archivos menores de 5 MB. No requieren conexión a SQL Server.
+Las pruebas generan ejemplos sintéticos de 0, 2 y 100 detalles y verifican que no se pierdan filas, dimensiones máximas y archivos menores de 5 MB. No requieren conexión a PostgreSQL.
 
 El envío por plantilla a Meta está documentado en [whatsapp-comprobantes.md](whatsapp-comprobantes.md) y los estados de entrega en [whatsapp-webhook-desarrollo.md](whatsapp-webhook-desarrollo.md). No incluye botón de frontend ni comprobantes de abonos/productos. El servicio reutiliza el generador sin exponer el archivo por una URL pública.

@@ -19,7 +19,7 @@ public sealed class DocumentoFel
     public string xml_enviado { get; set; } = string.Empty;
     public string? xml_certificado { get; set; }
     public string? respuesta { get; set; }
-    public byte[] version { get; set; } = [];
+    public uint version { get; set; }
     public Ventas Venta { get; set; } = null!;
     public Usuario Usuario { get; set; } = null!;
 }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Ventas;
 
-public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaService ventas)
+public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaService ventas, TimeProvider? reloj = null)
 {
     public async Task<List<ListarVentasDto>> Listar(int idUsuario, HistorialVentasFechaDto filtro, CancellationToken ct = default)
         => (await ListarPagina(idUsuario, filtro, ct)).Items;
@@ -23,7 +23,7 @@ public sealed class HistorialVentasFechaService(SistemaDbContext context, VentaS
             throw new KeyNotFoundException("El usuario consultado no existe.");
         if (filtro.IdCliente.HasValue)
             throw new ValidationException("El filtro de cliente está disponible únicamente para la caja activa.");
-        var hoy = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "America/Guatemala"));
+        var hoy = DateOnly.FromDateTime(RelojNegocio.Ahora(reloj));
         var hasta = filtro.Hasta ?? hoy;
         if (!filtro.Desde.HasValue && hasta.DayNumber < 6)
             throw new ValidationException("El rango de fechas no es válido.");

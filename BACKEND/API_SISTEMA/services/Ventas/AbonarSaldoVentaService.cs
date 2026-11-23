@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace API_SISTEMA.Services.Ventas;
 
 public class AbonarSaldoVentaService(SistemaDbContext context, MovimientoCajaService movimientos,
-    API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService auditoria)
+    API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService auditoria, TimeProvider? reloj = null)
 {
     public async Task<Pagos> AbonarVenta(AbonarSaldoVentaDto dto, int idUsuario, CancellationToken ct = default)
     {
@@ -39,7 +39,7 @@ public class AbonarSaldoVentaService(SistemaDbContext context, MovimientoCajaSer
         var saldo = venta.total - pagado;
         if (saldo <= 0 || dto.monto > saldo) throw new ValidationException("El abono debe ser mayor a cero y no superar el saldo pendiente.");
         var pago = new Pagos { id_operacion = dto.id_operacion, id_venta = venta.id_ventas, id_usuario = idUsuario, id_sesion_caja = caja.id_sesion_caja,
-            monto = dto.monto, metodo_pago = "EFECTIVO", observacion = observacion, fecha_pago = DateTime.Now };
+            monto = dto.monto, metodo_pago = "EFECTIVO", observacion = observacion, fecha_pago = RelojNegocio.Ahora(reloj) };
         context.pagos.Add(pago);
         venta.monto_pagado = pagado + dto.monto; venta.saldo_pendiente = saldo - dto.monto;
         venta.id_estado_venta = venta.saldo_pendiente == 0 ? 1 : 2;

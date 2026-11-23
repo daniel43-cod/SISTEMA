@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace API_SISTEMA.Models;
 
-[Table("auditoria_evento", Schema = "dbo")]
+[Table("auditoria_evento", Schema = "public")]
 public sealed class AuditoriaEvento
 {
     [Key]
@@ -12,7 +12,7 @@ public sealed class AuditoriaEvento
     [Column("id_auditoria")]
     public long IdAuditoria { get; set; }
 
-    [Column("fecha_utc", TypeName = "datetime2(7)")]
+    [Column("fecha_utc", TypeName = "timestamp with time zone")]
     public DateTime FechaUtc { get; set; }
 
     [Column("id_usuario")]

@@ -19,6 +19,11 @@ public sealed class FacturaFelController(CertificarVentaService servicio) : Cont
     private int Usuario() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id > 0
         ? id : throw new UnauthorizedAccessException("No se pudo identificar al usuario.");
 
+    [HttpPost("/api/Fel/ventas/estados")]
+    public async Task<IActionResult> ConsultarEstados([FromBody] int[] ids,
+        [FromServices] ConsultarEstadosFelService consulta, CancellationToken ct)
+        => Ok(await consulta.Consultar(ids, Usuario(), ct));
+
     [HttpPost("certificar")]
     public async Task<IActionResult> Certificar(int idVenta, CertificarVentaDto dto, CancellationToken ct)
     {

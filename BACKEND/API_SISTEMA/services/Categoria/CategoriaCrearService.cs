@@ -55,11 +55,11 @@ namespace API_SISTEMA.Services.Categoria
                 if (existe)
                     throw new CategoriaDuplicadaException();
     
-                // El servidor asigna estado y fecha; el ID lo genera SQL Server.
+                // El servidor asigna estado y fecha; el ID lo genera PostgreSQL.
                 var categoria = new API_SISTEMA.Models.Categoria
                 {
                     nombreCategoria = nombreCategoria,
-                    FechaCreacion = DateTime.Now,
+                    FechaCreacion = API_SISTEMA.Utilidades.RelojNegocio.Ahora(),
                     Estado = true,
                     UrlImagen = url
                 };

@@ -99,5 +99,8 @@ sealed class PublicDbContext(DbContextOptions<SistemaDbContext> options) : Siste
         foreach (var entity in builder.Model.GetEntityTypes().ToArray())
             if (!keep.Contains(entity.ClrType)) builder.Ignore(entity.ClrType);
         builder.Entity<Productos>().Ignore(p => p.DetalleVentas).Ignore(p => p.ProductoPrecios);
+        // Estos fixtures incluyen presentaciones históricas inválidas para probar su filtrado.
+        foreach (var constraint in builder.Entity<ProductoPresentacion>().Metadata.GetCheckConstraints().ToArray())
+            builder.Entity<ProductoPresentacion>().Metadata.RemoveCheckConstraint(constraint.Name);
     }
 }

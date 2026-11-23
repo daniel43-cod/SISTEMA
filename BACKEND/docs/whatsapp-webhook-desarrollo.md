@@ -4,7 +4,7 @@
 
 Cloudflared 2026.11.0 está instalado mediante el paquete Cloudflare.cloudflared de winget. Si la terminal no encuentra `cloudflared`, abrir una nueva. El script también busca su ejecutable en Program Files. No se instala como servicio ni se inicia al encender Windows.
 
-1. Aplicar `docs/sql/whatsapp-webhook.sql` después de `whatsapp-historial.sql`. El nuevo script crea una tabla de estados de entrega, sin modificar las ventas ni enviar mensajes. No se ejecuta automáticamente.
+1. Aplicar `docs/postgresql.md` después de `whatsapp-historial.sql`. El nuevo script crea una tabla de estados de entrega, sin modificar las ventas ni enviar mensajes. No se ejecuta automáticamente.
 2. En Meta for Developers, abrir la aplicación > Configuración de la aplicación > Básica > Secreto de la aplicación > Mostrar. No es el AccessToken ni el WABA ID.
 3. Agregar estas propiedades a la sección WhatsApp de los secretos del backend, conservando las demás:
 

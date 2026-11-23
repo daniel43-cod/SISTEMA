@@ -34,6 +34,11 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 builder.Services.AddScoped<SistemaDbContext>(_ => new CatalogoDbContext(options));
 builder.Services.AddScoped<ProductoService>();
 builder.Services.AddScoped<ProductoActualizarService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<API_SISTEMA.Security.ContextoPeticion>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.ProductoAuditoriaService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.PresentacionAuditoriaService>();
 builder.Services.AddSingleton<ProductoImagenService>();
 builder.Services.AddScoped<ProductoBuscarAdminService>();
 builder.Services.AddScoped<CrearPresentacionService>();
@@ -72,6 +77,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<SistemaDbContext>();
     await db.Database.EnsureCreatedAsync();
+    db.rols.Add(new Rol { id_rol = 1, nombre = "ADMINISTRADOR", descripcion = "Prueba", estado = true });
+    db.usuarios.Add(new Usuario { id_usuario = 1, id_rol = 1, nombre = "Admin", apellido = "Prueba", usuario = "admin", telefono = "55551234", estado = true });
     var categoria = new Categoria { IdCategoria = 1, nombreCategoria = "Bebidas", Estado = true };
     var marca = new Marca { IdMarca = 1, Nombre = "Marca A", Estado = true, Categoria = categoria };
     var unidad = new Presentacion { IdPresentacion = 1, Descripcion = "Unidad", Estado = true };
@@ -93,7 +100,7 @@ try
     void Check(bool success, string name) { if (!success) throw new Exception(name); passed++; Console.WriteLine("OK: " + name); }
     void Login(string role)
     {
-        var jwt = new JwtSecurityToken("checks", "checks", [new Claim(ClaimTypes.Role, role)],
+        var jwt = new JwtSecurityToken("checks", "checks", [new Claim(ClaimTypes.Role, role), new Claim(ClaimTypes.NameIdentifier, "1")],
             expires: DateTime.UtcNow.AddMinutes(5), signingCredentials: new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", new JwtSecurityTokenHandler().WriteToken(jwt));
@@ -137,7 +144,8 @@ try
     Login("VENDEDOR");
     Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).StatusCode == HttpStatusCode.Forbidden, "Edición de vendedor bloqueada");
     Login("ADMINISTRADOR");
-    Check((await client.PutAsJsonAsync("/api/Productos/1", edit)).IsSuccessStatusCode, "Conserva nombre y código propios");
+    var respuestaEdicion = await client.PutAsJsonAsync("/api/Productos/1", edit);
+    Check(respuestaEdicion.IsSuccessStatusCode, "Conserva nombre y código propios: " + respuestaEdicion.StatusCode + " " + await respuestaEdicion.Content.ReadAsStringAsync());
     edit.UrlImagen = "https://example.com/producto.png";
     var imageResponse = await client.PutAsJsonAsync("/api/Productos/1", edit);
     Check(imageResponse.IsSuccessStatusCode && (await imageResponse.Content.ReadFromJsonAsync<ProductoResumenDto>())!.Imagen == edit.UrlImagen,
@@ -332,7 +340,7 @@ try
     Check(marcasActivas!.All(m => m.IdMarca != 1) && marcasAdmin!.Any(m => m.IdMarca == 1 && !m.Estado), "Marca inactiva visible en listado administrativo");
     var reactivacion = await client.PatchAsJsonAsync("/api/Marcas/1/estado", new { estado = true });
     Check(reactivacion.IsSuccessStatusCode && (await reactivacion.Content.ReadFromJsonAsync<API_SISTEMA.Dtos.Marcas.RespuestaMarcaDto>())!.Estado, "Administrador reactiva marca");
-    Console.WriteLine($"{passed} comprobaciones aprobadas, sin SQL Server real.");
+    Console.WriteLine($"{passed} comprobaciones aprobadas, sin PostgreSQL real.");
 }
 finally { await app.StopAsync(); }
 
@@ -341,9 +349,15 @@ sealed class CatalogoDbContext(DbContextOptions<SistemaDbContext> options) : Sis
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        var keep = new[] { typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion) };
+        var keep = new[] { typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion), typeof(Usuario), typeof(Rol), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle) };
         foreach (var entity in builder.Model.GetEntityTypes().ToArray())
             if (!keep.Contains(entity.ClrType)) builder.Ignore(entity.ClrType);
         builder.Entity<Productos>().Ignore(p => p.DetalleVentas).Ignore(p => p.ProductoPrecios);
+        foreach (var type in new[] { typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle) })
+            foreach (var constraint in builder.Entity(type).Metadata.GetCheckConstraints().ToArray())
+                builder.Entity(type).Metadata.RemoveCheckConstraint(constraint.Name);
+        // Estos fixtures incluyen presentaciones históricas inválidas para probar su filtrado.
+        foreach (var constraint in builder.Entity<ProductoPresentacion>().Metadata.GetCheckConstraints().ToArray())
+            builder.Entity<ProductoPresentacion>().Metadata.RemoveCheckConstraint(constraint.Name);
     }
 }

@@ -2,7 +2,7 @@
 
 ## Cambio de esquema pendiente
 
-El script docs/sql/ventas-registro-seguro.sql está preparado pero NO fue ejecutado. Antes de desplegar este código, revisar el esquema real, respaldar y aplicar ese script con autorización del responsable. La nueva API depende de venta_operacion y de detalle_venta.costo_unitario_venta. No arrancar este cambio contra la base anterior esperando que EF la actualice automáticamente.
+El script docs/postgresql.md está preparado pero NO fue ejecutado. Antes de desplegar este código, revisar el esquema real, respaldar y aplicar ese script con autorización del responsable. La nueva API depende de venta_operacion y de detalle_venta.costo_unitario_venta. No arrancar este cambio contra la base anterior esperando que EF la actualice automáticamente.
 
 ## Reglas confirmadas
 
@@ -33,6 +33,6 @@ El abono actualiza monto_pagado, saldo_pendiente y estado dentro de su transacci
 
 ## Verificación
 
-Las pruebas de tests/Ventas.Checks usan SQLite temporal y no cargan appsettings ni la cadena de conexión del negocio. Comprueban cálculo, reglas de costo/margen, inventario, pago parcial, idempotencia, reversión y errores seguros. Validar además concurrencia y script en SQL Server de pruebas antes de producción: SQLite no reproduce bloqueos ni deadlocks de SQL Server.
+Las pruebas de tests/Ventas.Checks usan SQLite temporal y no cargan appsettings ni la cadena de conexión del negocio. Comprueban cálculo, reglas de costo/margen, inventario, pago parcial, idempotencia, reversión y errores seguros. Validar además concurrencia y script en PostgreSQL de pruebas antes de producción: SQLite no reproduce bloqueos ni deadlocks de PostgreSQL.
 
 No hay un máximo de detalles al crear o editar una venta; se exige al menos una línea válida. El límite de tamaño HTTP de 128 KiB sigue vigente y no equivale a un número fijo de detalles.

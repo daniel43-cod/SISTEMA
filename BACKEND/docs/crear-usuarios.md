@@ -5,11 +5,11 @@ delega en él para conservar compatibilidad. Las rutas `POST /api/Usuario` y
 `POST /api/Login/crear` siguen restringidas a administradores.
 
 - Usuario y teléfono obligatorios y únicos. Correo opcional: vacío o espacios se convierten en null.
-- Los índices únicos existentes en SQL Server protegen las altas concurrentes.
+- Los índices únicos existentes en PostgreSQL protegen las altas concurrentes.
   Para admitir varios usuarios sin correo, su índice único debe estar filtrado con
-  `WHERE correo IS NOT NULL`: una restricción UNIQUE normal de SQL Server admite un solo null.
+  `WHERE correo IS NOT NULL`: una restricción UNIQUE normal de PostgreSQL admite un solo null.
   Este cambio no ejecuta SQL ni modifica los índices existentes.
-- Las comparaciones de duplicados respetan la intercalación de SQL Server.
+- Las comparaciones de duplicados respetan la intercalación de PostgreSQL.
 - Teléfono: números, prefijo y separadores habituales; se recortan espacios externos.
   No se unifican formatos diferentes del mismo número.
 - Contraseña BCrypt, validación de rol interno activo y cancelación propagada a EF Core.

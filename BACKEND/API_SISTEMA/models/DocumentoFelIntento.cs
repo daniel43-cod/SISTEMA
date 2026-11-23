@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API_SISTEMA.Models;
 
-[Table("documento_fel_intento", Schema = "dbo")]
+[Table("documento_fel_intento", Schema = "public")]
 public sealed class DocumentoFelIntento
 {
     [Key] public long id_intento { get; set; }
@@ -38,12 +38,12 @@ public sealed class DocumentoFelIntento
     public string xml_enviado { get; set; } = "";
     public string? xml_certificado { get; set; }
     public bool migrado { get; set; }
-    [Timestamp] public byte[] version { get; set; } = [];
+    [Timestamp] public uint version { get; set; }
     public List<DocumentoFelError> Errores { get; set; } = [];
     public List<DocumentoFelAlerta> Alertas { get; set; } = [];
 }
 
-[Table("documento_fel_error", Schema = "dbo")]
+[Table("documento_fel_error", Schema = "public")]
 public sealed class DocumentoFelError
 {
     [Key] public long id_error { get; set; }
@@ -57,7 +57,7 @@ public sealed class DocumentoFelError
     public string? mensaje { get; set; }
 }
 
-[Table("documento_fel_alerta", Schema = "dbo")]
+[Table("documento_fel_alerta", Schema = "public")]
 public sealed class DocumentoFelAlerta
 {
     [Key] public long id_alerta { get; set; }

@@ -80,7 +80,7 @@ public class ProductoCrearService
                 CodigoBarra = codigo, Nombre = dto.nombre.Trim(), IdMarca = dto.IdMarca,
                 Stock = 0, StockMinimo = dto.stock_minimo, Imagen = url,
                 
-                PrecioPromedioCompra = 0, CostoUnitario = null, FechaCreacion = DateTime.Now,
+                PrecioPromedioCompra = 0, CostoUnitario = null, FechaCreacion = API_SISTEMA.Utilidades.RelojNegocio.Ahora(),
                 ProductoPresentaciones = dto.presentaciones.Select(p => new ProductoPresentacion
                 {
                     IdPresentacion = p.id_presentacion, unidades_equivalentes = p.unidades_equivalentes,

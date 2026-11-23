@@ -23,7 +23,7 @@ La plantilla debe estar aprobada en esa cuenta y ese idioma, con encabezado IMAG
 
 ## Solicitud
 
-Antes de utilizar estas rutas, aplicar `docs/sql/whatsapp-historial.sql` y `docs/sql/whatsapp-webhook.sql` en SQL Server. Si ya existían las tablas de la versión con recuperación selectiva, detener el backend anterior y aplicar `docs/sql/whatsapp-compartir-siempre.sql` antes de iniciar esta versión. Quita la restricción única por venta/empresa y elimina snapshot_json con sus copias antiguas; conserva los registros de envío, páginas, intentos y eventos. No se ejecuta automáticamente. Cada acción Compartir envía el comprobante completo de nuevo, aun cuando no haya cambios.
+Antes de utilizar estas rutas, aplicar `docs/postgresql.md` y `docs/postgresql.md` en PostgreSQL. Si ya existían las tablas de la versión con recuperación selectiva, detener el backend anterior y aplicar `docs/postgresql.md` antes de iniciar esta versión. Quita la restricción única por venta/empresa y elimina snapshot_json con sus copias antiguas; conserva los registros de envío, páginas, intentos y eventos. No se ejecuta automáticamente. Cada acción Compartir envía el comprobante completo de nuevo, aun cuando no haya cambios.
 
 Con JWT de administrador o vendedor, usando la misma empresa utilizada para la vista previa:
 
@@ -36,7 +36,7 @@ La ruta habitual no tiene cuerpo ni parámetro para cambiar el destinatario: usa
 
 ## Botones del frontend y teléfono faltante
 
-No se requiere agregar una columna: se reutiliza cliente.telefono. Si se ejecutó el script anterior que agregaba ventas.telefono_comprobante, aplicar `docs/sql/cliente-telefono-comprobante.sql` para trasladar los datos compatibles al cliente y retirar esa columna. El script no sobrescribe teléfonos existentes y se detiene ante conflictos, sin elegir un número arbitrariamente. Comparaciones con distinto formato también requieren revisión. Si nunca se creó la columna, el script no hace cambios.
+No se requiere agregar una columna: se reutiliza cliente.telefono. Si se ejecutó el script anterior que agregaba ventas.telefono_comprobante, aplicar `docs/postgresql.md` para trasladar los datos compatibles al cliente y retirar esa columna. El script no sobrescribe teléfonos existentes y se detiene ante conflictos, sin elegir un número arbitrariamente. Comparaciones con distinto formato también requieren revisión. Si nunca se creó la columna, el script no hace cambios.
 
 Al registrar una venta (o confirmar una venta de pedido) se abre un cuadro opcional con el botón e icono de WhatsApp. Registrar por sí solo nunca envía. Ahora no/Cerrar tampoco envía. El historial tiene botones por venta tanto en escritorio como en móvil.
 
@@ -108,7 +108,7 @@ dotnet run --project tests/WhatsAppHistorial.Checks
 
 Utilizan un HttpMessageHandler simulado y credenciales ficticias; no leen secretos ni envían mensajes reales. Cubren teléfonos, payload y PNG, envío secuencial, fallo parcial, errores de subida, autorización rechazada, timeout, desconexión, respuesta inválida, configuración incompleta y cancelación.
 
-Las pruebas de historial usan SQLite temporal y cubren múltiples acciones Compartir de la misma venta, envío completo tras fallo parcial, imagen nueva al modificar la venta, solicitudes simultáneas, avisos de fallo, resultados desconocidos sin bloqueo de nuevas acciones y paginación del historial. Verifican la lógica relacional sin conectarse al SQL Server real; el script SQL Server requiere aplicación en el entorno del negocio.
+Las pruebas de historial usan SQLite temporal y cubren múltiples acciones Compartir de la misma venta, envío completo tras fallo parcial, imagen nueva al modificar la venta, solicitudes simultáneas, avisos de fallo, resultados desconocidos sin bloqueo de nuevas acciones y paginación del historial. Verifican la lógica relacional sin conectarse al PostgreSQL real; el script PostgreSQL requiere aplicación en el entorno del negocio.
 
 Referencias oficiales:
 

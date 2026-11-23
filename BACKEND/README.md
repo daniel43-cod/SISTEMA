@@ -1,8 +1,8 @@
 # Sistema de gestión comercial
 
-Aplicación para administrar productos, inventario, compras, ventas, caja, gastos, usuarios y reportes. Incluye un catálogo público, pedidos y un asistente de consultas con IA.
+Aplicación para administrar productos, inventario, compras, ventas, caja, gastos, usuarios y reportes. Incluye un catálogo público y pedidos. El asistente y las cuentas públicas están desactivados.
 
-El frontend está desarrollado con React 19, TypeScript y Vite 8, con soporte PWA. El backend es una API REST en C# con ASP.NET Core (.NET 10), Entity Framework Core, SQL Server y autenticación JWT.
+El frontend está desarrollado con React 19, TypeScript y Vite 8, con soporte PWA. El backend es una API REST en C# con ASP.NET Core (.NET 10), Entity Framework Core, PostgreSQL y autenticación JWT.
 
 ## Organización del código fuente
 
@@ -17,7 +17,7 @@ SISTEMA/
 │   │   ├── Services/            # Lógica de negocio por módulo
 │   │   ├── Models/              # Entidades del sistema
 │   │   ├── DTOs/                # Datos de entrada y salida
-│   │   ├── Data/                # Contextos y acceso a SQL Server
+│   │   ├── Data/                # Contextos y acceso a PostgreSQL
 │   │   ├── Security/            # Contexto de seguridad
 │   │   ├── Utilidades/          # JWT y utilidades compartidas
 │   │   ├── Filters/             # Filtros de peticiones
@@ -51,7 +51,7 @@ SISTEMA/
 
 - SDK de .NET 10.
 - Node.js `20.19+` de la rama 20 o `22.12+`, y npm, según el requisito de Vite instalado.
-- SQL Server accesible y una base de datos con el esquema y los datos iniciales del sistema.
+- PostgreSQL accesible y una base de datos con el esquema y los datos iniciales del sistema.
 - Una cuenta interna habilitada para ingresar al panel.
 
 ### Backend
@@ -62,12 +62,12 @@ Desde `BACKEND`, restaurar las dependencias:
 dotnet restore .\API_SISTEMA\API_SISTEMA.csproj
 ```
 
-Preparar la base de datos a partir del respaldo o esquema proporcionado por el responsable del proyecto. Los archivos de `docs/sql/` son ajustes específicos; no constituyen un instalador completo de la base de datos. El inicio de la API no crea ni migra automáticamente la base.
+Preparar una base vacía PostgreSQL 18 y seguir [la instalación y migración](docs/postgresql.md). Las migraciones crean el esquema; no importan datos de prueba. La API no aplica migraciones al iniciar.
 
 Configurar la conexión y JWT en la terminal donde se ejecutará la API:
 
 ```powershell
-$env:ConnectionStrings__ConexionSQL = 'Server=localhost\SQLEXPRESS;Database=SISTEMA;Trusted_Connection=True;TrustServerCertificate=True;'
+$env:ConnectionStrings__ConexionPostgres = 'Host=localhost;Port=5432;Database=sistema_desarrollo;Username=sistema_app;Password=REEMPLAZAR;'
 $jwtBytes = New-Object byte[] 32
 $jwtGenerator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
 $jwtGenerator.GetBytes($jwtBytes)
@@ -78,7 +78,7 @@ $env:Jwt__Audience = 'SistemaPVUsuarios'
 $env:Jwt__DurationInMinutes = '720'
 ```
 
-Adaptar el servidor, la base y la autenticación a la instalación de SQL Server. La clave del ejemplo se genera para esa sesión; para conservar la validez de los tokens entre reinicios, guardar una clave estable mediante secretos de usuario de .NET o la configuración segura del entorno.
+Adaptar el servidor, la base y la autenticación a la instalación de PostgreSQL. La clave del ejemplo se genera para esa sesión; para conservar la validez de los tokens entre reinicios, guardar una clave estable mediante secretos de usuario de .NET o la configuración segura del entorno.
 
 ### Frontend
 
@@ -141,7 +141,7 @@ La compilación del frontend genera `dist/`. El proxy se configura en `server.pr
 
 ## Uso
 
-1. Iniciar SQL Server, el backend y el frontend.
+1. Iniciar PostgreSQL, el backend y el frontend.
 2. Abrir el frontend e ingresar con una cuenta interna existente. Las opciones disponibles dependen de los permisos del usuario.
 3. Administrar categorías, marcas, presentaciones y productos; consultar inventario y registrar las operaciones de compras, caja, ventas y gastos según los permisos asignados.
 4. Consultar los reportes desde el panel.
@@ -159,7 +159,7 @@ ASP.NET Core lee variables del proceso y permite reemplazar las claves de `appse
 
 | Variable | Uso | Requerida / valor base |
 | --- | --- | --- |
-| `ConnectionStrings__ConexionSQL` | Conexión a SQL Server. | Se requiere una conexión válida. Reemplazar la conexión de ejemplo de `appsettings.json` para cada instalación. |
+| `ConnectionStrings__ConexionPostgres` | Conexión a PostgreSQL. | Se requiere una conexión válida. Reemplazar la conexión de ejemplo de `appsettings.json` para cada instalación. |
 | `Jwt__Key` | Clave para firmar y validar JWT. | Obligatoria; al menos 32 bytes UTF-8. No está definida en `appsettings.json`. |
 | `Jwt__Issuer` | Emisor del token. | Base: `SistemaPV`. |
 | `Jwt__Audience` | Destinatario del token. | Base: `SistemaPVUsuarios`. |

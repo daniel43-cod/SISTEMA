@@ -12,10 +12,12 @@ namespace API_SISTEMA.Services.Compras
     public class CrearCompraService
     {
         private readonly SistemaDbContext _context;
+        private readonly TimeProvider _reloj;
         private readonly MovimientoCajaService _movimientoCajaService;
-        public CrearCompraService(SistemaDbContext context, MovimientoCajaService movimientoCajaService)
+        public CrearCompraService(SistemaDbContext context, MovimientoCajaService movimientoCajaService, TimeProvider? reloj = null)
         {
             _context = context;
+            _reloj = reloj ?? TimeProvider.System;
             _movimientoCajaService = movimientoCajaService;
         }
 
@@ -138,13 +140,14 @@ namespace API_SISTEMA.Services.Compras
 
             try
             {
+                var ahora = RelojNegocio.Ahora(_reloj);
                 var compra = new RegistroCompras
                 {
                     IdUsuario = idUsuario,
                     IdSesionCaja = sesionCaja.id_sesion_caja,
                     IdProveedor = compraDto.id_proveedor,
                     IdEstadoCompra = idEstadoCompra,
-                    FechaIngreso = DateTime.Now,
+                    FechaIngreso = ahora,
                     TotalCompra = totalCompra,
                     SaldoPendiente = saldoPendiente,
                     Observacion = compraDto.observacion?.Trim()
@@ -163,7 +166,7 @@ namespace API_SISTEMA.Services.Compras
                         id_sesion_caja =sesionCaja.id_sesion_caja,
                         observacion =compraDto.observacion?.Trim() ?? string.Empty,
                         monto =compraDto.monto_pagado,
-                        fecha_pago =DateTime.Now
+                        fecha_pago = ahora
                     };
 
                     _context.pagosCompras.Add(pagoCompra

@@ -9,11 +9,11 @@ namespace API_SISTEMA.Data
     public class SistemaDbContext :DbContext
     {
 
-       
+
         //constructor de la clase
         public SistemaDbContext(
             DbContextOptions<SistemaDbContext> options)
-            : base(options) 
+            : base(options)
         {
         }
 
@@ -30,7 +30,7 @@ namespace API_SISTEMA.Data
         public DbSet<ProductoPrecio> producto_precios { get; set; }
         public DbSet<API_SISTEMA.Models.Productos> productos { get; set; }
         public DbSet<Proveedores> proveedores { get; set;}
-        public DbSet<Rol> rols { get; set; }    
+        public DbSet<Rol> rols { get; set; }
         public DbSet<RolPermiso> rol_Permisocs { get; set; }
         public DbSet<TablaPermiso> tabla_Permisos { get; set; }
         public DbSet<Usuario> usuarios { get; set; }
@@ -61,27 +61,30 @@ namespace API_SISTEMA.Data
         public DbSet<SesionCaja> sesioncaja { get; set; }
         public DbSet<TipoMovimientoCaja> tipomovimientocaja {  get; set; }
         public DbSet<MovimientoCaja> movimientocaja { get; set; }
-        public DbSet<Gastos> gastos { get; set; } 
+        public DbSet<Gastos> gastos { get; set; }
         public DbSet<UsuarioPermiso> usuario_permisos { get; set; }
 
 
 
 
-        //mapear las tablas en SQLserver
+        // Mapeo relacional para PostgreSQL.
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new AuditoriaEventoConfiguration());
             WhatsAppEnvioConfiguration.Configurar(modelBuilder);
             modelBuilder.ApplyConfiguration(new DocumentoFelConfiguration());
             modelBuilder.ApplyConfiguration(new DocumentoFelIntentoConfiguration());
+            modelBuilder.ApplyConfiguration(new ProductoConfiguration());
+            modelBuilder.ApplyConfiguration(new PresentacionConfiguration());
+            modelBuilder.ApplyConfiguration(new ProductoPresentacionConfiguration());
             modelBuilder.ApplyConfiguration(new ZonaEntregaConfiguration());
             modelBuilder.ApplyConfiguration(new PedidoCatalogoConfiguration());
             modelBuilder.ApplyConfiguration(new DetallePedidoCatalogoConfiguration());
 
             modelBuilder.Entity<AuditoriaEventoDetalle>(detalle =>
             {
-                detalle.ToTable("auditoria_evento_detalle", "dbo", tabla =>
-                    tabla.HasCheckConstraint("CK_auditoria_detalle_campo", "LEN(LTRIM(RTRIM(campo))) > 0"));
+                detalle.ToTable("auditoria_evento_detalle", "public", tabla =>
+                    tabla.HasCheckConstraint("CK_auditoria_detalle_campo", "length(btrim(campo)) > 0"));
                 detalle.HasOne(d => d.AuditoriaEvento)
                     .WithMany(e => e.Detalles)
                     .HasForeignKey(d => d.IdAuditoria)
@@ -93,10 +96,8 @@ namespace API_SISTEMA.Data
 
             modelBuilder.Entity<Categoria>().ToTable("categoria");
             modelBuilder.Entity<Marca>().ToTable("marca");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Cliente>().ToTable("cliente");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Ventas>().ToTable("ventas");
             modelBuilder.Entity<VentaOperacion>().ToTable("venta_operacion");
@@ -119,116 +120,77 @@ namespace API_SISTEMA.Data
             modelBuilder.Entity<DetalleVenta>().Property(d => d.subtotal).HasPrecision(18, 2);
             modelBuilder.Entity<Pagos>().Property(p => p.monto).HasPrecision(18, 2);
             modelBuilder.Entity<Ventas>().HasIndex(v => new { v.id_sesion_caja, v.fecha_venta });
-            base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<API_SISTEMA.Models.Productos>().ToTable("productos", tabla =>
-                tabla.HasCheckConstraint("CK_productos_stock_minimo", "[stock_minimo] >= 0"));
-            base.OnModelCreating(modelBuilder);
-            
-            modelBuilder.Entity<Presentacion>().ToTable("presentaciones");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<DetalleVenta>().ToTable("detalle_venta");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Usuario>().ToTable("usuario");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Rol>().ToTable("rol");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<RolPermiso>().ToTable("rol_permiso");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<ProductoPrecio>().ToTable("producto_precio");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Pagos>().ToTable("pagos");
-            modelBuilder.Entity<Pagos>().HasIndex(p => p.id_operacion).IsUnique().HasDatabaseName("UX_pagos_id_operacion").HasFilter("[id_operacion] IS NOT NULL");
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Pagos>().HasIndex(p => p.id_operacion).IsUnique().HasDatabaseName("UX_pagos_id_operacion").HasFilter("id_operacion IS NOT NULL");
 
             modelBuilder.Entity<TipoCliente>().ToTable("tipo_cliente");
-            base.OnModelCreating(modelBuilder); 
-            
-            modelBuilder.Entity<EstadoVenta>().ToTable("estado_venta");
-            base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<ProductoPresentacion>().ToTable("producto_presentacion ", tabla =>
-                tabla.HasCheckConstraint("CK_producto_presentaciones_unidades", "[unidades_equivalentes] > 0"));
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<EstadoVenta>().ToTable("estado_venta");
 
             modelBuilder.Entity<DetalleCompra>().ToTable("detalle_compra");
-            base.OnModelCreating(modelBuilder);
-            
+
             modelBuilder.Entity<RegistroCompras>().ToTable("registro_compras");
-            modelBuilder.Entity<API_SISTEMA.Models.Productos>()
-                .Property(p => p.PrecioPromedioCompra).HasPrecision(18, 6);
+
             modelBuilder.Entity<RegistroCompras>().Property(c => c.TotalCompra).HasPrecision(10, 2);
             modelBuilder.Entity<RegistroCompras>().Property(c => c.SaldoPendiente).HasPrecision(10, 2);
             modelBuilder.Entity<DetalleCompra>().Property(c => c.precio).HasPrecision(10, 2);
             modelBuilder.Entity<DetalleCompra>().Property(c => c.subtotal).HasPrecision(10, 2);
             modelBuilder.Entity<PagosCompra>().Property(c => c.monto).HasPrecision(10, 2);
             modelBuilder.Entity<Proveedores>().ToTable("proveedores");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<EstadoCompra>().ToTable("estado_compra");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Empresa>().ToTable("empresa");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<PagosCompra>().ToTable("pagos_compra");
             modelBuilder.Entity<PagosCompra>().Property(p => p.IdOperacion).HasColumnName("id_operacion");
             modelBuilder.Entity<PagosCompra>().HasIndex(p => p.IdOperacion).IsUnique()
-                .HasDatabaseName("UX_pagos_compra_id_operacion").HasFilter("[id_operacion] IS NOT NULL");
-            base.OnModelCreating(modelBuilder);
+                .HasDatabaseName("UX_pagos_compra_id_operacion").HasFilter("id_operacion IS NOT NULL");
 
             modelBuilder.Entity<API_SISTEMA.Models.Caja>().ToTable("caja");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<MovimientoCaja>().ToTable("movimiento_caja");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<SesionCaja>().ToTable("sesion_caja");
-            // SQL Server permite un solo NULL en este indice: una unica sesion abierta global.
-            modelBuilder.Entity<SesionCaja>().HasIndex(s => s.fecha_cierre).IsUnique()
-                .HasFilter("[fecha_cierre] IS NULL").HasDatabaseName("UX_sesion_caja_unica_abierta");
+            // NULLS NOT DISTINCT garantiza una sola sesión abierta global.
+            modelBuilder.Entity<SesionCaja>().HasIndex(s => s.fecha_cierre).IsUnique().AreNullsDistinct(false)
+                .HasFilter("fecha_cierre IS NULL").HasDatabaseName("UX_sesion_caja_unica_abierta");
             modelBuilder.Entity<SesionCaja>().Property(s => s.monto_inicial).HasPrecision(10, 2);
             modelBuilder.Entity<SesionCaja>().Property(s => s.monto_esperado).HasPrecision(10, 2);
             modelBuilder.Entity<SesionCaja>().Property(s => s.monto_contado).HasPrecision(10, 2);
             modelBuilder.Entity<SesionCaja>().Property(s => s.diferencia).HasPrecision(10, 2);
             modelBuilder.Entity<MovimientoCaja>().Property(s => s.monto).HasPrecision(10, 2);
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<TipoMovimientoCaja>().ToTable("tipo_movimiento_caja");
-            base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Gastos>().ToTable("gastos"); 
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Gastos>().ToTable("gastos");
 
             modelBuilder.Entity<UsuarioPermiso>().ToTable("usuario_permiso");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<RolPermiso>().ToTable("rol_permiso");
-            base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<TablaPermiso>().ToTable("tabla_permisos"); 
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<TablaPermiso>().ToTable("tabla_permisos");
 
             modelBuilder.Entity<UsuarioPermiso>().ToTable("usuario_permiso");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<RolPermiso>().ToTable("rol_permiso");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<CuentaCliente>().ToTable("cuenta_cliente");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Conversacion>().ToTable("conversacion");
-            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Mensaje>().ToTable("mensaje");
-            base.OnModelCreating(modelBuilder);
 
 
 
@@ -252,12 +214,8 @@ namespace API_SISTEMA.Data
                 .HasOne(p => p.TipoCliente)
                 .WithMany(x => x.ProductoPrecios)
                 .HasForeignKey(p => p.id_tipo_cliente);
-                base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<ProductoPresentacion>()
-               .HasOne(pp => pp.Producto)
-               .WithMany(p => p.ProductoPresentaciones)
-               .HasForeignKey(pp => pp.id_producto);
+
 
             modelBuilder.Entity<Ventas>()
                 .HasOne(v => v.cliente)
@@ -302,7 +260,7 @@ namespace API_SISTEMA.Data
             modelBuilder.Entity<SesionCaja>()
                 .HasOne(v => v.caja)
                 .WithMany()
-                .HasForeignKey(v => v.id_caja); 
+                .HasForeignKey(v => v.id_caja);
 
             modelBuilder.Entity<SesionCaja>()
                 .HasOne(s => s.usuarioapertura)
@@ -385,7 +343,7 @@ namespace API_SISTEMA.Data
                 .HasOne(v => v.Usuario)
                 .WithMany()
                 .HasForeignKey(v => v.id_usuario);
-            
+
             modelBuilder.Entity<UsuarioPermiso>()
                 .HasOne(v => v.tabla_permiso)
                 .WithMany()
@@ -401,17 +359,13 @@ namespace API_SISTEMA.Data
                 .WithMany()
                 .HasForeignKey(v => v.IdUsuario)
                 .OnDelete(DeleteBehavior.Restrict);
-                
+
             modelBuilder.Entity<Mensaje>()
                 .HasOne(v => v.Conversacion)
                 .WithMany()
                 .HasForeignKey(v => v.IdConversacion);
 
-            modelBuilder.Entity<ProductoPresentacion>()
-                .HasOne(p => p.Presentacion)
-                .WithMany()
-                .HasForeignKey(p => p.IdPresentacion)
-                .OnDelete(DeleteBehavior.Restrict);
+
 
             // Una categoría puede tener muchas marcas; cada marca tiene una sola categoría.
             // Impide borrar una categoría con marcas asociadas y evita borrarlas en cascada.
@@ -424,12 +378,7 @@ namespace API_SISTEMA.Data
 
             // Una marca tiene muchos productos; cada producto requiere una marca.
             // Impide borrar una marca con productos asociados.
-            modelBuilder.Entity<API_SISTEMA.Models.Productos>()
-                .HasOne(p => p.Marca)
-                .WithMany()
-                .HasForeignKey(p => p.IdMarca)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Restrict);
+
 
             // Un usuario puede tener varias sesiones; cada sesión pertenece a un usuario.
             modelBuilder.Entity<SesionUsuario>()
@@ -447,6 +396,8 @@ namespace API_SISTEMA.Data
             modelBuilder.Entity<SesionUsuario>().ToTable("sesiones_usuario", table =>
                 table.HasCheckConstraint("CK_sesiones_usuario_motivo_cierre",
                     "motivo_cierre IN ('VOLUNTARIO', 'EXPIRACION')"));
+            PostgreSqlConfiguration.Configurar(modelBuilder);
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

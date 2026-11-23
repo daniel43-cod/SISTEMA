@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace API_SISTEMA.Services.PagoCompra;
 
 public class PagoCompraService(SistemaDbContext context, MovimientoCajaService movimientos,
-    API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService auditoria)
+    API_SISTEMA.Services.Auditoria.CatalogoAuditoriaService auditoria, TimeProvider? reloj = null)
 {
     public async Task<List<PagoCompraHistorialDto>> ListarPagos(int idCompra, CancellationToken ct)
     {
@@ -50,7 +50,7 @@ public class PagoCompraService(SistemaDbContext context, MovimientoCajaService m
         {
             IdOperacion = dto.IdOperacion,
             id_compra = compra.IdCompra, id_usuario = idUsuario, id_sesion_caja = sesionCaja.id_sesion_caja,
-            monto = dto.monto, observacion = dto.observacion?.Trim() ?? string.Empty, fecha_pago = DateTime.Now
+            monto = dto.monto, observacion = dto.observacion?.Trim() ?? string.Empty, fecha_pago = RelojNegocio.Ahora(reloj)
         };
         var saldoAnterior = compra.SaldoPendiente;
         context.pagosCompras.Add(pago);

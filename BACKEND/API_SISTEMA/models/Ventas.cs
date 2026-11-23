@@ -11,7 +11,7 @@ namespace API_SISTEMA.Models
         public decimal? descuento { get; set; }
         public decimal impuesto { get; set; }
         public decimal total { get; set; }
-        public DateTime fecha_venta { get; set; } = DateTime.Now;
+        public DateTime fecha_venta { get; set; } = API_SISTEMA.Utilidades.RelojNegocio.Ahora();
         public int id_cliente { get; set; }
         [MaxLength(3)] public string? tipo_identificacion_receptor { get; set; }
         [MaxLength(20)] public string? identificacion_receptor { get; set; }

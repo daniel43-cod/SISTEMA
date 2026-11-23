@@ -10,10 +10,12 @@ namespace API_SISTEMA.Services.Gastos
     public class CrearGastosService
     {
         private readonly SistemaDbContext _context;
+        private readonly TimeProvider _reloj;
         private readonly MovimientoCajaService _movimientoCajaService;
-        public CrearGastosService(SistemaDbContext context, MovimientoCajaService movimientoCajaService)
+        public CrearGastosService(SistemaDbContext context, MovimientoCajaService movimientoCajaService, TimeProvider? reloj = null)
         {
             _context = context;
+            _reloj = reloj ?? TimeProvider.System;
             _movimientoCajaService = movimientoCajaService;
         }
 
@@ -35,7 +37,7 @@ namespace API_SISTEMA.Services.Gastos
                 descripcion = gastoDto.descripcion.Trim(),
                 monto = gastoDto.monto,
                 observacion = gastoDto.observacion?.Trim() ?? string.Empty,
-                fecha = DateTime.Now
+                fecha = RelojNegocio.Ahora(_reloj)
             };
             _context.gastos.Add(gasto);
 

@@ -9,7 +9,7 @@ public class DetallePedidoCatalogo
     public string NombrePresentacion { get; set; } = string.Empty;
     public int Cantidad { get; set; }
     public decimal PrecioUnitario { get; set; }
-    // Calculado por SQL Server; EF lo recupera al guardar.
+    // Calculado por la base de datos; EF lo recupera al guardar.
     public decimal Subtotal { get; private set; }
 
     public PedidoCatalogo Pedido { get; set; } = null!;

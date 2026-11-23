@@ -27,4 +27,4 @@ el cierre y se reintenta después. No depende solo de row_version para evitar du
 
 Pruebas Auth.Checks verifican login, invalidación tras cierre, expiración sin navegador,
 fecha real y procesamiento repetido. Usan SQLite con adaptación de rowversion y tipos
-específicos; se necesita validar el despliegue y concurrencia en SQL Server real.
+específicos; se necesita validar el despliegue y concurrencia en PostgreSQL real.

@@ -16,4 +16,4 @@ el XML nuevo, sin actualizar su historial ni sobrescribir el XML de un intento y
 Los reintentos POR_CONFIRMAR conservan el XML original, incluso si usa dos decimales.
 Esta versión solo contempla líneas afectas al 12%, no productos exentos ni impuestos especiales.
 
-Aplicar primero `docs/sql/ventas-impuesto-precision.sql`. No hace falta otro script para este paso.
+Aplicar primero `docs/postgresql.md`. No hace falta otro script para este paso.

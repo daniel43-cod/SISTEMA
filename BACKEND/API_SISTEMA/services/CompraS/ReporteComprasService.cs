@@ -38,10 +38,7 @@ public sealed class ReporteComprasService(
             return null;
         }
 
-        var hasta = TimeZoneInfo.ConvertTime(
-            reloj.GetUtcNow(),
-            TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala")
-        ).DateTime;
+        var hasta = RelojNegocio.Ahora(reloj);
 
         // Obtiene el total original de cada compra de esta sesión.
         var puntos = await context.registroCompras

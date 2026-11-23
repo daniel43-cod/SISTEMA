@@ -5,7 +5,7 @@ using API_SISTEMA.Dtos.Login;
 using API_SISTEMA.Models;
 using API_SISTEMA.Services.Auditoria;
 using API_SISTEMA.Utilidades;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Usuarios;
@@ -41,13 +41,13 @@ public sealed class UsuarioCrearService(SistemaDbContext context, CatalogoAudito
         cancellationToken.ThrowIfCancellationRequested();
         var hash = BCrypt.Net.BCrypt.HashPassword(dto.password);
         cancellationToken.ThrowIfCancellationRequested();
-        // Los índices únicos de SQL Server resuelven altas concurrentes sin bloqueos Serializable.
+        // Los índices únicos de PostgreSQL resuelven altas concurrentes sin bloqueos Serializable.
         await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
         var user = new Usuario
         {
             nombre = dto.nombre.Trim(), apellido = dto.apellido.Trim(), usuario = username,
             telefono = phone, correo = email, password = hash, id_rol = role.id_rol,
-            estado = true, fecha_Creacion = DateTime.Now
+            estado = true, fecha_Creacion = API_SISTEMA.Utilidades.RelojNegocio.Ahora()
         };
         try
         {
@@ -58,7 +58,7 @@ public sealed class UsuarioCrearService(SistemaDbContext context, CatalogoAudito
             await context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqlException sql && sql.Number is 2601 or 2627)
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException sql && sql.SqlState == PostgresErrorCodes.UniqueViolation)
         {
             throw new UsuarioConflictException("Ya existe un usuario con ese usuario, correo o teléfono.");
         }

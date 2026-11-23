@@ -16,7 +16,7 @@ public sealed class ReporteVentasIntervaloService(SistemaDbContext context, Time
             throw new UnauthorizedAccessException("Solo un administrador puede consultar este reporte.");
         var sesion = await context.sesioncaja.AsNoTracking().SingleOrDefaultAsync(s => s.id_sesion_caja == idSesionCaja, ct)
             ?? throw new KeyNotFoundException("La sesión de caja no existe.");
-        var ahora = TimeZoneInfo.ConvertTime(reloj.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala")).DateTime;
+        var ahora = RelojNegocio.Ahora(reloj);
         var hasta = sesion.fecha_cierre ?? ahora;
         if (hasta < sesion.fecha_apertura) throw new ValidationException("Las fechas de la sesión de caja no son válidas.");
         var ventas = await context.ventas.AsNoTracking().Where(v => v.id_sesion_caja == idSesionCaja &&
@@ -46,7 +46,7 @@ public sealed class ReporteVentasIntervaloService(SistemaDbContext context, Time
         var sesion = await context.sesioncaja.AsNoTracking().SingleOrDefaultAsync(s => s.id_sesion_caja == filtro.IdSesionCaja, ct)
             ?? throw new KeyNotFoundException("La sesión de caja no existe.");
         // Las fechas de ventas y caja existentes se almacenan en hora local del negocio.
-        var ahora = TimeZoneInfo.ConvertTime(reloj.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala")).DateTime;
+        var ahora = RelojNegocio.Ahora(reloj);
         var hasta = sesion.fecha_cierre ?? ahora;
         if (hasta < sesion.fecha_apertura) throw new ValidationException("Las fechas de la sesión de caja no son válidas.");
         var paso = TimeSpan.FromMinutes(filtro.IntervaloMinutos);

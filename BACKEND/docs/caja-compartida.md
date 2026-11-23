@@ -6,14 +6,14 @@ El login no abre una caja. Vendedores no pueden abrir ni cerrar caja.
 
 ## Base de datos
 
-Aplicar `sql/caja-compartida.sql` con la API detenida antes de usar esta funcionalidad.
+Aplicar `docs/postgresql.md` con la API detenida antes de usar esta funcionalidad.
 El script no modifica datos: rechaza varias sesiones abiertas y crea el índice único
 filtrado. El mapeo EF por sí solo no aplica este cambio a una base existente.
 
 Los importes de sesión y movimientos se mapean como `decimal(10,2)`.
 Las naturalezas admitidas de movimientos son `Entrada`/`Ingreso` y `Salida`/`Egreso` (sin distinguir
 mayúsculas ni espacios exteriores). Un movimiento inválido impide cerrar: no se
-omite ni se interpreta por su ID. Revisar este catálogo en SQL Server.
+omite ni se interpreta por su ID. Revisar este catálogo en PostgreSQL.
 
 ## Endpoints
 
@@ -41,4 +41,4 @@ No se reconstruyen movimientos faltantes del historial anterior.
 
 Pruebas automatizadas con SQLite verifican permisos, apertura duplicada, sesión
 compartida, cierre por otro administrador, saldo y auditoría. El índice de NULL único
-y la concurrencia/bloqueos se deben verificar adicionalmente con SQL Server.
+y la concurrencia/bloqueos se deben verificar adicionalmente con PostgreSQL.

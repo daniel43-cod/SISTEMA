@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Caja;
 
-public class CajaService(SistemaDbContext context, CatalogoAuditoriaService auditoria, CajaSaldoService saldo)
+public class CajaService(SistemaDbContext context, CatalogoAuditoriaService auditoria, CajaSaldoService saldo, TimeProvider? reloj = null)
 {
     // Consulta administrativa acotada; no expone entidades ni historial de caja.
     public async Task<List<CajaDisponibleDto>> CajasDisponibles(CancellationToken ct = default) =>
@@ -48,7 +48,7 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
             throw new CajaValidationException("Ya existe una sesion de caja abierta.");
         var sesion = new SesionCaja
         {
-            id_caja = dto.id_caja, id_usuario_apertura = idUsuario, fecha_apertura = DateTime.Now,
+            id_caja = dto.id_caja, id_usuario_apertura = idUsuario, fecha_apertura = RelojNegocio.Ahora(reloj),
             monto_inicial = dto.monto_inicial, monto_esperado = dto.monto_inicial,
             observacion_apertura = dto.observacion?.Trim() ?? string.Empty
         };
@@ -80,7 +80,7 @@ public class CajaService(SistemaDbContext context, CatalogoAuditoriaService audi
             throw new CajaValidationException("El resultado del cierre supera decimal(10,2).");
         // Se conserva quien abrio y se registra al administrador que realmente cierra.
         sesion.id_usuario_cierre = idUsuario;
-        sesion.fecha_cierre = DateTime.Now;
+        sesion.fecha_cierre = RelojNegocio.Ahora(reloj);
         sesion.monto_esperado = esperado;
         sesion.monto_contado = dto.monto_contado;
         sesion.diferencia = diferencia;

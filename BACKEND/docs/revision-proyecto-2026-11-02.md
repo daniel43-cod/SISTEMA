@@ -6,7 +6,7 @@ Revisión de estructura, arranque, dependencias, controladores, persistencia, se
 
 ## Mapa del sistema
 
-- Backend: API ASP.NET Core, C# y .NET 10. Controladores → servicios → SistemaDbContext → SQL Server mediante EF Core. DTOs separados de las entidades; servicios organizados principalmente por funcionalidad.
+- Backend: API ASP.NET Core, C# y .NET 10. Controladores → servicios → SistemaDbContext → PostgreSQL mediante EF Core. DTOs separados de las entidades; servicios organizados principalmente por funcionalidad.
 - Frontend vecino: `../Front-End.web/Front-End`, React 19, TypeScript y Vite, con PWA. Organización por funcionalidades, cliente HTTP común y navegación interna por estado. `/catalogo` abre el catálogo público; el resto entra al acceso del personal. La sesión interna se mantiene en memoria.
 - Seguridad: JWT y BCrypt; administrador y vendedor para personal, CLIENTE para cuentas externas. Política de autenticación por defecto, comprobación de sesiones internas y versión de credenciales en cada petición. Permisos de usuario pueden sobrescribir los del rol.
 - Datos: catálogo (categorías, marcas, productos, presentaciones y precios), inventario, clientes, proveedores, ventas, compras, pagos, gastos, caja, pedidos públicos, cuentas de clientes, conversaciones, sesiones y auditoría.
@@ -40,7 +40,7 @@ Se ejecutó `dotnet build API_SISTEMA/API_SISTEMA.csproj --no-restore`: compilac
 | Auth.Checks | No compila: CS0200 en generador OpenAPI |
 | ProductoConsulta.Checks | No compila: CS0200 en generador OpenAPI |
 
-Las pruebas no usaron SQL Server del negocio ni llamadas reales al proveedor de IA. No se ejecutaron build, pruebas ni inspección visual del frontend. SQLite no valida los bloqueos ni los deadlocks de SQL Server.
+Las pruebas no usaron PostgreSQL del negocio ni llamadas reales al proveedor de IA. No se ejecutaron build, pruebas ni inspección visual del frontend. SQLite no valida los bloqueos ni los deadlocks de PostgreSQL.
 
 ## Hallazgos prioritarios
 
@@ -64,4 +64,4 @@ Las pruebas no usaron SQL Server del negocio ni llamadas reales al proveedor de 
 
 ## Orden sugerido de trabajo
 
-Primero resolver las dependencias que bloquean pruebas y comprobar publicación Release. Después unificar fechas y validar esquema y concurrencia en SQL Server de pruebas. Continuar con errores seguros, límites de solicitudes externos y ejecución completa de suites. Dejar la reorganización estructural y la limpieza de Git para cambios separados y revisables.
+Primero resolver las dependencias que bloquean pruebas y comprobar publicación Release. Después unificar fechas y validar esquema y concurrencia en PostgreSQL de pruebas. Continuar con errores seguros, límites de solicitudes externos y ejecución completa de suites. Dejar la reorganización estructural y la limpieza de Git para cambios separados y revisables.

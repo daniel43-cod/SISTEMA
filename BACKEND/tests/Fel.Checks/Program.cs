@@ -170,6 +170,7 @@ await ReceptorLookupChecks.Run();
 RecuperacionFelChecks.Run();
 await VerificarReceptorFelChecks.Run();
 CertificadoFelChecks.Run(xml);
+TicketPosChecks.Run(empresa);
 Console.WriteLine("FEL: XML, IVA, límite CF, CUI, HTTP simulado y normalización de éxito/rechazo/alertas correctos. Sin llamadas reales.");
 
 sealed class ServidorSimulado(Guid identificador) : HttpMessageHandler

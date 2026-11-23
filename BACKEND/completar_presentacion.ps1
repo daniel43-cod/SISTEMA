@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $outputDir = Join-Path $PSScriptRoot 'documentos'
@@ -15,7 +15,7 @@ $map = @{
 '[Nombre integrante 2]'=''; '[Nombre integrante 3]'='';
 '[Explica en 2-3 líneas el problema real que resuelve tu proyecto y para quién es útil.]'="Problema que resuelve`nFacilita a los clientes consultar productos, precios y disponibilidad sin recorrer manualmente el catálogo. El asistente responde en español con datos consultados desde el sistema.";
 '[Resume el alcance: módulos, funcionalidades principales que implementaste.]'="Alcance final`nBackend en ASP.NET Core con catálogo y conversaciones. El cliente autenticado envía su consulta; el backend llama a OpenAI, ejecuta búsquedas de solo lectura y guarda la respuesta. El asistente no crea ventas ni modifica inventario.";
-'[Herramienta o motor principal]'="Herramienta o motor principal`nASP.NET Core (.NET 10), Entity Framework Core y SQL Server.";
+'[Herramienta o motor principal]'="Herramienta o motor principal`nASP.NET Core (.NET 10), Entity Framework Core y PostgreSQL.";
 '[Herramienta de diseño/modelado]'="Herramienta de diseño/modelado`nNo se identificó una herramienta de modelado en los archivos revisados.";
 '[Lenguaje o entorno adicional]'="Lenguaje o entorno adicional`nC#, LINQ y JSON. HttpClient conecta el backend con la API de OpenAI.";
 '[Recursos de apoyo: cursos, documentación]'="Recursos de apoyo`nDocumentación oficial de OpenAI: Responses API y llamadas a funciones. No se verificaron cursos utilizados.";
