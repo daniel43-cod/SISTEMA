@@ -72,3 +72,9 @@
   .wa-share-heading { flex-basis: calc(100% - 60px); }
   .wa-share-header .wa-send-button { width: 100%; margin-top: 5px; min-height: 48px; }
 }
+
+.sale-certification-dialog:not([open]) { display: none; }
+.sale-certification-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.sale-certification-dialog-header h2 { margin: 0; color: #1f2937; font-size: 22px; }
+.sale-certification-dialog-header > button { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 12px; background: #f1f5f9; color: #526477; font-size: 26px; }
+.sale-certification-dialog .fel-certification-panel { margin: 0; }

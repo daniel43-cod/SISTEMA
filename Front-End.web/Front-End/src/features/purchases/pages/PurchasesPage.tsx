@@ -218,14 +218,14 @@ export function PurchasesPage() {
               <span className="purchase-mobile-time">{Number.isNaN(Date.parse(p.fecha_ingreso)) ? 'Hora no disponible' : new Intl.DateTimeFormat('es-GT', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(p.fecha_ingreso))}</span>
             </div>
           </li>)}
-        </ul> : <div className="purchase-table-scroll purchase-history-cards"><table>
-          <thead><tr>{desktopView && <th scope="col">Compra</th>}<th scope="col">Distribuidor</th><th scope="col">Usuario</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th><th scope="col" className="purchase-history-date">Fecha y hora</th>{desktopView && <th scope="col">Acciones</th>}</tr></thead>
+        </ul> : <div className="purchase-table-scroll purchase-history-cards"><table className="purchase-history-table">
+          <thead><tr><th scope="col">Distribuidor</th><th scope="col">Usuario</th><th scope="col">Total</th><th scope="col">Saldo</th><th scope="col">Estado</th></tr></thead>
           <tbody>{purchases.map(p => <tr key={p.id_compra} className="purchase-history-row" tabIndex={saving ? -1 : 0} aria-label={`Ver compra de ${p.nombre_proveedor}`} onClick={() => { if (!saving) setSelected(p) }} onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(p) } }}>
-                        {desktopView && <td><strong>{p.id_compra}</strong><small className="purchase-history-row-date">{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</small></td>}
+
             <td data-label="Proveedor">{p.nombre_proveedor}</td><td data-label="Responsable">{p.nombre_usuario}</td><td data-label="Total">{money.format(p.total_compra)}</td>
             <td data-label="Saldo pendiente" className={p.saldo_pendiente > 0 ? 'purchase-balance-pending' : undefined}>{money.format(p.saldo_pendiente)}</td><td data-label="Estado">{p.saldo_pendiente > 0 ? 'Pendiente' : 'Pagada'}</td>
-            <td className="purchase-history-date" data-label="Fecha y hora"><time dateTime={p.fecha_ingreso}>{new Date(p.fecha_ingreso).toLocaleString('es-GT')}</time></td>
-            {desktopView && <td><button type="button" disabled={saving} onKeyDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); setSelected(p) }}>{p.saldo_pendiente > 0 ? "Registrar pago" : "Ver detalle"}</button></td>}
+
+
           </tr>)}</tbody>
         </table></div>}
       <nav className="purchase-pagination" aria-label="Páginas de compras">

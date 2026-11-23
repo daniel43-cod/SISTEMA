@@ -37,6 +37,6 @@ La bienvenida confirma la sesión; los módulos de ventas y administración aún
 
 `npm run build`, `npm run lint` y `node --experimental-strip-types --test tests/auth.test.ts` (Node compatible con TypeScript nativo).
 
-Las pruebas de contrato usan fetch simulado: no crean usuarios ni prueban contraseñas en la base real. Para verificar con SQL Server, ejecutar ambos servicios e iniciar sesión con una cuenta autorizada.
+Las pruebas de contrato usan fetch simulado: no crean usuarios ni prueban contraseñas en la base real. Para verificar con PostgreSQL, ejecutar ambos servicios e iniciar sesión con una cuenta autorizada.
 
 Referencia: [proxy de Vite](https://vite.dev/config/server-options).

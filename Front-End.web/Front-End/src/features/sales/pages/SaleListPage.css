@@ -311,3 +311,150 @@
   .sale-mobile-card-time { font-size: .65rem; color: #7a8492; white-space: nowrap; }
   .sale-mobile-card-options button.sale-more-button { width: 44px; min-height: 44px; color: #075b96; }
 }
+
+.sale-receipt-direct-actions { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sale-list-page .sale-receipt-direct-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 8px; border: 1px solid #d3deed; border-radius: 10px; background: #fff; }
+.sale-list-page .sale-receipt-direct-actions button.sale-direct-whatsapp { color: #128c4a; }
+.sale-list-page .sale-receipt-direct-actions button.sale-direct-print { color: #075b96; }
+.sale-list-page .sale-receipt-direct-actions button:hover:not(:disabled) { background: #f0f7fc; }
+.sale-list-page .sale-receipt-direct-actions button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+@media (max-width: 800px) {
+  .sale-mobile-cards > .sale-mobile-sale { grid-template-columns: minmax(0, 1fr) minmax(82px, 28%); }
+  .sale-direct-print-label { display: none; }
+}
+
+/* Columnas del historial de PC: nombres flexibles, importes y acciones acotados. */
+@media (min-width: 801px) {
+  .sale-list-view .sale-list-body table.sale-history-table { table-layout: fixed; width: 100%; min-width: 800px; }
+  .sale-history-table .sale-history-seller-col { width: 24%; }
+  .sale-history-table .sale-history-amount-col { width: 128px; }
+  .sale-history-table .sale-history-status-col { width: 112px; }
+  .sale-history-table .sale-history-actions-col { width: 112px; }
+  .sale-list-view .sale-list-body .sale-history-table th,
+  .sale-list-view .sale-list-body .sale-history-table td { padding-inline: 12px; vertical-align: middle; }
+  .sale-list-view .sale-list-body .sale-history-table th { padding-block: 12px; white-space: nowrap; font-size: .8rem; font-weight: 650; }
+  .sale-list-view .sale-list-body .sale-history-table td { padding-block: 6px; line-height: 1.4; }
+  .sale-history-table .sale-history-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sale-history-table th.sale-list-money,
+  .sale-history-table td.sale-list-money { text-align: right; font-variant-numeric: tabular-nums; }
+  .sale-history-table td:nth-child(3) { font-weight: 650; color: #263747; }
+  .sale-history-table th:last-child,
+  .sale-history-table td:last-child { text-align: center; padding-inline: 8px; }
+  .sale-history-table .sale-list-status { font-size: .75rem; padding: 4px 8px; }
+  .sale-history-table .sale-receipt-direct-actions { gap: 4px; }
+}
+
+@media (min-width: 801px) {
+  .sale-detail-desktop-dialog { width: min(1280px, calc(100vw - 64px)); max-height: calc(100dvh - 64px); border-radius: 24px; background: #fff; }
+  .sale-detail-desktop-dialog > .sale-payment { --receipt-ink: #1f2937; --receipt-muted: #64748b; --receipt-border: #d3deed; padding: 0; max-width: none; background: white; border-radius: inherit; }
+  .sale-detail-desktop-dialog .sale-detail-header { padding: 28px 32px 18px; margin: 0; border-bottom: 1px solid #edf2f7; }
+  .sale-detail-desktop-dialog .sale-detail-title-row h2 { display: flex; align-items: center; gap: 14px; font-size: 28px; font-weight: 750; color: #1f2937; }
+  .sale-detail-desktop-dialog .sale-detail-title-row .sale-list-status { font-size: 14px; padding: 6px 14px; border-radius: 999px; }
+  .sale-detail-desktop-dialog .sale-detail-close { width: 48px; min-height: 48px; border-radius: 14px; background: #f1f5f9; font-size: 26px; }
+  .sale-detail-desktop-dialog .sale-detail-metadata { margin: 8px 0 0; gap: 5px 14px; font-size: 15px; color: #64748b; }
+  .sale-detail-desktop-dialog .sale-detail-metadata strong { color: #1f2937; }
+  .sale-detail-desktop-dialog .sale-detail-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; gap: 30px; padding: 24px 32px 32px; }
+  .sale-detail-main, .sale-detail-aside { min-width: 0; }
+  .sale-detail-products-title { margin: 0 0 12px; font-size: 13px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; color: #64748b; }
+  .sale-detail-desktop-dialog .sale-detail-products table { table-layout: fixed; min-width: 0; font-size: 14px; }
+  .sale-detail-desktop-dialog .sale-detail-products th { background: #eaf4fe; color: #075b96; padding: 12px 10px; font-weight: 700; }
+  .sale-detail-desktop-dialog .sale-detail-products td { padding: 14px 10px; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
+  .sale-detail-desktop-dialog .sale-detail-products th:first-child { width: 34%; }
+  .sale-detail-desktop-dialog .sale-detail-products th:nth-child(2) { width: 12%; }
+  .sale-detail-desktop-dialog .sale-detail-products th:nth-child(n+3), .sale-detail-desktop-dialog .sale-detail-products td:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sale-detail-desktop-dialog .sale-detail-products th:nth-child(2), .sale-detail-desktop-dialog .sale-detail-products td:nth-child(2) { text-align: center; }
+  .sale-detail-desktop-dialog .sale-detail-products td:first-child { overflow-wrap: anywhere; }
+  .sale-detail-desktop-dialog .sale-detail-products td:last-child { font-weight: 700; }
+  .sale-detail-presentation { display: block; margin-top: 4px; color: #64748b; font-size: 12px; }
+  .sale-detail-desktop-dialog .sale-receipt-totals { width: min(100%, 380px); margin: 24px 0 22px auto; font-size: 15px; }
+  .sale-detail-desktop-dialog .sale-receipt-totals > div { padding: 10px 0; }
+  .sale-detail-desktop-dialog .sale-receipt-grand-total { margin-top: 4px; padding-top: 16px; font-size: 26px; font-weight: 750; border-color: #d3deed; }
+  .sale-detail-desktop-dialog .sale-detail-settled dd { color: #008553; font-weight: 700; }
+  .sale-detail-profit-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px; background: #f1f6fb; border-radius: 14px; font-size: 14px; }
+  .sale-detail-profit-card small { display: block; color: #64748b; font-size: 12px; margin-top: 3px; }
+  .sale-detail-aside { display: grid; gap: 16px; }
+  .sale-detail-option-card { padding: 22px; border: 1px solid #d3deed; border-radius: 18px; background: #fff; }
+  .sale-detail-option-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .sale-detail-option-heading h3 { margin: 0; font-size: 18px; color: #1f2937; }
+  .sale-detail-option-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; color: #075b96; background: #eaf4fe; }
+  .sale-detail-option-card a { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  .sale-detail-desktop-dialog .sale-detail-aside .fel-certification-panel { margin: 0; padding: 22px; }
+  .sale-detail-desktop-dialog .fel-card-heading h3 { font-size: 18px; }
+  .sale-detail-desktop-dialog .fel-card-heading p { font-size: 13px; }
+  .sale-detail-desktop-dialog .fel-badge { font-size: 12px; padding: 6px 10px; }
+  .sale-detail-desktop-dialog .fel-toggle { border: 0; color: #075b96; background: transparent; padding: 6px; font-size: 13px; }
+  .sale-detail-desktop-dialog .fel-card-body label { display: grid; gap: 7px; font-size: 14px; color: #526477; }
+  .sale-detail-desktop-dialog .fel-card-body input, .sale-detail-desktop-dialog .fel-card-body select { width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px; box-sizing: border-box; border: 1px solid #bfcee0; border-radius: 12px; background: #fff; font: inherit; }
+  .sale-detail-desktop-dialog .fel-card-actions { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; }
+  .sale-detail-desktop-dialog .fel-card-actions button { min-height: 48px; padding: 10px; font-size: 14px; }
+  .sale-detail-desktop-dialog .fel-info { font-size: 14px; padding: 12px; gap: 10px; }
+  .sale-detail-desktop-dialog .sale-detail-actions { position: sticky; bottom: 0; z-index: 3; margin: 0; padding: 18px 32px; border-top: 1px solid #edf2f7; background: #fff; }
+  .sale-detail-desktop-dialog .sale-detail-actions button { min-height: 50px; padding: 12px 20px; border: 1px solid #bfcee0; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 700; background: #fff; color: #1f2937; }
+  .sale-detail-desktop-dialog .sale-detail-actions .wa-send-button { color: #10943b; border-color: #9bd8ae; }
+
+  .sale-detail-desktop-dialog :focus-visible { outline: 2px solid #2389e5; outline-offset: 2px; }
+}
+@media (min-width: 801px) and (max-width: 1100px) {
+  .sale-detail-desktop-dialog { width: calc(100vw - 32px); }
+  .sale-detail-desktop-dialog .sale-detail-layout { gap: 18px; padding: 20px; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .sale-detail-desktop-dialog .sale-detail-products table { font-size: 12px; }
+  .sale-detail-desktop-dialog .sale-detail-products th, .sale-detail-desktop-dialog .sale-detail-products td { padding-inline: 6px; }
+  .sale-detail-desktop-dialog .fel-card-header { flex-wrap: wrap; gap: 8px; }
+  .sale-detail-desktop-dialog .fel-card-actions { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (min-width: 801px) {
+  .sale-detail-desktop-dialog .sale-detail-aside .fel-toggle { display: none; }
+}
+@media (min-width: 801px) and (max-width: 1100px) {
+  .sale-detail-desktop-dialog .sale-detail-layout { grid-template-columns: minmax(0, 1fr); }
+  .sale-detail-desktop-dialog .sale-detail-aside { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .sale-detail-desktop-dialog .sale-detail-products table { font-size: 14px; }
+}
+@media (min-width: 801px) {
+  .sale-detail-desktop-dialog .sale-detail-layout.is-certified { grid-template-columns: minmax(0, 1fr); }
+  .sale-detail-payments-control { width: min(100%, 380px); margin: 20px 0 0 auto; }
+  .sale-detail-payments-control + .sale-receipt-totals { margin-top: 10px; }
+  .sale-detail-desktop-dialog .sale-detail-actions a.fel-secondary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 50px; padding: 12px 20px; box-sizing: border-box; border: 1px solid #bfcee0; border-radius: 14px; background: #fff; color: #1f2937; font-size: 15px; font-weight: 700; text-decoration: none; }
+}
+
+@media (min-width: 801px) {
+  .sale-detail-desktop-dialog { width: min(900px, calc(100vw - 32px)); border-radius: 18px; }
+  .sale-detail-desktop-dialog .sale-detail-header { padding: 20px 24px 14px; }
+  .sale-detail-desktop-dialog .sale-detail-title-row h2 { font-size: 24px; }
+  .sale-detail-desktop-dialog .sale-detail-layout { grid-template-columns: minmax(0, 1fr); padding: 16px 24px 20px; gap: 18px; }
+  .sale-detail-desktop-dialog .sale-detail-aside { grid-template-columns: minmax(0, 1fr); }
+  .sale-detail-products-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+  .sale-detail-products-heading .sale-detail-products-title { margin: 0; }
+  .sale-detail-products-heading button { min-height: 44px; padding: 8px 16px; font-size: 14px; }
+  .sale-detail-desktop-dialog .sale-detail-products th { padding-block: 10px; }
+  .sale-detail-desktop-dialog .sale-detail-products td { padding-block: 10px; }
+  .sale-detail-desktop-dialog .sale-receipt-totals { margin: 16px 0 14px auto; font-size: 14px; }
+  .sale-detail-desktop-dialog .sale-receipt-totals > div { padding-block: 6px; }
+  .sale-detail-desktop-dialog .sale-receipt-grand-total { font-size: 22px; padding-top: 10px; }
+  .sale-detail-desktop-dialog .sale-detail-profit-card { padding: 12px 14px; }
+  .sale-detail-desktop-dialog .sale-detail-actions { padding: 14px 24px; }
+  .sale-detail-desktop-dialog .sale-detail-actions button,
+  .sale-detail-desktop-dialog .sale-detail-actions a.fel-secondary-button { min-height: 44px; padding: 10px 16px; font-size: 14px; }
+}
+.sale-fel-status { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 7px; border-radius: 6px; font-size: .67rem; font-weight: 600; line-height: 1.3; white-space: nowrap; vertical-align: middle; }
+.sale-fel-status::before { content: ''; width: 5px; height: 5px; flex-shrink: 0; border-radius: 50%; background: currentColor; }
+.sale-fel-status.is-certified { color: #087347; background: #e1f5e9; }
+.sale-fel-status.is-not-certified, .sale-fel-status.is-unknown { color: #64748b; background: #f1f5f9; }
+.sale-fel-status.is-rejected { color: #a32929; background: #fff0ee; }
+.sale-fel-status.is-processing { color: #075b96; background: #eaf4fe; }
+.sale-fel-status.is-pending { color: #975400; background: #fff4df; }
+.sale-mobile-total-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; min-width: 0; }
+.sale-history-client-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
+.sale-fel-status-error { flex-shrink: 0; margin: 8px 0; font-size: .8rem; color: #64748b; }
+
+@media (max-width: 800px) {
+  .sale-payment-dialog .sale-detail-title-row { gap: 6px; }
+  .sale-payment-dialog .sale-detail-title-row h2 { min-width: 0; overflow-wrap: anywhere; }
+  .sale-mobile-detail-tools { display: flex; align-items: center; flex-shrink: 0; gap: 2px; }
+  .sale-payment-dialog .sale-mobile-detail-tools button { display: inline-flex; align-items: center; justify-content: center; width: 40px; min-width: 40px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: #075b96; }
+  .sale-payment-dialog .sale-mobile-detail-tools button.sale-mobile-share-icon { color: #128c4a; }
+  .sale-payment-dialog .sale-detail-title-row .sale-detail-close { margin-left: 0; }
+  .sale-payment-dialog .sale-detail-payment-action { gap: 8px; flex-wrap: wrap; }
+  .sale-payment-dialog .sale-detail-payment-action .fel-secondary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 12px; border-radius: 10px; font-size: .8rem; text-decoration: none; }
+}

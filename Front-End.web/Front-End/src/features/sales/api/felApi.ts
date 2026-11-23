@@ -53,3 +53,15 @@ export async function recoverFel(saleId: number, token: string) {
   })
   return parseFelDocument(result, saleId)
 }
+
+export type FelListStatus = { id_venta: number; estado: 'SIN_CERTIFICAR' | 'PENDIENTE' | 'CERTIFICADA' | 'RECHAZADA' | 'EN_PROCESO' | 'POR_CONFIRMAR'; ambiente: 'PRUEBAS' | 'PRODUCCION' }
+export async function loadFelStatuses(ids: number[], token: string, signal?: AbortSignal): Promise<FelListStatus[]> {
+  if (ids.length > 100 || ids.some(id => !Number.isSafeInteger(id) || id < 1) || new Set(ids).size !== ids.length)
+    throw new ApiError('La consulta de estados FEL no es válida.')
+  if (!ids.length) return []
+  const result = await requestJson('/Fel/ventas/estados', { method: 'POST', body: ids, token, signal })
+  if (!Array.isArray(result) || result.length !== ids.length || new Set(result.map(r => record(r) ? r.id_venta : null)).size !== ids.length ||
+      !result.every(r => record(r) && ids.includes(r.id_venta as number) && ['SIN_CERTIFICAR','PENDIENTE','CERTIFICADA','RECHAZADA','EN_PROCESO','POR_CONFIRMAR'].includes(String(r.estado)) && ['PRUEBAS','PRODUCCION'].includes(String(r.ambiente))))
+    throw new ApiError('No se pudieron interpretar los estados FEL. Vuelve a consultarlos.')
+  return result as FelListStatus[]
+}

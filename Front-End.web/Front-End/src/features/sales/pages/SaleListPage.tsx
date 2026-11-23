@@ -1,17 +1,34 @@
 import { listUsers } from '../../users/api/usersApi'
 import { lastSevenSaleDays } from '../utils/saleDateRange'
 import { SalePaymentForm } from './SalePaymentForm'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { TicketPosDialog } from '../components/TicketPosDialog'
+import { WhatsAppIcon, WhatsAppReceiptDialog } from '../components/WhatsAppReceipt'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { loadSaleSummary } from '../api/saleSummaryApi'
 import { loadSaleHistory } from '../api/salesApi'
+import { loadFelStatuses } from '../api/felApi'
+import type { FelListStatus } from '../api/felApi'
+import { felStatusView } from '../utils/felStatusView'
 import type { SaleHistory } from '../api/salesApi'
 
 import './SalesPage.css'
 import './SaleListPage.css'
+
+function SaleFelBadge({ status, loading }: { status?: FelListStatus; loading: boolean }) {
+  const view = felStatusView(status, loading)
+  return <span className={'sale-fel-status is-' + view.tone} title={'Facturación FEL: ' + view.label}>{view.label}</span>
+}
+
+function SaleReceiptActions({saleId,disabled,onPrint,onShare}:{saleId:number;disabled:boolean;onPrint:(id:number)=>void;onShare:(id:number)=>void}) {
+  return <div className="sale-receipt-direct-actions" onClick={e=>e.stopPropagation()} onKeyDown={e=>e.stopPropagation()}>
+    <button type="button" className="sale-direct-whatsapp" disabled={disabled} aria-haspopup="dialog" aria-label={`Compartir venta ${saleId} por WhatsApp`} title="Compartir por WhatsApp" onClick={()=>onShare(saleId)}><WhatsAppIcon /></button>
+    <button type="button" className="sale-direct-print" disabled={disabled} aria-haspopup="dialog" aria-label={`Imprimir venta ${saleId}`} title="Imprimir ticket" onClick={()=>onPrint(saleId)}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
+  </div>
+}
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 
@@ -45,6 +62,9 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState('')
   const [selected, setSelected] = useState<SaleHistory | null>(null)
+  const [printSaleId, setPrintSaleId] = useState<number | null>(null)
+  const [shareSaleId, setShareSaleId] = useState<number | null>(null)
+  const printUnauthorized = useCallback(() => logout('La sesión ya no es válida.'), [logout])
 
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
@@ -52,6 +72,10 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   const [pageSize, setPageSize] = useState(50)
   const [revision, setRevision] = useState(0)
   const [rows, setRows] = useState<SaleHistory[]>([])
+  const [felStatuses, setFelStatuses] = useState<Record<number, FelListStatus>>({})
+  const [felStatusesLoading, setFelStatusesLoading] = useState(false)
+  const [felStatusesError, setFelStatusesError] = useState(false)
+  const [felRevision, setFelRevision] = useState(0)
   const [salesVisible, setSalesVisible] = useState(false)
   const [salesTotal, setSalesTotal] = useState<number | null>(null)
   const [profitTotal, setProfitTotal] = useState<number | null>(null)
@@ -111,6 +135,21 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
     return () => controller.abort()
   }, [token, page, revision, logout, range, isAdmin, userId, pageSize, desktopView, appliedSearch, desktopStatus])
 
+  useEffect(() => {
+    const controller = new AbortController()
+    setFelStatuses({}); setFelStatusesError(false)
+    if (!token || !rows.length) { setFelStatusesLoading(false); return () => controller.abort() }
+    setFelStatusesLoading(true)
+    void loadFelStatuses(rows.map(sale => sale.id_ventas), token, controller.signal).then(result => {
+      if (!controller.signal.aborted) setFelStatuses(Object.fromEntries(result.map(status => [status.id_venta, status])))
+    }).catch(failure => {
+      if (controller.signal.aborted) return
+      if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
+      else setFelStatusesError(true)
+    }).finally(() => { if (!controller.signal.aborted) setFelStatusesLoading(false) })
+    return () => controller.abort()
+  }, [rows, token, logout, felRevision])
+
   function desktopAmount(value: number | null, visible: boolean, toggle: () => void, label: string) {
     return <div className="sale-desktop-amount">
       <strong>{visible ? value === null ? '—' : money.format(value) : 'Q ••••••'}</strong>
@@ -136,6 +175,8 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   )
   return <section className="sales-page sale-list-page sale-list-view" aria-label={isAdmin && range ? 'Historial de ventas por fechas' : 'Ventas de la caja abierta'}>
     {success && <p role="status">{success}</p>}
+    {printSaleId !== null && <TicketPosDialog key={printSaleId} saleId={printSaleId} token={token ?? ''} onClose={()=>setPrintSaleId(null)} onUnauthorized={printUnauthorized} />}
+    {shareSaleId !== null && <WhatsAppReceiptDialog key={shareSaleId} saleId={shareSaleId} mode="historial" showCertification={false} onClose={()=>setShareSaleId(null)} />}
 
     {selected && <SalePaymentForm key={selected.id_ventas} sale={selected} onSaving={setSaving}
       onClose={() => { setSelected(null); setRevision(v => v + 1) }}
@@ -227,6 +268,7 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
         </button>
       </div>}
       {error && <div role="alert" className="sale-list-error"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div>}
+      {felStatusesError && <p className="sale-fel-status-error" role="status">No se pudo consultar la certificación. <button type="button" onClick={() => setFelRevision(value => value + 1)}>Reintentar estados FEL</button></p>}
       <div className="sale-list-body" aria-busy={loading}>
         {loading ? <p role="status">Cargando ventas…</p> : !error && rows.length === 0 ?
           <p role="status">{isAdmin && range ? 'No hay ventas para los filtros de esa fecha.' : 'No hay ventas para mostrar. La caja puede estar cerrada o aún no tener ventas.'}</p> : !error && <>
@@ -241,7 +283,7 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
                     <strong className="sale-mobile-card-client" title={sale.cliente}>{sale.cliente}</strong>
                     <span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span>
                   </span>
-                  <strong className="sale-mobile-card-total">{money.format(sale.total)}</strong>
+                  <span className="sale-mobile-total-row"><strong className="sale-mobile-card-total">{money.format(sale.total)}</strong><SaleFelBadge status={felStatuses[sale.id_ventas]} loading={felStatusesLoading} /></span>
                   {sale.saldo_pendiente > 0 && <span className="sale-mobile-card-balance">Saldo <strong>{money.format(sale.saldo_pendiente)}</strong></span>}
                 </button>
                 <div className="sale-mobile-card-options">
@@ -254,20 +296,22 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
               </li>)}
             </ul>
             <div className="sales-table-scroll" role="region" aria-label="Listado de ventas" tabIndex={0}>
-              <table><caption className="sr-only">{isAdmin && range ? 'Ventas de la fecha seleccionada, de todas las sesiones de caja' : 'Ventas registradas en la sesión de caja abierta'}</caption>
+              <table className="sale-history-table"><caption className="sr-only">{isAdmin && range ? 'Ventas de la fecha seleccionada, de todas las sesiones de caja' : 'Ventas registradas en la sesión de caja abierta'}</caption>
+                <colgroup>
+                  <col className="sale-history-client-col" /><col className="sale-history-seller-col" />
+                  <col className="sale-history-amount-col" /><col className="sale-history-amount-col" />
+                  <col className="sale-history-status-col" /><col className="sale-history-actions-col" />
+                </colgroup>
                 <thead><tr><th scope="col">Cliente</th><th scope="col">Responsable</th><th scope="col" className="sale-list-money">Total</th><th scope="col" className="sale-list-money">Saldo</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Opciones</span></th></tr></thead>
                 <tbody>{rows.map(sale => <tr key={sale.id_ventas} className={selected?.id_ventas === sale.id_ventas ? 'sale-list-row is-selected' : 'sale-list-row'}
                   tabIndex={saving ? -1 : 0} aria-label={'Ver detalle de la venta de ' + sale.cliente} aria-expanded={selected?.id_ventas === sale.id_ventas}
                   onKeyDown={event => { if (!saving && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelected(sale); setSuccess('') } }}
                   onClick={() => { if (!saving) { setSelected(sale); setSuccess('') } }}>
-                  <td>{sale.cliente}</td><td>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
+                  <td className="sale-history-name sale-history-client-cell" title={sale.cliente}><span className="sale-history-client-text">{sale.cliente}</span><SaleFelBadge status={felStatuses[sale.id_ventas]} loading={felStatusesLoading} /></td><td className="sale-history-name" title={sale.usuario}>{sale.usuario}</td><td className="sale-list-money">{money.format(sale.total)}</td>
 
                   <td className="sale-list-money">{money.format(sale.saldo_pendiente)}</td>
                   <td><span className={sale.saldo_pendiente === 0 ? 'sale-list-status is-paid' : 'sale-list-status'}>{sale.saldo_pendiente === 0 ? 'Pagada' : sale.estado}</span></td>
-                  <td><button type="button" className="sale-more-button" disabled={saving} aria-haspopup="dialog"
-                    aria-label={`Ver detalle y opciones de venta ${sale.id_ventas}`} title="Detalle y opciones"
-                    onKeyDown={e => e.stopPropagation()}
-                    onClick={e => { e.stopPropagation(); setSelected(sale); setSuccess('') }}><span aria-hidden="true">⋮</span></button></td>
+                  <td><SaleReceiptActions saleId={sale.id_ventas} disabled={saving} onPrint={setPrintSaleId} onShare={setShareSaleId} /></td>
                 </tr>)}</tbody>
               </table>
             </div>

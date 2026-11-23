@@ -6,8 +6,8 @@ import { lookupReceiver } from '../api/receptorLookupApi'
 import { receiverDocumentInput } from '../utils/saleReceiver'
 import type { ReceiverType } from '../utils/saleReceiver'
 
-export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized, onToggle, disabled = false }: {
-  saleId: number; token: string; active: boolean; onToggle: () => void; disabled?: boolean; onBusy: (busy: boolean) => void; onUnauthorized: () => void
+export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized, onToggle, onDocumentChange, disabled = false }: {
+  saleId: number; token: string; active: boolean; onToggle: () => void; disabled?: boolean; onBusy: (busy: boolean) => void; onUnauthorized: () => void; onDocumentChange?: (document: FelDocument | null) => void
 }) {
   const [document, setDocument] = useState<FelDocument | null>(null)
   const [total, setTotal] = useState<number | null>(null)
@@ -38,14 +38,14 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
     setLoading(true); setTotal(null)
     void Promise.all([loadFel(saleId, token, controller.signal), loadFelPreparation(saleId, token, controller.signal)]).then(([invoice, sale]) => {
       if (controller.signal.aborted) return
-      setDocument(invoice); setTotal(sale.total); setError('')
+      setDocument(invoice); onDocumentChange?.(invoice); setTotal(sale.total); setError('')
     }).catch(e => {
       if (controller.signal.aborted) return
       if (e instanceof ApiError && e.status === 401) onUnauthorized()
       else setError(e instanceof Error ? e.message : 'No se pudo preparar la certificación.')
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [saleId, token, revision, onUnauthorized])
+  }, [saleId, token, revision, onUnauthorized, onDocumentChange])
   function invalidate() {
     lookupController.current?.abort(); setVerified(null); setLookupPending(false); setError('')
   }
@@ -83,7 +83,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
         ...(!reconciliation && type !== 'CF' && hasAddress ? { direccion: address.trim(), codigo_postal: postal, municipio: municipality.trim(), departamento: department.trim(), pais: country } : {}),
         confirmar_bienes_gravados: true,
       }, token)
-      if (alive.current) setDocument(result)
+      if (alive.current) { setDocument(result); onDocumentChange?.(result) }
     } catch (e) {
       if (!alive.current) return
       if (e instanceof ApiError && e.status === 401) onUnauthorized()
@@ -95,7 +95,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
     busy.current = true; setSending(true); onBusy(true); setError('')
     try {
       const result = await recoverFel(saleId, token)
-      if (alive.current) setDocument(result)
+      if (alive.current) { setDocument(result); onDocumentChange?.(result) }
     } catch (e) {
       if (!alive.current) return
       if (e instanceof ApiError && e.status === 401) onUnauthorized()
@@ -105,7 +105,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
   return <section className="fel-certification-panel" aria-labelledby={titleId}>
     <header className="fel-card-header">
       <span className="fel-card-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg></span>
-      <div className="fel-card-heading"><h3 id={titleId}>Certificar factura</h3><p>Venta #{saleId}</p></div>
+      <div className="fel-card-heading"><h3 id={titleId}>{document?.estado === 'CERTIFICADA' ? 'Factura certificada' : 'Certificar factura'}</h3><p>Venta #{saleId}</p></div>
       <span className={document?.estado === 'CERTIFICADA' ? 'fel-badge fel-badge-success' : document?.estado === 'RECHAZADA' ? 'fel-badge fel-badge-error' : 'fel-badge'}>
         {document?.estado === 'CERTIFICADA' ? 'Certificada' : document?.estado === 'RECHAZADA' ? 'Rechazada' : document?.estado === 'EN_PROCESO' ? 'En proceso' : document ? 'Por confirmar' : 'Sin certificar'}
       </span>
@@ -125,7 +125,7 @@ export function CertifySalePanel({ saleId, token, active, onBusy, onUnauthorized
     {document?.errores.map((e, i) => <p key={i} className="wa-receipt-error" role="alert">{e.mensaje}</p>)}
     {document?.alertas.map((a, i) => <p key={i}>{a.mensaje}</p>)}
     {error && <p className="wa-receipt-error" role="alert">{error}</p>}
-    {document?.estado === 'CERTIFICADA' && <><button className="fel-primary-button" type="button" disabled>Factura ya certificada</button><p>Serie: {document.serie} · Número: {document.numero}</p>
+    {document?.estado === 'CERTIFICADA' && <><p>Serie: {document.serie} · Número: {document.numero}</p>
       {document.pdf && <a className="fel-pdf-link" href={document.pdf} target="_blank" rel="noopener noreferrer">Ver factura PDF</a>}</>}
     {!loading && total !== null && document?.estado !== 'CERTIFICADA' && document?.estado !== 'EN_PROCESO' && <form onSubmit={e => { void send(e) }}>
       <fieldset disabled={sending || disabled}>

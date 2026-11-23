@@ -326,3 +326,12 @@
   .purchases-page:not(.purchases-page-editing) .purchase-history-panel > .purchase-mobile-history { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; align-content: start; padding-bottom: 12px; }
   .purchases-page:not(.purchases-page-editing) .purchase-history-panel > .purchase-pagination { margin-top: 8px; }
 }
+
+@media (min-width: 801px) {
+  .purchase-history-panel .purchase-history-table th:nth-child(3),
+  .purchase-history-panel .purchase-history-table th:nth-child(4),
+  .purchase-history-panel .purchase-history-table td:nth-child(3),
+  .purchase-history-panel .purchase-history-table td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
+  .purchase-history-panel .purchase-history-table th:last-child,
+  .purchase-history-panel .purchase-history-table td:last-child { text-align: left; }
+}
