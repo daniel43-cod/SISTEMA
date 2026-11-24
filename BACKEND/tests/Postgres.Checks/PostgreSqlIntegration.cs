@@ -142,6 +142,33 @@ static class PostgreSqlIntegration
         Check(fiscalGuardado.fecha_emision == fechaFiscal && fiscalGuardado.fecha_emision.Offset == TimeSpan.Zero, "Fecha fiscal conserva el instante al normalizar a UTC");
         Check((await db.DocumentosFelIntentos.SingleAsync()).fecha_respuesta == fechaFiscal.AddMinutes(1), "Fecha fiscal nullable conserva el instante");
         Check(await db.AuditoriaEventos.AnyAsync(e => e.Accion == "ABONO_VENTA_REGISTRADO"), "Auditoría persiste con la operación");
+        async Task<RegistroCompras> CompraDistribuidora(string? nombre, int? id = null)
+        {
+            await using var c = new SistemaDbContext(options);
+            return await new CrearCompraService(c, new MovimientoCajaService(c)).CrearCompra(new() {
+                nombre_proveedor = nombre, id_proveedor = id,
+                detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 1, precio = 5 }]
+            }, admin.id_usuario);
+        }
+        var nuevaDistribuidora = await CompraDistribuidora("  Distribuidora nueva  ");
+        var seleccionada = await CompraDistribuidora(null, nuevaDistribuidora.IdProveedor);
+        var encontrada = await CompraDistribuidora(" distribuidora NUEVA ");
+        Check(nuevaDistribuidora.IdProveedor == seleccionada.IdProveedor && encontrada.IdProveedor == seleccionada.IdProveedor &&
+            await db.proveedores.CountAsync(p => p.id_proveedor == seleccionada.IdProveedor) == 1,
+            "Compra crea o reutiliza distribuidora por ID o nombre sin duplicar");
+        async Task<RegistroCompras> CompraConcurrente()
+        {
+            for (var attempt = 0; ; attempt++)
+                try { return await CompraDistribuidora("Distribuidora simultánea"); }
+                catch (Exception e) when (attempt < 3 && e.GetBaseException() is PostgresException {
+                    SqlState: PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected }) { }
+        }
+        var simultaneas = await Task.WhenAll(CompraConcurrente(), CompraConcurrente());
+        var mayusculas = await CompraDistribuidora("DISTRIBUIDORA SIMULTÁNEA");
+        Check(simultaneas[0].IdProveedor == simultaneas[1].IdProveedor &&
+            mayusculas.IdProveedor == simultaneas[0].IdProveedor &&
+            await db.proveedores.CountAsync(p => p.nombre == "Distribuidora simultánea") == 1,
+            "Dos compras simultáneas reutilizan una sola distribuidora después del reintento por conflicto");
         Console.WriteLine($"{count} comprobaciones de integración PostgreSQL real aprobadas.");
     }
 }

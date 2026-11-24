@@ -42,12 +42,18 @@ public sealed class ProductoPresentacionConfiguration : IEntityTypeConfiguration
     {
         // El nombre anterior tenía un espacio final: no crear esa tabla accidentalmente en PostgreSQL.
         b.ToTable("producto_presentacion", tabla =>
-            tabla.HasCheckConstraint("CK_producto_presentaciones_unidades", "unidades_equivalentes > 0"));
+        {
+            tabla.HasCheckConstraint("CK_producto_presentaciones_unidades", "unidades_equivalentes > 0");
+            tabla.HasCheckConstraint("CK_producto_presentacion_propietario",
+                "(id_producto IS NOT NULL AND id_surtido IS NULL) OR (id_producto IS NULL AND id_surtido IS NOT NULL)");
+        });
         b.HasKey(p => p.id_producto_presentacion);
         b.Property(p => p.id_producto_presentacion).ValueGeneratedOnAdd();
         b.Property(p => p.precio).HasPrecision(18, 2);
         b.HasOne(p => p.Producto).WithMany(p => p.ProductoPresentaciones)
-            .HasForeignKey(p => p.id_producto);
+            .HasForeignKey(p => p.id_producto).IsRequired(false);
+        b.HasOne(p => p.Surtido).WithMany()
+            .HasForeignKey(p => p.id_surtido).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(p => p.Presentacion).WithMany().HasForeignKey(p => p.IdPresentacion)
             .OnDelete(DeleteBehavior.Restrict);
     }

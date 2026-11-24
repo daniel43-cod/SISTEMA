@@ -66,10 +66,12 @@ public sealed class ConfirmarVentaPedidoService(SistemaDbContext context, Contex
         {
             VentaReglas.Monto(d.Descuento);
             if (!precios.TryGetValue(d.IdProductoPresentacion, out var pr)) throw new ValidationException("Una presentación ya no existe.");
+            if (pr.id_producto is not int idProducto || pr.id_surtido.HasValue)
+                throw new ValidationException("Esta presentación no corresponde a un producto individual.");
             VentaReglas.Monto(pr.precio, false);
             var neto = pr.precio * d.Cantidad - d.Descuento;
             VentaReglas.Monto(neto, false); total += neto;
-            lineas.Add(new() { id_producto = pr.id_producto, id_producto_presentacion = pr.id_producto_presentacion, cantidad = d.Cantidad, descuento = d.Descuento });
+            lineas.Add(new() { id_producto = idProducto, id_producto_presentacion = pr.id_producto_presentacion, cantidad = d.Cantidad, descuento = d.Descuento });
         }
         if (total != dto.TotalEsperado) throw new PedidoCatalogoEdicionConflictoException("Los precios cambiaron. Actualiza el catálogo y revisa el total antes de confirmar.");
         if (total <= pedido.ZonaEntrega.MinimoCompra) throw new ValidationException("El total con descuentos debe superar el mínimo de la zona.");

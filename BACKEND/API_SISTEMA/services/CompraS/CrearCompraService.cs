@@ -58,18 +58,27 @@ namespace API_SISTEMA.Services.Compras
             if (compraDto.detalle_compra.Count > 100 || compraDto.detalle_compra.Select(d => d.id_producto).Distinct().Count() != compraDto.detalle_compra.Count)
                 throw new CompraValidationException("La compra admite hasta 100 productos sin repetir.");
             await using var transaccion = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-            bool proveedorExiste = await _context.proveedores
-                .AnyAsync(e =>
-                    e.id_proveedor == compraDto.id_proveedor, ct
-                );
-
-            if (!proveedorExiste)
-                throw new CompraValidationException(
-                    "El proveedor indicado no existe."
-                );
-
             // Usa el turno compartido y bloquea el cierre hasta confirmar toda la compra.
             var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context, ct);
+            // La consulta y el alta comparten la transacción serializable de la compra.
+            // Dos altas concurrentes no pueden confirmar el mismo nombre como nuevo.
+            Proveedores? proveedor;
+            if (compraDto.id_proveedor is int idProveedor)
+            {
+                proveedor = await _context.proveedores.SingleOrDefaultAsync(p => p.id_proveedor == idProveedor, ct)
+                    ?? throw new CompraValidationException("El proveedor indicado no existe.");
+            }
+            else
+            {
+                var nombre = compraDto.nombre_proveedor!.Trim();
+                // Ambas cadenas se comparan en la base: no mezclar ToUpperInvariant de
+                // .NET con upper de PostgreSQL, que pueden diferir para nombres con tildes.
+                var coincidencias = _context.Database.IsNpgsql()
+                    ? _context.proveedores.FromSqlInterpolated($"SELECT * FROM public.proveedores WHERE upper(trim(nombre) COLLATE pg_unicode_fast) = upper({nombre} COLLATE pg_unicode_fast)")
+                    : _context.proveedores.FromSqlInterpolated($"SELECT * FROM proveedores WHERE upper(trim(nombre)) = upper({nombre})");
+                proveedor = await coincidencias.OrderBy(p => p.id_proveedor).FirstOrDefaultAsync(ct);
+                proveedor ??= new Proveedores { nombre = nombre, telefono = string.Empty, fecha_creacion = RelojNegocio.Ahora(_reloj) };
+            }
             var idsProductos = compraDto.detalle_compra.Select(d => d.id_producto).Distinct().ToList();
 
             var productos = await _context.productos.Where(p =>idsProductos.Contains(p.IdProducto)).ToListAsync(ct);
@@ -140,12 +149,17 @@ namespace API_SISTEMA.Services.Compras
 
             try
             {
+                if (proveedor.id_proveedor == 0)
+                {
+                    _context.proveedores.Add(proveedor);
+                    await _context.SaveChangesAsync(ct);
+                }
                 var ahora = RelojNegocio.Ahora(_reloj);
                 var compra = new RegistroCompras
                 {
                     IdUsuario = idUsuario,
                     IdSesionCaja = sesionCaja.id_sesion_caja,
-                    IdProveedor = compraDto.id_proveedor,
+                    IdProveedor = proveedor.id_proveedor,
                     IdEstadoCompra = idEstadoCompra,
                     FechaIngreso = ahora,
                     TotalCompra = totalCompra,

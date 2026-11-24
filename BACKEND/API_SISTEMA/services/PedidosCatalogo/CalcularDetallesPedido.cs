@@ -25,16 +25,18 @@ internal static class CalcularDetallesPedido
         decimal total = 0;
         foreach (var linea in lineas)
         {
-            if (!presentaciones.TryGetValue(linea.IdProductoPresentacion, out var pr) || !pr.estado || pr.Presentacion.Estado != true ||
+            if (!presentaciones.TryGetValue(linea.IdProductoPresentacion, out var pr) ||
+                pr.id_producto is not int idProducto || pr.id_surtido.HasValue || pr.Producto is null ||
+                !pr.estado || pr.Presentacion.Estado != true ||
                 !pr.Producto.Marca.Estado || !pr.Producto.Marca.Categoria.Estado || pr.unidades_equivalentes <= 0)
                 throw new ValidationException("Uno de los productos o sus presentaciones ya no está disponible.");
             VentaReglas.Monto(pr.precio, false);
             if (pr.Producto.PrecioPromedioCompra is not decimal costo || costo <= 0 || pr.precio <= costo * pr.unidades_equivalentes)
                 throw new ValidationException("Uno de los productos no tiene un precio de venta válido.");
             var unidades = (long)linea.Cantidad * pr.unidades_equivalentes;
-            unidadesPorProducto.TryGetValue(pr.id_producto, out var anteriores);
-            unidadesPorProducto[pr.id_producto] = anteriores + unidades;
-            if (unidadesPorProducto[pr.id_producto] > (pr.Producto.Stock ?? 0))
+            unidadesPorProducto.TryGetValue(idProducto, out var anteriores);
+            unidadesPorProducto[idProducto] = anteriores + unidades;
+            if (unidadesPorProducto[idProducto] > (pr.Producto.Stock ?? 0))
                 throw new ValidationException("Existencias insuficientes para las cantidades solicitadas.");
             var bruto = pr.precio * linea.Cantidad;
             VentaReglas.Monto(bruto, false);

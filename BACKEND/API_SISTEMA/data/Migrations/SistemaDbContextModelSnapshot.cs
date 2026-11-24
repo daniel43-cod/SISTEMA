@@ -478,6 +478,37 @@ namespace API_SISTEMA.Data.Migrations
                     b.ToTable("detalle_venta", "public");
                 });
 
+            modelBuilder.Entity("API_SISTEMA.Models.DetalleVentaSurtido", b =>
+                {
+                    b.Property<int>("IdDetalleVenta")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_detalle_venta");
+
+                    b.Property<int>("IdProducto")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_producto");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad");
+
+                    b.Property<decimal>("CostoUnitarioVenta")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("costo_unitario_venta");
+
+                    b.HasKey("IdDetalleVenta", "IdProducto");
+
+                    b.HasIndex("IdProducto");
+
+                    b.ToTable("detalle_venta_surtido", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_detalle_venta_surtido_cantidad", "cantidad > 0");
+
+                            t.HasCheckConstraint("CK_detalle_venta_surtido_costo", "costo_unitario_venta > 0");
+                        });
+                });
+
             modelBuilder.Entity("API_SISTEMA.Models.DocumentoFel", b =>
                 {
                     b.Property<int>("id_documento_fel")
@@ -1350,7 +1381,10 @@ namespace API_SISTEMA.Data.Migrations
                     b.Property<bool>("estado")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("id_producto")
+                    b.Property<int?>("id_producto")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("id_surtido")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("precio")
@@ -1366,8 +1400,12 @@ namespace API_SISTEMA.Data.Migrations
 
                     b.HasIndex("id_producto");
 
+                    b.HasIndex("id_surtido");
+
                     b.ToTable("producto_presentacion", "public", t =>
                         {
+                            t.HasCheckConstraint("CK_producto_presentacion_propietario", "(id_producto IS NOT NULL AND id_surtido IS NULL) OR (id_producto IS NULL AND id_surtido IS NOT NULL)");
+
                             t.HasCheckConstraint("CK_producto_presentaciones_unidades", "unidades_equivalentes > 0");
                         });
                 });
@@ -1694,6 +1732,56 @@ namespace API_SISTEMA.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_sesiones_usuario_motivo_cierre", "motivo_cierre IN ('VOLUNTARIO', 'EXPIRACION')");
                         });
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.Surtido", b =>
+                {
+                    b.Property<int>("IdSurtido")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id_surtido");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdSurtido"));
+
+                    b.Property<bool>("Estado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("estado");
+
+                    b.Property<int>("IdMarca")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_marca");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("nombre");
+
+                    b.HasKey("IdSurtido");
+
+                    b.HasIndex("IdMarca");
+
+                    b.ToTable("surtido", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_surtido_nombre", "length(btrim(nombre)) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.SurtidoProducto", b =>
+                {
+                    b.Property<int>("IdSurtido")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_surtido");
+
+                    b.Property<int>("IdProducto")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_producto");
+
+                    b.HasKey("IdSurtido", "IdProducto");
+
+                    b.HasIndex("IdProducto");
+
+                    b.ToTable("surtido_producto", "public");
                 });
 
             modelBuilder.Entity("API_SISTEMA.Models.TablaPermiso", b =>
@@ -2291,6 +2379,25 @@ namespace API_SISTEMA.Data.Migrations
                     b.Navigation("producto_presentacion");
                 });
 
+            modelBuilder.Entity("API_SISTEMA.Models.DetalleVentaSurtido", b =>
+                {
+                    b.HasOne("API_SISTEMA.Models.DetalleVenta", "DetalleVenta")
+                        .WithMany()
+                        .HasForeignKey("IdDetalleVenta")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("API_SISTEMA.Models.Productos", "Producto")
+                        .WithMany()
+                        .HasForeignKey("IdProducto")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DetalleVenta");
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("API_SISTEMA.Models.DocumentoFel", b =>
                 {
                     b.HasOne("API_SISTEMA.Models.Usuario", "Usuario")
@@ -2545,13 +2652,18 @@ namespace API_SISTEMA.Data.Migrations
 
                     b.HasOne("API_SISTEMA.Models.Productos", "Producto")
                         .WithMany("ProductoPresentaciones")
-                        .HasForeignKey("id_producto")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("id_producto");
+
+                    b.HasOne("API_SISTEMA.Models.Surtido", "Surtido")
+                        .WithMany()
+                        .HasForeignKey("id_surtido")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Presentacion");
 
                     b.Navigation("Producto");
+
+                    b.Navigation("Surtido");
                 });
 
             modelBuilder.Entity("API_SISTEMA.Models.Productos", b =>
@@ -2651,6 +2763,36 @@ namespace API_SISTEMA.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.Surtido", b =>
+                {
+                    b.HasOne("API_SISTEMA.Models.Marca", "Marca")
+                        .WithMany()
+                        .HasForeignKey("IdMarca")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Marca");
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.SurtidoProducto", b =>
+                {
+                    b.HasOne("API_SISTEMA.Models.Productos", "Producto")
+                        .WithMany()
+                        .HasForeignKey("IdProducto")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("API_SISTEMA.Models.Surtido", "Surtido")
+                        .WithMany("Productos")
+                        .HasForeignKey("IdSurtido")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Surtido");
                 });
 
             modelBuilder.Entity("API_SISTEMA.Models.Usuario", b =>
@@ -2808,6 +2950,11 @@ namespace API_SISTEMA.Data.Migrations
             modelBuilder.Entity("API_SISTEMA.Models.Rol", b =>
                 {
                     b.Navigation("RolPermisos");
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.Surtido", b =>
+                {
+                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("API_SISTEMA.Models.TablaPermiso", b =>

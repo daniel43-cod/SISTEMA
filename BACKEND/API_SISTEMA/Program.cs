@@ -207,6 +207,7 @@ builder.Services.AddScoped<PermisoUsuarioService>();
 //productos
 builder.Services.AddScoped<API_SISTEMA.Services.Auditoria.ProductoAuditoriaService>();
 builder.Services.AddScoped<ProductoCrearService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Surtidos.SurtidoService>();
 builder.Services.AddScoped<ProductoActualizarService>();
 builder.Services.AddScoped<ProductoBuscarAdminService>();
 builder.Services.AddScoped<ProductoInventarioService>();

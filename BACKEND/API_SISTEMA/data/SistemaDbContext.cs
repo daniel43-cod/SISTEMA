@@ -51,6 +51,9 @@ namespace API_SISTEMA.Data
         public DbSet<TipoCliente> tipo_cliente { get; set; }
         public DbSet<EstadoVenta> estado_venta { get; set; }
         public DbSet<ProductoPresentacion> producto_presentaciones { get; set; }
+        public DbSet<Surtido> Surtidos { get; set; }
+        public DbSet<SurtidoProducto> SurtidoProductos { get; set; }
+        public DbSet<DetalleVentaSurtido> DetalleVentaSurtidos { get; set; }
         public DbSet<Presentacion> presentaciones { get; set; }
         public DbSet<DetalleCompra> detalle_compras { get; set; }
         public DbSet<RegistroCompras> registroCompras { get; set; }
@@ -77,6 +80,9 @@ namespace API_SISTEMA.Data
             modelBuilder.ApplyConfiguration(new ProductoConfiguration());
             modelBuilder.ApplyConfiguration(new PresentacionConfiguration());
             modelBuilder.ApplyConfiguration(new ProductoPresentacionConfiguration());
+            modelBuilder.ApplyConfiguration(new SurtidoConfiguration());
+            modelBuilder.ApplyConfiguration(new SurtidoProductoConfiguration());
+            modelBuilder.ApplyConfiguration(new DetalleVentaSurtidoConfiguration());
             modelBuilder.ApplyConfiguration(new ZonaEntregaConfiguration());
             modelBuilder.ApplyConfiguration(new PedidoCatalogoConfiguration());
             modelBuilder.ApplyConfiguration(new DetallePedidoCatalogoConfiguration());

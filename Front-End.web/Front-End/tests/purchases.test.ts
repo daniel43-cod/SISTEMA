@@ -35,3 +35,27 @@ test('Compras: rechaza totales inválidos del servidor', async t => {
   t.mock.method(globalThis, 'fetch', async () => Response.json({...summary,totalPorPagar:-1}))
   await assert.rejects(getPurchaseSummary('test',1,'',''))
 })
+
+import { buildPurchase, purchaseSupplier } from '../src/features/purchases/utils/purchaseValidation.ts'
+const purchaseLines = [{ idProducto: 1, nombre: 'Producto', cantidad: '2', total: '10' }]
+test('Compras: distribuidora seleccionada envía solo su ID', () => {
+  const payload = buildPurchase('12', '', '0', purchaseLines, 'Distribuidora seleccionada')
+  assert.equal(payload.id_proveedor, 12)
+  assert.equal(payload.nombre_proveedor, undefined)
+})
+test('Compras: nueva distribuidora envía nombre recortado sin ID', () => {
+  const payload = buildPurchase('', '', '0', purchaseLines, '  Nueva distribuidora  ')
+  assert.equal(payload.nombre_proveedor, 'Nueva distribuidora')
+  assert.equal(payload.id_proveedor, undefined)
+  assert.equal(payload.detalle_compra[0].precio, 10)
+})
+test('Compras: distribuidora vacía inválida o nombre demasiado largo se rechaza', () => {
+  for (const name of ['', '   ', 'x'.repeat(101), 'Nombre\nOculto'])
+    assert.throws(() => purchaseSupplier('', name))
+  for (const id of ['-1', '0', 'abc', '1.5', '2147483648'])
+    assert.throws(() => purchaseSupplier(id, 'Nombre'))
+})
+test('Compras: nombre numérico es nombre de distribuidora y admite límite de longitud', () => {
+  assert.deepEqual(purchaseSupplier('', '123'), { nombre_proveedor: '123' })
+  assert.equal(purchaseSupplier('', 'x'.repeat(100)).nombre_proveedor?.length, 100)
+})

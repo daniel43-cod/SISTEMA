@@ -9,7 +9,7 @@ import { parseCashSession } from '../../cash/api/cashApi'
 import { loadProductNames } from '../../products/api/searchProducts'
 import type { ProductSuggestion } from '../../products/api/searchProducts'
 import { createPurchase, listSuppliers, getPurchaseSummary } from '../api/purchasesApi'
-import { amountCents, buildPurchase } from '../utils/purchaseValidation'
+import { amountCents, buildPurchase, purchaseSupplier } from '../utils/purchaseValidation'
 import { PurchaseProductRow } from '../components/PurchaseProductRow'
 import { PurchaseDetails } from '../components/PurchaseDetails'
 import type { Purchase, PurchaseLine, Supplier } from '../types/purchase'
@@ -43,6 +43,7 @@ export function PurchasesPage() {
   const [revision, setRevision] = useState(0)
   const [page, setPage] = useState(1)
   const [supplier, setSupplier] = useState('')
+  const [supplierName, setSupplierName] = useState('')
   const [lines, setLines] = useState<PurchaseLine[]>([{ idProducto: 0, nombre: '', cantidad: '', total: '' }])
   const [note, setNote] = useState('')
   const [paid, setPaid] = useState('0')
@@ -89,14 +90,17 @@ export function PurchasesPage() {
   const paymentCents = amountCents(paid) ?? 0
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy.current || uncertain || !cashOpen || loading || error || !token) return
+    if (busy.current || uncertain || !token) return
+    if (loading) { setFormError('Espera a que termine la consulta de caja y productos.'); return }
+    if (error) { setFormError('No se pudo verificar la caja o cargar los datos. Reintenta la consulta antes de guardar.'); return }
+    if (!cashOpen) { setFormError('Abre la caja para guardar la compra. Puedes conservar los datos ingresados.'); return }
     let payload
-    try { payload = buildPurchase(supplier, note, paid, lines.filter(line => line.idProducto > 0 || line.nombre.trim())) }
+    try { payload = buildPurchase(supplier, note, paid, lines.filter(line => line.idProducto > 0 || line.nombre.trim()), supplierName) }
     catch (failure) { setFormError(failure instanceof Error ? failure.message : 'Revisa la compra.'); return }
     busy.current = true; setSaving(true); setFormError('')
     try {
       await createPurchase(token, payload)
-      setLines([{ idProducto: 0, nombre: '', cantidad: '', total: '' }]); setSupplier(''); setNote(''); setPaid('0')
+      setLines([{ idProducto: 0, nombre: '', cantidad: '', total: '' }]); setSupplier(''); setSupplierName(''); setNote(''); setPaid('0')
       setPage(1); setRevision(v => v + 1)
       closeEditor()
     } catch (failure) {
@@ -114,7 +118,9 @@ export function PurchasesPage() {
     <div className="purchase-toolbar"><p role="status">{loading ? 'Consultando caja y compras…'
       : error ? 'No se pudo verificar la caja.' : cashOpen ? null : 'Abre la caja para registrar compras o abonos.'}</p>
     </div>
-    {error && <p role="alert" className="purchase-error">{error}</p>}
+    {error && <div role="alert" className="purchase-error"><p>{error}</p>
+      <button type="button" disabled={loading || saving} onClick={() => setRevision(value => value + 1)}>Reintentar consulta</button>
+    </div>}
     {open && <section ref={editor} tabIndex={-1} className={"purchase-panel purchase-editor-panel purchase-step-" + purchaseStep} aria-labelledby="new-purchase-title">
       <div className="purchase-panel-heading">
         <h2 id="new-purchase-title">Registrar compra</h2>
@@ -122,23 +128,33 @@ export function PurchasesPage() {
           onClick={closeEditor}>×</button>
       </div>
       <form onSubmit={submit}>
-        <fieldset disabled={saving || loading || !cashOpen || !!error || uncertain} className="purchase-form">
+        <fieldset disabled={saving || uncertain} className="purchase-form">
           <legend className="purchase-sr-only">Datos de la compra</legend>
           <div className="purchase-fields purchase-supplier-card">
-            <label>Proveedor<select id="purchase-supplier" value={supplier} onChange={e => setSupplier(e.target.value)} required>
-              <option value="">Selecciona un proveedor</option>
-              {suppliers.map(p => <option key={p.idProveedor} value={p.idProveedor}>{p.nombre}</option>)}
-            </select></label>
+            <label>Distribuidora<input id="purchase-supplier" list="purchase-supplier-options" value={supplierName}
+              placeholder="Busca o escribe una distribuidora" required maxLength={100} autoComplete="off"
+              aria-describedby="purchase-supplier-hint" onChange={event => {
+                const name = event.target.value
+                setSupplierName(name)
+                const existing = suppliers.find(item => item.nombre.trim().toLocaleUpperCase('es-GT') === name.trim().toLocaleUpperCase('es-GT'))
+                setSupplier(existing ? String(existing.idProveedor) : '')
+              }} /></label>
+            <datalist id="purchase-supplier-options">
+              {suppliers.map(item => <option key={item.idProveedor} value={item.nombre} />)}
+            </datalist>
+            <small id="purchase-supplier-hint">{supplier ? 'Distribuidora existente seleccionada.' : supplierName.trim() ? 'Se registrará esta distribuidora al guardar la compra.' : 'Selecciona una existente o escribe el nombre de una nueva.'}</small>
             <label>Observación<input maxLength={100} value={note} onChange={e => setNote(e.target.value)} /></label>
           </div>
           <button type="button" className="purchase-step-continue purchase-primary" onClick={() => {
-            const select = document.getElementById('purchase-supplier') as HTMLSelectElement | null
-            if (!select?.reportValidity()) return
+            const input = document.getElementById('purchase-supplier') as HTMLInputElement | null
+            if (!input?.reportValidity()) return
+            try { purchaseSupplier(supplier, supplierName) }
+            catch (failure) { setFormError(failure instanceof Error ? failure.message : 'Revisa la distribuidora.'); return }
+            setFormError('')
             setPurchaseStep('products')
             requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.purchase-product-cell input')?.focus())
           }}>Continuar con productos →</button>
           <button type="button" className="purchase-step-back purchase-legacy-back" onClick={() => setPurchaseStep('supplier')}>← Ver proveedor</button>
-          {!loading && !suppliers.length && <p>No hay proveedores registrados. Registra un proveedor para continuar.</p>}
           {purchaseStep === 'products' && <MobilePurchaseCart products={products} lines={lines} onChange={setLines}
             onClose={closeEditor} onSupplier={() => setPurchaseStep('supplier')} total={totalCents} paid={paid} onPaid={setPaid} saving={saving} />}
           <div className="purchase-table-scroll purchase-entry-cards"><table>
@@ -159,7 +175,7 @@ export function PurchasesPage() {
           <div className="purchase-summary purchase-form-footer">
             <p>Total <strong>{money.format(totalCents / 100)}</strong></p>
             <label>Pago inicial (Q)<input inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value)} required /></label>
-            <p>Saldo pendiente <strong>{money.format(Math.max(0, totalCents - paymentCents) / 100)}</strong></p> <button className="purchase-primary" type="submit" disabled={!lines.some(line => line.idProducto > 0) || !suppliers.length}>{saving ? 'Registrando…' : 'Registrar compra'}</button>
+            <p>Saldo pendiente <strong>{money.format(Math.max(0, totalCents - paymentCents) / 100)}</strong></p> <button className="purchase-primary" type="submit" disabled={!lines.some(line => line.idProducto > 0) || !supplierName.trim()}>{saving ? 'Registrando…' : 'Registrar compra'}</button>
           </div>
         </fieldset>
       </form>
@@ -188,7 +204,7 @@ export function PurchasesPage() {
         </div>
         <div className="purchase-history-filters">
           <label>Buscar<input type="search" maxLength={100} placeholder="Distribuidor o número de compra" value={search} onChange={e => setSearch(e.target.value)} /></label>
-          <button type="button" className="purchase-create-desktop" disabled={loading || saving || !!error || !cashOpen}
+          <button type="button" className="purchase-create-desktop" disabled={saving}
           onClick={() => { setSelected(null); setPurchaseStep('supplier'); setOpen(true) }}>+ Registrar compra</button>
           <RefreshButton label="Actualizar historial de compras" loading={saving || loading} onClick={() => setRevision(v => v + 1)} />
         </div>
@@ -235,7 +251,7 @@ export function PurchasesPage() {
       </nav>
     </section>}
     {!open && <button ref={add} type="button" className="catalog-add-button" aria-label="Registrar nueva compra"
-      title="Registrar nueva compra" onClick={() => { setSelected(null); setPurchaseStep('supplier'); setOpen(true) }}>
+      title="Registrar nueva compra" disabled={saving} onClick={() => { setSelected(null); setPurchaseStep('supplier'); setOpen(true) }}>
       <span aria-hidden="true">+</span>
     </button>}
     {selected && token && <PurchaseDetails key={selected.id_compra} purchase={selected} token={token}

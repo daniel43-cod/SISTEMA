@@ -85,7 +85,7 @@ namespace API_SISTEMA.Services
                 .Select(p => new ListarPresentacionProductoDto
                 {
                     id_producto_presentacion = p.id_producto_presentacion,
-                    id_producto = p.id_producto,
+                    id_producto = p.id_producto.Value,
                     id_presentacion = p.IdPresentacion,
                     descripcion = p.Presentacion.Descripcion,
                     unidades_equivalentes = p.unidades_equivalentes,
@@ -105,6 +105,7 @@ namespace API_SISTEMA.Services
             texto = texto.Trim();
 
             var productos = await _context.producto_presentaciones
+                .Where(p => p.id_producto.HasValue && p.id_surtido == null)
                 .Include(p => p.Producto)
                 .Where(p =>
                     p.Producto.Nombre.Contains(texto) ||
@@ -112,7 +113,7 @@ namespace API_SISTEMA.Services
                     (p.Producto.CodigoBarra != null && p.Producto.CodigoBarra.Contains(texto)))
                 .Select(p => new ProductoVentaBuscarDto
                 {
-                    id_producto = p.id_producto,
+                    id_producto = p.id_producto.Value,
                     id_producto_presentacion = p.id_producto_presentacion,
                     
                     nombre_producto = p.Producto.Nombre,

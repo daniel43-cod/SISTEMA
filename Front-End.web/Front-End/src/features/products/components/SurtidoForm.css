@@ -1,0 +1,29 @@
+.surtido-form { display: grid; gap: 20px; min-width: 0; }
+.surtido-section { display: grid; gap: 14px; min-width: 0; padding: 18px; border: 1px solid #dce3eb; border-radius: 12px; }
+.surtido-section legend { padding: 0 6px; font-weight: 650; }
+.surtido-identity { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.surtido-presentation { display: grid; grid-template-columns: minmax(160px, 2fr) repeat(2, minmax(100px, 1fr)) 44px; align-items: end; gap: 12px; }
+.surtido-form .input { border: 1px solid #dce3eb; border-radius: 10px; min-width: 0; }
+.surtido-selected, .surtido-suggestions { padding: 0; margin: 0; list-style: none; display: grid; gap: 8px; }
+.surtido-selected li, .surtido-suggestions button { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #dce3eb; border-radius: 10px; padding: 8px 14px; background: white; }
+.surtido-suggestions { max-height: 280px; overflow-y: auto; }
+.surtido-suggestions button { width: 100%; text-align: left; color: #075b96; min-height: 44px; cursor: pointer; font: inherit; }
+.surtido-selected strong { overflow-wrap: anywhere; }
+.surtido-selected button, .surtido-remove { border: 0; background: transparent; color: #b91c1c; min-width: 44px; min-height: 44px; font-size: 24px; cursor: pointer; }
+.surtido-help { margin: 0; color: var(--color-muted); font-size: .85rem; }
+.surtido-secondary { width: auto; justify-self: start; min-height: 44px; border: 1px solid #b4c7dd; border-radius: 10px; background: white; padding: 8px 14px; color: #075b96; font: inherit; cursor: pointer; }
+.surtido-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.surtido-actions .button { width: auto; min-height: 44px; }
+.surtido-form button:disabled { opacity: .55; cursor: not-allowed; }
+.surtido-form button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.product-create-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.product-create-actions .surtido-create-button { position: static; display: inline-flex; align-items: center; gap: 6px; width: auto; height: auto; min-height: 44px; padding: 8px 14px; border-radius: 8px; font: inherit; box-shadow: none; }
+.product-create-actions .surtido-create-button span { font-size: .9rem; }
+@media (max-width: 800px) {
+  .surtido-identity { grid-template-columns: minmax(0, 1fr); }
+  .surtido-section { padding: 14px; }
+  .surtido-presentation { grid-template-columns: repeat(2, minmax(0, 1fr)) 44px; }
+  .surtido-presentation > label:first-child { grid-column: 1 / -1; }
+  .product-create-actions { position: fixed; right: 18px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 20; flex-wrap: nowrap; }
+  .product-create-actions .catalog-create-responsive { position: static; flex-shrink: 0; }
+}

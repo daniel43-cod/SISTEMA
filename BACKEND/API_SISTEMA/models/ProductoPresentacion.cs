@@ -7,14 +7,17 @@ namespace API_SISTEMA.Models
     {
         [Key]
         public int id_producto_presentacion { get; set; }
-        public int id_producto { get; set; }
+        public int? id_producto { get; set; }
+        public int? id_surtido { get; set; }
         public int unidades_equivalentes { get; set; }
         public decimal precio { get; set; }
         public bool estado { get; set; }
         [Column("id_presentacion")]
         public int IdPresentacion {get;set;}
 
-        public API_SISTEMA.Models.Productos Producto { get; set; } = null!;
+        public API_SISTEMA.Models.Productos? Producto { get; set; }
+        [ForeignKey(nameof(id_surtido))]
+        public Surtido? Surtido { get; set; }
         public Presentacion Presentacion {get;set;} = null!;
     }
 }
