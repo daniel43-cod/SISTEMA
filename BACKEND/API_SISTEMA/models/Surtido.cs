@@ -21,6 +21,10 @@ public class Surtido
     public int IdMarca { get; set; }
     public Marca Marca { get; set; } = null!;
 
+    [MaxLength(2048)]
+    [Column("imagen")]
+    public string? Imagen { get; set; }
+
     // Productos que el administrador permite combinar; no representa existencias propias.
     public ICollection<SurtidoProducto> Productos { get; set; } = new List<SurtidoProducto>();
 }

@@ -36,7 +36,7 @@ export function CreateProductPage() {
       <h2 id="product-title">{editor === 'surtido' ? 'Crear surtido' : 'Crear producto'}</h2>
       <button type="button" className="catalog-close" aria-label="Cerrar formulario" title="Cerrar formulario" disabled={surtidoPending} onClick={close}>×</button>
       {editor === 'surtido' ? <SurtidoForm onPending={setSurtidoPending} onCancel={close} onSaved={() => {
-        setNotice('Surtido creado correctamente.'); setRevision(value => value + 1); setEditor(null)
+        setNotice('Surtido creado correctamente. Puedes verlo dentro de su marca.'); setRevision(value => value + 1); setEditor(null)
         requestAnimationFrame(() => addSurtido.current?.focus())
       }} /> : <ProductForm onSaved={() => { setNotice('Producto creado correctamente.'); setRevision(value => value + 1); close() }} />}
     </section> : <section className="product-card product-create-panel"><ProductCatalogBrowser key={revision} createAction={actions} /></section>}

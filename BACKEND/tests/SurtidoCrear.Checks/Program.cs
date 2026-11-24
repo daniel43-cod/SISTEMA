@@ -32,7 +32,9 @@ static async Task Run()
     await db.SaveChangesAsync();
     var accessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
     accessor.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "test"));
-    var service = new SurtidoService(db, new CatalogoAuditoriaService(db, new ContextoPeticion(accessor)));
+    var imageService = new API_SISTEMA.Services.Productos.ProductoImagenService(new TestEnvironment(),
+        Microsoft.Extensions.Logging.Abstractions.NullLogger<API_SISTEMA.Services.Productos.ProductoImagenService>.Instance);
+    var service = new SurtidoService(db, new CatalogoAuditoriaService(db, new ContextoPeticion(accessor)), imageService);
     int passed = 0;
     void Check(bool ok, string message) { if (!ok) throw new Exception(message); passed++; Console.WriteLine("OK " + message); }
     CrearSurtidoDto Request() => new() { Nombre = "  Cola surtida  ", IdMarca = 1, IdsProductos = [1, 2],
@@ -51,6 +53,12 @@ static async Task Run()
     Check(await db.productos.SumAsync(p => p.Stock) == 30, "Configurar no modifica inventario");
     Check(await db.AuditoriaEventos.CountAsync() == 1, "Configuración registra auditoría");
     Check((await service.Listar("COLA", 1, 20, default)).Total == 1, "Listado permite encontrar surtidos creados");
+    Check((await service.Listar(null, 1, 20, default, 2)).Total == 0, "Surtido no aparece en otra marca");
+    await db.Surtidos.Where(s => s.IdSurtido == created.IdSurtido).ExecuteUpdateAsync(s => s.SetProperty(p => p.Imagen, "https://example.com/cola.webp"));
+    var tarjeta = (await service.Listar(null, 1, 20, default, 1)).Elementos.Single();
+    Check(tarjeta.Imagen == "https://example.com/cola.webp" && tarjeta.Presentaciones.Count == 2 && tarjeta.Presentaciones[0].Precio == 16.20m,
+        "Tarjeta de marca incluye imagen y presentaciones del surtido");
+    Check((await service.Consultar(created.IdSurtido, default)).Imagen == tarjeta.Imagen, "Detalle conserva la imagen del surtido");
     var permission = (Microsoft.AspNetCore.Authorization.AuthorizeAttribute)Attribute.GetCustomAttribute(
         typeof(API_SISTEMA.Controllers.SurtidosController), typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute))!;
     Check(permission.Roles == API_SISTEMA.Utilidades.Roles.Administrador, "Crear y consultar configuración exige rol administrador");
@@ -77,13 +85,53 @@ static async Task Run()
     await Reject(Request(), "No redondea el costo hacia abajo para permitir una pérdida");
     bad = Request(); bad.Presentaciones[0].Precio = 16.21m; bad.Presentaciones[1].Precio = 32.41m;
     Check((await service.Crear(bad, default)).Presentaciones[0].PrecioMinimoActual == 16.21m, "Mínimo con seis decimales se eleva al centavo suficiente");
+    db.ChangeTracker.Clear();
+    ActualizarSurtidoDto Edit() => new() { Nombre = "Cola actualizada", IdMarca = 2, IdsProductos = [2],
+        Presentaciones = [new() { IdPresentacion = 1, UnidadesEquivalentes = 6, Precio = 20 }] };
+    var previousId = created.Presentaciones[0].IdProductoPresentacion;
+    var edited = await service.Actualizar(created.IdSurtido, Edit(), default);
+    Check(edited.Nombre == "Cola actualizada" && edited.IdMarca == 2 && edited.Productos.Count == 1, "Edita nombre, marca y composición sin duplicar surtido");
+    Check(edited.Imagen == "https://example.com/cola.webp", "Editar otros datos conserva imagen existente");
+    Check(edited.Presentaciones.Single().IdProductoPresentacion == previousId && edited.Presentaciones.Single().Precio == 20,
+        "Editar precio conserva identificador de presentación");
+    Check(!await db.Set<ProductoPresentacion>().Where(p => p.id_producto_presentacion == created.Presentaciones[1].IdProductoPresentacion).Select(p => p.estado).SingleAsync(),
+        "Presentación retirada se desactiva sin borrarla");
+    Check(await db.AuditoriaEventos.AnyAsync(a => a.Accion == "ACTUALIZAR"), "Actualización registra auditoría");
+    var editInvalid = Edit(); editInvalid.Presentaciones[0].Precio = 1;
+    try { await service.Actualizar(created.IdSurtido, editInvalid, default); throw new Exception("Se aceptó precio inferior al costo"); }
+    catch (ValidationException) { db.ChangeTracker.Clear(); }
+    Check((await service.Consultar(created.IdSurtido, default)).Presentaciones.Single().Precio == 20, "Precio incompatible no modifica surtido existente");
+    var editImage = Edit(); editImage.UrlImagen = "https://example.com/nueva.webp";
+    Check((await service.Actualizar(created.IdSurtido, editImage, default)).Imagen == editImage.UrlImagen, "Reemplaza imagen mediante enlace HTTPS");
+    editImage.QuitarImagen = true;
+    try { await service.Actualizar(created.IdSurtido, editImage, default); throw new Exception("Aceptó quitar y reemplazar"); }
+    catch (ValidationException) { Check(true, "No permite quitar y reemplazar la imagen simultáneamente"); }
+    editImage.UrlImagen = null; editImage.Estado = false;
+    var withoutImage = await service.Actualizar(created.IdSurtido, editImage, default);
+    Check(withoutImage.Imagen is null && !withoutImage.Estado, "Permite quitar imagen y desactivar surtido");
+    try { await service.Actualizar(999, Edit(), default); throw new Exception("Aceptó surtido inexistente"); }
+    catch (KeyNotFoundException) { Check(true, "Rechaza actualizar surtido inexistente"); }
     await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER impedir_auditoria BEFORE INSERT ON auditoria_evento BEGIN SELECT RAISE(ABORT, 'prueba'); END;");
     var before = await db.Surtidos.CountAsync();
     try { await service.Crear(bad, default); throw new Exception("No revirtió auditoría"); }
     catch (DbUpdateException) { db.ChangeTracker.Clear(); }
     Check(await db.Surtidos.CountAsync() == before && await db.Set<ProductoPresentacion>().CountAsync() == before * 2,
         "Fallo de auditoría revierte surtido, composición y presentaciones");
+    var rollbackEdit = Edit(); rollbackEdit.Nombre = "No guardar";
+    try { await service.Actualizar(created.IdSurtido, rollbackEdit, default); throw new Exception("No revirtió actualización"); }
+    catch (DbUpdateException) { db.ChangeTracker.Clear(); }
+    Check((await service.Consultar(created.IdSurtido, default)).Nombre == "Cola actualizada", "Fallo de auditoría revierte edición completa");
     Console.WriteLine($"{passed} comprobaciones aprobadas con base SQLite temporal.");
+}
+
+sealed class TestEnvironment : Microsoft.AspNetCore.Hosting.IWebHostEnvironment
+{
+    public string ApplicationName { get; set; } = "SurtidoChecks";
+    public string EnvironmentName { get; set; } = "Testing";
+    public string ContentRootPath { get; set; } = Path.GetTempPath();
+    public string WebRootPath { get; set; } = Path.GetTempPath();
+    public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = new Microsoft.Extensions.FileProviders.NullFileProvider();
+    public Microsoft.Extensions.FileProviders.IFileProvider WebRootFileProvider { get; set; } = new Microsoft.Extensions.FileProviders.NullFileProvider();
 }
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)

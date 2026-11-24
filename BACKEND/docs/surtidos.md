@@ -6,6 +6,13 @@ nombre, marca, buscador de productos, selección múltiple y presentaciones. La 
 de costos se comprueba al guardar; un rechazo conserva los datos para corregirlos.
 Todavía no permite vender surtidos mediante los flujos de ventas existentes.
 
+Los surtidos se muestran como tarjetas dentro de su marca, en Productos. Incluyen
+imagen y presentaciones con sus precios. La imagen opcional se guarda en `surtido.imagen`;
+se admite enlace HTTPS o archivo mediante `POST /api/surtidos/con-imagen` (multipart).
+Los archivos reutilizan el procesamiento de imágenes y la carpeta persistente de productos.
+`GET /api/surtidos?idMarca=1` filtra exclusivamente por la marca del surtido.
+La migración `ImagenSurtido` agrega la columna nullable y conserva los surtidos existentes.
+
 ## Crear
 
 `POST /api/surtidos`, Content-Type `application/json`:
@@ -42,6 +49,20 @@ Responde `201` con el detalle y su ubicación. Validaciones: `400`; registro ine
 
 - `GET /api/surtidos?texto=cola&pagina=1&tamano=20`: listado paginado (máximo 100).
 - `GET /api/surtidos/1`: componentes, costos actuales y presentaciones.
+
+## Editar
+
+`PUT /api/surtidos/1` admite el mismo cuerpo de creación, más `estado` (booleano) y
+`quitarImagen` (booleano). Omitir imagen conserva la actual; un enlace HTTPS la reemplaza;
+`quitarImagen: true` la retira. Para subir archivo se usa `PUT /api/surtidos/1/con-imagen`
+con multipart y los mismos campos indexados de creación.
+
+En Productos, «Editar» abre los datos precargados. Permite cambiar nombre, marca,
+estado, productos permitidos, presentaciones, unidades, precios y la imagen.
+El guardado vuelve a validar la compatibilidad de costos y el precio mínimo.
+Las presentaciones existentes conservan su identificador; las retiradas se desactivan.
+Los cambios de composición no eliminan detalles históricos de venta.
+La actualización y auditoría se confirman juntas, sin modificar inventario.
 
 El detalle devuelve `precioMinimoActual` por presentación. Si los costos actuales no son
 compatibles, ese mínimo es `null`; consultar nunca modifica el estado configurado.

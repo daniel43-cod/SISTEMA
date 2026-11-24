@@ -1,0 +1,23 @@
+.product-kind-tabs { display: flex; gap: 10px; margin-bottom: 12px; }
+.product-kind-tabs button { min-height: 44px; padding: 8px 18px; border: 1px solid #dce3eb; border-radius: 22px; background: white; color: #075b96; font: inherit; cursor: pointer; }
+.product-kind-tabs button[aria-pressed="true"] { color: white; background: #075b96; border-color: #075b96; }
+.surtido-list { max-width: none; display: grid; gap: 16px; }
+.surtido-list-heading, .surtido-list-actions, .surtido-list-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.surtido-list-heading h2, .surtido-list p { margin: 0; }
+.surtido-list-grid { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 16px; margin: 0; padding: 0; }
+.surtido-list-grid li { display: grid; align-content: start; gap: 12px; padding: 18px; border: 1px solid #dce3eb; border-radius: 14px; background: white; min-width: 0; }
+.surtido-list-card-heading strong { overflow-wrap: anywhere; }
+.surtido-list-grid li > span { color: var(--color-muted); font-size: .9rem; }
+.surtido-active, .surtido-inactive { padding: 4px 10px; border-radius: 20px; font-size: .8rem; white-space: nowrap; }
+.surtido-active { color: #047857; background: #e0f5eb; }
+.surtido-inactive { color: #64748b; background: #f1f5f9; }
+.surtido-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.surtido-list.product-card.surtido-list-embedded { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.surtido-list-grid .product-detail-image { width: 100%; height: 180px; min-height: 0; }
+.surtido-list-grid .product-detail-image img { width: 100%; height: 100%; object-fit: contain; }
+.surtido-card-presentation { display: flex; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: .85rem; }
+.surtido-type { font-size: .75rem; color: #075b96; }
+
+.surtido-product-row { cursor: pointer; }
+.surtido-product-row:hover { background: #f8fafc; }
+.surtido-list .product-table-scroll.surtido-rows { display: block; }

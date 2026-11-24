@@ -9,6 +9,9 @@ import { getProductDetail, listProducts } from '../api/productQueries'
 import type { ProductPage, ProductDetail } from '../types/product'
 import { ProductDetailImage } from '../components/ProductDetailImage'
 import { EditProductForm } from '../components/EditProductForm'
+import { listSurtidos } from '../api/surtidosApi'
+import type { SurtidoSummary } from '../api/surtidosApi'
+import { SurtidoDetailDialog } from '../components/SurtidoDetailDialog'
 import './ProductsPage.css'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
@@ -21,6 +24,9 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
   const [notice, setNotice] = useState('')
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<ProductPage | null>(null)
+  const [surtidos, setSurtidos] = useState<SurtidoSummary[]>([])
+  const [selectedSurtido, setSelectedSurtido] = useState<number | null>(null)
+  const [editingSurtido, setEditingSurtido] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selected, setSelected] = useState<number | null>(null)
@@ -54,11 +60,21 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
     const controller = new AbortController()
     void Promise.resolve().then(() => {
       if (controller.signal.aborted) return null
-      setLoading(true); setError(''); setData(null)
+      setLoading(true); setError(''); setData(null); setSurtidos([])
       return productId !== undefined
         ? getProductDetail(productId, token, controller.signal).then(product => ({ pagina: 1, tamanoPagina: 20, total: 1, items: [product] }))
         : (async () => {
-            const first = await listProducts(1, token, controller.signal, { idMarca, idCategoria })
+            const [first, firstSurtidos] = await Promise.all([
+              listProducts(1, token, controller.signal, { idMarca, idCategoria }),
+              idMarca !== undefined ? listSurtidos('', 1, token, controller.signal, idMarca) : Promise.resolve(null),
+            ])
+            const surtidoItems = [...(firstSurtidos?.elementos ?? [])]
+            if (firstSurtidos) {
+              for (let page = 2; page <= Math.ceil(firstSurtidos.total / firstSurtidos.tamano); page++) {
+                const batch = await listSurtidos('', page, token, controller.signal, idMarca)
+                for (const item of batch.elementos) if (!surtidoItems.some(s => s.idSurtido === item.idSurtido)) surtidoItems.push(item)
+              }
+            }
             const items = [...first.items]
             const ids = new Set(items.map(item => item.idProducto))
             const lastPage = Math.ceil(first.total / first.tamanoPagina)
@@ -68,6 +84,7 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
                 if (!ids.has(item.idProducto)) { ids.add(item.idProducto); items.push(item) }
               }
             }
+            if (!controller.signal.aborted) setSurtidos(surtidoItems)
             return { ...first, items }
           })()
     }).then(result => {
@@ -119,9 +136,14 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
       {waiting > 0 && <p role="status">Espera {waiting} segundos antes de volver a consultar.</p>}
       {loading && <p role="status">Cargando productos…</p>}
       {error && <p role="alert" className="product-error">{error}</p>}
-      {data && !data.items.length && <p>No hay productos registrados.</p>}
+      {data && !data.items.length && !surtidos.length && <p>No hay productos registrados.</p>}
       {data && <>
         <ul className="product-mobile-cards" aria-label="Productos">
+          {surtidos.map(s => <li key={`surtido-${s.idSurtido}`}>
+            <div className="product-mobile-card-info"><strong>{s.nombre}</strong><span>{s.marca}</span><span>{s.estado ? 'Activo' : 'Inactivo'}</span></div>
+            <button type="button" className="product-mobile-more" disabled={busy} aria-haspopup="dialog" aria-label={`Ver detalles de ${s.nombre}`}
+              onClick={() => { setEditingSurtido(false); setSelectedSurtido(s.idSurtido) }}><span aria-hidden="true">⋮</span></button>
+          </li>)}
           {data.items.map(product => <li key={product.idProducto}>
             <div className="product-mobile-card-info">
               <strong>{product.nombre}</strong>
@@ -141,7 +163,16 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
         <div className="product-table-scroll">
           <table className="product-table">
             <thead><tr><th scope="col">Producto</th><th scope="col">Marca</th><th scope="col">Estado</th><th scope="col">Editar</th></tr></thead>
-            <tbody>{data.items.map(product => <tr key={product.idProducto}>
+            <tbody>
+              {surtidos.map(s => <tr key={`surtido-${s.idSurtido}`} onClick={() => { if (!busy) { setEditingSurtido(false); setSelectedSurtido(s.idSurtido) } }}>
+                <td data-label="Producto"><button type="button" className="product-name-button" disabled={busy} aria-haspopup="dialog"
+                  onClick={() => setSelectedSurtido(s.idSurtido)}>{s.nombre}</button></td>
+                <td data-label="Marca">{s.marca}</td>
+                <td data-label="Estado"><span className={`product-stock-status ${s.estado ? 'is-available' : 'is-empty'}`}>{s.estado ? 'Activo' : 'Inactivo'}</span></td>
+                <td data-label="Editar"><button type="button" className="Product-update-button" disabled={busy} aria-label={`Editar ${s.nombre}`}
+                  onClick={event => { event.stopPropagation(); setEditingSurtido(true); setSelectedSurtido(s.idSurtido) }}>Editar</button></td>
+              </tr>)}
+              {data.items.map(product => <tr key={product.idProducto}>
               <td data-label="Producto"><button className="product-name-button" type="button" disabled={busy}
                 aria-label={`Ver detalles de ${product.nombre}`} aria-expanded={selected === product.idProducto}
                 aria-controls="product-detail"
@@ -164,6 +195,8 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
         </div>
       </>}
     </section>
+    {selectedSurtido !== null && <SurtidoDetailDialog key={selectedSurtido} id={selectedSurtido} token={token} startEditing={editingSurtido}
+      onUpdated={() => { setRevision(v => v + 1); onProductSaved?.() }} onClose={() => setSelectedSurtido(null)} />}
     {selected !== null && createPortal(<dialog id="product-detail" ref={detailPanel} tabIndex={-1} className="product-card product-detail-dialog"
       aria-labelledby="product-detail-title" aria-busy={detailLoading}
       onCancel={event => { event.preventDefault(); closeDetail() }}>

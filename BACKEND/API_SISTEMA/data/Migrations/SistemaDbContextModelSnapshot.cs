@@ -1751,6 +1751,11 @@ namespace API_SISTEMA.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id_marca");
 
+                    b.Property<string>("Imagen")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("imagen");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -7,24 +7,30 @@ import { ApiError } from '../../../shared/api/ApiError'
 import { useProductNames } from '../hooks/useProductNames'
 import { filterProductNames } from '../api/searchProducts'
 import type { ProductSuggestion } from '../api/searchProducts'
-import { createSurtido } from '../api/surtidosApi'
+import { createSurtido, updateSurtido } from '../api/surtidosApi'
+import type { SurtidoDetail } from '../api/surtidosApi'
+import { ProductImagePicker } from './ProductImagePicker'
 import './SurtidoForm.css'
 
 type Row = { key: number; presentation: string; units: string; price: string }
-export function SurtidoForm({ onSaved, onCancel, onPending }: {
-  onSaved: () => void; onCancel: () => void; onPending: (pending: boolean) => void
+export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
+  onSaved: () => void; onCancel: () => void; onPending: (pending: boolean) => void; initial?: SurtidoDetail
 }) {
   const { session, logout } = useAuth()
   const brands = useBrands()
   const presentations = usePresentations()
   const [revision, setRevision] = useState(0)
   const names = useProductNames(revision)
-  const [name, setName] = useState('')
-  const [brand, setBrand] = useState('')
+  const [name, setName] = useState(initial?.nombre ?? '')
+  const [brand, setBrand] = useState(initial ? String(initial.idMarca) : '')
+  const [state, setState] = useState(initial?.estado ?? true)
+  const [imageChanged, setImageChanged] = useState(false)
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageFile, setImageFile] = useState<File>()
   const [text, setText] = useState('')
-  const [selected, setSelected] = useState<ProductSuggestion[]>([])
-  const [rows, setRows] = useState<Row[]>([{ key: 0, presentation: '', units: '', price: '' }])
-  const nextKey = useRef(1)
+  const [selected, setSelected] = useState<ProductSuggestion[]>(initial?.productos.map(p => ({ idProducto: p.idProducto, nombre: p.nombre })) ?? [])
+  const [rows, setRows] = useState<Row[]>(initial?.presentaciones.map((p, key) => ({ key, presentation: String(p.idPresentacion), units: String(p.unidadesEquivalentes), price: String(p.precio) })) ?? [{ key: 0, presentation: '', units: '', price: '' }])
+  const nextKey = useRef(initial?.presentaciones.length ?? 1)
   const [pending, setPending] = useState(false)
   const submitting = useRef(false)
   const [error, setError] = useState('')
@@ -58,8 +64,10 @@ export function SurtidoForm({ onSaved, onCancel, onPending }: {
     submitting.current = true; setPending(true); onPending(true)
     try {
       // Los costos actuales y su compatibilidad se validan en el servidor al guardar.
-      await createSurtido({ nombre: name.trim(), idMarca: Number(brand), idsProductos: selected.map(p => p.idProducto),
-        presentaciones: rows.map(r => ({ idPresentacion: Number(r.presentation), unidadesEquivalentes: Number(r.units), precio: Number(r.price) })) }, session.token)
+      const payload = { nombre: name.trim(), idMarca: Number(brand), idsProductos: selected.map(p => p.idProducto), urlImagen: imageUrl, imagen: imageFile,
+        presentaciones: rows.map(r => ({ idPresentacion: Number(r.presentation), unidadesEquivalentes: Number(r.units), precio: Number(r.price) })) }
+      if (initial) await updateSurtido(initial.idSurtido, { ...payload, estado: state, quitarImagen: imageChanged && !imageUrl.trim() && !imageFile }, session.token)
+      else await createSurtido(payload, session.token)
       onSaved()
     } catch (failure) {
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
@@ -79,6 +87,8 @@ export function SurtidoForm({ onSaved, onCancel, onPending }: {
           <option value="">Selecciona una marca</option>
           {brands.items.map(b => <option key={b.idMarca} value={b.idMarca}>{b.nombre}{b.nombreCategoria ? ` — ${b.nombreCategoria}` : ''}</option>)}
         </select></label>
+      {initial && <label className="field">Estado<select className="input" value={String(state)} onChange={e => setState(e.target.value === 'true')}>
+        <option value="true">Activo</option><option value="false">Inactivo</option></select></label>}
     </fieldset>
     <fieldset className="surtido-section" disabled={pending}>
       <legend>Productos permitidos ({selected.length})</legend>
@@ -118,9 +128,11 @@ export function SurtidoForm({ onSaved, onCancel, onPending }: {
       <button type="button" className="surtido-secondary" onClick={() => setRows(current => [...current, { key: nextKey.current++, presentation: '', units: '', price: '' }])}>+ Agregar presentación</button>
       <p className="surtido-help">Cada precio debe cubrir todas las unidades usando el producto de mayor costo promedio.</p>
     </fieldset>
+    <ProductImagePicker url={imageUrl} file={imageFile} currentImage={!imageChanged ? initial?.imagen ?? undefined : undefined} disabled={pending}
+      onChange={(url, file) => { setImageChanged(true); setImageUrl(url); setImageFile(file) }} />
     <p ref={errorRef} tabIndex={-1} role="alert" className="product-error">{error}</p>
     <div className="surtido-actions"><button type="button" className="surtido-secondary" disabled={pending} onClick={onCancel}>Cancelar</button>
       <button className="button" type="submit" disabled={pending || brands.loading || presentations.loading || !!brands.error || !!presentations.error}>
-        {pending ? 'Guardando…' : 'Guardar surtido'}</button></div>
+        {pending ? 'Guardando…' : initial ? 'Guardar cambios' : 'Guardar surtido'}</button></div>
   </form>
 }
