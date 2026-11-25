@@ -27,3 +27,4 @@
 .sale-catalog-card-footer { padding: 0 18px 18px; }
 .sale-catalog-card-footer .sale-catalog-add { width: 100%; }
 @media (max-width: 640px) { .sale-catalog-card-footer { padding: 0 8px 12px; } }
+.sale-catalog-page .catalog-surtido-card > .sale-catalog-add { display: block; width: fit-content; max-width: 100%; margin: 12px auto 18px; align-self: center; justify-self: center; }

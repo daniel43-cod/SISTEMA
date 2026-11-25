@@ -24,7 +24,8 @@ public sealed class ListarPedidosCatalogoService(SistemaDbContext context)
                 {
                     IdProductoPresentacion = d.IdProductoPresentacion, NombreProducto = d.NombreProducto,
                     NombrePresentacion = d.NombrePresentacion, Cantidad = d.Cantidad,
-                    PrecioUnitario = d.PrecioUnitario, Subtotal = d.Subtotal
+                    PrecioUnitario = d.PrecioUnitario, Subtotal = d.Subtotal,
+                    Componentes = d.Componentes.Select(c => new ComponentePedidoDetalleDto(c.IdProducto, c.NombreProducto, c.Cantidad)).ToList()
                 }).ToList()
             }).SingleOrDefaultAsync(ct);
     }

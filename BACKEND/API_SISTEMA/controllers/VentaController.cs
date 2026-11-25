@@ -28,6 +28,10 @@ public class VentaController(VentaService consulta, AbonarSaldoVentaService abon
     public async Task<IActionResult> ListarCatalogo(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
         => Ok(await consulta.ListarCatalogo(pagina, tamanoPagina, ct));
 
+    [HttpGet("surtidos")]
+    public async Task<IActionResult> ListarSurtidos(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
+        => Ok(await consulta.ListarCatalogoSurtidos(pagina, tamanoPagina, ct));
+
     [HttpGet("historial")]
     [Authorize(Roles = Roles.Administrador)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]

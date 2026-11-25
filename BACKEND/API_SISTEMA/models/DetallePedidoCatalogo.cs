@@ -14,4 +14,5 @@ public class DetallePedidoCatalogo
 
     public PedidoCatalogo Pedido { get; set; } = null!;
     public ProductoPresentacion ProductoPresentacion { get; set; } = null!;
+    public ICollection<DetallePedidoSurtido> Componentes { get; set; } = new List<DetallePedidoSurtido>();
 }

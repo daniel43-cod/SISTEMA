@@ -79,7 +79,7 @@ public static class TicketPos
     public static TicketPosDto DesdeVenta(Models.Ventas venta, Empresa empresa)
     {
         var lineas = venta.DetalleVentas.OrderBy(d => d.id_detalle_venta).Select(d => new LineaTicket(
-            string.Join(" · ", new[] { d.Producto.Nombre, d.producto_presentacion?.Presentacion?.Descripcion }.Where(s => !string.IsNullOrWhiteSpace(s))),
+            string.Join(" · ", new[] { d.Surtido?.Nombre ?? d.Producto?.Nombre ?? "Producto", d.producto_presentacion?.Presentacion?.Descripcion }.Where(s => !string.IsNullOrWhiteSpace(s))),
             d.cantidad, "UND", d.precio, d.descuento ?? 0m, d.subtotal)).ToArray();
         if (lineas.Length == 0 || lineas.Sum(i => i.Total) != venta.total) throw new ValidationException("El detalle de la venta no coincide con su total.");
         return new(venta.id_ventas, "COMPROBANTE_INTERNO", null, venta.fecha_venta.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture),

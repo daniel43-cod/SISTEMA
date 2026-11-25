@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../../../shared/api/ApiError'
-import { listPublicProducts } from '../api/publicProductsApi'
-import type { PublicProduct } from '../types/product'
+import { listPublicProducts, listPublicSurtidos } from '../api/publicProductsApi'
+import type { PublicProduct, PublicSurtido } from '../types/product'
 
 export function usePublicProducts(idMarca: number) {
   const [items, setItems] = useState<PublicProduct[]>([])
+  const [surtidos, setSurtidos] = useState<PublicSurtido[]>([])
   const [pagina, setPagina] = useState(1)
   const [hayMas, setHayMas] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -14,10 +15,10 @@ export function usePublicProducts(idMarca: number) {
   useEffect(() => {
     const controller = new AbortController()
     async function load() {
-      setLoading(true); setError(''); setItems([]); setHayMas(false)
+      setLoading(true); setError(''); setItems([]); setSurtidos([]); setHayMas(false)
       try {
-        const result = await listPublicProducts(idMarca, pagina, controller.signal)
-        if (!controller.signal.aborted) { setItems(result.productos); setHayMas(result.hayMas) }
+        const [result, mixed] = await Promise.all([listPublicProducts(idMarca, pagina, controller.signal), listPublicSurtidos(idMarca, pagina, controller.signal)])
+        if (!controller.signal.aborted) { setItems(result.productos); setSurtidos(mixed.surtidos); setHayMas(result.hayMas || mixed.hayMas) }
       } catch (failure) {
         if (!controller.signal.aborted)
           setError(failure instanceof ApiError ? failure.message : 'No se pudieron cargar los productos.')
@@ -26,5 +27,5 @@ export function usePublicProducts(idMarca: number) {
     void load()
     return () => controller.abort()
   }, [idMarca, pagina, revision])
-  return { items, pagina, hayMas, loading, error, reload, setPagina }
+  return { items, surtidos, pagina, hayMas, loading, error, reload, setPagina }
 }

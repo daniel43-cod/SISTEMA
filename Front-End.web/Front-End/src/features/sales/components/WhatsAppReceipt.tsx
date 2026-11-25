@@ -96,6 +96,8 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose, showCertification
       <span className="receipt-success-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
       <div><h2 id={title}>{mode === 'registro' ? `Venta #${saleId} registrada` : mode === 'pagos' ? `Historial de pagos ? Venta #${saleId}` : `Factura y comprobante · Venta #${saleId}`}</h2>
         <p>{showCertification && mode !== 'pagos' ? 'Consulta o certifica la factura y envía el comprobante al cliente.' : 'Envía el comprobante al cliente por WhatsApp.'}</p></div>
+      <button type="button" className="receipt-mobile-close" aria-label="Cerrar" title="Cerrar" disabled={sending || certifying}
+        onClick={() => { if (!busy.current && !certifying) onClose() }}><span aria-hidden="true">×</span></button>
     </header>
     {showCertification && mode !== 'pagos' && <CertifySalePanel saleId={saleId} token={token} active={certificationOpen}
       onToggle={() => setCertificationOpen(value => !value)} disabled={sending}

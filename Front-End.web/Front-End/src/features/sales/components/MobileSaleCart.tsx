@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SaleSurtidoBreakdown } from './SaleSurtidoBreakdown'
 import { findBarcode } from '../api/salesApi'
 import { filterSaleOptions, saleOptions } from '../utils/saleSearch'
 import type { SaleDraft, SaleOption } from '../utils/saleSearch'
@@ -11,9 +12,10 @@ type Props = {
   rows: SaleDraft[]; options: SaleOption[]; token: string; disabled: boolean
   onChoose: (option: SaleOption, quantity: string, discount: string) => boolean; onQuantity: (key: number, quantity: number) => void
   onOpenCatalog: () => void
+  onConfigureSurtido: (option: SaleOption) => void
   onRemove: (key: number) => void; onDiscount: (key: number, value: string) => void
 }
-export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQuantity, onRemove, onDiscount, onOpenCatalog }: Props) {
+export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQuantity, onRemove, onDiscount, onOpenCatalog, onConfigureSurtido }: Props) {
   const [query, setQuery] = useState('')
   const [editor, setEditor] = useState<{ option: SaleOption; quantity: string; discount: string } | null>(null)
   const quantityInput = useRef<HTMLInputElement>(null)
@@ -64,6 +66,10 @@ export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQua
 
   function choose(option: SaleOption) {
     if (disabled) return
+    if (option.product.id_surtido) {
+      request.current?.abort(); setQuery(''); setOpen(false); setBarcodeOptions(null); setError(''); setPending(false)
+      onConfigureSurtido(option); return
+    }
     const existing = rows.find(row => row.selection?.presentation.id_producto_presentacion === option.presentation.id_producto_presentacion)
     setEditor({ option, quantity: existing?.selection?.quantity ?? '', discount: existing?.selection?.discount ?? '0.00' })
     request.current?.abort()
@@ -166,11 +172,12 @@ export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQua
         let total: number | null = null
         let lineError = ''
         try { total = saleLineTotal(line) / 100 } catch (failure) { lineError = (failure as Error).message }
-        const usedUnits = selectedRows.reduce((sum, item) => item.selection!.product.id_producto === line.product.id_producto
-          ? sum + (Number(item.selection!.quantity) || 0) * item.selection!.presentation.unidades_equivalentes : sum, 0)
+        const usedUnits = selectedRows.reduce((sum, item) => sum + (item.selection!.product.id_surtido
+          ? item.selection!.componentes?.find(c => c.id_producto === line.product.id_producto)?.cantidad ?? 0
+          : item.selection!.product.id_producto === line.product.id_producto ? (Number(item.selection!.quantity) || 0) * item.selection!.presentation.unidades_equivalentes : 0), 0)
         const remaining = Math.max(0, line.product.stock - usedUnits)
         return <li key={row.key} className="sales-cart-item">
-          <div className="sales-cart-item-heading"><strong>{line.product.nombre}</strong><strong>{total === null ? 'Revisar' : money(total)}</strong></div>
+          <SaleSurtidoBreakdown line={line}><div className="sales-cart-item-heading"><strong>{line.product.nombre}</strong><strong>{total === null ? 'Revisar' : money(total)}</strong></div></SaleSurtidoBreakdown>
           <small>{line.presentation.presentacion} · {money(line.presentation.precio)} c/u</small>
           <div className="sales-cart-item-actions">
             <div className="sales-cart-quantity">
@@ -190,7 +197,7 @@ export function MobileSaleCart({ rows, options, token, disabled, onChoose, onQua
             </button>
           </div>
           {lineError && <small id={`${id}-discount-${row.key}`} className="sale-discount-error" role="alert">{lineError}</small>}
-          {remaining <= line.presentation.unidades_equivalentes * 3 && <small className="sales-cart-stock">Quedan {remaining} uds</small>}
+          {!line.product.id_surtido && remaining <= line.presentation.unidades_equivalentes * 3 && <small className="sales-cart-stock">Quedan {remaining} uds</small>}
         </li>
       })}
     </ul>

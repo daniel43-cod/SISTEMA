@@ -114,6 +114,7 @@ public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
             ?? throw new KeyNotFoundException("La empresa no existe.");
         var registro = await db.ventas.AsNoTracking().Include(v => v.cliente)
             .Include(v => v.DetalleVentas).ThenInclude(d => d.Producto)
+            .Include(v => v.DetalleVentas).ThenInclude(d => d.Surtido)
             .Include(v => v.DetalleVentas).ThenInclude(d => d.producto_presentacion).ThenInclude(p => p.Presentacion)
             .SingleOrDefaultAsync(v => v.id_ventas == venta, ct)
             ?? throw new KeyNotFoundException("La venta no existe.");

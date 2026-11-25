@@ -51,7 +51,7 @@ function OrderDialog({ order, token, onClose, onExpired, onPrepare }: { order: O
         </dl>
         <div className="sales-table-scroll orders-detail-cards" role="region" aria-label="Productos del pedido" tabIndex={0}><table>
           <caption>Productos solicitados</caption><thead><tr><th scope="col">Presentación y producto</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Subtotal</th></tr></thead>
-          <tbody>{detail.detalles.map(line => <tr key={line.idProductoPresentacion}><td data-label="Presentación y producto">{[line.nombrePresentacion, line.nombreProducto].filter(Boolean).join(' · ')}</td><td data-label="Cantidad">{line.cantidad}</td>
+          <tbody>{detail.detalles.map(line => <tr key={line.idProductoPresentacion}><td data-label="Presentación y producto">{[line.nombrePresentacion, line.nombreProducto].filter(Boolean).join(' · ')}{line.componentes?.map(c => <small key={c.idProducto} style={{ display: 'block' }}>{c.nombre}: {c.cantidad} unidades</small>)}</td><td data-label="Cantidad">{line.cantidad}</td>
             <td data-label="Precio unitario" className="sale-list-money">{money.format(line.precioUnitario)}</td><td data-label="Importe" className="sale-list-money">{money.format(line.subtotal)}</td></tr>)}</tbody>
         </table></div>
         <dl className="sale-payment-summary sale-payment-totals"><div><dt>Total</dt><dd>{money.format(detail.total)}</dd></div>

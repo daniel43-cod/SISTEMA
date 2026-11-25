@@ -1,0 +1,13 @@
+.sales-checkout-dialog { position: fixed; inset: var(--checkout-top, 12px) 0 auto; margin: 0 auto; max-height: var(--checkout-height, calc(100dvh - 24px)); box-sizing: border-box; }
+.sales-checkout-dialog form { display: grid; gap: 16px; }
+.sales-checkout-dialog form h2, .sales-checkout-dialog form p { margin: 0; }
+.sales-checkout-dialog label { display: grid; gap: 8px; font-size: .9rem; }
+.sales-checkout-dialog input { min-height: 44px; width: 100%; min-width: 0; box-sizing: border-box; padding: 10px 12px; border: 1px solid #dce5ef; border-radius: 10px; background: white; font-size: 16px; }
+.sales-checkout-dialog p { display: flex; justify-content: space-between; gap: 12px; }
+.sales-checkout-dialog .sales-checkout-dialog-total strong { font-size: 1.25rem; }
+.sales-checkout-dialog .sales-payment-dialog-actions { position: sticky; bottom: -24px; padding-block: 12px; background: var(--surface, white); }
+
+.sales-checkout-dialog .sales-payment-dialog-actions { margin-top: 0; }
+.sales-checkout-dialog button { min-height: 44px; padding: 10px 16px; border: 1px solid #cbd8e8; border-radius: 10px; background: white; color: #075b96; font: inherit; cursor: pointer; }
+.sales-checkout-dialog button.sales-primary { background: #075b96; color: white; border-color: #075b96; }
+.sales-checkout-dialog button:disabled { opacity: .5; cursor: not-allowed; }

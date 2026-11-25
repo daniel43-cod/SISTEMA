@@ -131,6 +131,41 @@ namespace API_SISTEMA.Services.Ventas
             };
         }
 
+        public async Task<List<SurtidoVentaCatalogoDto>> ListarCatalogoSurtidos(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default, int? idMarca = null)
+        {
+            if (pagina < 1 || pagina > 100000 || tamanoPagina < 1 || tamanoPagina > 100) throw new ValidationException("Paginación inválida.");
+            var grupos = await _context.Surtidos.AsNoTracking().Include(s => s.Productos).ThenInclude(p => p.Producto)
+                .ThenInclude(p => p.Marca).ThenInclude(m => m.Categoria)
+                .Where(s => s.Estado && s.Marca.Estado && s.Marca.Categoria.Estado)
+                .Where(s => !idMarca.HasValue || s.IdMarca == idMarca.Value)
+                .OrderBy(s => s.Nombre).ThenBy(s => s.IdSurtido).Skip((pagina - 1) * tamanoPagina).Take(tamanoPagina).ToListAsync(ct);
+            var ids = grupos.Select(s => s.IdSurtido).ToArray();
+            var presentaciones = await _context.producto_presentaciones.AsNoTracking().Include(p => p.Presentacion)
+                .Where(p => p.id_surtido.HasValue && ids.Contains(p.id_surtido.Value) && p.estado && p.Presentacion.Estado == true).ToListAsync(ct);
+            return grupos.Select(s =>
+            {
+                var productos = s.Productos.Select(p => p.Producto).ToArray();
+                string? bloqueo = null;
+                try
+                {
+                    API_SISTEMA.Services.Surtidos.SurtidoReglas.ValidarCostosPromedio(productos);
+                    if (productos.Any(p => !p.Marca.Estado || !p.Marca.Categoria.Estado)) bloqueo = "Hay componentes con marca o categoría inactiva.";
+                }
+                catch (ValidationException error) { bloqueo = error.Message; }
+                return new SurtidoVentaCatalogoDto
+                {
+                    id_surtido = s.IdSurtido, nombre = s.Nombre, imagen = s.Imagen, bloqueo = bloqueo,
+                    stock = (int)Math.Min(int.MaxValue, productos.Sum(p => (long)Math.Max(0, p.Stock ?? 0))),
+                    componentes = productos.Select(p => new ComponenteSurtidoCatalogoDto(p.IdProducto, p.Nombre, Math.Max(0, p.Stock ?? 0))).ToList(),
+                    presentaciones = presentaciones.Where(p => p.id_surtido == s.IdSurtido).Select(p => new PresentacionCatalogoDto
+                    {
+                        id_producto_presentacion = p.id_producto_presentacion, presentacion = p.Presentacion.Descripcion,
+                        unidades_equivalentes = p.unidades_equivalentes, precio = p.precio
+                    }).ToList()
+                };
+            }).ToList();
+        }
+
         //catalodo
         public async Task<List<ProductoCatalogoDto>> ListarCatalogo(int pagina = 1, int tamanoPagina = 100, CancellationToken ct = default)
         {

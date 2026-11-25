@@ -19,17 +19,19 @@ export function PublicCart({ items, total, count, storageError, setQuantity, cle
     <h2 id="public-cart-title">Tu carrito <span>({count})</span></h2>
     {success && <p role="status">{success}</p>}
     {storageError && <p role="status">{storageError}</p>}
-    {!items.length ? <p>Agrega presentaciones con el botón + de cada producto.</p> : checkout ? <PublicCheckoutForm items={items} total={total} onBack={() => setCheckout(false)} onBusy={value => onBusy?.(value)}
+    {!items.length ? <p>Agrega productos o surtidos desde el catálogo.</p> : checkout ? <PublicCheckoutForm items={items} total={total} onBack={() => setCheckout(false)} onBusy={value => onBusy?.(value)}
       onSuccess={confirmedTotal => { setSuccess('Pedido recibido, pendiente de aprobación. Total: ' + money.format(confirmedTotal)); setCheckout(false); clear() }} /> : <>
       <ul className="public-cart-items">
         {items.map(item => <li key={item.idProductoPresentacion}>
           <div><strong>{item.producto}</strong><span>{item.presentacion} · {money.format(item.precio)} c/u</span></div>
+          {item.idSurtido && <div><ul>{item.componentes?.map(c => <li key={c.idProducto}>{c.nombre}: {c.cantidad} unidades</li>)}</ul><small>Para cambiar las cantidades, edita el surtido desde el catálogo.</small></div>}
           <div className="public-quantity" role="group" aria-label={`Cantidad de ${item.producto}, ${item.presentacion}`}>
             <button type="button" aria-label={`Reducir ${item.producto}, ${item.presentacion}`}
+              disabled={!!item.idSurtido}
               onClick={() => setQuantity(item, item.cantidad - 1)}>−</button>
             <output>{item.cantidad}</output>
             <button type="button" aria-label={`Aumentar ${item.producto}, ${item.presentacion}`}
-              disabled={item.cantidad >= MAX_QUANTITY} onClick={() => setQuantity(item, item.cantidad + 1)}>+</button>
+              disabled={!!item.idSurtido || item.cantidad >= MAX_QUANTITY} onClick={() => setQuantity(item, item.cantidad + 1)}>+</button>
           </div>
           <span>{money.format(Math.round(item.precio * 100) * item.cantidad / 100)}</span>
           <button type="button" className="public-cart-remove" onClick={() => setQuantity(item, 0)}

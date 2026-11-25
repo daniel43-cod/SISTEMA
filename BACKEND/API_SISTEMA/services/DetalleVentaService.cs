@@ -23,7 +23,9 @@ namespace API_SISTEMA.Services
                 .Select(dv => new ListarDetalleDto
                 {
                     id_producto = dv.id_producto,
-                    nombre_producto = dv.Producto.Nombre,
+                    id_surtido = dv.id_surtido,
+                    nombre_producto = dv.id_surtido.HasValue ? dv.Surtido!.Nombre : dv.Producto!.Nombre,
+                    componentes = dv.ComponentesSurtido.Select(c => new ComponenteDetalleVentaDto(c.IdProducto, c.Producto.Nombre, c.Cantidad)).ToList(),
                     descuento = dv.descuento??0,
                     id_producto_presentacion = dv.id_producto_presentacion,
                     descripcion_resentacion = dv.producto_presentacion.Presentacion.Descripcion,

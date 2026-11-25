@@ -9,7 +9,10 @@ namespace API_SISTEMA.Models
         [Key]
         public int id_detalle_venta {  get; set; }
         public int id_venta { get; set; }
-        public int id_producto { get; set; }
+        public int? id_producto { get; set; }
+        public int? id_surtido { get; set; }
+        public Surtido? Surtido { get; set; }
+        public ICollection<DetalleVentaSurtido> ComponentesSurtido { get; set; } = new List<DetalleVentaSurtido>();
         public int cantidad { get; set; }
         public decimal precio { get; set; }
         public decimal? descuento { get; set; }
@@ -24,7 +27,7 @@ namespace API_SISTEMA.Models
         public ProductoPresentacion producto_presentacion { get; set; } = null!;
 
         [ForeignKey("id_producto")]
-        public API_SISTEMA.Models.Productos Producto { get; set; } = null!;
+        public API_SISTEMA.Models.Productos? Producto { get; set; }
 
         [ForeignKey("id_venta")]
         public Ventas Venta { get; set; } = null!;

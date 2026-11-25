@@ -18,33 +18,38 @@ internal static class CalcularDetallesPedido
             throw new ValidationException("Agrupa cada presentación en una sola línea.");
         var ids = lineas.Select(d => d.IdProductoPresentacion).ToArray();
         var presentaciones = await context.producto_presentaciones.AsNoTracking()
-            .Include(p => p.Presentacion).Include(p => p.Producto).ThenInclude(p => p.Marca).ThenInclude(m => m.Categoria)
+            .Include(p => p.Surtido).Include(p => p.Presentacion).Include(p => p.Producto).ThenInclude(p => p.Marca).ThenInclude(m => m.Categoria)
             .Where(p => ids.Contains(p.id_producto_presentacion)).ToDictionaryAsync(p => p.id_producto_presentacion, ct);
-        var unidadesPorProducto = new Dictionary<int, long>();
-        var detalles = new List<DetallePedidoCatalogo>();
-        decimal total = 0;
+        var solicitudes = new List<API_SISTEMA.Dtos.Ventas.CrearDetalleVentaDto>();
         foreach (var linea in lineas)
         {
-            if (!presentaciones.TryGetValue(linea.IdProductoPresentacion, out var pr) ||
-                pr.id_producto is not int idProducto || pr.id_surtido.HasValue || pr.Producto is null ||
-                !pr.estado || pr.Presentacion.Estado != true ||
-                !pr.Producto.Marca.Estado || !pr.Producto.Marca.Categoria.Estado || pr.unidades_equivalentes <= 0)
-                throw new ValidationException("Uno de los productos o sus presentaciones ya no está disponible.");
-            VentaReglas.Monto(pr.precio, false);
-            if (pr.Producto.PrecioPromedioCompra is not decimal costo || costo <= 0 || pr.precio <= costo * pr.unidades_equivalentes)
-                throw new ValidationException("Uno de los productos no tiene un precio de venta válido.");
-            var unidades = (long)linea.Cantidad * pr.unidades_equivalentes;
-            unidadesPorProducto.TryGetValue(idProducto, out var anteriores);
-            unidadesPorProducto[idProducto] = anteriores + unidades;
-            if (unidadesPorProducto[idProducto] > (pr.Producto.Stock ?? 0))
-                throw new ValidationException("Existencias insuficientes para las cantidades solicitadas.");
-            var bruto = pr.precio * linea.Cantidad;
-            VentaReglas.Monto(bruto, false);
-            total += bruto;
-            detalles.Add(new DetallePedidoCatalogo { IdProductoPresentacion = pr.id_producto_presentacion,
-                NombreProducto = pr.Producto.Nombre, NombrePresentacion = pr.Presentacion.Descripcion ?? string.Empty,
-                Cantidad = linea.Cantidad, PrecioUnitario = pr.precio });
+            if (!presentaciones.TryGetValue(linea.IdProductoPresentacion, out var pr))
+                throw new ValidationException("Una presentación ya no está disponible.");
+            solicitudes.Add(new()
+            {
+                id_producto = pr.id_producto, id_surtido = pr.id_surtido,
+                id_producto_presentacion = pr.id_producto_presentacion, cantidad = linea.Cantidad,
+                componentes = linea.Componentes?.Select(c => c is null ? null! : new API_SISTEMA.Dtos.Ventas.ComponenteSurtidoVentaDto
+                    { id_producto = c.IdProducto, cantidad = c.Cantidad }).ToList()
+            });
         }
+        var calculados = await new CalcularDetallesVentaService(context).Calcular(solicitudes, ct, descontarInventario: false);
+        var idsComponentes = calculados.SelectMany(d => d.ComponentesSurtido.Select(c => c.IdProducto)).Distinct().ToArray();
+        var nombres = await context.productos.AsNoTracking().Where(p => idsComponentes.Contains(p.IdProducto))
+            .ToDictionaryAsync(p => p.IdProducto, p => p.Nombre, ct);
+        var detalles = calculados.Select(d =>
+        {
+            var pr = presentaciones[d.id_producto_presentacion];
+            return new DetallePedidoCatalogo
+            {
+                IdProductoPresentacion = pr.id_producto_presentacion,
+                NombreProducto = pr.id_surtido.HasValue ? pr.Surtido!.Nombre : pr.Producto!.Nombre,
+                NombrePresentacion = pr.Presentacion.Descripcion ?? string.Empty,
+                Cantidad = d.cantidad, PrecioUnitario = d.precio,
+                Componentes = d.ComponentesSurtido.Select(c => new DetallePedidoSurtido { IdProducto = c.IdProducto, Cantidad = c.Cantidad, NombreProducto = nombres[c.IdProducto] }).ToList()
+            };
+        }).ToList();
+        var total = calculados.Sum(d => d.subtotal);
         VentaReglas.Monto(total, false);
         if (total <= minimo)
             throw new ValidationException($"El total debe ser mayor a Q{minimo:0.00} para esta zona.");

@@ -49,7 +49,8 @@ export function PublicCheckoutForm({ items, total, onBack, onBusy, onSuccess }: 
       try {
         pending.current = { idOperacion: createOperationId(), nombreCliente: name.trim(), telefono: '+502' + phone,
           direccion: address.trim(), referencias: references.trim(), observacion: note.trim(), idZonaEntrega: zone.idZonaEntrega,
-          detalles: items.map(item => ({ idProductoPresentacion: item.idProductoPresentacion, cantidad: item.cantidad })) }
+          detalles: items.map(item => ({ idProductoPresentacion: item.idProductoPresentacion, cantidad: item.cantidad,
+            ...(item.idSurtido ? { componentes: item.componentes!.map(c => ({ idProducto: c.idProducto, cantidad: c.cantidad })) } : {}) })) }
       } catch { setError('No se pudo preparar el pedido. Usa un navegador actualizado.'); return }
     }
     if (!pending.current) return

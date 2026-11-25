@@ -11,6 +11,23 @@ namespace API_SISTEMA.Controllers;
 public sealed class CatalogoPublicoController(CatalogoPublicoService service,ILogger<CatalogoPublicoController> logger) : ControllerBase
 {
     [AllowAnonymous]
+    [HttpGet("marcas/{idMarca:int:min(1)}/surtidos")]
+    public async Task<ActionResult<SurtidosPublicosPaginaDto>> ListarSurtidosPorMarca(int idMarca,
+        [FromQuery, Range(1, 100000)] int pagina = 1, [FromQuery, Range(1, 60)] int tamanoPagina = 24, CancellationToken ct = default)
+    {
+        try
+        {
+            var resultado = await service.ListarSurtidosPorMarca(idMarca, pagina, tamanoPagina, ct);
+            return resultado is null ? NotFound() : Ok(resultado);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Error al listar surtidos públicos de marca {IdMarca}", idMarca);
+            return Problem(statusCode: 500, title: "No se pudieron listar los surtidos.");
+        }
+    }
+
+    [AllowAnonymous]
     [HttpGet("marcas/{idMarca:int}/productos")]
     [ProducesResponseType(typeof(ProductosPublicosPaginaDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

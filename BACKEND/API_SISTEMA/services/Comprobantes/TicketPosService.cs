@@ -13,6 +13,7 @@ public sealed class TicketPosService(SistemaDbContext db, PermisoUsuarioService 
         if (!await permisos.TienePermiso(usuario, Utilidades.Permisos.Vender)) throw new UnauthorizedAccessException("No tienes permiso para imprimir ventas.");
         var venta = await db.ventas.AsNoTracking().Include(v => v.usuario).Include(v => v.cliente)
             .Include(v => v.DetalleVentas).ThenInclude(d => d.Producto)
+            .Include(v => v.DetalleVentas).ThenInclude(d => d.Surtido)
             .Include(v => v.DetalleVentas).ThenInclude(d => d.producto_presentacion).ThenInclude(p => p.Presentacion)
             .SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct) ?? throw new KeyNotFoundException("La venta no existe.");
         var documento = await db.DocumentosFel.AsNoTracking().SingleOrDefaultAsync(d => d.id_venta == idVenta && d.ambiente == options.Value.Ambiente, ct);

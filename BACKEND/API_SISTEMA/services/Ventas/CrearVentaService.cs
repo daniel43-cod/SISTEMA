@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -19,11 +19,7 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
     {
         ct.ThrowIfCancellationRequested();
         if (dto is null || dto.id_operacion == Guid.Empty) throw new ValidationException("Debes enviar una clave id_operacion válida para registrar la venta.");
-        if (dto.detalles is null || dto.detalles.Count == 0 || dto.detalles.Any(d => d is null || d.id_producto <= 0 || d.id_producto_presentacion <= 0 || d.cantidad <= 0))
-            throw new ValidationException("La venta debe contener al menos una línea con identificadores y cantidades válidos.");
-        if (dto.detalles.Select(d => d.id_producto_presentacion).Distinct().Count() != dto.detalles.Count)
-            throw new ValidationException("Agrupa las cantidades de una misma presentación en una sola línea.");
-        foreach (var d in dto.detalles) VentaReglas.Monto(d.descuento);
+        CalcularDetallesVentaService.Validar(dto.detalles);
         VentaReglas.Texto(dto.origen, 50, "el origen");
         VentaReglas.Texto(dto.observacion, 100, "la observación");
         if (dto.id_cliente < 0 || (dto.id_cliente == 0 && dto.clienteNuevo is null) || (dto.id_cliente > 0 && dto.clienteNuevo is not null))
@@ -59,21 +55,7 @@ public class CrearVentaService(SistemaDbContext context, MovimientoCajaService m
         var caja = await CajaSesionActual.ParaOperacion(context, ct);
         // Dos solicitudes con la misma clave pueden haber llegado antes de adquirir el bloqueo del turno.
         if (await Repetida() is { } repetida) return repetida;
-        var productoIds = dto.detalles.Select(d => d.id_producto).Distinct().Order().ToArray();
-        var productos = await context.productos.Include(p => p.Marca).ThenInclude(m => m.Categoria)
-            .Where(p => productoIds.Contains(p.IdProducto)).OrderBy(p => p.IdProducto).ToDictionaryAsync(p => p.IdProducto, ct);
-        var presentacionIds = dto.detalles.Select(d => d.id_producto_presentacion).ToArray();
-        var presentaciones = await context.producto_presentaciones.Include(p => p.Presentacion)
-            .Where(p => presentacionIds.Contains(p.id_producto_presentacion)).ToDictionaryAsync(p => p.id_producto_presentacion, ct);
-        var detalles = new List<DetalleVenta>();
-        foreach (var d in dto.detalles)
-        {
-            if (!productos.TryGetValue(d.id_producto, out var producto) || !producto.Marca.Estado || !producto.Marca.Categoria.Estado)
-                throw new ValidationException("El producto, su marca y su categoría deben estar disponibles y activos.");
-            if (!presentaciones.TryGetValue(d.id_producto_presentacion, out var pr) || pr.id_producto != d.id_producto || !pr.estado || pr.Presentacion.Estado != true)
-                throw new ValidationException("La presentación debe pertenecer al producto y estar activa.");
-            detalles.Add(VentaReglas.Calcular(producto, pr, d.cantidad, d.descuento));
-        }
+        var detalles = await new CalcularDetallesVentaService(context).Calcular(dto.detalles, ct);
         var total = detalles.Sum(d => d.subtotal);
         var receptorFiscal = ReceptorVentaReglas.ValidarOpcional(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
         var descuento = detalles.Sum(d => d.descuento ?? 0);

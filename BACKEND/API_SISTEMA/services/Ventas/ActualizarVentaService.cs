@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using API_SISTEMA.Data;
 using API_SISTEMA.Dtos.Ventas;
@@ -13,18 +13,15 @@ public class ActualizarVentaService(SistemaDbContext context)
 {
     public async Task ModificarVenta(int idVenta, ModificarVentaDto dto, int idUsuario, CancellationToken ct = default)
     {
-        if (dto is null || dto.id_cliente <= 0 || dto.detalles is null || dto.detalles.Count == 0 ||
-            dto.detalles.Any(d => d is null || d.id_producto <= 0 || d.id_producto_presentacion <= 0 || d.cantidad <= 0))
-            throw new ValidationException("Revisa el cliente y agrega al menos una línea válida a la venta.");
-        if (dto.detalles.Select(d => d.id_producto_presentacion).Distinct().Count() != dto.detalles.Count)
-            throw new ValidationException("No repitas la misma presentación.");
-        foreach (var d in dto.detalles) VentaReglas.Monto(d.descuento);
+        if (dto is null || dto.id_cliente <= 0) throw new ValidationException("Selecciona un cliente válido.");
+        var lineas = dto.detalles?.Cast<CrearDetalleVentaDto>().ToArray();
+        CalcularDetallesVentaService.Validar(lineas);
         VentaReglas.Texto(dto.observacion, 100, "la observación");
         var permisos = new API_SISTEMA.Services.Permisos.PermisoUsuarioService(context);
         if (!await permisos.TienePermiso(idUsuario, API_SISTEMA.Utilidades.Permisos.Vender)) throw new UnauthorizedAccessException("No tienes permiso para vender.");
         await using var tx = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         await CajaSesionActual.ParaOperacion(context, ct);
-        var venta = await context.ventas.Include(v => v.DetalleVentas).SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct)
+        var venta = await context.ventas.Include(v => v.DetalleVentas).ThenInclude(d => d.ComponentesSurtido).SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct)
             ?? throw new KeyNotFoundException("La venta no existe.");
         if (await context.DocumentosFel.AnyAsync(d => d.id_venta == idVenta, ct))
             throw new VentaConflictoException("La venta tiene un documento FEL registrado y no puede modificarse mientras exista ese documento.");
@@ -32,33 +29,29 @@ public class ActualizarVentaService(SistemaDbContext context)
         // Nunca reconstruir unidades históricas usando una presentación que pudo cambiar.
         if (venta.DetalleVentas.Any(d => d.unidades_descontadas <= 0 || d.precio <= 0 || d.costo_unitario_venta is null))
             throw new VentaConflictoException("Esta venta histórica no tiene el detalle original completo. Requiere revisión antes de modificarla.");
-        var ids = dto.detalles.Select(d => d.id_producto).Concat(venta.DetalleVentas.Select(d => d.id_producto)).Distinct().Order().ToArray();
-        var productos = await context.productos.Include(p => p.Marca).ThenInclude(m => m.Categoria)
-            .Where(p => ids.Contains(p.IdProducto)).OrderBy(p => p.IdProducto).ToDictionaryAsync(p => p.IdProducto, ct);
-        foreach (var anterior in venta.DetalleVentas)
+        var restaurar = venta.DetalleVentas.SelectMany(d => d.id_producto is int producto
+            ? new[] { (Id: producto, Cantidad: d.unidades_descontadas) }
+            : d.ComponentesSurtido.Select(c => (Id: c.IdProducto, Cantidad: c.Cantidad))).ToArray();
+        if (venta.DetalleVentas.Any(d => d.id_surtido.HasValue &&
+            (d.ComponentesSurtido.Count == 0 || d.ComponentesSurtido.Sum(c => (long)c.Cantidad) != d.unidades_descontadas)))
+            throw new VentaConflictoException("La composición histórica del surtido está incompleta.");
+        var ids = restaurar.Select(c => c.Id).Distinct().ToArray();
+        var productos = await context.productos.Where(p => ids.Contains(p.IdProducto)).ToDictionaryAsync(p => p.IdProducto, ct);
+        foreach (var grupo in restaurar.GroupBy(c => c.Id))
         {
-            var p = productos[anterior.id_producto];
-            if (p.Stock is null) throw new ValidationException("El inventario requiere revisión.");
-            try { p.Stock = checked(p.Stock.Value + anterior.unidades_descontadas); }
-            catch (OverflowException) { throw new ValidationException("El inventario excede el límite permitido."); }
+            if (!productos.TryGetValue(grupo.Key, out var p) || p.Stock is null) throw new ValidationException("El inventario requiere revisión.");
+            var stock = p.Stock.Value + grupo.Sum(c => (long)c.Cantidad);
+            if (stock > int.MaxValue) throw new ValidationException("El inventario excede el límite permitido.");
+            p.Stock = (int)stock;
         }
-        var idsPr = dto.detalles.Select(d => d.id_producto_presentacion).ToArray();
-        var presentaciones = await context.producto_presentaciones.Include(p => p.Presentacion)
-            .Where(p => idsPr.Contains(p.id_producto_presentacion)).ToDictionaryAsync(p => p.id_producto_presentacion, ct);
-        var nuevos = new List<DetalleVenta>();
-        foreach (var d in dto.detalles)
-        {
-            if (!productos.TryGetValue(d.id_producto, out var p) || !p.Marca.Estado || !p.Marca.Categoria.Estado ||
-                !presentaciones.TryGetValue(d.id_producto_presentacion, out var pr) || pr.id_producto != p.IdProducto || !pr.estado || pr.Presentacion.Estado != true)
-                throw new ValidationException("Producto, marca, categoría y presentación deben estar activos.");
-            nuevos.Add(VentaReglas.Calcular(p, pr, d.cantidad, d.descuento));
-        }
+        var nuevos = await new CalcularDetallesVentaService(context).Calcular(lineas!, ct);
         var total = nuevos.Sum(d => d.subtotal);
         var receptorFiscal = ReceptorVentaReglas.ValidarOpcional(dto.tipo_identificacion_receptor, dto.identificacion_receptor, dto.nombre_receptor, total);
         var descuento = nuevos.Sum(d => d.descuento ?? 0m);
         VentaReglas.Monto(total, false); VentaReglas.Monto(total + descuento);
         var pagado = await context.pagos.Where(p => p.id_venta == idVenta).SumAsync(p => (decimal?)p.monto, ct) ?? 0m;
         if (pagado > total) throw new VentaConflictoException("El nuevo total no puede ser menor a lo ya pagado.");
+        context.DetalleVentaSurtidos.RemoveRange(venta.DetalleVentas.SelectMany(d => d.ComponentesSurtido));
         context.detalle_Ventas.RemoveRange(venta.DetalleVentas);
         venta.DetalleVentas = nuevos;
         venta.id_cliente = dto.id_cliente; venta.subtotal = total + descuento; venta.descuento = descuento;

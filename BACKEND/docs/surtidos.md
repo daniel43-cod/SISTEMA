@@ -4,7 +4,7 @@ Los endpoints `/api/surtidos` requieren sesión interna y rol ADMINISTRADOR.
 El frontend incluye «Crear surtido» junto a «Crear producto». Abre un formulario con
 nombre, marca, buscador de productos, selección múltiple y presentaciones. La compatibilidad
 de costos se comprueba al guardar; un rechazo conserva los datos para corregirlos.
-Todavía no permite vender surtidos mediante los flujos de ventas existentes.
+El flujo de venta y sus validaciones se describen en [ventas-surtidos.md](ventas-surtidos.md).
 
 Los surtidos se muestran como tarjetas dentro de su marca, en Productos. Incluyen
 imagen y presentaciones con sus precios. La imagen opcional se guarda en `surtido.imagen`;
@@ -66,8 +66,8 @@ La actualización y auditoría se confirman juntas, sin modificar inventario.
 
 El detalle devuelve `precioMinimoActual` por presentación. Si los costos actuales no son
 compatibles, ese mínimo es `null`; consultar nunca modifica el estado configurado.
-Al implementar la venta habrá que revalidar costos y composición, existencias y precio
-neto después de descuentos. La configuración no sustituye esas validaciones futuras.
+La venta revalida costos y composición, existencias y precio neto después de descuentos.
+La configuración no sustituye esas validaciones.
 
 ## Migraciones
 

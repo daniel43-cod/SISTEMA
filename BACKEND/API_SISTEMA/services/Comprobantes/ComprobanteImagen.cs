@@ -55,7 +55,7 @@ public static class ComprobanteImagen
         foreach (var detalle in venta.DetalleVentas.OrderBy(d => d.id_detalle_venta))
         {
             string[] celdas = [detalle.cantidad.ToString(Cultura),
-                detalle.producto_presentacion?.Presentacion?.Descripcion ?? "Sin presentación", detalle.Producto.Nombre,
+                detalle.producto_presentacion?.Presentacion?.Descripcion ?? "Sin presentación", detalle.Surtido?.Nombre ?? detalle.Producto?.Nombre ?? "Producto",
                 Moneda(detalle.cantidad * detalle.precio)];
             string? descuento = detalle.descuento > 0 ? "−" + Moneda(detalle.descuento.Value) : null;
             int altoPrecio = Medir(celdas[^1], fuente, W[^1]) +

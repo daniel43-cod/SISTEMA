@@ -22,6 +22,13 @@ public sealed class RegistrarDetallePedidoCatalogoDto
 {
     [Range(1, int.MaxValue)] public int IdProductoPresentacion { get; init; }
     [Range(1, int.MaxValue)] public int Cantidad { get; init; }
+    public List<ComponentePedidoCatalogoDto>? Componentes { get; init; }
+}
+
+public sealed class ComponentePedidoCatalogoDto
+{
+    [Range(1, int.MaxValue)] public int IdProducto { get; init; }
+    [Range(1, int.MaxValue)] public int Cantidad { get; init; }
 }
 
 public sealed record PedidoCatalogoRegistradoDto(Guid IdOperacion, decimal Total, string Estado);

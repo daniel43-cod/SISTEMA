@@ -1,5 +1,6 @@
 import { catalogSaleLines } from '../utils/catalogSelection'
 import { SaleCatalog } from '../components/SaleCatalog'
+import type { SurtidoCatalogSelection } from '../../public-catalog/types/product'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { FormEvent, MouseEvent } from 'react'
 import { useAuth } from '../../auth'
@@ -11,6 +12,8 @@ import type { SaleCustomer, SaleCustomerDetail } from '../api/customersApi'
 import { SaleCustomerPicker } from '../components/SaleCustomerPicker'
 import { SaleProductRow } from '../components/SaleProductRow'
 import { MobileSaleCart } from '../components/MobileSaleCart'
+import { SaleCheckoutDialog } from '../components/SaleCheckoutDialog'
+import { SaleSurtidoEditor } from '../components/SaleSurtidoEditor'
 import { saleOptions } from '../utils/saleSearch'
 import type { SaleDraft, SaleOption } from '../utils/saleSearch'
 import { cashCents, saleLineTotal, saleTotals } from '../utils/saleValidation'
@@ -70,6 +73,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const [revision, setRevision] = useState(0)
   const [rows, setRows] = useState<SaleDraft[]>([{ key: 0, text: '', selection: null }])
   const nextRowKey = useRef(1)
+  const [surtidoEditor, setSurtidoEditor] = useState<{ option: SaleOption; key: number; initial?: SaleLine } | null>(null)
   const [pendingRows, setPendingRows] = useState<Set<number>>(() => new Set())
   const lines: SaleLine[] = rows.flatMap(row => row.selection ? [row.selection] : [])
   const options = useMemo(() => saleOptions(products), [products])
@@ -84,6 +88,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const [customerSelectionFailed, setCustomerSelectionFailed] = useState(false)
   const [customerReset, setCustomerReset] = useState(0)
   const [received, setReceived] = useState('')
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
@@ -106,7 +111,8 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
               const product = catalog.find(p => p.presentaciones.some(pr => pr.id_producto_presentacion === line.idProductoPresentacion))
               const presentation = product?.presentaciones.find(pr => pr.id_producto_presentacion === line.idProductoPresentacion)
               return { key: index, text: line.nombreProducto + ' · ' + line.nombrePresentacion,
-                selection: product && presentation ? { product, presentation, quantity: String(line.cantidad), discount: '0.00' } : null }
+                selection: product && presentation ? { product, presentation, quantity: String(line.cantidad), discount: '0.00',
+                  ...(product.id_surtido ? { componentes: line.componentes?.map(c => ({ id_producto: c.idProducto, cantidad: c.cantidad })) } : {}) } : null }
             }
             if (!seeded.current) {
               setRows(order.detalles.map(makeRow)); nextRowKey.current = order.detalles.length; seeded.current = true
@@ -150,6 +156,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     if (rows.some(other => other.key !== row.key && other.selection?.presentation.id_producto_presentacion === option.presentation.id_producto_presentacion)) {
       setError('Esa presentación ya está en otra fila. Cambia su cantidad en esa fila.'); return false
     }
+    if (option.product.id_surtido) { openSurtido(option, row.key); return false }
     const selection: SaleLine = { product: option.product, presentation: option.presentation, quantity: '1', discount: '0.00' }
     try {
       saleTotals([...rows.filter(other => other.key !== row.key).flatMap(other => other.selection ? [other.selection] : []), selection])
@@ -192,6 +199,21 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       return true
     } catch (failure) { setError((failure as Error).message); return false }
   }
+  function openSurtido(option: SaleOption, rowKey?: number) {
+    if (blocked) return
+    const existing = rows.find(r => r.selection?.presentation.id_producto_presentacion === option.presentation.id_producto_presentacion)
+    const empty = rows.find(r => !r.selection && !r.text.trim() && !r.barcode?.trim())
+    const key = existing?.key ?? rowKey ?? empty?.key ?? nextRowKey.current++
+    setSurtidoEditor({ option, key, initial: existing?.selection ?? undefined })
+  }
+  function saveSurtido(line: SaleLine): string | null {
+    if (!surtidoEditor || blocked) return 'La venta no está disponible.'
+    const updated: SaleDraft = { key: surtidoEditor.key, text: surtidoEditor.option.label, selection: line }
+    const next = rows.some(r => r.key === updated.key) ? rows.map(r => r.key === updated.key ? updated : r) : [...rows, updated]
+    try { saleTotals(next.flatMap(r => r.selection ? [r.selection] : [])) }
+    catch (failure) { return failure instanceof Error ? failure.message : 'Revisa las cantidades.' }
+    setRows(next); setSurtidoEditor(null); setError(''); return null
+  }
   function addFromCatalog(productId: number, selections: { presentationId: number; quantity: string }[]): string | null {
     if (blocked) return 'La venta no está disponible para agregar productos en este momento.'
     let added: SaleLine[]
@@ -210,6 +232,27 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
     setError('')
     return null
   }
+  function addSurtidosFromCatalog(idSurtido: number, selections: SurtidoCatalogSelection[]): string | null {
+    if (blocked) return 'La venta no está disponible para agregar productos.'
+    try {
+      const added = selections.map(s => {
+        if (lines.some(l => l.presentation.id_producto_presentacion === s.idProductoPresentacion))
+          throw new Error('Esta presentación ya está agregada. Editala desde Nueva venta.')
+        const option = options.find(o => o.product.id_surtido === idSurtido && o.presentation.id_producto_presentacion === s.idProductoPresentacion)
+        if (!option) throw new Error('El surtido no está disponible. Actualiza el catálogo.')
+        return { product: option.product, presentation: option.presentation, quantity: String(s.cantidad), discount: '0.00',
+          componentes: s.componentes.map(c => ({ id_producto: c.idProducto, cantidad: c.cantidad })) } satisfies SaleLine
+      })
+      saleTotals([...lines, ...added])
+      const next = [...rows]
+      for (const selection of added) {
+        const emptyIndex = next.findIndex(r => !r.selection && !r.text.trim() && !r.barcode?.trim())
+        const row = { key: emptyIndex >= 0 ? next[emptyIndex].key : nextRowKey.current++, text: `${selection.product.nombre} · ${selection.presentation.presentacion}`, selection }
+        if (emptyIndex >= 0) next[emptyIndex] = row; else next.push(row)
+      }
+      setRows(next); setError(''); return null
+    } catch (failure) { return failure instanceof Error ? failure.message : 'Revisa las cantidades del surtido.' }
+  }
   function changeCartDiscount(key: number, value: string) {
     if (blocked) return
     setRows(previous => previous.map(row => row.key === key && row.selection
@@ -217,6 +260,11 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   }
   function changeCartQuantity(key: number, quantity: number) {
     if (blocked) return
+    const current = rows.find(r => r.key === key)?.selection
+    if (current?.product.id_surtido) {
+      setSurtidoEditor({ option: { product: current.product, presentation: current.presentation, label: current.product.nombre }, key,
+        initial: { ...current, quantity: String(quantity) } }); return
+    }
     const updated = rows.map(row => row.key === key && row.selection
       ? { ...row, selection: { ...row.selection, quantity: String(quantity) } } : row)
     try {
@@ -255,6 +303,17 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       setError('No se pudieron confirmar los datos del cliente. Selecciónalo nuevamente antes de registrar la venta.')
     }
   }
+  function openCheckout() {
+    if (blocked || customerPending || productPending) return
+    if (!order && !customerId && !name.trim()) { focusCustomerName(); return }
+    if (customerSelectionFailed) { setError('Selecciona nuevamente el cliente antes de cobrar.'); return }
+    const form = document.getElementById(saleFormId) as HTMLFormElement | null
+    if (!form?.reportValidity()) return
+    try {
+      if (rows.some(r => (r.text.trim() || r.barcode?.trim()) && !r.selection)) throw new Error('Selecciona un producto y presentación en cada fila que hayas escrito.')
+      saleTotals(lines); setError(''); setCheckoutOpen(true)
+    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Revisa los productos de la venta.') }
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token || busy.current || paymentConfirmation.current || blocked || customerPending || customerSelectionFailed || productPending) return
@@ -280,18 +339,21 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       if (order) {
         const registered = await confirmOrderSale(order.idPedido, { idOperacion: operationId.current, totalEsperado: total / 100,
           pagoInicial: Math.min(receivedCents!, total) / 100,
-          detalles: lines.map(l => ({ idProductoPresentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })) }, token)
-        setReceiptSaleId(registered.id); return
+          detalles: lines.map(l => ({ idProductoPresentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100,
+            ...(l.product.id_surtido ? { componentes: l.componentes!.map(c => ({ idProducto: c.id_producto, cantidad: c.cantidad })) } : {}) })) }, token)
+        setCheckoutOpen(false); setReceiptSaleId(registered.id); return
       }
       const registered = await createSale({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
         ...(newCustomer ? { clienteNuevo: { nombre: name.trim(), apellido: surname.trim() || null, nit: null,
           direccion: address.trim() || null, dpi: null, telefono: phone.trim() || null, correo_electronico: email.trim() || null } } : {}),
         origen: 'MOSTRADOR', observacion: note.trim() || null,
-        detalles: lines.map(l => ({ id_producto: l.product.id_producto, id_producto_presentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })),
+        detalles: lines.map(l => ({ ...(l.product.id_surtido ? { id_surtido: l.product.id_surtido, componentes: l.componentes } : { id_producto: l.product.id_producto }),
+          id_producto_presentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })),
         pago: { monto: Math.min(receivedCents!, total) / 100, metodo_pago: 'EFECTIVO' } }, token)
       operationId.current = createOperationId()
       setRows([{ key: nextRowKey.current++, text: '', selection: null }]); setPendingRows(new Set()); setReceived(''); setNote(''); selectCustomer(null); setCustomerReset(v => v + 1)
       setRevision(v => v + 1)
+      setCheckoutOpen(false)
       setReceiptSaleId(registered.id)
     } catch (failure) {
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
@@ -355,7 +417,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
           </fieldset>
   )
   return <div className={catalogOpen ? "sales-page sales-catalog-open" : "sales-page"}>
-    {catalogOpen && <SaleCatalog options={options} lines={lines} disabled={blocked} onAdd={addFromCatalog}
+    {catalogOpen && <SaleCatalog options={options} lines={lines} disabled={blocked} onAdd={addFromCatalog} onAddSurtidos={addSurtidosFromCatalog}
       onClose={() => { setCatalogOpen(false); if (lines.length) { setMobileCartVisible(true); setMobileProductKey(null) } requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(window.matchMedia("(max-width: 800px)").matches ? ".sales-cart-catalog-button" : ".sales-catalog-access button")?.focus()) }} />}
     {receiptSaleId !== null && <WhatsAppReceiptDialog saleId={receiptSaleId} mode="registro" onClose={() => {
       setReceiptSaleId(null); if (order) onOrderConfirmed?.()
@@ -367,7 +429,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       <p>El total de <strong>{estimated === null ? '—' : money(estimated)}</strong> quedará como saldo pendiente.</p>
       <div className="sales-payment-dialog-actions">
         <button type="button" autoFocus onClick={() => closePaymentConfirmation(false)}>Cancelar</button>
-        <button type="button" className="sales-primary" onClick={() => closePaymentConfirmation(true)}>Registrar venta</button>
+        <button type="button" className="sales-primary" onClick={() => closePaymentConfirmation(true)}>Sí, registrar venta</button>
       </div>
     </dialog>
     <section className="sales-card" aria-labelledby="sale-title">
@@ -400,9 +462,9 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
           <div className="sales-mobile-summary">
             <p aria-live="polite">Total <strong>{estimated === null ? '—' : money(estimated)}</strong></p>
             {mobileCartVisible && mobileProductKey === null && (
-            <button type="submit" className="sales-mobile-register-sale" onClick={checkCustomerBeforeRegister}
+            <button type="button" className="sales-mobile-register-sale" onClick={openCheckout} aria-haspopup="dialog"
               disabled={blocked || !lines.length || estimated === null || customerPending || productPending}>
-              {pending ? 'Registrando…' : order ? 'Confirmar y registrar venta' : 'Registrar venta'}
+              Cobrar
             </button>
             )}
           </div>
@@ -410,7 +472,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
           <div className={`sales-entry${mobileProductKey !== null ? ' sales-product-card-open' : ''}${mobileCartVisible && mobileProductKey === null ? ' sales-cart-open' : ''}${!mobileCartVisible && mobileProductKey === null && !order ? ' sales-customer-step' : ''}`} ref={entryRef}>
           {customerFields}
           <div className="sales-mobile-cart-region" hidden={!mobileCartVisible || mobileProductKey !== null}>
-            <MobileSaleCart rows={rows} options={options} token={token ?? ''} disabled={blocked}
+            <MobileSaleCart rows={rows} options={options} token={token ?? ''} disabled={blocked} onConfigureSurtido={openSurtido}
               onOpenCatalog={() => setCatalogOpen(true)} onChoose={chooseCartProduct}
               onQuantity={changeCartQuantity} onRemove={removeRow} onDiscount={changeCartDiscount}
               />
@@ -425,7 +487,8 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
             <thead><tr><th scope="col">Código de barras</th><th scope="col">Producto y presentación</th><th scope="col">Cantidad</th><th scope="col">Precio</th><th scope="col">Descuento (Q)</th><th scope="col">Total</th><th scope="col"><span className="sr-only">Quitar</span></th></tr></thead>
             <tbody>{rows.map((row, index) => <SaleProductRow key={row.key} mobileActive={row.key === mobileProductKey} row={row} options={options}
               usedIds={rows.filter(other => other.key !== row.key).flatMap(other => other.selection ? [other.selection.presentation.id_producto_presentacion] : [])}
-              token={token ?? ''} disabled={blocked} autoFocus={index > 0}
+              token={token ?? ''} disabled={blocked} autoFocus={index > 0} onEditSurtido={row.selection?.product.id_surtido
+                ? () => openSurtido({ product: row.selection!.product, presentation: row.selection!.presentation, label: row.text }, row.key) : undefined}
               onChange={updated => {
                 setRows(previous => previous.map(other => other.key === row.key ? updated : other))
                 const entry = entryRef.current
@@ -476,5 +539,9 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
       {uncertain && <button type="button" onClick={() => { setUncertain(false); setError('') }}>Ya revisé el historial y confirmé que esta venta no se registró</button>}
     </section>
 
+    {checkoutOpen && estimated !== null && <SaleCheckoutDialog total={estimated} received={received} onReceived={setReceived} pending={pending}
+      blocked={blocked} error={error} onRegister={submit} onClose={() => { if (!pending) setCheckoutOpen(false) }} />}
+    {surtidoEditor && <SaleSurtidoEditor option={surtidoEditor.option} initial={surtidoEditor.initial} disabled={blocked}
+      existing={rows.filter(r => r.key !== surtidoEditor.key).flatMap(r => r.selection ? [r.selection] : [])} onSave={saveSurtido} onClose={() => setSurtidoEditor(null)} />}
   </div>
 }

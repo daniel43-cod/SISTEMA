@@ -42,7 +42,8 @@ namespace API_SISTEMA.Services.Ventas
                         {
                             id_detalle_venta = d.id_detalle_venta,
                             id_producto = d.id_producto,
-                            producto = d.Producto.Nombre,
+                            id_surtido = d.id_surtido,
+                            producto = d.id_surtido.HasValue ? d.Surtido!.Nombre : d.Producto!.Nombre,
                             cantidad = d.cantidad,
                             precio = d.precio,
                             descuento = d.descuento??0,

@@ -78,3 +78,9 @@
 .sale-certification-dialog-header h2 { margin: 0; color: #1f2937; font-size: 22px; }
 .sale-certification-dialog-header > button { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 12px; background: #f1f5f9; color: #526477; font-size: 26px; }
 .sale-certification-dialog .fel-certification-panel { margin: 0; }
+
+.wa-receipt-dialog .receipt-mobile-close { display: none; }
+@media (max-width: 800px) {
+  .wa-receipt-dialog .receipt-dialog-heading { position: relative; padding-right: 44px; }
+  .wa-receipt-dialog .receipt-mobile-close { display: inline-flex; align-items: center; justify-content: center; position: absolute; top: 0; right: 0; width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 10px; background: #f1f5f9; color: #526477; font-size: 26px; line-height: 1; }
+}

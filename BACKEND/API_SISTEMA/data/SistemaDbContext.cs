@@ -83,6 +83,8 @@ namespace API_SISTEMA.Data
             modelBuilder.ApplyConfiguration(new SurtidoConfiguration());
             modelBuilder.ApplyConfiguration(new SurtidoProductoConfiguration());
             modelBuilder.ApplyConfiguration(new DetalleVentaSurtidoConfiguration());
+            modelBuilder.ApplyConfiguration(new DetalleVentaPropietarioConfiguration());
+            modelBuilder.ApplyConfiguration(new DetallePedidoSurtidoConfiguration());
             modelBuilder.ApplyConfiguration(new ZonaEntregaConfiguration());
             modelBuilder.ApplyConfiguration(new PedidoCatalogoConfiguration());
             modelBuilder.ApplyConfiguration(new DetallePedidoCatalogoConfiguration());

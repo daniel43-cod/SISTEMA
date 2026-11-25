@@ -16,4 +16,5 @@ public sealed class EditarDetallePedidoCatalogoDto
 {
     [Range(1, int.MaxValue)] public int IdProductoPresentacion { get; init; }
     [Range(1, int.MaxValue)] public int Cantidad { get; init; }
+    public List<ComponentePedidoCatalogoDto>? Componentes { get; init; }
 }

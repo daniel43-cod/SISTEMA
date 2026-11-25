@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SaleSurtidoBreakdown } from './SaleSurtidoBreakdown'
 import { ApiError } from '../../../shared/api/ApiError'
 import { findBarcode } from '../api/salesApi'
 import { filterSaleOptions, saleOptions } from '../utils/saleSearch'
@@ -13,9 +14,10 @@ type Props = {
   row: SaleDraft; options: SaleOption[]; usedIds: number[]; token: string; disabled: boolean; autoFocus: boolean
   onChange: (row: SaleDraft) => void; onChoose: (option: SaleOption) => boolean
   onNext: () => void; onRemove: () => void; onPending: (pending: boolean) => void
+  onEditSurtido?: () => void
 }
 
-export function SaleProductRow({ mobileActive, row, options, usedIds, token, disabled, autoFocus, onChange, onChoose, onNext, onRemove, onPending }: Props) {
+export function SaleProductRow({ mobileActive, row, options, usedIds, token, disabled, autoFocus, onChange, onChoose, onNext, onRemove, onPending, onEditSurtido }: Props) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
   const [barcodeProduct, setBarcodeProduct] = useState<SaleProduct>()
@@ -143,6 +145,7 @@ export function SaleProductRow({ mobileActive, row, options, usedIds, token, dis
         }
       }} /></td>
     <td className="sale-product-cell">
+      <SaleSurtidoBreakdown line={row.selection}>
       <input ref={input} data-sale-row={row.key} aria-label="Producto y presentación" type="text" autoComplete="off" autoFocus={autoFocus}
         value={row.text} disabled={disabled} placeholder="Busca por nombre…" role="combobox" aria-autocomplete="list"
         aria-expanded={expanded} aria-controls={expanded ? listId : undefined}
@@ -170,6 +173,7 @@ export function SaleProductRow({ mobileActive, row, options, usedIds, token, dis
             else if (row.selection) quantity.current?.focus()
           }
         }} />
+      </SaleSurtidoBreakdown>
       {pending && <small role="status">Buscando código…</small>}
       {error && <small id={`${listId}-error`} className="sales-error" role="alert">{error}</small>}
       {open && row.text.trim() && !row.selection && !matches.length && !pending && !error && <small role="status">Sin coincidencias por nombre.</small>}
@@ -195,7 +199,7 @@ export function SaleProductRow({ mobileActive, row, options, usedIds, token, dis
         </li>)}
       </ul>, document.body)}
     </td>
-    <td><input ref={quantity} type="number" inputMode="numeric" min="1" step="1" disabled={disabled || !row.selection} required={!!row.selection}
+    <td><input ref={quantity} type="number" inputMode="numeric" min="1" step="1" disabled={disabled || !row.selection || !!onEditSurtido} required={!!row.selection}
       aria-label={`Cantidad de ${row.text || 'producto'}`} value={row.selection?.quantity ?? ''}
       onChange={event => { if (row.selection) onChange({ ...row, selection: { ...row.selection, quantity: event.target.value } }) }}
       onKeyDown={event => {

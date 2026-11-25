@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { CatalogCategoriesList } from '../../public-catalog/components/CatalogCategoriesList'
 import { CatalogProductCard } from '../../public-catalog/components/CatalogProductCard'
+import { CatalogSurtidoCard } from '../../public-catalog/components/CatalogSurtidoCard'
+import type { SurtidoCatalogSelection } from '../../public-catalog/types/product'
 import { PublicBrandsList } from '../../public-catalog/components/PublicBrandsList'
 import { usePublicCategories } from '../../public-catalog/hooks/usePublicCategories'
 import { usePublicProducts } from '../../public-catalog/hooks/usePublicProducts'
@@ -14,10 +16,11 @@ import './SaleCatalog.css'
 type Props = {
   options: SaleOption[]; lines: SaleLine[]; disabled: boolean
   onAdd: (productId: number, selections: { presentationId: number; quantity: string }[]) => string | null
+  onAddSurtidos: (idSurtido: number, selections: SurtidoCatalogSelection[]) => string | null
   onClose: () => void
 }
-function SaleCatalogProducts({ brandId, options, lines, disabled, onAdd }: Omit<Props, 'onClose'> & { brandId: number }) {
-  const { items, pagina, hayMas, loading, error, reload, setPagina } = usePublicProducts(brandId)
+function SaleCatalogProducts({ brandId, options, lines, disabled, onAdd, onAddSurtidos }: Omit<Props, 'onClose'> & { brandId: number }) {
+  const { items, surtidos, pagina, hayMas, loading, error, reload, setPagina } = usePublicProducts(brandId)
   const [quantities, setQuantities] = useState<Record<number, string>>({})
   const [message, setMessage] = useState('')
   const [addError, setAddError] = useState('')
@@ -42,8 +45,13 @@ function SaleCatalogProducts({ brandId, options, lines, disabled, onAdd }: Omit<
     {message && <p role="status" className="sale-catalog-success">{message}</p>}
     {addError && <p role="alert" className="sale-catalog-error">{addError}</p>}
     {loading ? <p role="status">Cargando productos…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={reload}>Reintentar</button></div>
-      : !items.length ? <p>No hay productos disponibles en esta página.</p>
+      : !items.length && !surtidos.length ? <p>No hay productos disponibles en esta página.</p>
       : <ul className="public-products-grid">
+        {surtidos.map(s => <CatalogSurtidoCard key={`surtido-${s.idSurtido}`} product={{ ...s, presentaciones: s.presentaciones.map(p => {
+          const option = options.find(o => o.product.id_surtido === s.idSurtido && o.presentation.id_producto_presentacion === p.idProductoPresentacion)
+          return { ...p, precio: option?.presentation.precio ?? p.precio, disponible: p.disponible && !!option && !option.product.bloqueo }
+        }) }} disabled={disabled} lockedIds={lines.map(l => l.presentation.id_producto_presentacion)} actionLabel="Agregar a la venta"
+          onAdd={selections => onAddSurtidos(s.idSurtido, selections)} />)}
         {items.map(product => <CatalogProductCard key={product.idProducto} product={{
           ...product,
           presentaciones: product.presentaciones.map(p => {
@@ -59,8 +67,9 @@ function SaleCatalogProducts({ brandId, options, lines, disabled, onAdd }: Omit<
           const id = presentation.idProductoPresentacion
           const option = options.find(o => o.product.id_producto === product.idProducto && o.presentation.id_producto_presentacion === id)
           const alreadyAdded = lines.some(line => line.presentation.id_producto_presentacion === id)
-          const usedUnits = lines.filter(line => line.product.id_producto === product.idProducto)
-            .reduce((sum, line) => sum + Number(line.quantity) * line.presentation.unidades_equivalentes, 0)
+          const usedUnits = lines.reduce((sum, line) => sum + (line.product.id_surtido
+            ? line.componentes?.find(c => c.id_producto === product.idProducto)?.cantidad ?? 0
+            : line.product.id_producto === product.idProducto ? Number(line.quantity) * line.presentation.unidades_equivalentes : 0), 0)
           const max = option ? Math.max(0, Math.floor((option.product.stock - usedUnits) / option.presentation.unidades_equivalentes)) : 0
           const raw = quantities[id] ?? '0'
           const quantity = /^\d+$/.test(raw) ? Number(raw) : 0

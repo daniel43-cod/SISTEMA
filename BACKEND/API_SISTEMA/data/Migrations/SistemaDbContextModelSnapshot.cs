@@ -420,6 +420,36 @@ namespace API_SISTEMA.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("API_SISTEMA.Models.DetallePedidoSurtido", b =>
+                {
+                    b.Property<int>("IdDetallePedido")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_detalle_pedido");
+
+                    b.Property<int>("IdProducto")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_producto");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad");
+
+                    b.Property<string>("NombreProducto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("nombre_producto");
+
+                    b.HasKey("IdDetallePedido", "IdProducto");
+
+                    b.HasIndex("IdProducto");
+
+                    b.ToTable("detalle_pedido_surtido", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_detalle_pedido_surtido_cantidad", "cantidad > 0");
+                        });
+                });
+
             modelBuilder.Entity("API_SISTEMA.Models.DetalleVenta", b =>
                 {
                     b.Property<int>("id_detalle_venta")
@@ -443,10 +473,13 @@ namespace API_SISTEMA.Data.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("numeric(18,6)");
 
-                    b.Property<int>("id_producto")
+                    b.Property<int?>("id_producto")
                         .HasColumnType("integer");
 
                     b.Property<int>("id_producto_presentacion")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("id_surtido")
                         .HasColumnType("integer");
 
                     b.Property<int>("id_venta")
@@ -473,9 +506,14 @@ namespace API_SISTEMA.Data.Migrations
 
                     b.HasIndex("id_producto_presentacion");
 
+                    b.HasIndex("id_surtido");
+
                     b.HasIndex("id_venta");
 
-                    b.ToTable("detalle_venta", "public");
+                    b.ToTable("detalle_venta", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_detalle_venta_propietario", "(id_producto IS NOT NULL AND id_surtido IS NULL) OR (id_producto IS NULL AND id_surtido IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("API_SISTEMA.Models.DetalleVentaSurtido", b =>
@@ -2357,19 +2395,41 @@ namespace API_SISTEMA.Data.Migrations
                     b.Navigation("ProductoPresentacion");
                 });
 
+            modelBuilder.Entity("API_SISTEMA.Models.DetallePedidoSurtido", b =>
+                {
+                    b.HasOne("API_SISTEMA.Models.DetallePedidoCatalogo", "Detalle")
+                        .WithMany("Componentes")
+                        .HasForeignKey("IdDetallePedido")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("API_SISTEMA.Models.Productos", "Producto")
+                        .WithMany()
+                        .HasForeignKey("IdProducto")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Detalle");
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("API_SISTEMA.Models.DetalleVenta", b =>
                 {
                     b.HasOne("API_SISTEMA.Models.Productos", "Producto")
                         .WithMany("DetalleVentas")
-                        .HasForeignKey("id_producto")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("id_producto");
 
                     b.HasOne("API_SISTEMA.Models.ProductoPresentacion", "producto_presentacion")
                         .WithMany()
                         .HasForeignKey("id_producto_presentacion")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("API_SISTEMA.Models.Surtido", "Surtido")
+                        .WithMany()
+                        .HasForeignKey("id_surtido")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("API_SISTEMA.Models.Ventas", "Venta")
                         .WithMany("DetalleVentas")
@@ -2379,6 +2439,8 @@ namespace API_SISTEMA.Data.Migrations
 
                     b.Navigation("Producto");
 
+                    b.Navigation("Surtido");
+
                     b.Navigation("Venta");
 
                     b.Navigation("producto_presentacion");
@@ -2387,7 +2449,7 @@ namespace API_SISTEMA.Data.Migrations
             modelBuilder.Entity("API_SISTEMA.Models.DetalleVentaSurtido", b =>
                 {
                     b.HasOne("API_SISTEMA.Models.DetalleVenta", "DetalleVenta")
-                        .WithMany()
+                        .WithMany("ComponentesSurtido")
                         .HasForeignKey("IdDetalleVenta")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -2924,6 +2986,16 @@ namespace API_SISTEMA.Data.Migrations
             modelBuilder.Entity("API_SISTEMA.Models.AuditoriaEvento", b =>
                 {
                     b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.DetallePedidoCatalogo", b =>
+                {
+                    b.Navigation("Componentes");
+                });
+
+            modelBuilder.Entity("API_SISTEMA.Models.DetalleVenta", b =>
+                {
+                    b.Navigation("ComponentesSurtido");
                 });
 
             modelBuilder.Entity("API_SISTEMA.Models.DocumentoFelIntento", b =>

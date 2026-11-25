@@ -169,6 +169,7 @@ static class PostgreSqlIntegration
             mayusculas.IdProveedor == simultaneas[0].IdProveedor &&
             await db.proveedores.CountAsync(p => p.nombre == "Distribuidora simultánea") == 1,
             "Dos compras simultáneas reutilizan una sola distribuidora después del reintento por conflicto");
-        Console.WriteLine($"{count} comprobaciones de integración PostgreSQL real aprobadas.");
+        await SurtidoVentaPostgresChecks.Run(options, admin.id_usuario, cliente.id_cliente);
+        Console.WriteLine($"{count} comprobaciones de integración PostgreSQL real y 8 de surtidos aprobadas.");
     }
 }

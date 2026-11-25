@@ -41,6 +41,7 @@ Reject(() => VentaReglas.Calcular(Producto(), Pr(), 1, 0.001m), "Tres decimales 
 
 await using var connection = new SqliteConnection("Data Source=:memory:");
 await connection.OpenAsync();
+connection.CreateFunction<string, string>("btrim", s => s.Trim());
 var options = new DbContextOptionsBuilder<SistemaDbContext>().UseSqlite(connection).Options;
 await using (var db = new CheckDb(options))
 {
@@ -659,7 +660,7 @@ sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbCont
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
-        var keep = new HashSet<Type> { typeof(ZonaEntrega), typeof(PedidoCatalogo), typeof(DetallePedidoCatalogo), typeof(Usuario), typeof(Rol), typeof(RolPermiso), typeof(TablaPermiso), typeof(UsuarioPermiso),
+        var keep = new HashSet<Type> { typeof(DetallePedidoSurtido), typeof(Surtido), typeof(SurtidoProducto), typeof(DetalleVentaSurtido), typeof(ZonaEntrega), typeof(PedidoCatalogo), typeof(DetallePedidoCatalogo), typeof(Usuario), typeof(Rol), typeof(RolPermiso), typeof(TablaPermiso), typeof(UsuarioPermiso),
             typeof(Productos), typeof(Marca), typeof(Categoria), typeof(ProductoPresentacion), typeof(Presentacion), typeof(Cliente),
             typeof(API_SISTEMA.Models.Ventas), typeof(DetalleVenta), typeof(EstadoVenta), typeof(Pagos), typeof(SesionCaja), typeof(Caja), typeof(MovimientoCaja), typeof(TipoMovimientoCaja), typeof(VentaOperacion), typeof(AuditoriaEvento), typeof(AuditoriaEventoDetalle), typeof(DocumentoFel) };
         foreach (var e in b.Model.GetEntityTypes().ToArray()) if (!keep.Contains(e.ClrType)) b.Ignore(e.ClrType);

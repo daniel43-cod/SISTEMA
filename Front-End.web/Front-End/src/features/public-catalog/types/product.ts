@@ -23,4 +23,15 @@ export interface CartItem {
   presentacion: string
   precio: number
   cantidad: number
+  idSurtido?: number
+  unidadesEquivalentes?: number
+  componentes?: { idProducto: number; nombre: string; cantidad: number }[]
 }
+
+export type PublicSurtido = {
+  idSurtido: number; nombre: string; urlImagen: string | null
+  productos: { idProducto: number; nombre: string; disponible: boolean }[]
+  presentaciones: (PublicPresentation & { unidadesEquivalentes: number })[]
+}
+export type SurtidoCatalogSelection = { idProductoPresentacion: number; cantidad: number;
+  unidadesEquivalentes: number; componentes: { idProducto: number; nombre: string; cantidad: number }[] }

@@ -104,6 +104,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
             // Comparte el bloqueo de la venta con su edición; no mantiene SQL abierto durante HTTP.
             var venta = await db.ventas.FromSqlInterpolated($"SELECT * FROM public.ventas WHERE id_ventas = {idVenta} FOR UPDATE")
                 .Include(v => v.DetalleVentas).ThenInclude(d => d.Producto)
+            .Include(v => v.DetalleVentas).ThenInclude(d => d.Surtido)
                 .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
             var existente = await db.DocumentosFel.SingleOrDefaultAsync(d => d.id_venta == idVenta && d.ambiente == config.Ambiente, ct);
             if (recuperar && existente is null) throw new KeyNotFoundException("La venta no tiene una certificación para recuperar.");
@@ -150,7 +151,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
                     identidad.Tipo == "CF" || !tieneDireccion ? null : new(dto.direccion!, dto.codigo_postal!, dto.municipio!, dto.departamento!, dto.pais!), dto.correo_receptor,
                     identidad.Tipo == "CUI" ? "CUI" : "NIT");
                 var lineas = venta.DetalleVentas.OrderBy(d => d.id_detalle_venta).Select(d =>
-                    new LineaFacturaFel(d.Producto.Nombre, d.cantidad, d.precio, d.descuento ?? 0m, "UND", "B", d.impuesto)).ToArray();
+                    new LineaFacturaFel(d.Surtido?.Nombre ?? d.Producto?.Nombre ?? "Producto", d.cantidad, d.precio, d.descuento ?? 0m, "UND", "B", d.impuesto)).ToArray();
                 documento = existente ?? new DocumentoFel { id_venta = idVenta, ambiente = config.Ambiente };
                 documento.id_usuario = usuario;
                 documento.identificador = Guid.NewGuid();

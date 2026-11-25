@@ -1,6 +1,24 @@
-import { requestJson } from '../../../shared/api/httpClient'
-import { ApiError } from '../../../shared/api/ApiError'
-import type { PublicProduct, PublicPresentation, PublicProductsPage } from '../types/product'
+import { requestJson } from '../../../shared/api/httpClient.ts'
+import { ApiError } from '../../../shared/api/ApiError.ts'
+import type { PublicProduct, PublicPresentation, PublicProductsPage } from '../types/product.ts'
+import type { PublicSurtido } from '../types/product.ts'
+
+export async function listPublicSurtidos(idMarca: number, pagina: number, signal?: AbortSignal): Promise<{ surtidos: PublicSurtido[]; hayMas: boolean }> {
+  const result = await requestJson(`/CatalogoPublico/marcas/${idMarca}/surtidos?pagina=${pagina}&tamanoPagina=24`, { signal })
+  if (!result || typeof result !== 'object') throw new ApiError('El listado de surtidos no es válido.')
+  const page = result as Record<string, unknown>
+  if (page.pagina !== pagina || page.tamanoPagina !== 24 || typeof page.hayMas !== 'boolean' || !Array.isArray(page.surtidos) || page.surtidos.length > 24)
+    throw new ApiError('El listado de surtidos no es válido.')
+  for (const value of page.surtidos) {
+    const s = value as PublicSurtido
+    if (!s || !Number.isSafeInteger(s.idSurtido) || s.idSurtido <= 0 || typeof s.nombre !== 'string' || !(s.urlImagen === null || typeof s.urlImagen === 'string') ||
+        !Array.isArray(s.productos) || !s.productos.every(p => p && Number.isSafeInteger(p.idProducto) && p.idProducto > 0 && typeof p.nombre === 'string' && typeof p.disponible === 'boolean') ||
+        !Array.isArray(s.presentaciones) || !s.presentaciones.every(p => p && Number.isSafeInteger(p.idProductoPresentacion) && p.idProductoPresentacion > 0 && typeof p.nombre === 'string' &&
+          Number.isSafeInteger(p.unidadesEquivalentes) && p.unidadesEquivalentes > 0 && typeof p.precio === 'number' && Number.isFinite(p.precio) && p.precio > 0 && typeof p.disponible === 'boolean'))
+      throw new ApiError('El listado de surtidos no es válido.')
+  }
+  return { surtidos: page.surtidos as PublicSurtido[], hayMas: page.hayMas }
+}
 
 export async function listPublicProducts(idMarca: number, pagina: number, signal?: AbortSignal): Promise<PublicProductsPage> {
   if (!Number.isSafeInteger(idMarca) || idMarca <= 0 || !Number.isSafeInteger(pagina) || pagina < 1)

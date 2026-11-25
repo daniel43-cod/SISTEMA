@@ -34,7 +34,7 @@ public sealed class RegistrarPedidoCatalogoService(SistemaDbContext context)
             throw new ValidationException("Agrupa cada presentación en una sola línea.");
 
         await using var tx = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-        var anterior = await context.PedidosCatalogo.AsNoTracking().Include(p => p.Detalles)
+        var anterior = await context.PedidosCatalogo.AsNoTracking().Include(p => p.Detalles).ThenInclude(d => d.Componentes)
             .SingleOrDefaultAsync(p => p.IdOperacion == dto.IdOperacion, ct);
         if (anterior is not null)
         {
@@ -42,7 +42,9 @@ public sealed class RegistrarPedidoCatalogoService(SistemaDbContext context)
                 anterior.Direccion != dto.Direccion.Trim() || anterior.IdZonaEntrega != dto.IdZonaEntrega ||
                 anterior.Referencias != dto.Referencias?.Trim() || anterior.Observacion != dto.Observacion?.Trim() ||
                 !anterior.Detalles.OrderBy(d => d.IdProductoPresentacion).Select(d => (d.IdProductoPresentacion, d.Cantidad))
-                    .SequenceEqual(dto.Detalles.OrderBy(d => d.IdProductoPresentacion).Select(d => (d.IdProductoPresentacion, d.Cantidad))))
+                    .SequenceEqual(dto.Detalles.OrderBy(d => d.IdProductoPresentacion).Select(d => (d.IdProductoPresentacion, d.Cantidad))) ||
+                anterior.Detalles.Any(d => Firma(d.Componentes.Select(c => new ComponentePedidoCatalogoDto { IdProducto = c.IdProducto, Cantidad = c.Cantidad })) !=
+                    Firma(dto.Detalles.Single(l => l.IdProductoPresentacion == d.IdProductoPresentacion).Componentes)))
                 throw new PedidoCatalogoConflictoException();
             await tx.CommitAsync(ct);
             return Respuesta(anterior);
@@ -57,7 +59,7 @@ public sealed class RegistrarPedidoCatalogoService(SistemaDbContext context)
         };
         var calculo = await CalcularDetallesPedido.Calcular(context,
             dto.Detalles.Select(d => new EditarDetallePedidoCatalogoDto
-            { IdProductoPresentacion = d.IdProductoPresentacion, Cantidad = d.Cantidad }).ToList(), zona.MinimoCompra, ct);
+            { IdProductoPresentacion = d.IdProductoPresentacion, Cantidad = d.Cantidad, Componentes = d.Componentes }).ToList(), zona.MinimoCompra, ct);
         pedido.Detalles = calculo.Detalles;
         pedido.Total = calculo.Total;
         context.PedidosCatalogo.Add(pedido);
@@ -68,4 +70,12 @@ public sealed class RegistrarPedidoCatalogoService(SistemaDbContext context)
 
     private static PedidoCatalogoRegistradoDto Respuesta(PedidoCatalogo pedido)
         => new(pedido.IdOperacion, pedido.Total, pedido.Estado.ToString());
+
+    internal static string Firma(IEnumerable<ComponentePedidoCatalogoDto>? componentes)
+    {
+        var lista = componentes?.ToArray() ?? [];
+        if (lista.Any(c => c is null || c.IdProducto <= 0 || c.Cantidad <= 0) || lista.Select(c => c.IdProducto).Distinct().Count() != lista.Length)
+            throw new ValidationException("Revisa los productos y cantidades del surtido.");
+        return string.Join(";", lista.OrderBy(c => c.IdProducto).Select(c => $"{c.IdProducto}:{c.Cantidad}"));
+    }
 }

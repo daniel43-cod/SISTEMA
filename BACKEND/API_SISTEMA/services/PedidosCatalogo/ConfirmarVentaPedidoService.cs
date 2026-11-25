@@ -27,6 +27,7 @@ public sealed class ConfirmarVentaPedidoService(SistemaDbContext context, Contex
             dto.Detalles.Select(d => d.IdProductoPresentacion).Distinct().Count() != dto.Detalles.Count)
             throw new ValidationException("Revisa los productos y cantidades; no repitas presentaciones.");
         var idUsuario = peticion.IdUsuario ?? throw new UnauthorizedAccessException("Usuario no identificado.");
+        foreach (var linea in dto.Detalles) RegistrarPedidoCatalogoService.Firma(linea.Componentes);
         if (!await context.usuarios.AnyAsync(u => u.id_usuario == idUsuario && u.estado && u.rol.estado && u.rol.nombre == Roles.Administrador, ct))
             throw new UnauthorizedAccessException("Solo un administrador puede confirmar pedidos.");
         await using var tx = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
@@ -35,11 +36,20 @@ public sealed class ConfirmarVentaPedidoService(SistemaDbContext context, Contex
         var pedido = await context.PedidosCatalogo.Include(p => p.ZonaEntrega)
             .SingleOrDefaultAsync(p => p.IdPedido == idPedido, ct) ?? throw new KeyNotFoundException("El pedido no existe.");
         // La huella del borrador permite comprobar reintentos después de una respuesta perdida.
+        var detallesFirma = dto.Detalles.OrderBy(d => d.IdProductoPresentacion).Select(d =>
+        {
+            var campos = new Dictionary<string, object?>
+            {
+                ["IdProductoPresentacion"] = d.IdProductoPresentacion, ["Cantidad"] = d.Cantidad,
+                ["Descuento"] = d.Descuento.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+            };
+            if (d.Componentes?.Count > 0) campos["Componentes"] = RegistrarPedidoCatalogoService.Firma(d.Componentes);
+            return campos;
+        });
         var firma = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
         { IdPedido = idPedido, IdUsuario = idUsuario, dto.TotalEsperado, dto.PagoInicial,
             dto.TipoIdentificacionReceptor, dto.IdentificacionReceptor, dto.NombreReceptor,
-            Detalles = dto.Detalles.OrderBy(d => d.IdProductoPresentacion).Select(d => new
-            { d.IdProductoPresentacion, d.Cantidad, Descuento = d.Descuento.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) }) })));
+            Detalles = detallesFirma })));
         if (pedido.Estado == EstadoPedidoCatalogo.ConvertidoAVenta && pedido.IdVenta is int existente)
         {
             var op = await context.VentaOperaciones.AsNoTracking().SingleOrDefaultAsync(o => o.id_operacion == dto.IdOperacion && o.id_venta == existente, ct);
@@ -66,12 +76,11 @@ public sealed class ConfirmarVentaPedidoService(SistemaDbContext context, Contex
         {
             VentaReglas.Monto(d.Descuento);
             if (!precios.TryGetValue(d.IdProductoPresentacion, out var pr)) throw new ValidationException("Una presentación ya no existe.");
-            if (pr.id_producto is not int idProducto || pr.id_surtido.HasValue)
-                throw new ValidationException("Esta presentación no corresponde a un producto individual.");
             VentaReglas.Monto(pr.precio, false);
             var neto = pr.precio * d.Cantidad - d.Descuento;
             VentaReglas.Monto(neto, false); total += neto;
-            lineas.Add(new() { id_producto = idProducto, id_producto_presentacion = pr.id_producto_presentacion, cantidad = d.Cantidad, descuento = d.Descuento });
+            lineas.Add(new() { id_producto = pr.id_producto, id_surtido = pr.id_surtido, id_producto_presentacion = pr.id_producto_presentacion, cantidad = d.Cantidad, descuento = d.Descuento,
+                componentes = d.Componentes?.Select(c => new ComponenteSurtidoVentaDto { id_producto = c.IdProducto, cantidad = c.Cantidad }).ToList() });
         }
         if (total != dto.TotalEsperado) throw new PedidoCatalogoEdicionConflictoException("Los precios cambiaron. Actualiza el catálogo y revisa el total antes de confirmar.");
         if (total <= pedido.ZonaEntrega.MinimoCompra) throw new ValidationException("El total con descuentos debe superar el mínimo de la zona.");

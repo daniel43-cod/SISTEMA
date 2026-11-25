@@ -6,6 +6,20 @@ namespace API_SISTEMA.Services.CatalogoPublico;
 
 public sealed class CatalogoPublicoService(SistemaDbContext context)
 {
+    public async Task<SurtidosPublicosPaginaDto?> ListarSurtidosPorMarca(int idMarca, int pagina = 1, int tamanoPagina = 24, CancellationToken ct = default)
+    {
+        if (idMarca <= 0 || pagina < 1 || pagina > 100000 || tamanoPagina < 1 || tamanoPagina > 60)
+            throw new ArgumentOutOfRangeException(nameof(idMarca));
+        if (!await context.Marcas.AnyAsync(m => m.IdMarca == idMarca && m.Estado && m.Categoria.Estado, ct)) return null;
+        var items = await new API_SISTEMA.Services.Ventas.VentaService(context).ListarCatalogoSurtidos(pagina, tamanoPagina, ct, idMarca);
+        var hayMas = await context.Surtidos.Where(s => s.IdMarca == idMarca && s.Estado && s.Marca.Estado && s.Marca.Categoria.Estado)
+            .OrderBy(s => s.Nombre).ThenBy(s => s.IdSurtido).Skip(pagina * tamanoPagina).AnyAsync(ct);
+        return new(pagina, tamanoPagina, hayMas, items.Select(s => new SurtidoPublicoDto(s.id_surtido, s.nombre, s.imagen,
+            s.componentes.Select(p => new ComponenteSurtidoPublicoDto(p.id_producto, p.nombre, p.stock > 0)).ToArray(),
+            s.presentaciones.Select(p => new PresentacionSurtidoPublicoDto(p.id_producto_presentacion, p.presentacion ?? "Presentación", p.precio,
+                p.unidades_equivalentes, s.bloqueo is null && s.stock >= p.unidades_equivalentes)).ToArray())).ToArray());
+    }
+
     public async Task<ProductosPublicosPaginaDto?> ListarProductosPorMarca(int idMarca, int pagina = 1, int tamanoPagina = 24, CancellationToken cancellationToken = default)
     {
         if (idMarca <= 0) throw new ArgumentOutOfRangeException(nameof(idMarca));

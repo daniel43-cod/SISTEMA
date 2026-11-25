@@ -1,5 +1,6 @@
 import { TicketPosDialog } from '../components/TicketPosDialog'
 import { SalePaymentsHistory } from '../components/SalePaymentsHistory'
+import { SaleDetailSurtido } from '../components/SaleDetailSurtido'
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CertifySalePanel } from '../components/CertifySalePanel'
@@ -184,7 +185,10 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
             <div className="sales-table-scroll sale-detail-products"><table><caption className="sr-only">Productos de la venta</caption>
               <thead><tr><th scope="col">{desktopView ? 'Producto' : 'Presentación y producto'}</th><th scope="col">{desktopView ? 'Cant.' : 'Cantidad'}</th><th scope="col">Precio</th><th scope="col">{desktopView ? 'Desc.' : 'Descuento'}</th><th scope="col">Subtotal</th></tr></thead>
               <tbody>{details.map((detail, index) => <tr key={index}>
-                <td data-label="Presentación y producto">{desktopView ? <><strong>{detail.nombre_producto}</strong><small className="sale-detail-presentation">{detail.descripcion_resentacion}</small></> : [detail.descripcion_resentacion, detail.nombre_producto].filter(Boolean).join(' · ')}</td>
+                <td data-label="Presentación y producto">{!desktopView && detail.id_surtido ? <SaleDetailSurtido detail={detail} /> : <>
+                  {desktopView ? <><strong>{detail.nombre_producto}</strong><small className="sale-detail-presentation">{detail.descripcion_resentacion}</small></> : [detail.descripcion_resentacion, detail.nombre_producto].filter(Boolean).join(' · ')}
+                  {detail.componentes?.map(c => <small key={c.id_producto} className="sale-detail-presentation">{c.nombre}: {c.cantidad} unidades</small>)}
+                </>}</td>
                 <td data-label="Cantidad">{detail.cantidad}</td><td data-label="Precio unitario">{money.format(detail.precio)}</td><td data-label="Descuento">{money.format(detail.descuento)}</td><td data-label="Importe">{money.format((Math.round(detail.precio * 100) * detail.cantidad - Math.round(detail.descuento * 100)) / 100)}</td>
               </tr>)}</tbody>
             </table></div>}

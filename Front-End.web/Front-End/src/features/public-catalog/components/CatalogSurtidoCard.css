@@ -1,0 +1,15 @@
+.catalog-surtido-label { color: #075b96; font-size: .75rem; }
+.catalog-surtido-presentation { display: grid; gap: 10px; min-width: 0; padding: 12px; border: 1px solid #dce3eb; border-radius: 10px; margin: 12px 0; }
+.catalog-surtido-presentation legend { font-size: .85rem; font-weight: 650; }
+.catalog-surtido-presentation label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .8rem; }
+.catalog-surtido-presentation input { min-width: 0; width: 70px; min-height: 40px; box-sizing: border-box; border: 1px solid #dce3eb; border-radius: 8px; padding: 8px; font: inherit; }
+.catalog-surtido-component small { display: block; color: #64748b; font-size: .7rem; }
+.catalog-surtido-presentation > small { font-size: .75rem; color: #64748b; }
+
+.catalog-surtido-component > span { min-width: 0; overflow-wrap: anywhere; }
+.catalog-surtido-presentation input { flex: 0 0 70px; }
+
+/* Oculta los controles nativos sin cambiar la validación ni la navegación por teclado. */
+.catalog-surtido-presentation input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.catalog-surtido-presentation input[type="number"]::-webkit-inner-spin-button,
+.catalog-surtido-presentation input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

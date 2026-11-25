@@ -25,7 +25,7 @@ public sealed class EditarPedidoCatalogoService(SistemaDbContext context, Contex
         // Adquiere un bloqueo de escritura antes de leer; no cambia el estado.
         await context.PedidosCatalogo.Where(p => p.IdPedido == idPedido)
             .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estado, p => p.Estado), ct);
-        var pedido = await context.PedidosCatalogo.Include(p => p.Detalles).Include(p => p.ZonaEntrega)
+        var pedido = await context.PedidosCatalogo.Include(p => p.Detalles).ThenInclude(d => d.Componentes).Include(p => p.ZonaEntrega)
             .SingleOrDefaultAsync(p => p.IdPedido == idPedido, ct) ?? throw new KeyNotFoundException("El pedido no existe.");
         if (pedido.Estado != EstadoPedidoCatalogo.Pendiente || pedido.IdVenta is not null)
             throw new PedidoCatalogoEdicionConflictoException("Solo puedes editar pedidos pendientes que no estén convertidos en venta.");
@@ -44,12 +44,20 @@ public sealed class EditarPedidoCatalogoService(SistemaDbContext context, Contex
             if (!nuevos.Remove(actual.IdProductoPresentacion, out var nuevo))
             {
                 pedido.Detalles.Remove(actual);
+                context.Set<DetallePedidoSurtido>().RemoveRange(actual.Componentes);
                 context.DetallesPedidoCatalogo.Remove(actual);
             }
             else
             {
                 actual.Cantidad = nuevo.Cantidad; actual.PrecioUnitario = nuevo.PrecioUnitario;
                 actual.NombreProducto = nuevo.NombreProducto; actual.NombrePresentacion = nuevo.NombrePresentacion;
+                foreach (var c in actual.Componentes.ToArray())
+                {
+                    var updated = nuevo.Componentes.SingleOrDefault(n => n.IdProducto == c.IdProducto);
+                    if (updated is null) { actual.Componentes.Remove(c); context.Set<DetallePedidoSurtido>().Remove(c); }
+                    else { c.Cantidad = updated.Cantidad; c.NombreProducto = updated.NombreProducto; }
+                }
+                foreach (var c in nuevo.Componentes.Where(c => !actual.Componentes.Any(a => a.IdProducto == c.IdProducto))) actual.Componentes.Add(c);
             }
         }
         foreach (var nuevo in nuevos.Values) pedido.Detalles.Add(nuevo);
@@ -66,7 +74,8 @@ public sealed class EditarPedidoCatalogoService(SistemaDbContext context, Contex
             ["detalles"] = JsonSerializer.Serialize(detalles.OrderBy(d => d.IdProductoPresentacion).Select(d => new
             {
                 d.IdProductoPresentacion, d.NombreProducto, d.NombrePresentacion, d.Cantidad,
-                PrecioUnitario = d.PrecioUnitario.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+                PrecioUnitario = d.PrecioUnitario.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                Componentes = d.Componentes.OrderBy(c => c.IdProducto).Select(c => new { c.IdProducto, c.Cantidad })
             }))
         };
 }

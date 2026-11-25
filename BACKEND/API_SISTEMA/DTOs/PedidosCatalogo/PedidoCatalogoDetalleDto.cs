@@ -23,4 +23,6 @@ public sealed class DetallePedidoCatalogoDto
     public int Cantidad { get; init; }
     public decimal PrecioUnitario { get; init; }
     public decimal Subtotal { get; init; }
+    public List<ComponentePedidoDetalleDto> Componentes { get; init; } = [];
 }
+public sealed record ComponentePedidoDetalleDto(int IdProducto, string Nombre, int Cantidad);

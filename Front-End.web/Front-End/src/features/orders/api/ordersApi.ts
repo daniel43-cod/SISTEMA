@@ -3,7 +3,7 @@ import { ApiError } from '../../../shared/api/ApiError'
 
 export type OrderSummary = { idPedido: number; fechaUtc: string; nombreCliente: string; telefono: string; direccion: string;
   referencias: string | null; observacion: string | null; zonaEntrega: string; total: number; estado: string }
-export type OrderLine = { idProductoPresentacion: number; nombreProducto: string; nombrePresentacion: string;
+export type OrderLine = { idProductoPresentacion: number; nombreProducto: string; nombrePresentacion: string; componentes?: { idProducto: number; nombre: string; cantidad: number }[];
   cantidad: number; precioUnitario: number; subtotal: number }
 export type OrderDetail = OrderSummary & { detalles: OrderLine[] }
 export type OrderPage = { pagina: number; tamanoPagina: number; hayMas: boolean; pedidos: OrderSummary[] }
@@ -28,7 +28,8 @@ export async function getOrderDetail(token: string, orderId: number, signal?: Ab
   const details = record(v) ? v.detalles : undefined
   if (!summary(v) || v.idPedido !== orderId || !Array.isArray(details) || !details.every(d => record(d) &&
     id(d.idProductoPresentacion) && typeof d.nombreProducto === 'string' && typeof d.nombrePresentacion === 'string' &&
-    id(d.cantidad) && amount(d.precioUnitario) && amount(d.subtotal)))
+    id(d.cantidad) && amount(d.precioUnitario) && amount(d.subtotal) && (d.componentes === undefined || (Array.isArray(d.componentes) &&
+      d.componentes.every(c => record(c) && id(c.idProducto) && typeof c.nombre === 'string' && id(c.cantidad))))))
     throw new ApiError('El detalle del pedido no tiene el formato esperado.')
   return v as OrderDetail
 }

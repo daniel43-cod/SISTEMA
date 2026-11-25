@@ -3,12 +3,38 @@ import { requestJson } from '../../../shared/api/httpClient.ts'
 import { ApiError } from '../../../shared/api/ApiError.ts'
 import type { SaleProduct } from '../utils/saleValidation.ts'
 
-export type SaleHistory = { id_ventas: number; cliente: string; usuario: string; subtotal: number; descuento: number | null; total: number; ganancia_total?: number; saldo_pendiente: number; estado: string; fecha_venta: string }
+export type SaleHistory = { id_ventas: number;
+  cliente: string;
+  usuario: string;
+  subtotal: number;
+  descuento: number | null;
+  total: number;
+  ganancia_total?: number;
+  saldo_pendiente: number;
+  estado: string;
+  fecha_venta: string }
+
+
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 const id = (v: unknown) => Number.isSafeInteger(v) && Number(v) > 0
 const amount = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v >= 0
 
 export async function loadSaleProducts(token: string, signal?: AbortSignal): Promise<SaleProduct[]> {
+  const normal = await loadNormalSaleProducts(token, signal)
+  const mixed: SaleProduct[] = []
+  for (let page = 1; page <= 100000; page++) {
+    const result = await requestJson(`/Venta/surtidos?pagina=${page}&tamanoPagina=100`, { token, signal })
+    if (!Array.isArray(result) || !result.every(p => record(p) && id(p.id_surtido) && p.id_producto === 0 && typeof p.nombre === 'string' &&
+        Number.isSafeInteger(p.stock) && (p.bloqueo === null || typeof p.bloqueo === 'string') && Array.isArray(p.componentes) &&
+        p.componentes.every(c => record(c) && id(c.id_producto) && typeof c.nombre === 'string' && Number.isSafeInteger(c.stock) && Number(c.stock) >= 0) &&
+        Array.isArray(p.presentaciones) && p.presentaciones.every(v => record(v) && id(v.id_producto_presentacion) && typeof v.presentacion === 'string' && id(v.unidades_equivalentes) && amount(v.precio))))
+      throw new ApiError('El catálogo de surtidos no tiene el formato esperado.')
+    mixed.push(...result as SaleProduct[])
+    if (result.length < 100) return [...normal, ...mixed]
+  }
+  throw new ApiError('El catálogo de surtidos excede el límite de consulta.')
+}
+async function loadNormalSaleProducts(token: string, signal?: AbortSignal): Promise<SaleProduct[]> {
   const products: SaleProduct[] = []
   for (let page = 1; page <= 100000; page++) {
   const result = await requestJson(`/Venta/catalogo?pagina=${page}&tamanoPagina=100`, { token, signal })
@@ -40,17 +66,18 @@ export async function findBarcode(code: string, token: string, signal?: AbortSig
 }
 export async function createSale(body: unknown, token: string) {
   // Un POST de venta nunca se reintenta automáticamente.
-  const result = await requestJson('/Venta/crear', { method: 'POST', body, token })
+  const result = await requestJson('/Venta/crear', { method: 'POST', body, token, validationMessages: true })
   if (!record(result) || !id(result.id_venta) || !amount(result.total) || !amount(result.saldo_pendiente))
     throw new ApiError('No se pudo confirmar la respuesta de la venta.', 200)
   return { id: Number(result.id_venta), total: Number(result.total), saldo: Number(result.saldo_pendiente) }
 }
 
-export type SaleDetail = { id_producto: number; nombre_producto: string; descripcion_resentacion: string; cantidad: number; precio: number; descuento: number }
+export type SaleDetail = { id_producto: number | null; id_surtido?: number | null; componentes?: { id_producto: number; nombre: string; cantidad: number }[]; nombre_producto: string; descripcion_resentacion: string; cantidad: number; precio: number; descuento: number }
 export async function loadSaleDetails(saleId: number, token: string, signal?: AbortSignal): Promise<SaleDetail[]> {
   const result = await requestJson('/DetalleVenta_/listar/' + saleId, { token, signal })
-  if (!Array.isArray(result) || !result.every(v => record(v) && id(v.id_producto) && typeof v.nombre_producto === 'string' &&
-    typeof v.descripcion_resentacion === 'string' && id(v.cantidad) && amount(v.precio) && amount(v.descuento)))
+  if (!Array.isArray(result) || !result.every(v => record(v) && (id(v.id_producto) || (v.id_producto === null && id(v.id_surtido))) && typeof v.nombre_producto === 'string' &&
+    typeof v.descripcion_resentacion === 'string' && id(v.cantidad) && amount(v.precio) && amount(v.descuento) &&
+    (v.componentes === undefined || (Array.isArray(v.componentes) && v.componentes.every(c => record(c) && id(c.id_producto) && typeof c.nombre === 'string' && id(c.cantidad))))))
     throw new ApiError('El detalle de venta no tiene el formato esperado.')
   return result as SaleDetail[]
 }

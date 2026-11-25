@@ -1,0 +1,8 @@
+.sale-detail-surtido-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sale-detail-surtido-heading > span { min-width: 0; overflow-wrap: anywhere; }
+.sale-detail-surtido-heading > button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; width: 36px; min-height: 36px; padding: 0; border: 1px solid #dce3eb; border-radius: 7px; background: #fff; color: #075b96; cursor: pointer; }
+.sale-detail-surtido-heading > button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+.sale-detail-surtido-components { display: grid; gap: 5px; margin: 8px 0 0; padding: 9px; list-style: none; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+.sale-detail-surtido-components > li { display: flex; justify-content: space-between; gap: 10px; font-size: .75rem; color: #64748b; }
+.sale-detail-surtido-components > li > span:first-child { overflow-wrap: anywhere; }
+.sale-detail-surtido-components > li > span:last-child { white-space: nowrap; }
