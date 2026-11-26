@@ -31,6 +31,7 @@ export function UsersPage() {
   }, [selectedId])
   const [editing, setEditing] = useState<StaffUser | null>(null)
   const [formVersion, setFormVersion] = useState(0)
+  const [showPassword, setShowPassword] = useState(false)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uncertain, setUncertain] = useState(false)
@@ -151,7 +152,7 @@ export function UsersPage() {
       </div>
       <div className="users-header-actions"><button ref={createButton} type="button" className="users-create-floating" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
       aria-haspopup="dialog" aria-controls="users-create-dialog" disabled={loading || saving || !!error || !availableRoles.length}
-      onClick={() => { setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
+      onClick={() => { setShowPassword(false); setEditing(null); setFormVersion(v => v + 1); setFormError(''); setUncertain(false); setOpen(true) }}>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg><span className="users-create-label">Crear usuario</span>
     </button></div>
     </div>
@@ -253,7 +254,10 @@ export function UsersPage() {
           <label>Rol<select name="id_rol" required defaultValue={editing?.id_rol ?? ''}><option value="" disabled>Selecciona un rol</option>
             {editing && !availableRoles.some(role => role.id_rol === editing.id_rol) && <option value={editing.id_rol} disabled>Rol actual inactivo: selecciona otro</option>}
             {availableRoles.map(role => <option key={role.id_rol} value={role.id_rol}>{role.nombre}</option>)}</select></label>
-          {!editing && <><label>Contraseña<input name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={72} aria-describedby="users-password-help" /></label>
+          {!editing && <><label>Contraseña<span className="users-password-field"><input name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} maxLength={72} aria-describedby="users-password-help" />
+            <button type="button" className="users-password-toggle" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showPassword && <path d="M3 3l18 18" />}</svg>
+            </button></span></label>
           <p id="users-password-help">Mínimo 8 caracteres, con mayúscula, minúscula y número. Máximo 72 bytes.</p></>}
           <button className="users-submit" type="submit">{saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear usuario'}</button>
         </fieldset>

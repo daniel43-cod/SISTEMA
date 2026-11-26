@@ -427,3 +427,49 @@
 @media (max-width: 800px) {
   .product-create-editor .product-image-column > button[type="submit"] { width: 100%; }
 }
+
+@media (max-width: 800px) {
+  .product-detail-dialog .product-presentations-table-scroll { overflow-x: visible; }
+  .product-detail-dialog .product-presentations-table { display: block; min-width: 0; width: 100%; }
+  .product-detail-dialog .product-presentations-table thead { display: none; }
+  .product-detail-dialog .product-presentations-table tbody { display: grid; gap: 12px; }
+  .product-detail-dialog .product-presentations-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px; border: 1px solid #d3deed; border-radius: 14px; background: white; }
+  .product-detail-dialog .product-presentations-table td { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 0; border: 0; text-align: left; overflow-wrap: anywhere; }
+  .product-detail-dialog .product-presentations-table td::before { content: attr(data-label); color: #64748b; font-size: .75rem; }
+  .product-detail-dialog .product-presentations-table td:first-child { grid-column: 1 / -1; color: #075b96; font-weight: 650; }
+  .product-detail-dialog .product-presentations-table td:first-child::before { display: none; }
+  .product-detail-dialog .product-presentations-table .product-stock-status { justify-self: start; }
+}
+@media (max-width: 800px) {
+  .product-edit-form .product-row { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .product-edit-form .product-row > .field:first-of-type { grid-column: 1 / -1; }
+  .product-edit-form .product-row > .field { min-width: 0; }
+  .product-edit-form .product-row input:not([type="checkbox"]) { box-sizing: border-box; }
+  .product-edit-form .product-edit-units-desktop { display: none; }
+}
+@media (max-width: 800px) {
+  .product-mobile-create-actions { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 30; }
+  .product-mobile-create-actions .product-mobile-create-trigger { position: static; display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: #1d4ed8; color: white; box-shadow: 0 4px 14px #0f172a33; }
+  .product-mobile-create-options { position: absolute; right: 0; bottom: calc(100% + 12px); display: grid; gap: 8px; min-width: 180px; max-width: calc(100vw - 36px); padding: 8px; border: 1px solid #d3deed; border-radius: 14px; background: white; box-shadow: 0 8px 24px #0f172a24; }
+  .product-mobile-create-options button { min-height: 44px; padding: 10px 14px; border: 0; border-radius: 10px; background: #eff6ff; color: #075b96; font: inherit; font-size: .9rem; text-align: left; white-space: nowrap; cursor: pointer; }
+  .product-mobile-create-options button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+}
+@media (max-width: 800px) {
+  .product-create-editor .product-row { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+  .product-create-editor .product-row > div.field:first-of-type { grid-column: 1; }
+  .product-create-editor .product-row > label.field:first-of-type { grid-column: 1 / -1; }
+  .product-create-editor .product-row > .field { min-width: 0; }
+  .product-create-editor .product-row > div.field > label { min-height: 2.6em; display: flex; align-items: end; }
+  .product-create-editor .product-row input { box-sizing: border-box; width: 100%; min-width: 0; }
+  .product-create-editor .product-row .product-remove-presentation { grid-column: 2; justify-self: end; }
+}
+@media (max-width: 800px) {
+  .product-create-editor .product-row { position: relative; }
+  .product-create-editor .product-create-presentation-label { display: flex; align-items: center; min-height: 44px; padding-right: 48px; }
+  .product-create-editor .product-row .product-remove-presentation { position: absolute; top: 14px; right: 14px; margin: 0; }
+}
+@media (min-width: 801px) {
+  .product-catalog-browser .product-catalog-grid { grid-template-columns: repeat(auto-fill, minmax(0, 240px)); justify-content: start; align-items: stretch; }
+  .product-catalog-browser .product-category-card,
+  .product-catalog-browser .product-brand-card { box-sizing: border-box; width: 100%; }
+}

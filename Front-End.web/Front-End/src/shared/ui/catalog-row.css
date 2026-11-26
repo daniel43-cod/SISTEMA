@@ -14,3 +14,17 @@
 .catalog-row-dialog dl > div { display: grid; gap: 4px; margin: 16px 0; }
 .catalog-row-dialog dt { font-weight: 600; }
 .catalog-row-dialog dd { margin: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 800px) {
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) > button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; margin: 6px 8px 0 0; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font: inherit; font-size: .85rem; font-weight: 600; transition: background-color .15s; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) .catalog-detail-edit { background: #075b96; border-color: #075b96; color: white; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) .catalog-detail-deactivate { background: #fff1f2; border-color: #fecdd3; color: #b91c1c; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) .catalog-detail-activate { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) .catalog-detail-close { background: #f1f5f9; border-color: #dce3eb; color: #475569; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) .catalog-row-dialog-heading button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: #f1f5f9; color: #475569; font-size: 1.5rem; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+  .catalog-row-dialog:is([data-detail-type="categoría"], [data-detail-type="presentación"]) button:disabled { opacity: .5; cursor: default; }
+}
+@media (max-width: 800px) {
+  .catalog-row-dialog:is([data-detail-type="marca"], [data-detail-type="categoría"], [data-detail-type="presentación"]) > .catalog-detail-close { display: none; }
+}

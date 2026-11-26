@@ -16,7 +16,7 @@ export function CatalogSurtidoCard({ product, actionLabel, onAdd, initial = [], 
   const [message, setMessage] = useState('')
   function change(id: number, quantity?: string, component?: number, value = '') {
     setValues(previous => {
-      const prior = previous[id] ?? { cantidad: '0', productos: {} }
+      const prior = previous[id] ?? { cantidad: '', productos: {} }
       return { ...previous, [id]: { cantidad: quantity ?? prior.cantidad, productos: component === undefined ? prior.productos : { ...prior.productos, [component]: value } } }
     }); setError(''); setMessage('')
   }
@@ -24,7 +24,7 @@ export function CatalogSurtidoCard({ product, actionLabel, onAdd, initial = [], 
     <CatalogImage url={product.urlImagen} name={product.nombre} kind="productos" />
     <h2>{product.nombre}</h2><span className="catalog-surtido-label">Surtido</span>
     {product.presentaciones.map(p => {
-      const current = values[p.idProductoPresentacion] ?? { cantidad: '0', productos: {} }
+      const current = values[p.idProductoPresentacion] ?? { cantidad: '', productos: {} }
       const total = Object.values(current.productos).reduce((sum, v) => sum + (Number(v) || 0), 0)
       const required = (Number(current.cantidad) || 0) * p.unidadesEquivalentes
       const locked = lockedIds.includes(p.idProductoPresentacion)
@@ -36,11 +36,11 @@ export function CatalogSurtidoCard({ product, actionLabel, onAdd, initial = [], 
         const next = fields[Math.max(0, Math.min(fields.length - 1, i + delta))]; next?.focus(); next?.select()
       }}>
         <legend>{p.nombre} · {money.format(p.precio)}</legend>
-        <label>Cantidad de presentaciones<input type="number" inputMode="numeric" min="0" max="999" step="1" value={current.cantidad}
+        <label>Cantidad<input type="number" inputMode="numeric" min="0" max="999" step="1" value={current.cantidad}
           onChange={e => change(p.idProductoPresentacion, e.target.value)} /></label>
         {product.productos.map(c => <label className="catalog-surtido-component" key={c.idProducto}>
           <span>{c.nombre}{!c.disponible && <small>No disponible</small>}</span>
-          <input type="number" inputMode="numeric" min="0" max="2147483647" step="1" placeholder="0" aria-label={`${product.nombre}, ${p.nombre}: unidades de ${c.nombre}`}
+          <input type="number" inputMode="numeric" min="0" max="2147483647" step="1" aria-label={`${product.nombre}, ${p.nombre}: unidades de ${c.nombre}`}
             value={current.productos[c.idProducto] ?? ''} disabled={!c.disponible} onChange={e => change(p.idProductoPresentacion, undefined, c.idProducto, e.target.value)} />
         </label>)}
         <small aria-live="polite">{total} de {required} unidades</small>

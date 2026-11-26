@@ -27,3 +27,16 @@
   .product-create-actions { position: fixed; right: 18px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 20; flex-wrap: nowrap; }
   .product-create-actions .catalog-create-responsive { position: static; flex-shrink: 0; }
 }
+
+.surtido-mobile-save-target, .surtido-remove-mobile { display: none; }
+@media (max-width: 800px) {
+  .surtido-mobile-save-target { display: inline-flex; }
+  .surtido-mobile-save-target .button { width: auto; min-height: 44px; padding: 8px 12px; margin: 0; font-size: .8rem; white-space: nowrap; }
+  .surtido-footer-save.is-in-header, .surtido-form .surtido-help, .surtido-form .surtido-label-desktop, .surtido-selected .surtido-remove-desktop { display: none; }
+  .surtido-selected .surtido-remove-mobile { display: block; }
+  .surtido-selected button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+}
+@media (max-width: 800px) {
+  .surtido-form.is-creating .surtido-selection-help,
+  .surtido-form.is-creating .surtido-price-sale-suffix { display: none; }
+}

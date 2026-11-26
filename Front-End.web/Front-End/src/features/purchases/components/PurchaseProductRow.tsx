@@ -4,6 +4,7 @@ import type { KeyboardEvent } from 'react'
 import { filterProductNames } from '../../products/api/searchProducts'
 import type { ProductSuggestion } from '../../products/api/searchProducts'
 import type { PurchaseLine } from '../types/purchase'
+import { PurchaseUnitCost } from './PurchaseUnitCost'
 import { amountCents } from '../utils/purchaseValidation'
 
 export function PurchaseProductRow({ line, products, usedIds, onChange, onNext, onRemove, autoFocus }: {
@@ -88,6 +89,7 @@ export function PurchaseProductRow({ line, products, usedIds, onChange, onNext, 
     <td data-label="Total de línea (Q)"><input ref={total} aria-label={`Total de ${line.nombre || 'producto'}`} inputMode="decimal"
       disabled={!line.idProducto} value={line.total} onChange={event => onChange({ ...line, total: event.target.value })}
       onKeyDown={advance} required={line.idProducto > 0} /></td>
+    <td data-label="Costo unitario (estimado)"><PurchaseUnitCost line={line} /></td>
     <td><button type="button" className="purchase-remove-line" aria-label={`Quitar ${line.nombre || 'fila'}`}
       title="Quitar producto" onClick={onRemove}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"

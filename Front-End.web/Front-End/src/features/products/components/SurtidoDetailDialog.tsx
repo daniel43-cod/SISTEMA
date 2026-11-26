@@ -17,6 +17,7 @@ export function SurtidoDetailDialog({ id, token, onClose, startEditing = false, 
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [editing, setEditing] = useState(startEditing)
+  const [mobileSaveTarget, setMobileSaveTarget] = useState<HTMLSpanElement | null>(null)
   const [pending, setPending] = useState(false)
   useEffect(() => {
     const element = dialog.current
@@ -41,10 +42,11 @@ export function SurtidoDetailDialog({ id, token, onClose, startEditing = false, 
     onCancel={event => { event.preventDefault(); if (!pending) onClose() }}>
     <div className="product-detail-header"><h2 id="surtido-detail-title">{editing ? 'Editar surtido' : 'Detalles del surtido'}</h2>
       <div className="product-detail-header-actions">{data && !editing && <button type="button" className="Product-update-button" onClick={() => setEditing(true)}>Editar</button>}
+      {data && editing && <span className="surtido-mobile-save-target" ref={setMobileSaveTarget} />}
       <button type="button" className="product-detail-close" aria-label="Cerrar detalles" disabled={pending} onClick={onClose}>×</button></div></div>
     {!data && !error && <p role="status">Cargando detalles…</p>}
     {error && <><p role="alert" className="product-error">{error}</p><button type="button" onClick={() => { setError(''); setRevision(v => v + 1) }}>Reintentar</button></>}
-    {data && editing && <SurtidoForm initial={data} onPending={setPending} onCancel={() => setEditing(false)} onSaved={() => {
+    {data && editing && <SurtidoForm initial={data} mobileSaveTarget={mobileSaveTarget} onPending={setPending} onCancel={() => setEditing(false)} onSaved={() => {
       setEditing(false); setData(null); setRevision(v => v + 1); onUpdated?.()
     }} />}
     {data && !editing && <>
@@ -55,8 +57,8 @@ export function SurtidoDetailDialog({ id, token, onClose, startEditing = false, 
       <h3>Presentaciones</h3>
       <div className="product-presentations-table-scroll"><table className="product-presentations-table"><thead><tr>
         <th>Presentación</th><th>Unidades</th><th>Precio</th><th>Precio mínimo actual</th></tr></thead><tbody>
-        {data.presentaciones.map(p => <tr key={p.idProductoPresentacion}><td>{p.presentacion}</td><td>{p.unidadesEquivalentes}</td>
-          <td>{money.format(p.precio)}</td><td>{p.precioMinimoActual === null ? 'Costos incompatibles' : money.format(p.precioMinimoActual)}</td></tr>)}
+        {data.presentaciones.map(p => <tr key={p.idProductoPresentacion}><td data-label="Presentación">{p.presentacion}</td><td data-label="Unidades">{p.unidadesEquivalentes}</td>
+          <td data-label="Precio">{money.format(p.precio)}</td><td data-label="Precio mínimo actual">{p.precioMinimoActual === null ? 'Costos incompatibles' : money.format(p.precioMinimoActual)}</td></tr>)}
       </tbody></table></div>
       <h3>Productos permitidos</h3><ul>{data.productos.map(p => <li key={p.idProducto}>{p.nombre}</li>)}</ul>
     </>}

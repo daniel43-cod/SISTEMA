@@ -1,4 +1,4 @@
-﻿.purchases-page { display: grid; gap: 24px; max-width: 1200px; }
+.purchases-page { display: grid; gap: 24px; max-width: 1200px; }
 .purchase-panel, .purchase-success { padding: 24px; border: 1px solid #e1e7ed; background: white; border-radius: 16px; }
 .purchase-panel h2, .purchase-success h2 { margin-bottom: 12px; font-size: 22px; }
 .purchase-panel p { line-height: 1.6; margin-bottom: 16px; color: #475569; }
@@ -335,3 +335,32 @@
   .purchase-history-panel .purchase-history-table th:last-child,
   .purchase-history-panel .purchase-history-table td:last-child { text-align: left; }
 }
+
+@media (max-width: 800px) {
+  .purchase-payments-dialog > .purchase-panel-heading { position: relative; display: block; padding-right: 52px; min-height: 44px; }
+  .purchase-payments-dialog #purchase-payments-title { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .purchase-payments-dialog .purchase-payments-title-prefix { display: none; }
+  .purchase-payments-dialog > .purchase-panel-heading .purchase-detail-close { position: absolute; top: 0; right: 0; margin: 0; }
+  .purchase-payments-history.is-empty { display: none; }
+}
+@media (max-width: 800px) { .purchase-payments-dialog .purchase-payments-external-balance { display: none; } }
+
+.purchase-payments-history .payment-history-mobile-date { display: none; }
+@media (max-width: 800px) {
+  .purchase-payments-history .payment-history-desktop-date { display: none; }
+  .purchase-payments-history .payment-history-mobile-date { display: inline; }
+  .purchase-payments-history .purchase-payment-cards td:first-child { grid-column: 1; grid-row: 2; }
+  .purchase-payments-history .purchase-payment-cards td:nth-child(2) { grid-column: 1; grid-row: 1; }
+  .purchase-payments-history .purchase-payment-cards td:nth-child(3) { grid-column: 2; grid-row: 1 / span 2; align-self: center; text-align: right; }
+  .purchase-payments-history .purchase-payment-cards td:nth-child(4) { display: none; }
+  .purchase-payments-history .purchase-payment-cards td:first-child::before { content: 'Fecha'; }
+}
+.payment-history-mobile-action { display: none; }
+@media (max-width: 800px) {
+  .payment-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .payment-history-heading h3 { min-width: 0; margin: 0; }
+  .payment-history-mobile-action { display: block; flex-shrink: 0; }
+  .payment-history-mobile-action button { min-height: 44px; padding: 8px 16px; border: 1px solid #075b96; border-radius: 10px; background: #075b96; color: white; font: inherit; }
+  .payment-form-has-history:not(.is-mobile-payment-open) { display: none; }
+}
+@media (max-width: 800px) { .purchase-pagination button { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border-radius: 10px; } }

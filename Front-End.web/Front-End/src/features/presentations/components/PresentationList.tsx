@@ -35,7 +35,7 @@ export function PresentationList({ items, loading, error, onReload, onEdit, onSt
         <RowDetails compact name={item.descripcion} type="presentación"  disabled={editing || loading || pending}
           fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}
           onEdit={onEdit ? () => onEdit(item) : undefined} editDisabled={!item.estado}
-          actions={onStateChange && <button type="button" disabled={editing || loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar presentación' : 'Activar presentación'}</button>} />
+          actions={onStateChange && <button type="button" className={item.estado ? 'catalog-detail-deactivate' : 'catalog-detail-activate'} disabled={editing || loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar presentación' : 'Activar presentación'}</button>} />
       </li>)}
     </ul>
         <ul className="presentation-list-items">

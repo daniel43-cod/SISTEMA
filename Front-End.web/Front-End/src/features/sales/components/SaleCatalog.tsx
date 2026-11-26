@@ -4,6 +4,7 @@ import { CatalogProductCard } from '../../public-catalog/components/CatalogProdu
 import { CatalogSurtidoCard } from '../../public-catalog/components/CatalogSurtidoCard'
 import type { SurtidoCatalogSelection } from '../../public-catalog/types/product'
 import { PublicBrandsList } from '../../public-catalog/components/PublicBrandsList'
+import { usePublicBrands } from '../../public-catalog/hooks/usePublicBrands'
 import { usePublicCategories } from '../../public-catalog/hooks/usePublicCategories'
 import { usePublicProducts } from '../../public-catalog/hooks/usePublicProducts'
 import type { PublicCategory } from '../../public-catalog/types/category'
@@ -96,25 +97,75 @@ function SaleCatalogProducts({ brandId, options, lines, disabled, onAdd, onAddSu
     </nav>
   </>
 }
+function BrandSwitcher({ categoryId, selectedId, disabled, onSelect }: {
+  categoryId: number; selectedId: number; disabled: boolean; onSelect: (brand: PublicBrand) => void
+}) {
+  const { items, loading, error, reload } = usePublicBrands(categoryId)
+  const nav = useRef<HTMLElement>(null)
+  useEffect(() => {
+    nav.current?.querySelector<HTMLElement>('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest', inline: 'center' })
+  }, [selectedId, items])
+  return <nav className="sale-catalog-brand-switcher" aria-label="Marcas de esta categoría" ref={nav}>
+    {loading ? <p role="status">Cargando marcas…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={reload}>Reintentar marcas</button></div> :
+      <div className="sale-catalog-brand-options">{items.map(item => <button key={item.idMarca} type="button" disabled={disabled} aria-pressed={selectedId === item.idMarca}
+        onClick={() => { if (selectedId !== item.idMarca) onSelect(item) }}>{item.nombre}</button>)}</div>}
+  </nav>
+}
 export function SaleCatalog({ onClose, ...props }: Props) {
   const categories = usePublicCategories()
+  const toolbarRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+
+    const toolbar = toolbarRef.current
+    const catalog = toolbar?.closest<HTMLElement>('.sale-catalog-page')
+    if (!toolbar || !catalog) return
+    const measure = () => catalog.style.setProperty('--sale-catalog-toolbar-height', `${toolbar.getBoundingClientRect().height}px`)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(toolbar)
+    return () => { observer.disconnect(); catalog.style.removeProperty('--sale-catalog-toolbar-height') }
+  }, [])
   const [category, setCategory] = useState<PublicCategory | null>(null)
   const [brand, setBrand] = useState<PublicBrand | null>(null)
 
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
+  const categoryMenu = useRef<HTMLDivElement>(null)
+  const categoryTrigger = useRef<HTMLButtonElement>(null)
+  const categoryMenuId = useId()
+  useEffect(() => {
+    if (!categoryMenuOpen) return
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !categoryMenu.current?.contains(event.target)) setCategoryMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    return () => document.removeEventListener('pointerdown', closeOutside)
+  }, [categoryMenuOpen])
   const titleRef = useRef<HTMLHeadingElement>(null)
   const titleId = useId()
   useEffect(() => { titleRef.current?.focus() }, [category, brand])
   return <section className="public-catalog sale-catalog-page" aria-labelledby={titleId}>
-    <header className="sale-catalog-toolbar">
-      <button type="button" onClick={onClose}>← Volver a Nueva venta</button>
-      <span>{props.lines.length} {props.lines.length === 1 ? 'presentación en la venta' : 'presentaciones en la venta'}</span>
+    <header className="sale-catalog-toolbar" ref={toolbarRef}>
+      {!category && <strong className="sale-catalog-categories-label">CATEGORÍAS</strong>}
+      {category && <div className="sale-catalog-category-menu" ref={categoryMenu} onKeyDown={event => {
+        if (event.key === 'Escape') { event.preventDefault(); setCategoryMenuOpen(false); categoryTrigger.current?.focus() }
+      }}>
+        <button type="button" ref={categoryTrigger} className="sale-catalog-category-trigger" aria-expanded={categoryMenuOpen} aria-controls={categoryMenuId}
+          disabled={props.disabled || categories.loading || !!categories.error} onClick={() => setCategoryMenuOpen(open => !open)}>
+          <span>{category.nombre}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </button>
+        {categoryMenuOpen && <ul id={categoryMenuId} className="sale-catalog-category-list" aria-label="Categorías">
+          {categories.items.map(item => <li key={item.idCategoria}><button type="button" aria-pressed={category.idCategoria === item.idCategoria} onClick={() => {
+            setBrand(null); setCategory(item); setCategoryMenuOpen(false)
+          }}>{item.nombre}</button></li>)}
+        </ul>}
+      </div>}
+      <button type="button" className="sale-catalog-back" onClick={onClose}>Ver venta</button>
     </header>
     <div className="sale-catalog-content">
-      <div className="sale-catalog-heading">
-        {category && <button type="button" aria-label={brand ? 'Volver a marcas' : 'Volver a categorías'}
-          onClick={() => { if (brand) setBrand(null); else setCategory(null) }}>←</button>}
+      <div className={`sale-catalog-heading${!category ? ' is-categories' : !brand ? ' is-brands' : ' is-products'}`}>
         <h1 ref={titleRef} tabIndex={-1} id={titleId}>{brand ? 'Productos de ' + brand.nombre : category ? 'Marcas de ' + category.nombre : 'Categorías'}</h1>
       </div>
+      {category && brand && <BrandSwitcher key={category.idCategoria} categoryId={category.idCategoria} selectedId={brand.idMarca} disabled={props.disabled} onSelect={setBrand} />}
       {brand ? <SaleCatalogProducts key={brand.idMarca} brandId={brand.idMarca} {...props} />
         : category ? <PublicBrandsList key={category.idCategoria} idCategoria={category.idCategoria} onSelect={setBrand} />
         : categories.loading ? <p role="status">Cargando categorías…</p>

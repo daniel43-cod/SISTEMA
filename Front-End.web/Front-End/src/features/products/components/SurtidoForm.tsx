@@ -1,4 +1,5 @@
-import { useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
 import { useBrands } from '../../brands'
@@ -13,10 +14,17 @@ import { ProductImagePicker } from './ProductImagePicker'
 import './SurtidoForm.css'
 
 type Row = { key: number; presentation: string; units: string; price: string }
-export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
-  onSaved: () => void; onCancel: () => void; onPending: (pending: boolean) => void; initial?: SurtidoDetail
+export function SurtidoForm({ onSaved, onCancel, onPending, initial, mobileSaveTarget }: {
+  onSaved: () => void; onCancel: () => void; onPending: (pending: boolean) => void; initial?: SurtidoDetail; mobileSaveTarget?: HTMLElement | null
 }) {
   const { session, logout } = useAuth()
+  const [mobileView, setMobileView] = useState(() => window.matchMedia('(max-width: 800px)').matches)
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 800px)')
+    const update = () => setMobileView(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   const brands = useBrands()
   const presentations = usePresentations()
   const [revision, setRevision] = useState(0)
@@ -74,7 +82,9 @@ export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
       else fail(failure instanceof ApiError ? failure.message : 'No se pudo confirmar el registro. Verifica si se guardó antes de reintentar.')
     } finally { submitting.current = false; setPending(false); onPending(false) }
   }
-  return <form className="surtido-form" onSubmit={save} aria-busy={pending}>
+  const saveButton = <button className="button" type="submit" form={`${id}-form`} disabled={pending || brands.loading || presentations.loading || !!brands.error || !!presentations.error}>
+    {pending ? 'Guardando…' : initial ? 'Guardar cambios' : 'Guardar surtido'}</button>
+  return <form id={`${id}-form`} className={`surtido-form${initial ? ' is-editing' : ' is-creating'}`} onSubmit={save} aria-busy={pending}>
     {catalogError && <div role="alert" className="product-error">{catalogError} <button type="button" onClick={() => {
       brands.reload(); presentations.reload(); setRevision(v => v + 1)
     }}>Reintentar</button></div>}
@@ -92,9 +102,9 @@ export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
     </fieldset>
     <fieldset className="surtido-section" disabled={pending}>
       <legend>Productos permitidos ({selected.length})</legend>
-      <label className="field" htmlFor={`${id}-search`}>Buscar productos
+      <label className="field" htmlFor={`${id}-search`}><span className={!initial && mobileView ? 'sr-only' : undefined}>Buscar productos</span>
         <input ref={searchRef} id={`${id}-search`} type="search" className="input" maxLength={200} value={text}
-          placeholder="Escribe al menos 3 letras del nombre" onChange={e => setText(e.target.value)}
+          placeholder={!initial && mobileView ? 'Buscar producto' : 'Escribe al menos 3 letras del nombre'} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') e.preventDefault() }} /></label>
       {names.loading && <p role="status">Cargando productos…</p>}
       {!!suggestions.length && <ul className="surtido-suggestions" aria-label="Coincidencias de productos">
@@ -105,9 +115,9 @@ export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
       {text.trim().length >= 3 && !names.loading && !names.error && !suggestions.length && <p role="status">No hay más coincidencias disponibles.</p>}
       <ul className="surtido-selected" aria-label="Productos seleccionados">
         {selected.map(p => <li key={p.idProducto}><strong>{p.nombre}</strong><button type="button" aria-label={`Quitar ${p.nombre}`}
-          onClick={() => setSelected(current => current.filter(s => s.idProducto !== p.idProducto))}>×</button></li>)}
+          onClick={() => setSelected(current => current.filter(s => s.idProducto !== p.idProducto))}><span className="surtido-remove-desktop">×</span><svg className="surtido-remove-mobile" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg></button></li>)}
       </ul>
-      {!selected.length && <p>Selecciona los productos que se podrán combinar.</p>}
+      {!selected.length && <p className="surtido-selection-help">Selecciona los productos que se podrán combinar.</p>}
       <p className="surtido-help">Al guardar se comprobarán los costos promedio de los productos seleccionados.</p>
     </fieldset>
     <fieldset className="surtido-section" disabled={pending}>
@@ -118,9 +128,9 @@ export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
             <option value="">Selecciona una presentación</option>
             {presentations.items.map(p => <option key={p.idPresentacion} value={p.idPresentacion}>{p.descripcion}</option>)}
           </select></label>
-        <label className="field" htmlFor={`${id}-units-${r.key}`}>Unidades equivalentes
+        <label className="field" htmlFor={`${id}-units-${r.key}`}><span>Unidades<span className="surtido-label-desktop"> equivalentes</span></span>
           <input id={`${id}-units-${r.key}`} className="input" type="number" inputMode="numeric" min="1" max="2147483647" step="1" required value={r.units} onChange={e => update(r.key, 'units', e.target.value)} /></label>
-        <label className="field" htmlFor={`${id}-price-${r.key}`}>Precio de venta (Q)
+        <label className="field" htmlFor={`${id}-price-${r.key}`}><span>Precio<span className="surtido-price-sale-suffix"> de venta</span><span className="surtido-label-desktop"> (Q)</span></span>
           <input id={`${id}-price-${r.key}`} className="input" type="number" inputMode="decimal" min="0.01" max="99999999.99" step="0.01" required value={r.price} onChange={e => update(r.key, 'price', e.target.value)} /></label>
         <button type="button" className="surtido-remove" disabled={rows.length === 1} aria-label={`Quitar presentación ${i + 1}`}
           onClick={() => setRows(current => current.filter(row => row.key !== r.key))}>×</button>
@@ -132,7 +142,7 @@ export function SurtidoForm({ onSaved, onCancel, onPending, initial }: {
       onChange={(url, file) => { setImageChanged(true); setImageUrl(url); setImageFile(file) }} />
     <p ref={errorRef} tabIndex={-1} role="alert" className="product-error">{error}</p>
     <div className="surtido-actions"><button type="button" className="surtido-secondary" disabled={pending} onClick={onCancel}>Cancelar</button>
-      <button className="button" type="submit" disabled={pending || brands.loading || presentations.loading || !!brands.error || !!presentations.error}>
-        {pending ? 'Guardando…' : initial ? 'Guardar cambios' : 'Guardar surtido'}</button></div>
+      <span className={initial && mobileSaveTarget ? 'surtido-footer-save is-in-header' : 'surtido-footer-save'}>{saveButton}</span></div>
+    {initial && mobileSaveTarget && createPortal(saveButton, mobileSaveTarget)}
   </form>
 }

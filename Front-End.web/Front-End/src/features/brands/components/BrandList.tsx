@@ -26,7 +26,7 @@ export function BrandList({ createAction, items, loading, error, reload, onEdit,
         <RowDetails compact name={item.nombre} type="marca" image={item.urlImagen ?? null} disabled={loading || pending}
           fields={[{ label: 'Categoría', value: item.nombreCategoria || 'No disponible' }, { label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}
           onEdit={onEdit ? () => onEdit(item) : undefined} editDisabled={!item.estado}
-          actions={onStateChange && <button type="button" disabled={loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar marca' : 'Activar marca'}</button>} />
+          actions={onStateChange && <button type="button" className={item.estado ? 'brand-detail-deactivate' : 'brand-detail-activate'} disabled={loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar marca' : 'Activar marca'}</button>} />
       </li>)}
     </ul>
     <div className="brand-table-scroll"><table className="brand-table">

@@ -127,6 +127,6 @@ export function WhatsAppReceiptDialog({ saleId, mode, onClose, showCertification
       {!loading && !options && <button className="fel-secondary-button" type="button" onClick={() => setRevision(v => v + 1)}>Reintentar carga</button>}
       {response && <p className={response.huboFallo ? 'wa-receipt-error' : 'wa-receipt-status'} role={response.huboFallo ? 'alert' : 'status'}>{response.mensaje}</p>}
     </section>
-    <footer className="receipt-dialog-footer"><button type="button" disabled={sending || certifying} onClick={onClose}>{response ? 'Cerrar' : 'Ahora no'}</button></footer>
+    <footer className="receipt-dialog-footer"><button type="button" disabled={sending || certifying} onClick={onClose}>{response ? 'Cerrar' : 'Cancelar'}</button></footer>
   </dialog>, document.body)
 }

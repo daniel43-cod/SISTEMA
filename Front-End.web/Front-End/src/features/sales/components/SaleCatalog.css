@@ -28,3 +28,23 @@
 .sale-catalog-card-footer .sale-catalog-add { width: 100%; }
 @media (max-width: 640px) { .sale-catalog-card-footer { padding: 0 8px 12px; } }
 .sale-catalog-page .catalog-surtido-card > .sale-catalog-add { display: block; width: fit-content; max-width: 100%; margin: 12px auto 18px; align-self: center; justify-self: center; }
+
+/* Navegación compartida del catálogo de ventas en PC y móvil. */
+.sale-catalog-toolbar { justify-content: flex-start; flex-wrap: nowrap; gap: 8px; }
+.sale-catalog-toolbar .sale-catalog-back { flex-shrink: 0; margin-left: auto; margin-right: 0; }
+.sale-catalog-categories-label { color: #263747; font-size: .9rem; letter-spacing: .03em; }
+.sale-catalog-heading { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.sale-catalog-category-menu { position: relative; min-width: 0; max-width: calc(100% - 100px); }
+.sale-catalog-toolbar .sale-catalog-category-trigger { display: flex; align-items: center; gap: 10px; max-width: 100%; text-align: left; }
+.sale-catalog-category-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit; }
+.sale-catalog-category-trigger svg { flex-shrink: 0; }
+.sale-catalog-category-list { position: absolute; top: calc(100% + 8px); left: 0; z-index: 20; box-sizing: border-box; width: min(240px, calc(100vw - 56px)); max-height: min(360px, 45dvh); overflow-y: auto; overscroll-behavior: contain; list-style: none; margin: 0; padding: 6px; border: 1px solid #d3deed; border-radius: 12px; background: white; box-shadow: 0 8px 24px #0f172a24; }
+.sale-catalog-toolbar .sale-catalog-category-list button { display: block; width: 100%; padding: 10px 12px; border: 0; border-radius: 8px; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.sale-catalog-category-list button[aria-pressed=true] { background: #eaf4fc; color: #075b96; font-weight: 650; }
+.sale-catalog-category-list button:focus-visible { outline: 2px solid #075b96; outline-offset: -2px; }
+.sale-catalog-brand-switcher { position: sticky; top: var(--sale-catalog-toolbar-height, 68px); z-index: 4; margin: 0 0 18px; padding: 8px 0 2px; min-width: 0; background: white; border-bottom: 1px solid #e7edf5; }
+.sale-catalog-brand-options { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; overscroll-behavior-x: contain; }
+.sale-catalog-brand-options button { flex: 0 0 auto; min-height: 44px; padding: 8px 16px; border: 1px solid #d3deed; border-radius: 24px; background: white; color: #075b96; white-space: nowrap; }
+.sale-catalog-brand-options button[aria-pressed=true] { background: #075b96; border-color: #075b96; color: white; font-weight: 650; }
+.sale-catalog-brand-options button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+.sale-catalog-brand-switcher p { margin: 0 0 8px; font-size: .85rem; }

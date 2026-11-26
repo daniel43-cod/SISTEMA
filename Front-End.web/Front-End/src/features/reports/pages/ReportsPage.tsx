@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
-import { getSalesReport, getPurchasesReport, getExpensesReport, listReportSessions } from '../api/reportsApi'
-import type { ReportSession, SalesReport, PurchasesReport, ExpensesReport } from '../api/reportsApi'
+import { getSalesReport, getPurchasesReport, getExpensesReport } from '../api/reportsApi'
+import type { SalesReport, PurchasesReport, ExpensesReport } from '../api/reportsApi'
+import { requestJson } from '../../../shared/api/httpClient'
+import { parseCashSession } from '../../cash/api/cashApi'
 import './ReportsPage.css'
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 const date = new Intl.DateTimeFormat('es-GT', { dateStyle: 'short', timeStyle: 'short' })
@@ -216,10 +218,10 @@ const [purchasesError, setPurchasesError] = useState('')
   const { session, logout } = useAuth()
   const token = session?.token
   const admin = session?.user.role === 'ADMINISTRADOR'
-  const [sessions, setSessions] = useState<ReportSession[]>([])
+
   const [sessionId, setSessionId] = useState(0)
-  const [sessionPage, setSessionPage] = useState(1)
-  const [more, setMore] = useState(false)
+
+
   const [sessionLoading, setSessionLoading] = useState(true)
   const [sessionError, setSessionError] = useState('')
   const [revision, setRevision] = useState(0)
@@ -230,18 +232,18 @@ const [purchasesError, setPurchasesError] = useState('')
     if (!token || !admin) return
     const controller = new AbortController()
     setSessionLoading(true); setSessionError('')
-    void listReportSessions(token, sessionPage, controller.signal).then(rows => {
+    void requestJson('/Caja/actual', { token, signal: controller.signal }).then(value => {
       if (controller.signal.aborted) return
-      setSessions(previous => sessionPage === 1 ? rows : [...previous.filter(p => !rows.some(s => s.id_sesion_caja === p.id_sesion_caja)), ...rows])
-      setMore(rows.length === 50)
-      if (sessionPage === 1) setSessionId(current => rows.some(s => s.id_sesion_caja === current) ? current : (rows.find(s => s.fecha_cierre === null)?.id_sesion_caja ?? rows[0]?.id_sesion_caja ?? 0))
+      const cash = parseCashSession(value)
+      setSessionId(cash?.id_sesion_caja ?? 0)
+      if (!cash) { setReport(null); setPurchasesReport(null); setExpensesReport(null) }
     }).catch(failure => {
       if (controller.signal.aborted) return
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
-      else setSessionError(failure instanceof Error ? failure.message : 'No se pudieron cargar las sesiones.')
+      else setSessionError(failure instanceof Error ? failure.message : 'No se pudo consultar la caja activa.')
     }).finally(() => { if (!controller.signal.aborted) setSessionLoading(false) })
     return () => controller.abort()
-  }, [token, admin, sessionPage, revision, logout])
+  }, [token, admin, revision, logout])
   useEffect(() => {
     if (!token || !admin || !sessionId) return
     const controller = new AbortController()
@@ -293,14 +295,11 @@ const [purchasesError, setPurchasesError] = useState('')
   }, [token, admin, sessionId, revision, logout])
   if (!admin) return null
   return <section className="reports-panel" aria-labelledby="sales-report-title">
-    <div className="reports-heading"><h2 id="sales-report-title">Importe de ventas por sesión de caja</h2><RefreshButton label="Actualizar reporte" loading={loading || sessionLoading || purchasesLoading || expensesLoading} onClick={() => { setSessionPage(1); setRevision(v => v + 1) }} /></div>
-    <div className="reports-filters"><label>Sesión de caja<select value={sessionId || ''} disabled={sessionLoading || !sessions.length} onChange={e => setSessionId(Number(e.target.value))}><option value="" disabled>Selecciona una sesión</option>{sessions.map(s => <option key={s.id_sesion_caja} value={s.id_sesion_caja}>{date.format(new Date(s.fecha_apertura))} · {s.fecha_cierre === null ? 'Abierta' : 'Cerrada'} · {s.usuario_apertura}</option>)}</select></label>
-      {more && <button type="button" disabled={sessionLoading} onClick={() => setSessionPage(p => p + 1)}>Cargar sesiones anteriores</button>}
-    </div>
+    <div className="reports-heading"><h2 id="sales-report-title">Importe de ventas de la caja activa</h2><RefreshButton label="Actualizar reporte" loading={loading || sessionLoading || purchasesLoading || expensesLoading} onClick={() => { setRevision(v => v + 1) }} /></div>
     {sessionError && <p role="alert">{sessionError}</p>}
-    {sessionLoading && <p role="status">Cargando sesiones…</p>}
-    {!sessionLoading && !sessionError && !sessions.length && <p>No hay sesiones de caja registradas.</p>}
-    {loading ? <p role="status">Cargando gráfica…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : report && <>
+    {sessionLoading && <p role="status">Consultando caja activa…</p>}
+    {!sessionLoading && !sessionError && !sessionId && <p>No hay una caja abierta.</p>}
+    {!sessionLoading && !sessionError && sessionId > 0 && (loading ? <p role="status">Cargando gráfica…</p> : error ? <div role="alert"><p>{error}</p><button type="button" onClick={() => setRevision(v => v + 1)}>Reintentar</button></div> : report && <>
       <p className={'reports-session-status ' + (report.cierre === null ? 'is-open' : 'is-closed')}>
         <span aria-hidden="true" />{report.cierre === null ? 'Abierta' : 'Cerrada'}
       </p>
@@ -331,7 +330,7 @@ const [purchasesError, setPurchasesError] = useState('')
       
       {report.cantidadVentas === 0 && <p>No hay ventas registradas en esta sesión.</p>}
       <SalesChart key={sessionId} report={report} purchasesReport={purchasesReport} expensesReport={expensesReport} />
-    </>}
+    </>)}
     {sessionId > 0 && (purchasesLoading ? (
       <p role="status">Cargando compras…</p>
     ) : purchasesError ? (

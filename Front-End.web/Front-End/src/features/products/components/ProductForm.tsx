@@ -18,7 +18,7 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
   const [brand, setBrand] = useState('')
   const [url, setUrl] = useState('')
   const [file, setFile] = useState<File>()
-  const [rows, setRows] = useState<Row[]>([{ key: 0, presentation: '', units: '1', price: '' }])
+  const [rows, setRows] = useState<Row[]>([{ key: 0, presentation: '', units: '', price: '' }])
   const [nextKey, setNextKey] = useState(1)
   const [validation, setValidation] = useState('')
   const brandId = useId()
@@ -76,7 +76,7 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
       <legend>Presentaciones de venta</legend>
       {rows.map((row, index) => <fieldset key={row.key} className="product-row">
         <legend>Presentación {index + 1}</legend>
-        <label className="field">Presentación
+        <label className="field product-create-presentation-field"><span className="product-create-presentation-label">Presentación</span>
           <select className="input" value={row.presentation} required onChange={event => update(row.key, 'presentation', event.target.value)}>
             <option value="">Selecciona una presentación</option>
             {presentations.items.map(item => <option key={item.idPresentacion} value={item.idPresentacion}
@@ -97,7 +97,7 @@ export function ProductForm({ onSaved }: { onSaved: () => void }) {
         </button>
       </fieldset>)}
       <Button disabled={rows.length >= Math.min(100, presentations.items.length)} onClick={() => {
-        setRows(current => [...current, { key: nextKey, presentation: '', units: '1', price: '' }]); setNextKey(value => value + 1)
+        setRows(current => [...current, { key: nextKey, presentation: '', units: '', price: '' }]); setNextKey(value => value + 1)
       }}>Agregar presentación</Button>
     </fieldset>
     {(validation || error) && <p role="alert" className="product-error">{validation || error}</p>}

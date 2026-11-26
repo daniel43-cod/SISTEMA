@@ -1,7 +1,7 @@
 import { listUsers } from '../../users/api/usersApi'
 import { lastSevenSaleDays } from '../utils/saleDateRange'
 import { SalePaymentForm } from './SalePaymentForm'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { TicketPosDialog } from '../components/TicketPosDialog'
 import { WhatsAppIcon, WhatsAppReceiptDialog } from '../components/WhatsAppReceipt'
 import { createPortal } from 'react-dom'
@@ -87,6 +87,19 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [mobileSearch, setMobileSearch] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const mobileFiltersDialog = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (!mobileFiltersOpen || desktopView) return
+    const dialog = mobileFiltersDialog.current
+    const trigger = document.activeElement
+    const overflow = document.body.style.overflow
+    dialog?.showModal()
+    document.body.style.overflow = 'hidden'
+    return () => {
+      dialog?.close(); document.body.style.overflow = overflow
+      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus()
+    }
+  }, [mobileFiltersOpen, desktopView])
   const mobileRows = rows.filter(sale =>
     (mobileStatus === 'all' || (mobileStatus === 'paid' ? sale.saldo_pendiente === 0 : sale.saldo_pendiente > 0)) &&
     (!mobileSearch.trim() || `${sale.cliente} ${sale.id_ventas} ${sale.usuario}`.toLocaleLowerCase().includes(mobileSearch.trim().toLocaleLowerCase())))
@@ -243,7 +256,12 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
 
       {toolbarTarget ? createPortal(mobileToolbar, toolbarTarget) : mobileToolbar}
       {mobileSearchOpen && <label className="sale-mobile-search">Buscar en esta página<input type="search" autoFocus placeholder="Cliente, número de venta o responsable" value={mobileSearch} onChange={event => setMobileSearch(event.target.value)} /></label>}
-      {isAdmin && mobileFiltersOpen && <div className="sale-mobile-filters">
+      {isAdmin && mobileFiltersOpen && !desktopView && createPortal(<dialog ref={mobileFiltersDialog} className="sales-page sale-list-view sale-mobile-filter-dialog" aria-label="Filtros de ventas" onCancel={event => { event.preventDefault(); setMobileFiltersOpen(false) }}><div className="sale-mobile-filters" onKeyDown={event => {
+        if (event.key === 'Escape') { setMobileFiltersOpen(false); document.querySelector<HTMLButtonElement>('.sale-mobile-user-filter')?.focus() }
+      }}>
+        <div className="sale-mobile-filters-heading"><strong>Filtros</strong>
+          <button type="button" aria-label="Cerrar filtros" title="Cerrar filtros" onClick={() => { setMobileFiltersOpen(false); document.querySelector<HTMLButtonElement>('.sale-mobile-user-filter')?.focus() }}>×</button>
+        </div>
         <label>Usuario<select value={userId} disabled={saving || usersLoading} onChange={event => { setUserId(event.target.value); setPage(1); setSelected(null); setSuccess('') }}>
           <option value="">Todos</option>{users.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}
         </select></label>
@@ -253,7 +271,7 @@ export function SaleListPage({ onAccountTarget, toolbarTarget }: { onAccountTarg
           setSelectedDate(day); setRange(day ? { desde: day, hasta: day } : undefined); setPage(1); setSelected(null)
         }} /></label>
         <button type="button" disabled={saving || loading} onClick={() => { setSelectedDate(''); setRange(undefined); setUserId(''); setPage(1); setSelected(null) }}>Caja activa</button>
-      </div>}
+      </div></dialog>, document.body)}
       <div className="sale-mobile-tabs" role="group" aria-label="Estado de las ventas de esta página">
         <button type="button" aria-pressed={mobileStatus === 'all'} onClick={() => setMobileStatus('all')}>Todas ({rows.length})</button>
         <button type="button" aria-pressed={mobileStatus === 'pending'} onClick={() => setMobileStatus('pending')}>Pendientes ({rows.filter(sale => sale.saldo_pendiente > 0).length})</button>

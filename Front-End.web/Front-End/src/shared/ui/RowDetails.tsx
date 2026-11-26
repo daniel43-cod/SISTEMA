@@ -1,4 +1,4 @@
-﻿import { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import './catalog-row.css'
 
@@ -16,7 +16,7 @@ export function RowDetails({ name, type, fields, image, disabled, compact = fals
   return <>
     <button type="button" className={compact ? "catalog-row-more" : "catalog-row-open"} disabled={disabled}
       aria-label={`Ver detalles de ${name}`} aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>{compact && <span aria-hidden="true">⋮</span>}</button>
-    <dialog ref={dialog} className="catalog-row-dialog" aria-label={`Detalles de ${type}: ${name}`}>
+    <dialog ref={dialog} className="catalog-row-dialog" data-detail-type={type} aria-label={`Detalles de ${type}: ${name}`}>
       <div className="catalog-row-dialog-heading"><h2>Detalles de {type}</h2>
         <button type="button" autoFocus onClick={() => dialog.current?.close()} aria-label="Cerrar detalles">×</button></div>
       <h3>{name}</h3>
@@ -24,9 +24,9 @@ export function RowDetails({ name, type, fields, image, disabled, compact = fals
         ? <img key={source} className="catalog-row-dialog-image" src={source} alt={`Imagen de ${name}`} referrerPolicy="no-referrer" onError={() => setFailed(true)} />
         : <p>Sin imagen</p>)}
       <dl>{fields.map(field => <div key={field.label}><dt>{field.label}</dt><dd>{field.value}</dd></div>)}</dl>
-      {onEdit && <button type="button" disabled={disabled || editDisabled} onClick={() => { dialog.current?.close(); onEdit() }}>Editar</button>}
+      {onEdit && <button type="button" className="catalog-detail-edit" disabled={disabled || editDisabled} onClick={() => { dialog.current?.close(); onEdit() }}>Editar</button>}
       {actions}
-      <button type="button" onClick={() => dialog.current?.close()}>Cerrar</button>
+      <button type="button" className="catalog-detail-close" onClick={() => dialog.current?.close()}>Cerrar</button>
     </dialog>
   </>
 }

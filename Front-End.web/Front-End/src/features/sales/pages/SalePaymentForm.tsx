@@ -1,3 +1,4 @@
+import { MobileAbonoDialog } from '../../../shared/ui/MobileAbonoDialog'
 import { TicketPosDialog } from '../components/TicketPosDialog'
 import { SalePaymentsHistory } from '../components/SalePaymentsHistory'
 import { SaleDetailSurtido } from '../components/SaleDetailSurtido'
@@ -9,6 +10,7 @@ import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
 import { ApiError } from '../../../shared/api/ApiError'
 import { loadSaleDetails, paySale } from '../api/salesApi'
+import { createOperationId } from '../utils/operationId'
 import { loadFel } from '../api/felApi'
 import type { FelDocument } from '../api/felApi'
 import type { SaleDetail, SaleHistory } from '../api/salesApi'
@@ -23,6 +25,9 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   const paymentButton = useRef<HTMLButtonElement>(null)
   const paymentHeading = useRef<HTMLHeadingElement>(null)
   const paymentAmount = useRef<HTMLInputElement>(null)
+  const [mobilePaymentOpen, setMobilePaymentOpen] = useState(false)
+  const [paymentShareTarget, setPaymentShareTarget] = useState<HTMLSpanElement | null>(null)
+  const [hasPayments, setHasPayments] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [sharing, setSharing] = useState(false)
   const [printing, setPrinting] = useState(false)
@@ -92,6 +97,7 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
 
   useEffect(() => {
     if (!paymentOpen) return
+    setMobilePaymentOpen(false)
     const panel = paymentDialog.current
     panel?.showModal(); if (sale.saldo_pendiente > 0) paymentAmount.current?.focus(); else paymentHeading.current?.focus()
     return () => { panel?.close(); paymentButton.current?.focus() }
@@ -130,9 +136,11 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
     if (!pendingPayment.current && (!/^\d+(\.\d{1,2})?$/.test(input) || value <= 0 || Math.round(value * 100) > Math.round(sale.saldo_pendiente * 100))) {
       setError('Ingresa un monto mayor a cero, con hasta dos decimales y que no supere el saldo.'); return
     }
-    pendingPayment.current ??= { id: crypto.randomUUID(), amount: value, note: note.trim() }
-    try { sessionStorage.setItem(paymentStorageKey, JSON.stringify(pendingPayment.current)) }
-    catch { setError("No se pudo conservar la operación. Habilita el almacenamiento del navegador antes de abonar."); return }
+    try {
+      pendingPayment.current ??= { id: createOperationId(), amount: value, note: note.trim() }
+      sessionStorage.setItem(paymentStorageKey, JSON.stringify(pendingPayment.current))
+    }
+    catch { setError("No se pudo preparar o conservar el abono. Verifica el almacenamiento del navegador antes de abonar."); return }
     busy.current = true; setSaving(true); onSaving(true)
     try {
       await paySale(sale.id_ventas, pendingPayment.current.amount, pendingPayment.current.note, token, pendingPayment.current.id)
@@ -152,7 +160,7 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   const invoiceAction = felDocument?.estado === 'CERTIFICADA' && felDocument.pdf ?
     <a className="fel-secondary-button" href={felDocument.pdf} target="_blank" rel="noopener noreferrer">Ver factura</a> :
     <button type="button" className="fel-secondary-button" disabled={saving || certifying || felLoading} aria-haspopup="dialog" aria-expanded={certificationOpen} onClick={() => setCertificationOpen(true)}>
-      {felLoading ? 'Consultando factura…' : felDocument?.estado === 'CERTIFICADA' ? 'Ver factura' : certificationOpen ? 'Certificar factura' : felDocument?.estado === 'EN_PROCESO' || felDocument?.estado === 'POR_CONFIRMAR' || felDocument === undefined ? 'Consultar factura' : 'Certificar factura'}
+      Certificar
     </button>
   const certificationPanel = <CertifySalePanel saleId={sale.id_ventas} token={token ?? ''} active={true}
     onToggle={() => setCertificationOpen(false)} disabled={saving} onBusy={certificationBusy} onUnauthorized={certificationUnauthorized} onDocumentChange={setFelDocument} />
@@ -200,13 +208,13 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
             <div className={sale.saldo_pendiente === 0 ? 'sale-detail-settled' : undefined}><dt>Saldo pendiente</dt><dd>{money.format(sale.saldo_pendiente)}</dd></div>
             {!desktopView && session?.user.role === 'ADMINISTRADOR' && <div className="sale-receipt-profit"><dt>Ganancia</dt><dd>{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</dd></div>}
           </dl>
-          {desktopView && session?.user.role === 'ADMINISTRADOR' && <div className="sale-detail-profit-card"><div><strong>Ganancia</strong><small>Solo administradores</small></div><strong>{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</strong></div>}
+          {desktopView && session?.user.role === 'ADMINISTRADOR' && <div className="sale-detail-profit-card"><div><strong>Ganancia</strong></div><strong>{sale.ganancia_total === undefined ? 'No disponible' : money.format(sale.ganancia_total)}</strong></div>}
         </div>
 
       </div>
       {desktopView && <footer className="sale-detail-actions">
-        <button type="button" className="fel-secondary-button" disabled={saving || certifying} onClick={() => setPrinting(true)} aria-haspopup="dialog">Imprimir ticket</button>
-        <button type="button" className="wa-send-button" disabled={saving || certifying} onClick={() => setSharing(true)} aria-haspopup="dialog"><WhatsAppIcon />Compartir por WhatsApp</button>
+        <button type="button" className="fel-secondary-button" disabled={saving || certifying} onClick={() => setPrinting(true)} aria-haspopup="dialog">Imprimir</button>
+        <button type="button" className="wa-send-button" disabled={saving || certifying} onClick={() => setSharing(true)} aria-haspopup="dialog"><WhatsAppIcon />Compartir</button>
         {invoiceAction}
 
       </footer>}
@@ -225,21 +233,23 @@ export function SalePaymentForm({ sale, onClose, onPaid, onSaving }: { sale: Sal
   {paymentOpen && <dialog ref={paymentDialog} className="sales-page sale-list-page sale-payment-dialog sale-abono-dialog"
     aria-labelledby="sale-abono-title" onCancel={event => { event.preventDefault(); if (!busy.current) setPaymentOpen(false) }}>
     <section className="sales-card sale-payment">
-      <div className="sale-detail-title-row"><h2 id="sale-abono-title" ref={paymentHeading} tabIndex={-1}>{sale.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'} · {sale.cliente}</h2>
+      <div className="sale-detail-title-row"><h2 id="sale-abono-title" ref={paymentHeading} tabIndex={-1}><span className="sale-abono-title-prefix">{sale.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'} · </span>{sale.cliente}</h2>
+        {!desktopView && <span className="sale-payments-header-share" ref={setPaymentShareTarget} />}
         <button type="button" className="sale-detail-close" disabled={saving} onClick={() => setPaymentOpen(false)} aria-label="Cerrar pagos">×</button>
       </div>
       <p>Saldo pendiente: <strong>{money.format(sale.saldo_pendiente)}</strong></p>
-    <SalePaymentsHistory saleId={sale.id_ventas} />
-    {(sale.saldo_pendiente > 0 || uncertain) && <form onSubmit={submit}>
+    <SalePaymentsHistory saleId={sale.id_ventas} onHasPaymentsChange={setHasPayments} mobileShareTarget={!desktopView ? paymentShareTarget : null}
+      mobileAction={(sale.saldo_pendiente > 0 || uncertain) && <button type="button" disabled={saving || (!uncertain && (loading || !!detailError))} onClick={() => setMobilePaymentOpen(true)}>Pagar</button>} />
+    {(sale.saldo_pendiente > 0 || uncertain) && <MobileAbonoDialog active={mobilePaymentOpen} title={sale.cliente} busy={saving} className="sales-page sale-list-page" onClose={() => { if (!busy.current) setMobilePaymentOpen(false) }}><form id={`sale-abono-form-${sale.id_ventas}`} className={`sale-abono-form${hasPayments ? ' payment-form-has-history' : ''}${mobilePaymentOpen ? ' is-mobile-payment-open' : ''}`} onSubmit={submit}>
       <fieldset className="sales-fields" disabled={saving || uncertain || loading || !!detailError}>
-        <legend>Registrar abono en efectivo</legend><div className="sale-payment-fields">
+        <legend className="sale-abono-form-legend">Registrar abono en efectivo</legend><div className="sale-abono-mobile-form-heading"><strong>Registrar abono</strong><span className="sale-abono-mobile-balance">Saldo: <strong>{money.format(sale.saldo_pendiente)}</strong></span></div><div className="sale-payment-fields">
           <label>Monto (Q)<input ref={paymentAmount} inputMode="decimal" value={amount} onChange={event => setAmount(event.target.value)} required maxLength={12} placeholder="0.00" /></label>
           <label>Observación<input value={note} onChange={event => setNote(event.target.value)} maxLength={100} /></label>
-        </div><button type="submit">{saving ? 'Registrando abono…' : 'Registrar abono'}</button>
+        </div><button className="payment-inline-submit" type="submit">{saving ? 'Registrando abono…' : 'Registrar abono'}</button>
       </fieldset>
       {error && <p role="alert">{error}</p>}
-      {uncertain && <button type="submit" disabled={saving}>{saving ? "Consultando abono…" : "Reintentar el mismo abono"}</button>}
-    </form>}
+      {uncertain && <button className="payment-inline-submit" type="submit" disabled={saving}>{saving ? "Consultando abono…" : "Reintentar el mismo abono"}</button>}
+    </form></MobileAbonoDialog>}
     </section>
   </dialog>}
   </>, document.body)

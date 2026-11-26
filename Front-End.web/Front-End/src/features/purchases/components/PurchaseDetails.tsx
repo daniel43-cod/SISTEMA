@@ -1,9 +1,11 @@
+import { MobileAbonoDialog } from '../../../shared/ui/MobileAbonoDialog'
 import { PurchasePaymentsHistory } from './PurchasePaymentsHistory'
 ﻿import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../../shared/api/ApiError'
 import { getPurchaseDetails, payPurchase } from '../api/purchasesApi'
 import { amountCents } from '../utils/purchaseValidation'
+import { createOperationId } from '../../sales/utils/operationId'
 import type { Purchase, PurchaseDetail } from '../types/purchase'
 import { useRef } from 'react'
 
@@ -31,9 +33,12 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
   const dialogRef = useRef<HTMLDialogElement>(null)
   const paymentsDialog = useRef<HTMLDialogElement>(null)
   const paymentsTrigger = useRef<HTMLButtonElement>(null)
+  const [mobilePaymentOpen, setMobilePaymentOpen] = useState(false)
+  const [hasPayments, setHasPayments] = useState(false)
   const [paymentsOpen, setPaymentsOpen] = useState(false)
   useEffect(() => {
     if (!paymentsOpen) return
+    setMobilePaymentOpen(false)
     const dialog = paymentsDialog.current
     dialog?.showModal()
     return () => { dialog?.close(); paymentsTrigger.current?.focus() }
@@ -68,8 +73,12 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
     if (cents === null || cents <= 0 || (!uncertain && cents > Math.round(purchase.saldo_pendiente * 100))) {
       setError('El abono debe ser mayor a cero y no superar el saldo.'); return
     }
-    if (!operation.current) operation.current = { id: crypto.randomUUID(), payment, note }
-    try { sessionStorage.setItem(storageKey, JSON.stringify(operation.current)) }
+    try {
+      if (!operation.current) operation.current = {
+        id: window.matchMedia('(max-width: 800px)').matches ? createOperationId() : crypto.randomUUID(), payment, note,
+      }
+      sessionStorage.setItem(storageKey, JSON.stringify(operation.current))
+    }
     catch { setError('No se pudo conservar la operación para reintentos. Habilita el almacenamiento del navegador.'); return }
     busy.current = true; setSaving(true); setError('')
     try { await payPurchase(token, purchase.id_compra, cents / 100, note, operation.current.id); sessionStorage.removeItem(storageKey); operation.current = null; onPaid() }
@@ -106,19 +115,20 @@ export function PurchaseDetails({ purchase, token, canPay, onClose, onPaid, onUn
   </dialog>
   {paymentsOpen && <dialog ref={paymentsDialog} className="purchases-page purchase-panel purchase-detail-dialog purchase-payments-dialog" aria-labelledby="purchase-payments-title"
     onCancel={event => { event.preventDefault(); if (!busy.current) setPaymentsOpen(false) }}>
-    <div className="purchase-panel-heading"><h2 id="purchase-payments-title">{purchase.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'} · {purchase.nombre_proveedor}</h2>
+    <div className="purchase-panel-heading"><h2 id="purchase-payments-title"><span className="purchase-payments-title-prefix">{purchase.saldo_pendiente > 0 ? 'Abonar' : 'Pagos'} · </span>{purchase.nombre_proveedor}</h2>
       <button type="button" className="purchase-detail-close" aria-label="Cerrar pagos" disabled={saving} onClick={() => setPaymentsOpen(false)}>×</button></div>
-    <p>Saldo pendiente: <strong>{money.format(purchase.saldo_pendiente)}</strong></p>
-    <PurchasePaymentsHistory token={token} purchaseId={purchase.id_compra} onUnauthorized={onUnauthorized} />
+    <p className="purchase-payments-external-balance">Saldo pendiente: <strong>{money.format(purchase.saldo_pendiente)}</strong></p>
+    <PurchasePaymentsHistory token={token} purchaseId={purchase.id_compra} onUnauthorized={onUnauthorized} onHasPaymentsChange={setHasPayments}
+      mobileAction={(purchase.saldo_pendiente > 0 || uncertain) && <button className="purchase-primary" type="button" disabled={saving || (!canPay && !uncertain)} onClick={() => setMobilePaymentOpen(true)}>Pagar</button>} />
     {error && <p role="alert" className="purchase-error">{error}</p>}
     {!canPay && purchase.saldo_pendiente > 0 && !uncertain && <p>Abre la caja para poder abonar la compra.</p>}
-    {(purchase.saldo_pendiente > 0 || uncertain) && <form className="purchase-payment-form" onSubmit={submit}>
+    {(purchase.saldo_pendiente > 0 || uncertain) && <MobileAbonoDialog active={mobilePaymentOpen} title={purchase.nombre_proveedor} busy={saving} className="purchases-page" onClose={() => { if (!busy.current) setMobilePaymentOpen(false) }}><form id={`purchase-abono-form-${purchase.id_compra}`} className={`purchase-payment-form${hasPayments ? ' payment-form-has-history' : ''}${mobilePaymentOpen ? ' is-mobile-payment-open' : ''}`} onSubmit={submit}>
       <fieldset disabled={saving || (!canPay && !uncertain)} className="purchase-fields">
         <legend className="purchase-payment-heading">Registrar abono <span className="purchase-payment-balance">Saldo: <strong>{money.format(purchase.saldo_pendiente)}</strong></span></legend>
         <label>Monto<input inputMode="decimal" readOnly={uncertain} placeholder="Ej. 250.00" value={payment} onChange={e => setPayment(e.target.value)} required /></label>
         <label>Observación<input readOnly={uncertain} maxLength={100} placeholder="Ej. Abono en efectivo (opcional)" value={note} onChange={e => setNote(e.target.value)} /></label>
-        <button className="purchase-primary" type="submit">{saving ? 'Guardando…' : uncertain ? 'Reintentar abono' : 'Registrar abono'}</button>
+        <button className="purchase-primary payment-inline-submit" type="submit">{saving ? 'Guardando…' : uncertain ? 'Reintentar abono' : 'Registrar abono'}</button>
       </fieldset>
-    </form>}
+    </form>{mobilePaymentOpen && error && <p role="alert" className="purchase-error">{error}</p>}</MobileAbonoDialog>}
   </dialog>}</>, document.body)
 }

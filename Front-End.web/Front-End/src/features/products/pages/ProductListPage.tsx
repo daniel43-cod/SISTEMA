@@ -232,11 +232,11 @@ export function ProductListPage({ idMarca, idCategoria, productId, onProductSave
           <table className="product-presentations-table">
             <thead><tr><th scope="col">Presentación</th><th scope="col">Unidades</th><th scope="col">Precio</th><th scope="col">Disponibles</th><th scope="col">Estado</th></tr></thead>
             <tbody>{detail.presentaciones.map(item => <tr key={item.idProductoPresentacion}>
-              <td><strong>{item.descripcion || 'Sin descripción'}</strong></td>
-              <td>{item.unidadesEquivalentes}</td>
-              <td>{money.format(item.precio)}</td>
-              <td>{item.presentacionesDisponibles}</td>
-              <td><span className={`product-stock-status ${item.activa && item.presentacionActiva ? 'is-available' : 'is-empty'}`}>{item.activa && item.presentacionActiva ? 'Activa' : 'Inactiva'}</span></td>
+              <td data-label="Presentación"><strong>{item.descripcion || 'Sin descripción'}</strong></td>
+              <td data-label="Unidades">{item.unidadesEquivalentes}</td>
+              <td data-label="Precio">{money.format(item.precio)}</td>
+              <td data-label="Disponibles">{item.presentacionesDisponibles}</td>
+              <td data-label="Estado"><span className={`product-stock-status ${item.activa && item.presentacionActiva ? 'is-available' : 'is-empty'}`}>{item.activa && item.presentacionActiva ? 'Activa' : 'Inactiva'}</span></td>
             </tr>)}</tbody>
           </table>
         </div>}

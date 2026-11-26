@@ -1,0 +1,60 @@
+.accounts-panel { background: white; border: 1px solid #d3deed; border-radius: 18px; padding: 24px; color: #263747; }
+.accounts-panel h2 { margin: 0 0 20px; }
+.accounts-totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+.accounts-totals article { display: grid; gap: 8px; padding: 16px 20px; background: #eaf4fc; border-radius: 14px; }
+.accounts-totals article:last-child { background: #fff4df; }
+.accounts-totals strong { font-size: 1.5rem; overflow-wrap: anywhere; }
+.accounts-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.accounts-toolbar input { box-sizing: border-box; min-height: 44px; width: min(100%, 340px); border: 1px solid #c4d0e1; border-radius: 10px; padding: 10px 14px; font: inherit; }
+.accounts-panel button { min-height: 44px; border: 1px solid #c4d0e1; border-radius: 10px; background: white; color: #075b96; padding: 8px 14px; font: inherit; cursor: pointer; }
+.accounts-panel button:disabled { opacity: .5; cursor: default; }
+.accounts-tabs { display: flex; gap: 8px; }
+.accounts-tabs button[aria-pressed=true] { background: #075b96; color: white; border-color: #075b96; }
+.accounts-table-scroll { overflow-x: auto; }
+.accounts-panel table { width: 100%; border-collapse: collapse; }
+.accounts-panel th { background: #eaf4fc; color: #075b96; text-align: left; }
+.accounts-panel td, .accounts-panel th { padding: 12px; border-bottom: 1px solid #e7edf5; }
+.accounts-balance { color: #995900; font-weight: 700; }
+.accounts-pagination { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 20px; }
+@media(max-width:800px) {
+  .accounts-panel { padding: 14px; }
+  .accounts-totals { gap: 10px; }
+  .accounts-totals article { padding: 12px; }
+  .accounts-totals strong { font-size: 1.15rem; }
+  .accounts-panel thead { display: none; }
+  .accounts-panel table, .accounts-panel tbody { display: block; }
+  .accounts-panel tr { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; border: 1px solid #d3deed; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .accounts-panel td { display: grid; gap: 4px; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .accounts-panel td::before { content: attr(data-label); font-size: .75rem; color: #64748b; }
+  .accounts-panel td:last-child { grid-column: 1 / -1; }
+  .accounts-toolbar input { flex: 1; min-width: 140px; }
+}
+
+/* Panel con la paginación al pie y desplazamiento de las cuentas. */
+.staff-shell-accounts { height: 100dvh; min-height: 0; overflow: hidden; }
+.staff-shell-accounts .staff-workspace { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
+.staff-shell-accounts .staff-header { flex-shrink: 0; }
+.staff-shell-accounts .staff-content { display: flex; flex-direction: column; flex: 1; min-height: 0; padding-bottom: 16px; overflow: hidden; }
+.accounts-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
+.accounts-panel > * { flex-shrink: 0; }
+.accounts-panel .accounts-table-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; margin-top: 16px; }
+.accounts-pagination { margin-top: auto; padding-top: 16px; flex-shrink: 0; }
+.accounts-pagination button { display: inline-flex; align-items: center; justify-content: center; width: 44px; padding: 0; }
+@media (min-width: 801px) {
+  .accounts-clickable-row { cursor: pointer; }
+  .accounts-clickable-row:hover { background: #f0f7fd; }
+  .accounts-clickable-row:focus-visible { outline: 2px solid #075b96; outline-offset: -2px; background: #f0f7fd; }
+  .accounts-panel .accounts-detail-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; padding: 0; border: 0; background: transparent; }
+}
+@media (max-width: 800px) {
+  .accounts-mobile-cards { display: grid; gap: 8px; list-style: none; margin: 0; padding: 2px; }
+  .accounts-mobile-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(82px, 30%); align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid #dce3eb; border-left: 4px solid #f59e0b; border-radius: 14px; background: white; box-shadow: 0 2px 4px #0f172a0a; }
+  .accounts-mobile-main { display: grid; gap: 5px; min-width: 0; }
+  .accounts-mobile-name { color: #075b96; font-size: .84rem; overflow-wrap: anywhere; }
+  .accounts-mobile-total { color: #075b96; font-size: .9rem; }
+  .accounts-mobile-balance { font-size: .72rem; color: #263747; }
+  .accounts-mobile-options { display: grid; justify-items: center; gap: 2px; min-width: 0; text-align: center; }
+  .accounts-mobile-user { color: #075b96; font-size: .72rem; font-weight: 600; overflow-wrap: anywhere; }
+  .accounts-panel .accounts-mobile-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; }
+  .accounts-mobile-date { color: #7a8492; font-size: .65rem; overflow-wrap: anywhere; }
+}

@@ -1,4 +1,4 @@
-﻿.brand-card { width: 100%; max-width: 560px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: var(--color-surface); }
+.brand-card { width: 100%; max-width: 560px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background: var(--color-surface); }
 .brand-card h2 { margin-top: 0; padding-right: 40px; font-size: 1.4rem; }
 .brand-form { display: grid; gap: 16px; margin-top: 24px; }
 .brand-form .button { justify-self: start; width: auto; min-height: 44px; padding: 8px 12px; font-size: .85rem; }
@@ -111,3 +111,15 @@
   .catalog-editor .brand-preview-column > .brand-preview-panel,
   .catalog-editor .brand-preview-column > .brand-form-footer { grid-column: auto; grid-row: auto; }
 }
+
+@media (max-width: 800px) {
+  .catalog-row-dialog[data-detail-type="marca"] > button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; margin: 6px 8px 0 0; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font: inherit; font-size: .85rem; font-weight: 600; transition: background-color .15s; }
+  .catalog-row-dialog[data-detail-type="marca"] .catalog-detail-edit { background: #075b96; border-color: #075b96; color: white; }
+  .catalog-row-dialog[data-detail-type="marca"] .brand-detail-deactivate { background: #fff1f2; border-color: #fecdd3; color: #b91c1c; }
+  .catalog-row-dialog[data-detail-type="marca"] .brand-detail-activate { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+  .catalog-row-dialog[data-detail-type="marca"] .catalog-detail-close { background: #f1f5f9; border-color: #dce3eb; color: #475569; }
+  .catalog-row-dialog[data-detail-type="marca"] .catalog-row-dialog-heading button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: #f1f5f9; color: #475569; font-size: 1.5rem; }
+  .catalog-row-dialog[data-detail-type="marca"] button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
+  .catalog-row-dialog[data-detail-type="marca"] button:disabled { opacity: .5; cursor: default; }
+}
+

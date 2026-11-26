@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { filterProductNames } from '../../products/api/searchProducts'
 import type { ProductSuggestion } from '../../products/api/searchProducts'
 import type { PurchaseLine } from '../types/purchase'
+import { PurchaseUnitCost } from './PurchaseUnitCost'
 import { amountCents } from '../utils/purchaseValidation'
 
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
@@ -64,6 +65,7 @@ export function MobilePurchaseCart({ products, lines, onChange, onSupplier, tota
     <h3>Carrito ({selected.length})</h3>
     {selected.map(line => <article className="purchase-cart-card" key={line.idProducto}>
       <div><strong>{line.nombre}</strong><strong>{money.format((amountCents(line.total) ?? 0) / 100)}</strong></div>
+      <p>Costo unitario (estimado): <PurchaseUnitCost line={line} /></p>
       <div className="purchase-cart-controls">
         <button type="button" aria-label={'Reducir unidades de ' + line.nombre} onClick={() => quantity(line, -1)}>−</button>
         <strong>{line.cantidad}</strong>
@@ -90,6 +92,7 @@ export function MobilePurchaseCart({ products, lines, onChange, onSupplier, tota
         <h3 id="purchase-cart-editor-title">{draft.nombre}</h3>
         <label>Unidades recibidas<input autoFocus inputMode="numeric" value={draft.cantidad} onChange={e => setDraft({ ...draft, cantidad: e.target.value })} /></label>
         <label>Total de línea (Q)<input inputMode="decimal" value={draft.total} onChange={e => setDraft({ ...draft, total: e.target.value })} /></label>
+        <p>Costo unitario (estimado): <PurchaseUnitCost line={draft} /></p>
         {error && <p role="alert">{error}</p>}
         <div><button type="button" onClick={() => setDraft(null)}>Cancelar</button><button type="button" onClick={finish}>Listo</button></div>
       </section>

@@ -33,7 +33,7 @@ export function CategoryList({ createAction, items, loading, error, reload, onEd
         <RowDetails compact name={item.nombre} type="categoría" image={item.urlImagen ?? null} disabled={editing || loading || pending}
           fields={[{ label: 'Estado', value: item.estado ? 'Activo' : 'Inactivo' }]}
           onEdit={onEdit ? () => onEdit(item) : undefined} editDisabled={!item.estado}
-          actions={onStateChange && <button type="button" disabled={editing || loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar categoría' : 'Activar categoría'}</button>} />
+          actions={onStateChange && <button type="button" className={item.estado ? 'catalog-detail-deactivate' : 'catalog-detail-activate'} disabled={editing || loading || pending} onClick={() => onStateChange(item)}>{item.estado ? 'Desactivar categoría' : 'Activar categoría'}</button>} />
       </li>)}
     </ul>
     <div className="category-table-scroll"><table className="category-table"><thead><tr><th scope="col">Categorías</th><th scope="col">Editar</th><th scope="col">Estado</th></tr></thead><tbody>

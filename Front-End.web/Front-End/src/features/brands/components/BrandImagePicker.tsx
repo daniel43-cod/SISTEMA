@@ -46,7 +46,7 @@ export function BrandImagePicker({ url, file, onChange, disabled, currentImage, 
       
       {file && <p>{file.name}</p>}
       {(file || url || existingImage) && <Button className="brand-secondary" onClick={clearImage}>Quitar imagen</Button>}
-      <small>JPEG, PNG o WebP, hasta 5 MB.</small>
+
       {error && <p className="brand-error" role="alert">{error}</p>}
     </fieldset>
       <div className="brand-preview-column">

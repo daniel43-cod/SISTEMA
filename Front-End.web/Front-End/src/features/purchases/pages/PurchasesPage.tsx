@@ -1,4 +1,4 @@
-﻿import type { PurchaseSummary } from '../api/purchasesApi'
+import type { PurchaseSummary } from '../api/purchasesApi'
 import { MobilePurchaseCart } from '../components/MobilePurchaseCart'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -158,7 +158,7 @@ export function PurchasesPage() {
           {purchaseStep === 'products' && <MobilePurchaseCart products={products} lines={lines} onChange={setLines}
             onClose={closeEditor} onSupplier={() => setPurchaseStep('supplier')} total={totalCents} paid={paid} onPaid={setPaid} saving={saving} />}
           <div className="purchase-table-scroll purchase-entry-cards"><table>
-            <thead><tr><th>Producto</th><th>Unidades recibidas</th><th>Total de línea (Q)</th><th /></tr></thead>
+            <thead><tr><th>Producto</th><th>Unidades recibidas</th><th>Total de línea (Q)</th><th>Costo unitario (estimado)</th><th /></tr></thead>
             <tbody>{lines.map((line, index) => <PurchaseProductRow key={index} line={line} products={products}
               usedIds={lines.filter((_, position) => position !== index).map(row => row.idProducto)} autoFocus={index > 0}
               onChange={updated => setLines(current => current.map((row, position) => position === index ? updated : row))}
@@ -244,11 +244,11 @@ export function PurchasesPage() {
 
           </tr>)}</tbody>
         </table></div>}
-      <nav className="purchase-pagination" aria-label="Páginas de compras">
-        <button type="button" disabled={loading || saving || page === 1} onClick={() => { setSelected(null); setPage(p => p - 1) }}>Anterior</button>
-        <span>Página {page}</span><button type="button" disabled={loading || saving || !!error || !summary?.hayMas}
-          onClick={() => { setSelected(null); setPage(p => p + 1) }}>Siguiente</button>
-      </nav>
+      {(desktopView || page > 1 || summary?.hayMas) && <nav className="purchase-pagination" aria-label={`Páginas de compras, página actual ${page}`}>
+        <button type="button" aria-label="Página anterior" title="Página anterior" disabled={loading || saving || page === 1} onClick={() => { setSelected(null); setPage(p => p - 1) }}>{desktopView ? 'Anterior' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>}</button>
+        {desktopView && <span>Página {page}</span>}<button type="button" aria-label="Página siguiente" title="Página siguiente" disabled={loading || saving || !!error || !summary?.hayMas}
+          onClick={() => { setSelected(null); setPage(p => p + 1) }}>{desktopView ? 'Siguiente' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>}</button>
+      </nav>}
     </section>}
     {!open && <button ref={add} type="button" className="catalog-add-button" aria-label="Registrar nueva compra"
       title="Registrar nueva compra" disabled={saving} onClick={() => { setSelected(null); setPurchaseStep('supplier'); setOpen(true) }}>

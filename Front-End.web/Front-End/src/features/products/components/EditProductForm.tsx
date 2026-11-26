@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../../auth'
 import { useBrands } from '../../brands/hooks/useBrands'
@@ -87,7 +87,7 @@ export function EditProductForm({ product, onSaved, onCancel, onPending, focusPr
                 <option key={item.idPresentacion} value={item.idPresentacion}>{item.descripcion}</option>)}
             </select>}
           </label>
-          <label className="field">Unidades equivalentes<input required type="number" min="1" max="2147483647" step="1" value={row.units} onChange={event => changeRow(row.key, { units: event.target.value })} /></label>
+          <label className="field"><span>Unidades<span className="product-edit-units-desktop"> equivalentes</span></span><input required type="number" min="1" max="2147483647" step="1" value={row.units} onChange={event => changeRow(row.key, { units: event.target.value })} /></label>
           <label className="field">Precio de venta (Q)<input required type="number" min="0.01" step="0.01" value={row.price} onChange={event => changeRow(row.key, { price: event.target.value })} /></label>
           <label><input type="checkbox" checked={row.active} onChange={event => changeRow(row.key, { active: event.target.checked })} /> Activa</label>
           {!row.id && <button type="button" onClick={() => { setPresentationsChanged(true); setRows(previous => previous.filter(item => item.key !== row.key)) }}>Quitar presentación nueva</button>}

@@ -99,7 +99,7 @@ export function InventoryPage() {
       }}>
       <label htmlFor="inventory-search">Producto</label>
         <input id="inventory-search" type="search" maxLength={100} value={query}
-          placeholder="Nombre o código de barras" aria-expanded={suggestionsOpen && query.trim().length >= 3}
+          placeholder={isMobile ? 'Buscar producto' : 'Nombre o código de barras'} aria-expanded={suggestionsOpen && query.trim().length >= 3}
           aria-controls="inventory-suggestions" onFocus={() => setSuggestionsOpen(true)}
           onKeyDown={event => {
             if (event.key === 'Escape') setSuggestionsOpen(false)
