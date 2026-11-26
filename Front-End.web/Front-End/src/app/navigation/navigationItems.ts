@@ -1,6 +1,6 @@
 import type { StaffRole } from '../../features/auth/types/auth.ts'
 
-export type StaffSection = 'ventas' | 'listado-ventas' | 'caja' | 'pedidos' | 'productos' | 'inventario' | 'compras' | 'gastos' | 'cuentas' | 'usuarios' | 'reportes' | 'configuracion'
+export type StaffSection = 'ventas' | 'listado-ventas' | 'caja' | 'pedidos' | 'productos' | 'inventario' | 'compras' | 'gastos' | 'cuentas' | 'clientes' | 'usuarios' | 'reportes' | 'configuracion'
 export type StaffNavigationItem = {
   id: StaffSection
   label: string
@@ -22,6 +22,7 @@ export const staffNavigation: readonly StaffNavigationItem[] = [
   { id: 'compras', label: 'Compras', group: 'Inventario', description: '', roles: admin },
   { id: 'gastos', label: 'Gastos', group: 'Administración', description: 'Registro y consulta de gastos del negocio.', roles: admin },
   { id: 'cuentas', label: 'Cuentas', group: 'Administración', description: '', roles: admin },
+  { id: 'clientes', label: 'Clientes', group: 'Administración', description: '', roles: admin },
   { id: 'usuarios', label: 'Usuarios', group: 'Administración', description: 'Consulta y creación de usuarios internos.', roles: admin },
   { id: 'reportes', label: 'Reportes', group: 'Administración', description: 'Consulta de ventas, caja e inventario.', roles: admin },
   { id: 'configuracion', label: 'Configuración', group: 'Administración', description: 'Datos del negocio, usuarios, roles y permisos.', roles: admin },

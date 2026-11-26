@@ -10,6 +10,7 @@ const paths: Record<StaffSection, string> = {
   compras: 'M5 7h14l1 14H4L5 7ZM9 7V5a3 3 0 0 1 6 0v2',
   cuentas: 'M4 4h16v16H4zM8 8h8M8 12h3M8 16h3M15 12h2M16 11v6',
   gastos: 'M5 3h14v18l-3-2-4 2-4-2-3 2V3ZM8 8h8M8 12h8M8 16h4',
+  clientes: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M17 8h5M17 12h5',
   usuarios: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M20 8v6M17 11h6',
   reportes: 'M4 3v18h17M8 16v-5M13 16V7M18 16V4',
   configuracion: 'M4 7h16M4 17h16M8 4v6M16 14v6',

@@ -62,7 +62,7 @@ namespace API_SISTEMA.Services
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(tipoCuenta == "usuario"
                 //tiempo de expiracion del tocken
-                    ? Math.Min(_jwtSettings.DurationInMinutes, 60) : _jwtSettings.DurationInMinutes),
+                    ? Math.Min(_jwtSettings.DurationInMinutes, 720) : _jwtSettings.DurationInMinutes),
                 signingCredentials: credenciales
             );
 

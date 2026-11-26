@@ -156,6 +156,7 @@ builder.Services.AddScoped<ListarPresentacionService>();
 builder.Services.AddScoped<ActualizarPresentacionService>();
 builder.Services.AddScoped<EstadoPresentacionService>();
 builder.Services.AddScoped<ClienteService>();
+builder.Services.AddScoped<API_SISTEMA.Services.Clientes.HistorialClienteService>();
 
 
 
