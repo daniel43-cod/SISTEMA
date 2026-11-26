@@ -1,3 +1,5 @@
+import { PendingCreation } from '../../../shared/api/PendingCreation'
+import type { CreatePurchase } from '../types/purchase'
 import type { PurchaseSummary } from '../api/purchasesApi'
 import { MobilePurchaseCart } from '../components/MobilePurchaseCart'
 import { RefreshButton } from '../../../shared/ui/RefreshButton'
@@ -19,6 +21,7 @@ import '../../../shared/ui/catalog.css'
 const money = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
 export function PurchasesPage() {
   const { session, logout } = useAuth()
+  const [operation] = useState(() => new PendingCreation<CreatePurchase>('create-purchase-' + session?.user.id))
   const [desktopView, setDesktopView] = useState(() => window.matchMedia('(min-width: 801px)').matches)
   const [search, setSearch] = useState('')
   const [searchApplied, setSearchApplied] = useState('')
@@ -42,16 +45,16 @@ export function PurchasesPage() {
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [page, setPage] = useState(1)
-  const [supplier, setSupplier] = useState('')
-  const [supplierName, setSupplierName] = useState('')
-  const [lines, setLines] = useState<PurchaseLine[]>([{ idProducto: 0, nombre: '', cantidad: '', total: '' }])
-  const [note, setNote] = useState('')
-  const [paid, setPaid] = useState('0')
+  const [supplier, setSupplier] = useState(operation.body?.id_proveedor ? String(operation.body.id_proveedor) : '')
+  const [supplierName, setSupplierName] = useState(operation.body?.nombre_proveedor ?? (operation.body?.id_proveedor ? 'Distribuidora #' + operation.body.id_proveedor : ''))
+  const [lines, setLines] = useState<PurchaseLine[]>(operation.body?.detalle_compra.map(d => ({ idProducto: d.id_producto, nombre: 'Producto #' + d.id_producto, cantidad: String(d.cantidad), total: String(d.precio) })) ?? [{ idProducto: 0, nombre: '', cantidad: '', total: '' }])
+  const [note, setNote] = useState(operation.body?.observacion ?? '')
+  const [paid, setPaid] = useState(String(operation.body?.monto_pagado ?? 0))
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
-  const [uncertain, setUncertain] = useState(false)
+  const [uncertain, setUncertain] = useState(!!operation.body)
   const [selected, setSelected] = useState<Purchase | null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(!!operation.body)
   const [purchaseStep, setPurchaseStep] = useState<'supplier' | 'products'>('supplier')
   const editor = useRef<HTMLElement>(null)
   const add = useRef<HTMLButtonElement>(null)
@@ -88,28 +91,30 @@ export function PurchasesPage() {
   if (session?.user.role !== 'ADMINISTRADOR') return null
   const totalCents = lines.reduce((sum, line) => sum + (amountCents(line.total) ?? 0), 0)
   const paymentCents = amountCents(paid) ?? 0
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: Pick<React.FormEvent<HTMLFormElement>, 'preventDefault'>) {
     event.preventDefault()
-    if (busy.current || uncertain || !token) return
-    if (loading) { setFormError('Espera a que termine la consulta de caja y productos.'); return }
-    if (error) { setFormError('No se pudo verificar la caja o cargar los datos. Reintenta la consulta antes de guardar.'); return }
-    if (!cashOpen) { setFormError('Abre la caja para guardar la compra. Puedes conservar los datos ingresados.'); return }
+    if (busy.current || !token) return
+    if (!operation.body && loading) { setFormError('Espera a que termine la consulta de caja y productos.'); return }
+    if (!operation.body && error) { setFormError('No se pudo verificar la caja o cargar los datos. Reintenta la consulta antes de guardar.'); return }
+    if (!operation.body && !cashOpen) { setFormError('Abre la caja para guardar la compra. Puedes conservar los datos ingresados.'); return }
     let payload
-    try { payload = buildPurchase(supplier, note, paid, lines.filter(line => line.idProducto > 0 || line.nombre.trim()), supplierName) }
+    try { payload = operation.prepare(operation.body ?? buildPurchase(supplier, note, paid, lines.filter(line => line.idProducto > 0 || line.nombre.trim()), supplierName)) }
     catch (failure) { setFormError(failure instanceof Error ? failure.message : 'Revisa la compra.'); return }
     busy.current = true; setSaving(true); setFormError('')
     try {
       await createPurchase(token, payload)
+      operation.complete(); setUncertain(false)
       setLines([{ idProducto: 0, nombre: '', cantidad: '', total: '' }]); setSupplier(''); setSupplierName(''); setNote(''); setPaid('0')
       setPage(1); setRevision(v => v + 1)
       closeEditor()
     } catch (failure) {
       if (failure instanceof ApiError && failure.status === 401) unauthorized()
       else {
-        const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500 ||
+        const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500 || failure.status === 409 || failure.status === 403 ||
           failure.message.includes('No se pudo confirmar')
         setUncertain(ambiguous)
-        setFormError(ambiguous ? 'No se pudo confirmar el registro. Conservamos el formulario. Actualiza el historial y verifica si la compra existe antes de volver a enviarla.'
+        if (!ambiguous) operation.complete()
+        setFormError(ambiguous ? 'No se pudo confirmar la compra. Reintenta la misma operación: no se registrará dos veces.'
           : failure.message)
       }
     } finally { busy.current = false; setSaving(false) }
@@ -180,8 +185,8 @@ export function PurchasesPage() {
         </fieldset>
       </form>
       {formError && <p role="alert" className="purchase-error">{formError}</p>}
-      {uncertain && <button type="button" onClick={() => { setUncertain(false); setFormError('') }}>
-        Ya revisé el historial y la compra no se registró
+      {uncertain && <button type="button" disabled={saving} onClick={() => void submit({ preventDefault() {} })}>
+        Reintentar la misma compra
       </button>}
     </section>}
     {(!open || uncertain) && <section className="purchase-panel purchase-history-panel" aria-label="Compras de la caja activa">

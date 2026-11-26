@@ -105,6 +105,14 @@ namespace API_SISTEMA.Controllers
             {
                 return BadRequest(new { mensaje = ex.Message });
             }
+            catch (VentaConflictoException ex)
+            {
+                return Conflict(new { mensaje = ex.Message });
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.GetBaseException() is Npgsql.PostgresException pg && pg.SqlState == Npgsql.PostgresErrorCodes.UniqueViolation)
+            {
+                return Conflict(new { mensaje = "La operación ya está siendo procesada. Reintenta con la misma clave de operación." });
+            }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 var traceId = HttpContext.TraceIdentifier;

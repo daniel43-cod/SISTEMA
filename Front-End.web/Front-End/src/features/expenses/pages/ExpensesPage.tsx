@@ -1,3 +1,4 @@
+import { PendingCreation } from '../../../shared/api/PendingCreation'
 import { RowDetails } from '../../../shared/ui/RowDetails'
 import { listUsers } from '../../users/api/usersApi'
 import type { StaffUser } from '../../users/api/usersApi'
@@ -15,6 +16,7 @@ import './ExpensesPage.css'
 export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } = {}) {
   const { session, logout } = useAuth()
   const token = session?.token
+  const [operation] = useState(() => new PendingCreation<ReturnType<typeof buildExpense>>('create-expense-' + session?.user.id))
   const [desktopView, setDesktopView] = useState(() => window.matchMedia('(min-width: 801px)').matches)
   useEffect(() => {
     const media = window.matchMedia('(min-width: 801px)')
@@ -49,18 +51,18 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
     dialog?.showModal()
     return () => dialog?.close()
   }, [filtersOpen])
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [note, setNote] = useState('')
+  const [description, setDescription] = useState(operation.body?.descripcion ?? '')
+  const [amount, setAmount] = useState(operation.body ? String(operation.body.monto) : '')
+  const [note, setNote] = useState(operation.body?.observacion ?? '')
   const [loading, setLoading] = useState(true)
   const [cashOpen, setCashOpen] = useState(false)
   const [cashError, setCashError] = useState('')
   const [error, setError] = useState('')
 
   const [saving, setSaving] = useState(false)
-  const [uncertain, setUncertain] = useState(false)
+  const [uncertain, setUncertain] = useState(!!operation.body)
   const [revision, setRevision] = useState(0)
-  const [formOpen, setFormOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(!!operation.body)
   const handledCreateRequest = useRef(0)
   useEffect(() => {
     if (createRequest > handledCreateRequest.current) {
@@ -146,16 +148,17 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
   }, [token, revision, logout])
   if (session?.user.role !== 'ADMINISTRADOR') return null
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: Pick<FormEvent<HTMLFormElement>, 'preventDefault'>) {
     event.preventDefault()
-    if (!token || busy.current || uncertain || loading || !cashOpen || cashError) return
+    if (!token || busy.current || (!operation.body && (loading || !cashOpen || cashError))) return
     setError('')
     let payload
-    try { payload = buildExpense(description, amount, note) }
+    try { payload = operation.prepare(operation.body ?? buildExpense(description, amount, note)) }
     catch (failure) { setError(failure instanceof Error ? failure.message : 'Revisa los datos.'); return }
     busy.current = true; setSaving(true)
     try {
       await createExpense(token, payload)
+      operation.complete(); setUncertain(false)
       if (!alive.current) return
       setDescription(''); setAmount(''); setNote('')
       setFormOpen(false); setPage(1)
@@ -164,9 +167,10 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
       if (!alive.current) return
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
       else {
-        const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500
+        const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500 || failure.status === 409 || failure.status === 403 || failure.status === 200
         setUncertain(ambiguous)
-        setError(ambiguous ? 'No se pudo confirmar el registro. Conservamos los datos. Revisa los movimientos de caja antes de volver a enviar para evitar duplicados.'
+        if (!ambiguous) operation.complete()
+        setError(ambiguous ? 'No se pudo confirmar el gasto. Reintenta la misma operación: no se registrará dos veces.'
           : failure.message)
         setRevision(v => v + 1)
       }
@@ -310,8 +314,8 @@ export function ExpensesPage({ createRequest = 0 }: { createRequest?: number } =
       </fieldset>
     </form>
     {error && <p role="alert" className="expense-error">{error}</p>}
-    {uncertain && <button type="button" onClick={() => { setUncertain(false); setError('') }}>
-      Ya revisé los movimientos y el gasto no se registró
+    {uncertain && <button type="button" disabled={saving} onClick={() => void submit({ preventDefault() {} })}>
+      Reintentar el mismo gasto
     </button>}
     </dialog>
   </section>

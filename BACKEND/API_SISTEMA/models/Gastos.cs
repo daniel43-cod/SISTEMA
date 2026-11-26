@@ -7,6 +7,8 @@ namespace API_SISTEMA.Models
     {
         [Key]
         public int id_gastos { get; set; }
+        public Guid? id_operacion { get; set; }
+        [MaxLength(64)] public string? huella_operacion { get; set; }
         public int id_sesion_caja { get; set; }
         public int id_usuario { get; set; }
         public string descripcion { get; set; } = string.Empty;

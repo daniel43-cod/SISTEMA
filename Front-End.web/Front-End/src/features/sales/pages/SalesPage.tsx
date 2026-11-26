@@ -1,3 +1,4 @@
+import { PendingCreation } from '../../../shared/api/PendingCreation'
 import { catalogSaleLines } from '../utils/catalogSelection'
 import { SaleCatalog } from '../components/SaleCatalog'
 import type { SurtidoCatalogSelection } from '../../public-catalog/types/product'
@@ -66,6 +67,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const productsInView = useRef(false)
   const { session, logout } = useAuth()
   const token = session?.token
+  const [saleOperation] = useState(() => new PendingCreation<Record<string, unknown>>('create-sale-' + session?.user.id))
   const [products, setProducts] = useState<SaleProduct[]>([])
   const [customers, setCustomers] = useState<SaleCustomer[]>([])
   const [loading, setLoading] = useState(true)
@@ -93,7 +95,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   const [receiptSaleId, setReceiptSaleId] = useState<number | null>(null)
-  const [uncertain, setUncertain] = useState(false)
+  const [uncertain, setUncertain] = useState(!order && !!saleOperation.body)
   const busy = useRef(false)
   const operationId = useRef('')
   if (!operationId.current) operationId.current = createOperationId()
@@ -343,24 +345,44 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
             ...(l.product.id_surtido ? { componentes: l.componentes!.map(c => ({ idProducto: c.id_producto, cantidad: c.cantidad })) } : {}) })) }, token)
         setCheckoutOpen(false); setReceiptSaleId(registered.id); return
       }
-      const registered = await createSale({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
+      const registered = await createSale(saleOperation.prepare({ id_operacion: operationId.current, id_cliente: newCustomer ? 0 : Number(customerId),
         ...(newCustomer ? { clienteNuevo: { nombre: name.trim(), apellido: surname.trim() || null, nit: null,
           direccion: address.trim() || null, dpi: null, telefono: phone.trim() || null, correo_electronico: email.trim() || null } } : {}),
         origen: 'MOSTRADOR', observacion: note.trim() || null,
         detalles: lines.map(l => ({ ...(l.product.id_surtido ? { id_surtido: l.product.id_surtido, componentes: l.componentes } : { id_producto: l.product.id_producto }),
           id_producto_presentacion: l.presentation.id_producto_presentacion, cantidad: Number(l.quantity), descuento: cashCents(l.discount?.trim() || '0.00')! / 100 })),
-        pago: { monto: Math.min(receivedCents!, total) / 100, metodo_pago: 'EFECTIVO' } }, token)
+        pago: { monto: Math.min(receivedCents!, total) / 100, metodo_pago: 'EFECTIVO' } }), token)
+      finishSale(registered.id)
+    } catch (failure) {
+      if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
+      const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500 || failure.status === 200
+      const keepOperation = order ? ambiguous : !!saleOperation.body && (ambiguous || (failure instanceof ApiError && (failure.status === 409 || failure.status === 403)))
+      setUncertain(keepOperation)
+      if (!order && !keepOperation) { saleOperation.complete(); operationId.current = createOperationId() }
+      setError(ambiguous ? 'No se pudo confirmar la venta. Conservamos la solicitud: reintenta la misma operación sin duplicarla.'
+        : failure instanceof ApiError && failure.status === 400 ? 'No se pudo registrar. Verifica caja abierta, permiso para vender, presentación activa y existencias; actualiza antes de continuar.' : (failure as Error).message)
+    } finally { busy.current = false; setPending(false) }
+  }
+  function finishSale(id: number) {
+    saleOperation.complete(); setUncertain(false)
       operationId.current = createOperationId()
       setRows([{ key: nextRowKey.current++, text: '', selection: null }]); setPendingRows(new Set()); setReceived(''); setNote(''); selectCustomer(null); setCustomerReset(v => v + 1)
       setRevision(v => v + 1)
       setCheckoutOpen(false)
-      setReceiptSaleId(registered.id)
+      setReceiptSaleId(id)
+  }
+  async function retrySale() {
+    if (!token || busy.current || !saleOperation.body) return
+    busy.current = true; setPending(true); setError('')
+    try {
+      const registered = await createSale(saleOperation.prepare(saleOperation.body), token)
+      finishSale(registered.id)
     } catch (failure) {
       if (failure instanceof ApiError && failure.status === 401) logout('La sesión ya no es válida.')
-      const ambiguous = !(failure instanceof ApiError) || failure.status === 0 || failure.status >= 500 || failure.status === 200
-      setUncertain(ambiguous)
-      setError(ambiguous ? 'No se pudo confirmar la venta. Conservamos los datos. Actualiza y revisa el historial antes de intentar nuevamente.'
-        : failure instanceof ApiError && failure.status === 400 ? 'No se pudo registrar. Verifica caja abierta, permiso para vender, presentación activa y existencias; actualiza antes de continuar.' : (failure as Error).message)
+      if (failure instanceof ApiError && [400, 404, 422].includes(failure.status)) {
+        saleOperation.complete(); operationId.current = createOperationId(); setUncertain(false)
+      }
+      setError(failure instanceof Error ? failure.message : 'No se pudo confirmar la venta. Reintenta la misma operación.')
     } finally { busy.current = false; setPending(false) }
   }
   const customerFields = order ? (
@@ -536,7 +558,7 @@ export function SalesPage({ order, onCancelOrder, onOrderConfirmed }: {
           <div className="sales-checkout"><p className="sales-checkout-total">Total:<strong>{estimated === null ? '—' : money(estimated)}</strong></p><label>Efectivo recibido (Q)<input inputMode="decimal" value={received} placeholder="0.00" onChange={e => setReceived(e.target.value)} /></label><p>Cambio:<strong>{estimated === null ? '—' : money(Math.max(0, (receivedCents ?? 0) - estimated))}</strong></p><button className="sales-primary" type="submit" onClick={checkCustomerBeforeRegister} disabled={!lines.length || customerPending || productPending}>{pending ? 'Registrando…' : order ? 'Confirmar y registrar venta' : 'Registrar venta'}</button></div>
         </fieldset>
       </form>
-      {uncertain && <button type="button" onClick={() => { setUncertain(false); setError('') }}>Ya revisé el historial y confirmé que esta venta no se registró</button>}
+      {uncertain && (order ? <button type="button" onClick={() => { setUncertain(false); setError('') }}>Ya revisé el historial y confirmé que esta venta no se registró</button> : <button type="button" disabled={pending} onClick={() => void retrySale()}>Reintentar la misma venta</button>)}
     </section>
 
     {checkoutOpen && estimated !== null && <SaleCheckoutDialog total={estimated} received={received} onReceived={setReceived} pending={pending}

@@ -80,7 +80,7 @@ static class PostgreSqlIntegration
         catch (VentaConflictoException) { Check(true, "Clave reutilizada con otros datos rechazada"); }
         db.ChangeTracker.Clear();
         Check((await db.ventas.SingleAsync()).saldo_pendiente == 19 && (await db.productos.SingleAsync()).Stock == 18, "Saldo e inventario coherentes");
-        var compra = await new CrearCompraService(db, new MovimientoCajaService(db)).CrearCompra(new() {
+        var compra = await new CrearCompraService(db, new MovimientoCajaService(db)).CrearCompra(new() { id_operacion = Guid.NewGuid(),
             id_proveedor = (await db.proveedores.SingleAsync()).id_proveedor, monto_pagado = 0,
             detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 2, precio = 10m }]
         }, admin.id_usuario);
@@ -122,7 +122,7 @@ static class PostgreSqlIntegration
             catch (Exception e) when (e.GetBaseException() is PostgresException { SqlState: PostgresErrorCodes.LockNotAvailable }) { Check(true, "Bloqueo exclusivo de venta para FEL"); }
             await tx2.RollbackAsync(); await tx1.RollbackAsync();
         }
-        await new API_SISTEMA.Services.Gastos.CrearGastosService(db, new MovimientoCajaService(db)).CrearGasto(new() { descripcion = "Gasto de prueba", monto = 2m }, admin.id_usuario);
+        await new API_SISTEMA.Services.Gastos.CrearGastosService(db, new MovimientoCajaService(db)).CrearGasto(new() { id_operacion = Guid.NewGuid(), descripcion = "Gasto de prueba", monto = 2m }, admin.id_usuario);
         var reporteVentas = await new ReporteVentasIntervaloService(db, TimeProvider.System).ConsultarAcumulado(admin.id_usuario, caja.id_sesion_caja);
         var reporteCompras = await new ReporteComprasService(db, TimeProvider.System).ConsultarCajaActiva(admin.id_usuario);
         var reporteGastos = await new API_SISTEMA.Services.Gastos.ReporteGastosService(db, TimeProvider.System).ConsultarCajaActiva(admin.id_usuario);
@@ -145,7 +145,7 @@ static class PostgreSqlIntegration
         async Task<RegistroCompras> CompraDistribuidora(string? nombre, int? id = null)
         {
             await using var c = new SistemaDbContext(options);
-            return await new CrearCompraService(c, new MovimientoCajaService(c)).CrearCompra(new() {
+            return await new CrearCompraService(c, new MovimientoCajaService(c)).CrearCompra(new() { id_operacion = Guid.NewGuid(),
                 nombre_proveedor = nombre, id_proveedor = id,
                 detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 1, precio = 5 }]
             }, admin.id_usuario);

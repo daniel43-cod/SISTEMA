@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "tsc -p tsconfig.test.json && node --experimental-strip-types --test tests/accounts.test.ts tests/auth.test.ts tests/presentations.test.ts tests/categories.test.ts tests/brands.test.ts tests/products.test.ts tests/surtidos.test.ts tests/cash.test.ts tests/sales.test.ts tests/saleSurtidos.test.ts tests/catalogSurtidos.test.ts tests/customers.test.ts tests/felApi.test.ts tests/saleReceiver.test.ts tests/receptorLookupApi.test.ts tests/purchases.test.ts tests/ticketPos.test.ts tests/felStatuses.test.ts"
+    "test": "tsc -p tsconfig.test.json && node --experimental-strip-types --test tests/idempotencia.test.ts tests/accounts.test.ts tests/auth.test.ts tests/presentations.test.ts tests/categories.test.ts tests/brands.test.ts tests/products.test.ts tests/surtidos.test.ts tests/cash.test.ts tests/sales.test.ts tests/saleSurtidos.test.ts tests/catalogSurtidos.test.ts tests/customers.test.ts tests/felApi.test.ts tests/saleReceiver.test.ts tests/receptorLookupApi.test.ts tests/purchases.test.ts tests/ticketPos.test.ts tests/felStatuses.test.ts"
   },
   "dependencies": {
     "qrcode": "^1.5.4",

@@ -4,6 +4,7 @@
 
     public class IngresarGastoDto : IValidatableObject
     {
+        public Guid id_operacion { get; set; }
      
       
         [Required(ErrorMessage = "La descripción del gasto es obligatoria.")]

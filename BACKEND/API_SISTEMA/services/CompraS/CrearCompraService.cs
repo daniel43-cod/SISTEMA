@@ -47,6 +47,7 @@ namespace API_SISTEMA.Services.Compras
 
             if (idUsuario <= 0) throw new CompraValidationException("El usuario no es valido.");
             ValidarDto(compraDto);
+            if (compraDto.id_operacion == Guid.Empty) throw new CompraValidationException("Debes enviar una clave id_operacion válida para registrar la compra.");
             foreach (var detalle in compraDto.detalle_compra)
             {
                 if (detalle is null) throw new CompraValidationException("Hay un detalle de compra vacio.");
@@ -57,9 +58,21 @@ namespace API_SISTEMA.Services.Compras
 
             if (compraDto.detalle_compra.Count > 100 || compraDto.detalle_compra.Select(d => d.id_producto).Distinct().Count() != compraDto.detalle_compra.Count)
                 throw new CompraValidationException("La compra admite hasta 100 productos sin repetir.");
+            var huella = HuellaOperacion.Calcular(new { compraDto.id_proveedor,
+                nombre = compraDto.nombre_proveedor?.Trim(), observacion = compraDto.observacion?.Trim() ?? "",
+                compraDto.monto_pagado, detalles = compraDto.detalle_compra.OrderBy(d => d.id_producto).Select(d => new { d.id_producto, d.cantidad, d.precio }).ToArray() });
+            async Task<RegistroCompras?> Repetida()
+            {
+                var anterior = await _context.registroCompras.AsNoTracking().SingleOrDefaultAsync(c => c.IdOperacion == compraDto.id_operacion, ct);
+                if (anterior is not null && (anterior.IdUsuario != idUsuario || anterior.HuellaOperacion != huella))
+                    throw new CompraOperacionConflictException();
+                return anterior;
+            }
+            if (await Repetida() is { } original) return original;
             await using var transaccion = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
             // Usa el turno compartido y bloquea el cierre hasta confirmar toda la compra.
             var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.ParaOperacion(_context, ct);
+            if (await Repetida() is { } repetida) return repetida;
             // La consulta y el alta comparten la transacción serializable de la compra.
             // Dos altas concurrentes no pueden confirmar el mismo nombre como nuevo.
             Proveedores? proveedor;
@@ -157,6 +170,7 @@ namespace API_SISTEMA.Services.Compras
                 var ahora = RelojNegocio.Ahora(_reloj);
                 var compra = new RegistroCompras
                 {
+                    IdOperacion = compraDto.id_operacion, HuellaOperacion = huella,
                     IdUsuario = idUsuario,
                     IdSesionCaja = sesionCaja.id_sesion_caja,
                     IdProveedor = proveedor.id_proveedor,

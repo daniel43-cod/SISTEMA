@@ -9,6 +9,8 @@ public static class PostgreSqlConfiguration
     public static void Configurar(ModelBuilder model)
     {
         model.HasDefaultSchema("public");
+        model.Entity<RegistroCompras>().HasIndex(c => c.IdOperacion).IsUnique().HasDatabaseName("UX_registro_compra_id_operacion");
+        model.Entity<Gastos>().HasIndex(g => g.id_operacion).IsUnique().HasDatabaseName("UX_gastos_id_operacion");
         // Identidades de acceso insensibles a mayúsculas; la contraseña conserva comparación exacta.
         model.HasPostgresExtension("citext");
         model.Entity<Usuario>().Property(u => u.usuario).HasColumnType("citext");

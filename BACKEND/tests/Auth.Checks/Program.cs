@@ -211,24 +211,24 @@ try
     foreach (var gastoRoute in new[] { "/api/Gastos/crear", "/CrearGasto" })
     {
         var gastoResponse = await client.PostAsJsonAsync(gastoRoute,
-            new { descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
+            new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
         var gastoBody = await gastoResponse.Content.ReadAsStringAsync();
         Check(gastoResponse.StatusCode == HttpStatusCode.BadRequest && gastoBody.Contains("Abre la caja") &&
             !gastoBody.Contains("detalle") && !gastoBody.Contains("Exception"),
             "Gastos devuelve caja cerrada sin detalles internos: " + gastoRoute);
     }
     Check((await client.PostAsJsonAsync("/api/Gastos/crear",
-        new { descripcion = "Transporte", monto = "inválido", observacion = "Prueba" })).StatusCode == HttpStatusCode.BadRequest,
+        new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = "inválido", observacion = "Prueba" })).StatusCode == HttpStatusCode.BadRequest,
         "Gastos rechaza JSON con monto inválido antes de ejecutar el servicio");
     foreach (var payload in new object[]
     {
         new { descripcion = "   ", monto = 10m },
         new { descripcion = new string('A', 301), monto = 10m },
-        new { descripcion = "Transporte", monto = 0m },
-        new { descripcion = "Transporte", monto = -1m },
-        new { descripcion = "Transporte", monto = 100000000m },
-        new { descripcion = "Transporte", monto = 1.001m },
-        new { descripcion = "Transporte", monto = 10m, observacion = new string('A', 501) }
+        new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = 0m },
+        new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = -1m },
+        new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = 100000000m },
+        new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = 1.001m },
+        new { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = 10m, observacion = new string('A', 501) }
     })
     {
         var invalidExpense = await client.PostAsJsonAsync("/api/Gastos/crear", payload);
@@ -524,7 +524,7 @@ try
             var compras = scope.ServiceProvider.GetRequiredService<API_SISTEMA.Services.Compras.CrearCompraService>();
             var compraDto = new API_SISTEMA.Dtos.Compras.RegistroComprasDto
             { id_proveedor = 1, monto_pagado = 20m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 50m }] };
-            var compra = await compras.CrearCompra(compraDto, 1);
+            compraDto.id_operacion = Guid.NewGuid(); var compra = await compras.CrearCompra(compraDto, 1);
             Check(compra.IdProveedor == 1 && compra.TotalCompra == 50m && compra.SaldoPendiente == 30m && producto.Stock == 5, "Compra usa proveedor, total de linea y stock correcto");
             Check(producto.PrecioPromedioCompra == 10m, "Primera compra calcula costo por unidad con el total de línea");
             Check(await db.pagosCompras.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.detalle_compras.SingleAsync()).subtotal == 50m, "Compra confirma pago, detalle y movimiento");
@@ -553,7 +553,7 @@ try
             Check(compra.SaldoPendiente == 0 && compra.IdEstadoCompra == 1 && await db.movimientocaja.CountAsync() == 2, "Abono liquida compra y actualiza estado y caja");
             var precision = false;
             compraDto.detalle_compra[0].precio = 1.001m;
-            try { await compras.CrearCompra(compraDto, 1); } catch (CompraValidationException) { precision = true; }
+            try { compraDto.id_operacion = Guid.NewGuid(); await compras.CrearCompra(compraDto, 1); } catch (CompraValidationException) { precision = true; }
             Check(precision && await db.registroCompras.CountAsync() == 1, "Compra rechaza mas de dos decimales");
             var listado = await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras();
             Check(listado.Single().nombre_proveedor == "Proveedor prueba", "Listado obtiene proveedor");
@@ -573,7 +573,7 @@ try
             Check(cajaAuditoria.Count == 2 && cajaAuditoria.Any(e => e.Accion == "CAJA_ABIERTA" && e.IdUsuario == 900) && cajaAuditoria.Any(e => e.Accion == "CAJA_CERRADA" && e.IdUsuario == 1), "Auditoria atribuye apertura y cierre a sus responsables reales");
             compraDto.detalle_compra[0].precio = 50m;
             var operacionCerrada = false;
-            try { await compras.CrearCompra(compraDto, 1); } catch (CajaValidationException) { operacionCerrada = true; }
+            try { compraDto.id_operacion = Guid.NewGuid(); await compras.CrearCompra(compraDto, 1); } catch (CajaValidationException) { operacionCerrada = true; }
             Check(operacionCerrada, "Caja cerrada impide registrar compras");
             Check((await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras()).Count == 0,
                 "Listado de compras vacío cuando no hay caja abierta");
@@ -619,8 +619,7 @@ try
             try { await resumenService.ConsultarResumen(sesionCompartida.id_sesion_caja); } catch (CajaValidationException) { rechazoResumen = true; }
             Check(rechazoResumen, "Resumen rechaza movimiento invalido sin ocultarlo fuera del listado");
             // Compras sin pago aíslan el promedio de los movimientos de caja ya comprobados.
-            var compraPromedio = await compras.CrearCompra(new()
-            { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 60m }] }, 1);
+            var compraPromedio = await compras.CrearCompra(new() { id_operacion = Guid.NewGuid(), id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 5, precio = 60m }] }, 1);
             Check(producto.Stock == 10 && producto.PrecioPromedioCompra == 11m,
                 "Nueva compra pondera inventario anterior y costo total recibido");
             var comprasTurno = await scope.ServiceProvider.GetRequiredService<CompraService>().listarcompras();
@@ -628,8 +627,7 @@ try
                 "Listado incluye compra sin pago del turno activo y excluye otros turnos");
             producto.Stock = 2; // Simula unidades restantes después de vender.
             await db.SaveChangesAsync();
-            var compraRestante = await compras.CrearCompra(new()
-            { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 3, precio = 39m }] }, 1);
+            var compraRestante = await compras.CrearCompra(new() { id_operacion = Guid.NewGuid(), id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 3, precio = 39m }] }, 1);
             Check(producto.Stock == 5 && producto.PrecioPromedioCompra == 12.2m,
                 "Promedio usa stock restante, no cantidades de compras históricas");
             await db.detalle_compras.Where(d => d.id_registro_compra == compraPromedio.IdCompra ||
@@ -638,8 +636,7 @@ try
                 c.IdCompra == compraRestante.IdCompra).ExecuteDeleteAsync();
             producto.PrecioPromedioCompra = 0m;
             await db.SaveChangesAsync();
-            var compraSinCosto = await compras.CrearCompra(new()
-            { id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 60, precio = 920m }] }, 1);
+            var compraSinCosto = await compras.CrearCompra(new() { id_operacion = Guid.NewGuid(), id_proveedor = 1, monto_pagado = 0m, detalle_compra = [new() { id_producto = producto.IdProducto, cantidad = 60, precio = 920m }] }, 1);
             Check(producto.Stock == 65 && producto.PrecioPromedioCompra == 15.333333m,
                 "Costo previo cero usa total entre unidades recibidas sin diluirlo con stock anterior");
             await db.detalle_compras.Where(d => d.id_registro_compra == compraSinCosto.IdCompra).ExecuteDeleteAsync();
@@ -651,7 +648,7 @@ try
             await db.Database.ExecuteSqlRawAsync("DROP TABLE movimiento_caja");
             compraDto.detalle_compra[0].precio = 50m;
             var revertida = false;
-            try { await compras.CrearCompra(compraDto, 1); } catch (DbUpdateException) { revertida = true; db.ChangeTracker.Clear(); }
+            try { compraDto.id_operacion = Guid.NewGuid(); await compras.CrearCompra(compraDto, 1); } catch (DbUpdateException) { revertida = true; db.ChangeTracker.Clear(); }
             Check(revertida && await db.registroCompras.CountAsync() == 1 && await db.pagosCompras.CountAsync() == 2 && (await db.productos.AsNoTracking().SingleAsync()).Stock == 5, "Fallo de movimiento revierte compra, pago y stock");
             Check((await db.productos.AsNoTracking().SingleAsync()).PrecioPromedioCompra == 10m,
                 "Fallo de compra conserva el costo promedio anterior");
@@ -794,8 +791,7 @@ try
                 User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "1")], "checks"))
             }
         };
-        var gastoError = (Microsoft.AspNetCore.Mvc.ObjectResult)await gastoController.CrearGasto(new()
-            { descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
+        var gastoError = (Microsoft.AspNetCore.Mvc.ObjectResult)await gastoController.CrearGasto(new() { id_operacion = Guid.NewGuid(), descripcion = "Transporte", monto = 10m, observacion = "Prueba" });
         var gastoJson = JsonSerializer.Serialize(gastoError.Value);
         Check(gastoError.StatusCode == 500 && gastoJson.Contains("traceId") && !gastoJson.Contains("Exception") &&
             !gastoJson.Contains("SQLite") && !gastoJson.Contains("detalle"), "Gastos oculta errores técnicos y devuelve 500");
@@ -810,7 +806,7 @@ sealed class AuthDbContext(DbContextOptions<SistemaDbContext> options) : Sistema
     {
         base.OnModelCreating(modelBuilder);
         foreach (var entity in modelBuilder.Model.GetEntityTypes().ToArray())
-            if (entity.ClrType != typeof(RolPermiso) && entity.ClrType != typeof(TablaPermiso) && entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(ProductoPresentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(API_SISTEMA.Models.Caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
+            if (entity.ClrType != typeof(Gastos) && entity.ClrType != typeof(RolPermiso) && entity.ClrType != typeof(TablaPermiso) && entity.ClrType != typeof(Usuario) && entity.ClrType != typeof(Rol) && entity.ClrType != typeof(AuditoriaEventoDetalle) && entity.ClrType != typeof(AuditoriaEvento) && entity.ClrType != typeof(SesionUsuario) && entity.ClrType != typeof(Presentacion) && entity.ClrType != typeof(Marca) && entity.ClrType != typeof(Categoria) && entity.ClrType != typeof(Productos) && entity.ClrType != typeof(ProductoPresentacion) && entity.ClrType != typeof(RegistroCompras) && entity.ClrType != typeof(Proveedores) && entity.ClrType != typeof(DetalleCompra) && entity.ClrType != typeof(PagosCompra) && entity.ClrType != typeof(EstadoCompra) && entity.ClrType != typeof(SesionCaja) && entity.ClrType != typeof(API_SISTEMA.Models.Caja) && entity.ClrType != typeof(MovimientoCaja) && entity.ClrType != typeof(TipoMovimientoCaja))
                 modelBuilder.Ignore(entity.ClrType);
         modelBuilder.Entity<SesionUsuario>().Property(s => s.RowVersion).IsRowVersion().HasDefaultValue(0u);
         // Las expresiones PostgreSQL se prueban en PostgreSQL; aquí se verifica el flujo HTTP.

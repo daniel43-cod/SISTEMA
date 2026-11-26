@@ -25,7 +25,7 @@ await db.SaveChangesAsync();
 var service = new CrearCompraService(db, new MovimientoCajaService(db));
 int passed = 0;
 void Check(bool ok, string message) { if (!ok) throw new Exception(message); Console.WriteLine("OK " + message); passed++; }
-RegistroComprasDto Request(string? name = null, int? id = null) => new() {
+RegistroComprasDto Request(string? name = null, int? id = null) => new() { id_operacion = Guid.NewGuid(),
     nombre_proveedor = name, id_proveedor = id,
     detalle_compra = [new() { id_producto = 1, cantidad = 2, precio = 10 }]
 };

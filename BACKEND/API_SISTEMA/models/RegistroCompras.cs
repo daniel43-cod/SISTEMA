@@ -11,6 +11,8 @@ namespace API_SISTEMA.Models
         [Key]
         [Column("id_compra")]
         public int IdCompra { get; set; }
+        [Column("id_operacion")] public Guid? IdOperacion { get; set; }
+        [Column("huella_operacion"), MaxLength(64)] public string? HuellaOperacion { get; set; }
 
         [Required]
         [Column("id_proveedor")]

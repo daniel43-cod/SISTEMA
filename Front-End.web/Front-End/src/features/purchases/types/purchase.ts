@@ -8,6 +8,7 @@ export interface PurchaseDetail {
 }
 export interface PurchaseLine { idProducto: number; nombre: string; cantidad: string; total: string }
 export interface CreatePurchase {
+  id_operacion?: string
   id_proveedor?: number; nombre_proveedor?: string; observacion: string | null; monto_pagado: number
   detalle_compra: { id_producto: number; cantidad: number; precio: number }[]
 }

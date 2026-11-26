@@ -1,4 +1,4 @@
-﻿import { requestJson } from '../../../shared/api/httpClient.ts'
+import { requestJson } from '../../../shared/api/httpClient.ts'
 import { ApiError } from '../../../shared/api/ApiError.ts'
 import type { CreatePurchase, CreatedPurchase, Purchase, PurchaseDetail, Supplier } from '../types/purchase.ts'
 
@@ -28,7 +28,7 @@ export async function getPurchaseDetails(token: string, purchaseId: number, sign
       typeof row.nombre_producto === 'string' && id(row.cantidad) && amount(row.subtotal))) throw badResponse()
   return rows
 }
-export async function createPurchase(token: string, body: CreatePurchase): Promise<CreatedPurchase> {
+export async function createPurchase(token: string, body: CreatePurchase & { id_operacion: string }): Promise<CreatedPurchase> {
   const result = await requestJson('/Compra/crear', { method: 'POST', token, body, validationMessages: true })
   if (!object(result) || !id(result.id_compra) || !amount(result.total_compra) || !amount(result.saldo_pendiente) ||
       !Array.isArray(result.productos) || !result.productos.every(p => object(p) && id(p.idProducto) &&

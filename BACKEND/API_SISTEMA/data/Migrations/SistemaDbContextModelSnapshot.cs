@@ -974,6 +974,13 @@ namespace API_SISTEMA.Data.Migrations
                     b.Property<DateTime>("fecha")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<string>("huella_operacion")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("id_operacion")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("id_sesion_caja")
                         .HasColumnType("integer");
 
@@ -988,6 +995,10 @@ namespace API_SISTEMA.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("id_gastos");
+
+                    b.HasIndex("id_operacion")
+                        .IsUnique()
+                        .HasDatabaseName("UX_gastos_id_operacion");
 
                     b.HasIndex("id_sesion_caja");
 
@@ -1565,9 +1576,18 @@ namespace API_SISTEMA.Data.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("fecha_ingreso");
 
+                    b.Property<string>("HuellaOperacion")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("huella_operacion");
+
                     b.Property<int>("IdEstadoCompra")
                         .HasColumnType("integer")
                         .HasColumnName("id_estado_compra");
+
+                    b.Property<Guid?>("IdOperacion")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_operacion");
 
                     b.Property<int>("IdProveedor")
                         .HasColumnType("integer")
@@ -1598,6 +1618,10 @@ namespace API_SISTEMA.Data.Migrations
                     b.HasKey("IdCompra");
 
                     b.HasIndex("IdEstadoCompra");
+
+                    b.HasIndex("IdOperacion")
+                        .IsUnique()
+                        .HasDatabaseName("UX_registro_compra_id_operacion");
 
                     b.HasIndex("IdProveedor");
 

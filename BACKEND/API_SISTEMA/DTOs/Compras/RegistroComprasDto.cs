@@ -4,6 +4,7 @@ namespace API_SISTEMA.Dtos.Compras
 {
     public class RegistroComprasDto : IValidatableObject
     {
+        public Guid id_operacion { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "El valor debe ser mayor que cero.")]
         public int? id_proveedor { get; set; }
         [StringLength(100)]
