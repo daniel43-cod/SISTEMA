@@ -11,6 +11,9 @@ using API_SISTEMA.Utilidades;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
+try { await Run(); } catch (Exception e) { Console.Error.WriteLine(e); Environment.ExitCode = 1; }
+static async Task Run()
+{
 int passed = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception(name); passed++; Console.WriteLine("OK " + name); }
 void Reject(Action run, string name) { try { run(); } catch (ValidationException) { Check(true, name); return; } throw new Exception("No rechazado: " + name); }
@@ -144,7 +147,7 @@ Check(repetida.id_ventas == venta.id_ventas, "Reintento devuelve la misma venta"
 await using (var db = new CheckDb(options)) {
     Check(await db.ventas.CountAsync() == 1 && await db.pagos.CountAsync() == 1 && await db.movimientocaja.CountAsync() == 1 && (await db.productos.SingleAsync()).Stock == 99, "Sin duplicar inventario, cobro ni movimiento");
     var precio = await db.producto_presentaciones.SingleAsync(); precio.precio = 130; await db.SaveChangesAsync();
-    Check((await new DetalleVentaService(db).ListarDetalleVenta(venta.id_ventas)).Single().precio == 120m, "El detalle conserva el precio original");
+    Check((await new DetalleVentaService(db).ListarDetalleVenta(venta.id_ventas, 1)).Single().precio == 120m, "El detalle conserva el precio original");
     var abono = new AbonarSaldoVentaService(db, new MovimientoCajaService(db, relojVenta), Auditoria(db), relojVenta);
     var pagoGuatemala = await abono.AbonarVenta(new() { id_operacion = Guid.NewGuid(), id_venta = venta.id_ventas, monto = 51, observacion = "Prueba" }, 1);
     Check(pagoGuatemala.fecha_pago == RelojNegocio.Ahora(relojVenta), "Abono guarda hora Guatemala del reloj inyectado");
@@ -200,6 +203,8 @@ foreach (var cambio in new Func<Task<Pagos>>[] {
 {
     try { await cambio(); throw new Exception("Clave reutilizada con otros datos aceptada"); }
     catch (VentaConflictoException) { Check(true, "Clave con otros datos rechazada como conflicto"); }
+    catch (UnauthorizedAccessException) { Check(true, "Reintento de usuario no autorizado rechazado"); }
+    catch (KeyNotFoundException) { Check(true, "Reintento de venta inexistente rechazado"); }
 }
 try { await RepetirAbono(Guid.Empty); throw new Exception("Clave vacía aceptada"); }
 catch (ValidationException) { Check(true, "Abono exige clave de operación"); }
@@ -549,7 +554,7 @@ await using (var db = new CheckDb(options))
         .ExecuteUpdateAsync(s => s.SetProperty(p => p.id_sesion_caja, 2));
     await db.sesioncaja.Where(c => c.fecha_cierre == null)
         .ExecuteUpdateAsync(s => s.SetProperty(c => c.fecha_cierre, (DateTime?)DateTime.Now));
-    var historialPagos = await servicioPagos.ListarPorVenta(venta.id_ventas);
+    var historialPagos = await servicioPagos.ListarPorVenta(venta.id_ventas, 1);
     Check(historialPagos.Count == 2 && historialPagos.Sum(p => p.Monto) == 101 &&
         historialPagos.Select(p => p.IdSesionCaja).Distinct().Count() == 2,
         "Historial de pagos: incluye pago inicial y abono de dos sesiones sin caja abierta");
@@ -558,13 +563,13 @@ await using (var db = new CheckDb(options))
     Check(historialPagos.Select(p => p.IdPago).Order().SequenceEqual(idsOriginales.Order()), "Historial de pagos: no omite ni duplica pagos");
     Check(historialPagos.Zip(historialPagos.Skip(1)).All(p => p.First.FechaPago > p.Second.FechaPago ||
         (p.First.FechaPago == p.Second.FechaPago && p.First.IdPago > p.Second.IdPago)), "Historial de pagos: orden estable más recientes primero");
-    Check((await servicioPagos.ListarPorVenta(ventaExtensa.id_ventas)).Count == 0, "Historial de pagos: venta sin pagos devuelve lista vacía");
-    try { await servicioPagos.ListarPorVenta(int.MaxValue); throw new Exception("Venta inexistente aceptada"); }
+    Check((await servicioPagos.ListarPorVenta(ventaExtensa.id_ventas, 1)).Count == 0, "Historial de pagos: venta sin pagos devuelve lista vacía");
+    try { await servicioPagos.ListarPorVenta(int.MaxValue, 1); throw new Exception("Venta inexistente aceptada"); }
     catch (KeyNotFoundException) { Check(true, "Historial de pagos: venta inexistente devuelve no encontrado"); }
-    try { await servicioPagos.ListarPorVenta(0); throw new Exception("ID inválido aceptado"); }
+    try { await servicioPagos.ListarPorVenta(0, 1); throw new Exception("ID inválido aceptado"); }
     catch (ValidationException) { Check(true, "Historial de pagos: valida identificador"); }
     using var cancelPagos = new CancellationTokenSource(); cancelPagos.Cancel();
-    try { await servicioPagos.ListarPorVenta(venta.id_ventas, cancelPagos.Token); throw new Exception("Cancelación ignorada"); }
+    try { await servicioPagos.ListarPorVenta(venta.id_ventas, 1, cancelPagos.Token); throw new Exception("Cancelación ignorada"); }
     catch (OperationCanceledException) { Check(true, "Historial de pagos: respeta cancelación"); }
 }
 await using (var db = new CheckDb(options))
@@ -653,7 +658,10 @@ await using (var db = new CheckDb(options))
     try { await servicio.Consultar(ids, 1, default); throw new Exception("Consulta sin permiso aceptada"); }
     catch (UnauthorizedAccessException) { Check(true, "FEL lista: exige permiso Vender"); }
 }
+await AccesoVentasChecks.Ejecutar(options, Check);
 Console.WriteLine($"{passed} comprobaciones aprobadas; base SQLite temporal, sin conexión a la base del negocio.");
+
+}
 
 sealed class CheckDb(DbContextOptions<SistemaDbContext> options) : SistemaDbContext(options)
 {

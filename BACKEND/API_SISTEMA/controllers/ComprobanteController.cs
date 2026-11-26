@@ -19,6 +19,7 @@ public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
     [HttpGet("ventas/{idVenta:int:min(1)}/opciones-whatsapp")]
     public async Task<IActionResult> OpcionesWhatsApp(int idVenta, CancellationToken ct)
     {
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, idVenta, Usuario(), ct);
         var venta = await db.ventas.AsNoTracking().Include(v => v.cliente).SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct)
             ?? throw new KeyNotFoundException("La venta no existe.");
         var empresas = await db.empresa.AsNoTracking().OrderBy(e => e.id_empresa)
@@ -68,7 +69,7 @@ public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
         [FromQuery] int pagina = 1, CancellationToken ct = default)
     {
         var datos = await Consultar(idVenta, idEmpresa, ct);
-        var pagos = await new API_SISTEMA.Services.PagoService(db).ListarPorVenta(idVenta, ct);
+        var pagos = await new API_SISTEMA.Services.PagoService(db).ListarPorVenta(idVenta, Usuario(), ct);
         var paginas = ComprobanteImagen.PlanificarPagos(datos.Venta, datos.Empresa, pagos);
         if (pagina < 1 || pagina > paginas.Count) return NotFound(new { mensaje = "La página no existe." });
         return File(ComprobanteImagen.Generar(datos.Venta, datos.Empresa, paginas, pagina, true), "image/png");
@@ -80,13 +81,21 @@ public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
     [HttpGet("whatsapp/{idEnvio:guid}")]
     public async Task<IActionResult> EstadoWhatsApp(Guid idEnvio,
         [FromServices] API_SISTEMA.Services.WhatsApp.WhatsAppHistorialService servicio, CancellationToken ct)
-        => Ok(await servicio.Consultar(idEnvio, ct));
+    {
+        var venta = await db.WhatsAppEnvios.AsNoTracking().Where(e => e.id_envio == idEnvio).Select(e => (int?)e.id_venta).SingleOrDefaultAsync(ct)
+            ?? throw new KeyNotFoundException("El envío no existe.");
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, venta, Usuario(), ct);
+        return Ok(await servicio.Consultar(idEnvio, ct));
+    }
 
     [HttpGet("ventas/{idVenta:int:min(1)}/whatsapp/historial")]
     public async Task<IActionResult> Historial(int idVenta, [FromQuery] int idEmpresa,
         [FromServices] API_SISTEMA.Services.WhatsApp.WhatsAppHistorialService servicio, CancellationToken ct,
         [FromQuery] int pagina = 1, [FromQuery] int tamanoPagina = 20)
-        => Ok(await servicio.Historial(idVenta, idEmpresa, ct, pagina, tamanoPagina));
+    {
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, idVenta, Usuario(), ct);
+        return Ok(await servicio.Historial(idVenta, idEmpresa, ct, pagina, tamanoPagina));
+    }
 
     [HttpGet("ventas/{idVenta:int:min(1)}/paginas")]
     public async Task<IActionResult> Paginas(int idVenta, [FromQuery] int idEmpresa, CancellationToken ct)
@@ -109,6 +118,7 @@ public sealed class ComprobanteController(SistemaDbContext db) : ControllerBase
 
     private async Task<(Models.Ventas Venta, Models.Empresa Empresa)> Consultar(int venta, int empresa, CancellationToken ct)
     {
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, venta, Usuario(), ct);
         if (empresa < 1) throw new System.ComponentModel.DataAnnotations.ValidationException("Selecciona idEmpresa.");
         var negocio = await db.empresa.AsNoTracking().SingleOrDefaultAsync(e => e.id_empresa == empresa, ct)
             ?? throw new KeyNotFoundException("La empresa no existe.");

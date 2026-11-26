@@ -16,8 +16,9 @@ namespace API_SISTEMA.Services
 
         }
 
-        public async Task<List<ListarDetalleDto>> ListarDetalleVenta(int id_venta)
+        public async Task<List<ListarDetalleDto>> ListarDetalleVenta(int id_venta, int idUsuario, CancellationToken ct = default)
         {
+            await Ventas.AccesoVenta.Validar(_context, id_venta, idUsuario, ct);
             var detalleVenta = await _context.detalle_Ventas
                 .Where(dv => dv.id_venta == id_venta)
                 .Select(dv => new ListarDetalleDto
@@ -32,7 +33,7 @@ namespace API_SISTEMA.Services
                     cantidad = dv.cantidad,
                     precio = dv.precio
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
             return detalleVenta;
         }
     }

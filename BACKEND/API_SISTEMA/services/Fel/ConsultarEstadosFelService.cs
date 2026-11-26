@@ -17,6 +17,9 @@ public sealed class ConsultarEstadosFelService(SistemaDbContext db, PermisoUsuar
         if (!await permisos.TienePermiso(usuario, Utilidades.Permisos.Vender))
             throw new UnauthorizedAccessException("No tienes permiso para consultar la certificación de ventas.");
         var ambiente = options.Value.Ambiente;
+        var admin = await API_SISTEMA.Services.Ventas.AccesoVenta.EsAdministrador(db, usuario, ct);
+        if (!admin && await db.ventas.AsNoTracking().AnyAsync(v => ids.Contains(v.id_ventas) && v.id_usuario != usuario, ct))
+            throw new UnauthorizedAccessException("Solo puedes acceder a tus propias ventas.");
         // Proyección de metadatos en una sola consulta: no carga XML, intentos ni respuestas.
         var estados = await db.ventas.AsNoTracking().Where(v => ids.Contains(v.id_ventas)).OrderBy(v => v.id_ventas)
             .Select(v => new EstadoVentaFelLista(v.id_ventas,

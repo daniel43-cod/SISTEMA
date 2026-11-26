@@ -54,7 +54,7 @@ public sealed class WhatsAppHistorialService(SistemaDbContext db, WhatsAppClient
     public async Task<WhatsAppHistorialResultado> IniciarPagos(Models.Ventas venta, Empresa empresa, int usuario,
         CancellationToken ct, string? telefonoTemporal = null)
     {
-        var pagos = await new PagoService(db).ListarPorVenta(venta.id_ventas, ct);
+        var pagos = await new PagoService(db).ListarPorVenta(venta.id_ventas, usuario, ct);
         if (pagos.Count == 0) throw new ValidationException("Esta venta aún no tiene pagos registrados.");
         return await IniciarImagenes(venta, empresa, usuario, ct, telefonoTemporal,
             ComprobanteImagen.PlanificarPagos(venta, empresa, pagos), true);

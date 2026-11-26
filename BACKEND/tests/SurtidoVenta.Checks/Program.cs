@@ -47,7 +47,7 @@ static async Task Run()
         dto.detalles[0].componentes![0].cantidad = 4;
         try { await f.Sell(dto); throw new Exception("Reutilizó clave modificada"); }
         catch (VentaConflictoException) { Check(true, "Misma clave con composición distinta devuelve conflicto"); }
-        var detail = (await new DetalleVentaService(f.Db).ListarDetalleVenta(v.id_ventas)).Single();
+        var detail = (await new DetalleVentaService(f.Db).ListarDetalleVenta(v.id_ventas, 1)).Single();
         Check(detail.id_surtido == 1 && detail.id_producto is null && detail.componentes.Count == 2 && detail.nombre_producto == "Surtido", "Detalle devuelve nombre y composición");
         var stored = await f.Db.ventas.AsNoTracking().Include(s => s.cliente).Include(s => s.usuario)
             .Include(s => s.DetalleVentas).ThenInclude(d => d.Surtido)

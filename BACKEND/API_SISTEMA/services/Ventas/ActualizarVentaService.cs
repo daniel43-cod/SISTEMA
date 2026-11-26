@@ -20,6 +20,7 @@ public class ActualizarVentaService(SistemaDbContext context)
         var permisos = new API_SISTEMA.Services.Permisos.PermisoUsuarioService(context);
         if (!await permisos.TienePermiso(idUsuario, API_SISTEMA.Utilidades.Permisos.Vender)) throw new UnauthorizedAccessException("No tienes permiso para vender.");
         await using var tx = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        await AccesoVenta.Validar(context, idVenta, idUsuario, ct);
         await CajaSesionActual.ParaOperacion(context, ct);
         var venta = await context.ventas.Include(v => v.DetalleVentas).ThenInclude(d => d.ComponentesSurtido).SingleOrDefaultAsync(v => v.id_ventas == idVenta, ct)
             ?? throw new KeyNotFoundException("La venta no existe.");

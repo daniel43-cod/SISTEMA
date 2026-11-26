@@ -13,6 +13,7 @@ public sealed class EditarReceptorVentaService(SistemaDbContext db, PermisoUsuar
     {
         if (!await permisos.TienePermiso(usuario, Utilidades.Permisos.Vender)) throw new UnauthorizedAccessException("No tienes permiso para editar el receptor.");
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        await AccesoVenta.Validar(db, idVenta, usuario, ct);
         var venta = await db.ventas.FromSqlInterpolated($"SELECT * FROM public.ventas WHERE id_ventas = {idVenta} FOR UPDATE")
             .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
         if (await db.DocumentosFel.AnyAsync(d => d.id_venta == idVenta && d.estado != "RECHAZADA", ct))

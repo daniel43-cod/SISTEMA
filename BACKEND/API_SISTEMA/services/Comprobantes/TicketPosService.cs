@@ -11,6 +11,7 @@ public sealed class TicketPosService(SistemaDbContext db, PermisoUsuarioService 
     public async Task<TicketPosDto> Obtener(int idVenta, int usuario, CancellationToken ct)
     {
         if (!await permisos.TienePermiso(usuario, Utilidades.Permisos.Vender)) throw new UnauthorizedAccessException("No tienes permiso para imprimir ventas.");
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, idVenta, usuario, ct);
         var venta = await db.ventas.AsNoTracking().Include(v => v.usuario).Include(v => v.cliente)
             .Include(v => v.DetalleVentas).ThenInclude(d => d.Producto)
             .Include(v => v.DetalleVentas).ThenInclude(d => d.Surtido)

@@ -18,11 +18,9 @@ namespace API_SISTEMA.Services
             _context = context;
         }
 
-        public async Task<List<PagoVentaHistorialDto>> ListarPorVenta(int idVenta, CancellationToken ct = default)
+        public async Task<List<PagoVentaHistorialDto>> ListarPorVenta(int idVenta, int idUsuario, CancellationToken ct = default)
         {
-            if (idVenta <= 0) throw new ValidationException("El identificador de la venta debe ser mayor a cero.");
-            if (!await _context.ventas.AsNoTracking().AnyAsync(v => v.id_ventas == idVenta, ct))
-                throw new KeyNotFoundException("La venta no existe.");
+            await Ventas.AccesoVenta.Validar(_context, idVenta, idUsuario, ct);
 
             // Incluye pago inicial y abonos; no depende de la sesión abierta ni de quién abrió la caja.
             return await _context.pagos.AsNoTracking().Where(p => p.id_venta == idVenta)

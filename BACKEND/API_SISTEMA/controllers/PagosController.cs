@@ -1,4 +1,5 @@
-﻿using API_SISTEMA.Services;
+using System.Security.Claims;
+using API_SISTEMA.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,7 +14,8 @@ namespace API_SISTEMA.Controllers
     [TypeFilter(typeof(VentaExceptionFilter))]
     public class PagosController : ControllerBase
     {
-            private readonly PagoService _service;
+        private int Usuario() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id > 0 ? id : throw new UnauthorizedAccessException("No se pudo identificar al usuario.");
+        private readonly PagoService _service;
 
             public PagosController(PagoService service)
             {
@@ -27,7 +29,7 @@ namespace API_SISTEMA.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListarPorVenta(int idVenta, CancellationToken ct = default)
-            => Ok(await _service.ListarPorVenta(idVenta, ct));
+            => Ok(await _service.ListarPorVenta(idVenta, Usuario(), ct));
 
            
 

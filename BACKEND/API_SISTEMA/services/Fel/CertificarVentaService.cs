@@ -50,6 +50,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
     public async Task<EstadoFacturaFel?> Consultar(int idVenta, int usuario, CancellationToken ct)
     {
         await Autorizar(usuario);
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, idVenta, usuario, ct);
         if (!await db.ventas.AnyAsync(v => v.id_ventas == idVenta, ct)) throw new KeyNotFoundException("La venta no existe.");
         var documento = await db.DocumentosFel.AsNoTracking()
             .SingleOrDefaultAsync(d => d.id_venta == idVenta && d.ambiente == options.Value.Ambiente, ct);
@@ -65,6 +66,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
     public async Task<object> Preparar(int idVenta, int usuario, CancellationToken ct)
     {
         await Autorizar(usuario);
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, idVenta, usuario, ct);
         return await db.ventas.AsNoTracking().Where(v => v.id_ventas == idVenta)
             .Select(v => new { v.total, v.tipo_identificacion_receptor, v.identificacion_receptor, v.nombre_receptor })
             .SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("La venta no existe.");
@@ -79,6 +81,7 @@ public sealed class CertificarVentaService(SistemaDbContext db, InfileClient inf
     private async Task<EstadoFacturaFel> Procesar(int idVenta, CertificarVentaDto dto, int usuario, bool recuperar, CancellationToken ct)
     {
         await Autorizar(usuario);
+        await API_SISTEMA.Services.Ventas.AccesoVenta.Validar(db, idVenta, usuario, ct);
         var config = options.Value;
         if (!config.Habilitado) throw new ValidationException("La integración FEL está deshabilitada.");
         // Habilitar producción después de validar XSD, reglas fiscales y pruebas integrales.

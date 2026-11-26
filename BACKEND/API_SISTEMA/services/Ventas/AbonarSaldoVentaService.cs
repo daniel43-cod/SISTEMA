@@ -17,6 +17,7 @@ public class AbonarSaldoVentaService(SistemaDbContext context, MovimientoCajaSer
     {
         if (dto is null || dto.id_venta <= 0) throw new ValidationException("La venta es obligatoria.");
         if (dto.id_operacion == Guid.Empty) throw new ValidationException("Debes enviar una clave id_operacion válida para registrar el abono.");
+        await AccesoVenta.Validar(context, dto.id_venta, idUsuario, ct);
         var observacion = dto.observacion?.Trim();
         async Task<Pagos?> Repetida()
         {

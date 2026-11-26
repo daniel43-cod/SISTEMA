@@ -18,6 +18,7 @@ namespace API_SISTEMA.Services.Ventas
 
         public async Task<List<VentaBuscarDto>> BuscarVentasClienteCajaActiva(  int idUsuario, int idCliente)
         {
+            var admin = await AccesoVenta.EsAdministrador(_context, idUsuario);
             // Consulta del turno compartido; el responsable de cada operacion se conserva.
             var sesionCaja = await API_SISTEMA.Services.Caja.CajaSesionActual.Consultar(_context);
 
@@ -28,7 +29,7 @@ namespace API_SISTEMA.Services.Ventas
                 .AsNoTracking()
                 .Where(v =>
                     v.id_sesion_caja == sesionCaja.id_sesion_caja &&
-                    v.id_cliente == idCliente)
+                    v.id_cliente == idCliente && (admin || v.id_usuario == idUsuario))
                 .Select(v => new VentaBuscarDto
                 {
                     id_venta = v.id_ventas,
