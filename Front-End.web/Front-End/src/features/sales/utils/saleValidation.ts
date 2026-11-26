@@ -1,5 +1,5 @@
 export type SalePresentation = { id_producto_presentacion: number; presentacion: string; unidades_equivalentes: number; precio: number }
-export type SaleProduct = { id_producto: number; id_surtido?: number; bloqueo?: string | null; nombre: string; stock: number; presentaciones: SalePresentation[];
+export type SaleProduct = { id_producto: number; id_surtido?: number; bloqueo?: string | null; imagen?: string | null; nombre: string; stock: number; presentaciones: SalePresentation[];
   componentes?: { id_producto: number; nombre: string; stock: number }[] }
 export type SaleComponent = { id_producto: number; cantidad: number }
 export type SaleLine = { product: SaleProduct; presentation: SalePresentation; quantity: string; discount?: string; componentes?: SaleComponent[] }

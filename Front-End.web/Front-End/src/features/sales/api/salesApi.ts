@@ -24,7 +24,7 @@ export async function loadSaleProducts(token: string, signal?: AbortSignal): Pro
   const mixed: SaleProduct[] = []
   for (let page = 1; page <= 100000; page++) {
     const result = await requestJson(`/Venta/surtidos?pagina=${page}&tamanoPagina=100`, { token, signal })
-    if (!Array.isArray(result) || !result.every(p => record(p) && id(p.id_surtido) && p.id_producto === 0 && typeof p.nombre === 'string' &&
+    if (!Array.isArray(result) || !result.every(p => record(p) && id(p.id_surtido) && p.id_producto === 0 && typeof p.nombre === 'string' && (p.imagen === undefined || p.imagen === null || typeof p.imagen === 'string') &&
         Number.isSafeInteger(p.stock) && (p.bloqueo === null || typeof p.bloqueo === 'string') && Array.isArray(p.componentes) &&
         p.componentes.every(c => record(c) && id(c.id_producto) && typeof c.nombre === 'string' && Number.isSafeInteger(c.stock) && Number(c.stock) >= 0) &&
         Array.isArray(p.presentaciones) && p.presentaciones.every(v => record(v) && id(v.id_producto_presentacion) && typeof v.presentacion === 'string' && id(v.unidades_equivalentes) && amount(v.precio))))
@@ -38,7 +38,7 @@ async function loadNormalSaleProducts(token: string, signal?: AbortSignal): Prom
   const products: SaleProduct[] = []
   for (let page = 1; page <= 100000; page++) {
   const result = await requestJson(`/Venta/catalogo?pagina=${page}&tamanoPagina=100`, { token, signal })
-  if (!Array.isArray(result) || !result.every(p => record(p) && id(p.id_producto) && typeof p.nombre === 'string' &&
+  if (!Array.isArray(result) || !result.every(p => record(p) && id(p.id_producto) && typeof p.nombre === 'string' && (p.imagen === undefined || p.imagen === null || typeof p.imagen === 'string') &&
     Number.isSafeInteger(p.stock) && Array.isArray(p.presentaciones) && p.presentaciones.every(v => record(v) &&
       id(v.id_producto_presentacion) && typeof v.presentacion === 'string' && id(v.unidades_equivalentes) && amount(v.precio))))
     throw new ApiError('El catálogo de ventas no tiene el formato esperado.')

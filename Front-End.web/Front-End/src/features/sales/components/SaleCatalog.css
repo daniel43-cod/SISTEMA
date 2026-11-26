@@ -48,3 +48,7 @@
 .sale-catalog-brand-options button[aria-pressed=true] { background: #075b96; border-color: #075b96; color: white; font-weight: 650; }
 .sale-catalog-brand-options button:focus-visible { outline: 2px solid #075b96; outline-offset: 2px; }
 .sale-catalog-brand-switcher p { margin: 0 0 8px; font-size: .85rem; }
+.sale-catalog-search { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.sale-catalog-search input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 10px 14px; border: 1px solid #cbd8e8; border-radius: 10px; color: #263747; background: white; font: inherit; }
+.sale-catalog-search button { flex-shrink: 0; width: 44px; border: 0; border-radius: 10px; background: #f1f5f9; color: #475569; font-size: 1.5rem; }
+.sale-catalog-search-status { margin: 0 0 14px; color: #526477; font-size: .85rem; }

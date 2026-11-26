@@ -1,3 +1,4 @@
+import { searchCatalogProducts, catalogSearchCards } from '../utils/catalogSearch'
 import { useEffect, useId, useRef, useState } from 'react'
 import { CatalogCategoriesList } from '../../public-catalog/components/CatalogCategoriesList'
 import { CatalogProductCard } from '../../public-catalog/components/CatalogProductCard'
@@ -20,8 +21,21 @@ type Props = {
   onAddSurtidos: (idSurtido: number, selections: SurtidoCatalogSelection[]) => string | null
   onClose: () => void
 }
-function SaleCatalogProducts({ brandId, options, lines, disabled, onAdd, onAddSurtidos }: Omit<Props, 'onClose'> & { brandId: number }) {
-  const { items, surtidos, pagina, hayMas, loading, error, reload, setPagina } = usePublicProducts(brandId)
+function SaleCatalogProducts({ brandId, ...props }: Omit<Props, 'onClose'> & { brandId: number }) {
+  const page = usePublicProducts(brandId)
+  return <SaleCatalogCards {...props} {...page} />
+}
+function SaleCatalogSearchResults({ query, ...props }: Omit<Props, 'onClose'> & { query: string }) {
+  const [pagina, setPagina] = useState(1)
+  const results = searchCatalogProducts(props.options, query)
+  const cards = catalogSearchCards(results.slice((pagina - 1) * 24, pagina * 24))
+  return <>
+    <p role="status" className="sale-catalog-search-status">{results.length} {results.length === 1 ? 'resultado' : 'resultados'} en todo el catálogo</p>
+    <SaleCatalogCards {...props} {...cards} pagina={pagina} setPagina={setPagina} hayMas={pagina * 24 < results.length} loading={false} error="" reload={() => {}} />
+  </>
+}
+function SaleCatalogCards({ items, surtidos, pagina, hayMas, loading, error, reload, setPagina, options, lines, disabled, onAdd, onAddSurtidos }:
+  Omit<Props, 'onClose'> & ReturnType<typeof usePublicProducts>) {
   const [quantities, setQuantities] = useState<Record<number, string>>({})
   const [message, setMessage] = useState('')
   const [addError, setAddError] = useState('')
@@ -113,6 +127,8 @@ function BrandSwitcher({ categoryId, selectedId, disabled, onSelect }: {
 }
 export function SaleCatalog({ onClose, ...props }: Props) {
   const categories = usePublicCategories()
+  const [search, setSearch] = useState('')
+  const query = search.trim()
   const toolbarRef = useRef<HTMLElement>(null)
   useEffect(() => {
 
@@ -155,18 +171,22 @@ export function SaleCatalog({ onClose, ...props }: Props) {
         </button>
         {categoryMenuOpen && <ul id={categoryMenuId} className="sale-catalog-category-list" aria-label="Categorías">
           {categories.items.map(item => <li key={item.idCategoria}><button type="button" aria-pressed={category.idCategoria === item.idCategoria} onClick={() => {
-            setBrand(null); setCategory(item); setCategoryMenuOpen(false)
+            setBrand(null); setCategory(item); setCategoryMenuOpen(false); setSearch('')
           }}>{item.nombre}</button></li>)}
         </ul>}
       </div>}
       <button type="button" className="sale-catalog-back" onClick={onClose}>Ver venta</button>
     </header>
     <div className="sale-catalog-content">
+      <div className="sale-catalog-search"><input type="search" aria-label="Buscar producto en todo el catálogo" placeholder="Buscar producto" maxLength={200}
+        value={search} disabled={props.disabled} onChange={event => setSearch(event.target.value)} />
+        {query && <button type="button" disabled={props.disabled} aria-label="Limpiar búsqueda" title="Limpiar búsqueda" onClick={() => setSearch('')}>×</button>}
+      </div>
       <div className={`sale-catalog-heading${!category ? ' is-categories' : !brand ? ' is-brands' : ' is-products'}`}>
         <h1 ref={titleRef} tabIndex={-1} id={titleId}>{brand ? 'Productos de ' + brand.nombre : category ? 'Marcas de ' + category.nombre : 'Categorías'}</h1>
       </div>
-      {category && brand && <BrandSwitcher key={category.idCategoria} categoryId={category.idCategoria} selectedId={brand.idMarca} disabled={props.disabled} onSelect={setBrand} />}
-      {brand ? <SaleCatalogProducts key={brand.idMarca} brandId={brand.idMarca} {...props} />
+      {!query && category && brand && <BrandSwitcher key={category.idCategoria} categoryId={category.idCategoria} selectedId={brand.idMarca} disabled={props.disabled} onSelect={setBrand} />}
+      {query ? <SaleCatalogSearchResults key={query} query={query} {...props} /> : brand ? <SaleCatalogProducts key={brand.idMarca} brandId={brand.idMarca} {...props} />
         : category ? <PublicBrandsList key={category.idCategoria} idCategoria={category.idCategoria} onSelect={setBrand} />
         : categories.loading ? <p role="status">Cargando categorías…</p>
         : categories.error ? <div role="alert"><p>{categories.error}</p><button type="button" onClick={categories.reload}>Reintentar</button></div>
