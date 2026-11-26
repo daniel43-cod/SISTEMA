@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API_SISTEMA.Services.Clientes;
 
-public sealed class HistorialClienteService(SistemaDbContext db)
+public sealed class HistorialClienteService(SistemaDbContext db, TimeProvider? reloj = null)
 {
     private async Task Administrador(int usuario, CancellationToken ct)
     {
@@ -52,15 +52,23 @@ public sealed class HistorialClienteService(SistemaDbContext db)
             totales?.Pagado ?? 0, totales?.Saldo ?? 0);
     }
 
-    public async Task<ClienteVentasPagina> Historial(int usuario, int idCliente, PaginaClientesFiltro filtro, CancellationToken ct = default)
+    public async Task<ClienteVentasPagina> Historial(int usuario, int idCliente, HistorialClientesFiltro filtro, CancellationToken ct = default)
     {
         await Administrador(usuario, ct);
         ValidarId(idCliente);
         ArgumentNullException.ThrowIfNull(filtro);
         Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
+        var hoy = DateOnly.FromDateTime(API_SISTEMA.Utilidades.RelojNegocio.Ahora(reloj));
+        if (filtro.Fecha is { } fecha && (fecha > hoy || fecha == DateOnly.MaxValue))
+            throw new ValidationException("La fecha no puede ser posterior a hoy.");
+        var hasta = filtro.Fecha ?? hoy;
+        var desde = filtro.Fecha ?? hoy.AddDays(-29);
+        var inicio = desde.ToDateTime(TimeOnly.MinValue);
+        var finExclusivo = hasta.AddDays(1).ToDateTime(TimeOnly.MinValue);
         if (!await db.cliente.AsNoTracking().AnyAsync(c => c.id_cliente == idCliente, ct))
             throw new KeyNotFoundException("El cliente no existe.");
-        var consulta = db.ventas.AsNoTracking().Where(v => v.id_cliente == idCliente);
+        var consulta = db.ventas.AsNoTracking().Where(v => v.id_cliente == idCliente
+            && v.fecha_venta >= inicio && v.fecha_venta < finExclusivo);
         var total = await consulta.CountAsync(ct);
         var items = await consulta.OrderByDescending(v => v.fecha_venta).ThenByDescending(v => v.id_ventas)
             .Skip((filtro.Pagina - 1) * filtro.TamanoPagina).Take(filtro.TamanoPagina)
@@ -68,6 +76,31 @@ public sealed class HistorialClienteService(SistemaDbContext db)
                 (v.usuario.nombre + " " + v.usuario.apellido).Trim(), v.total, v.monto_pagado,
                 v.saldo_pendiente, v.id_estado_venta, v.EstadoVenta.descripcion ?? "", v.usuario.nombre)).ToListAsync(ct);
         return new(idCliente, total, filtro.Pagina, filtro.TamanoPagina, (long)filtro.Pagina * filtro.TamanoPagina < total, items);
+    }
+
+    public async Task<ClienteResumen> Actualizar(int usuario, int idCliente, ActualizarClienteDto datos, CancellationToken ct = default)
+    {
+        await Administrador(usuario, ct);
+        ValidarId(idCliente);
+        ArgumentNullException.ThrowIfNull(datos);
+        Validator.ValidateObject(datos, new ValidationContext(datos), true);
+        var nombre = datos.Nombre.Trim();
+        if (nombre.Length == 0) throw new ValidationException("Ingresa el nombre del cliente.");
+        static string? Opcional(string? valor) => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        var correo = Opcional(datos.CorreoElectronico);
+        if (correo is not null && !new EmailAddressAttribute().IsValid(correo))
+            throw new ValidationException("Ingresa un correo electrónico válido.");
+        var cliente = await db.cliente.SingleOrDefaultAsync(c => c.id_cliente == idCliente, ct)
+            ?? throw new KeyNotFoundException("El cliente no existe.");
+        cliente.nombre = nombre;
+        cliente.apellido = Opcional(datos.Apellido);
+        cliente.nit = Opcional(datos.Nit);
+        cliente.dpi = Opcional(datos.Dpi);
+        cliente.telefono = Opcional(datos.Telefono);
+        cliente.correo_electronico = correo;
+        cliente.direccion = Opcional(datos.Direccion);
+        await db.SaveChangesAsync(ct);
+        return await Resumen(usuario, idCliente, ct);
     }
 
     private static void ValidarId(int id)

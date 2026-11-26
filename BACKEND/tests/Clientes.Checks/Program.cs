@@ -27,7 +27,7 @@ static async Task Run()
     var sellerRole = await db.Set<Rol>().FirstAsync(r => r.nombre == Roles.Vendedor);
     var seller = new Usuario { nombre = "Historial", apellido = "Vendedor", usuario = "historial-clientes-test", telefono = "123", estado = true, rol = sellerRole };
     db.Add(seller); await db.SaveChangesAsync();
-    var service = new HistorialClienteService(db);
+    var service = new HistorialClienteService(db, new FixedClock());
     var c = new Cliente { nombre = "PRUEBAHISTCLIENTE", apellido = "Apellido", nit = "NITHIST887", telefono = "TELHIST887", estado = true };
     var empty = new Cliente { nombre = "PRUEBAHISTCLIENTE sin ventas", estado = false };
     var other = new Cliente { nombre = "OTRO cliente", estado = true };
@@ -73,8 +73,61 @@ static async Task Run()
     await Reject<ValidationException>(() => service.Listar(admin.id_usuario, new() { Buscar = new string('x', 101) }));
     await Reject<ValidationException>(() => service.Historial(admin.id_usuario, c.id_cliente, new() { TamanoPagina = 101 }));
     await Reject<ValidationException>(() => service.Historial(admin.id_usuario, c.id_cliente, new() { TamanoPagina = 0 }));
+    Ventas Dated(DateTime when) => new() { cliente = c, id_usuario = admin.id_usuario, sesionCaja = closed,
+        id_estado_venta = state, origen = "LOCAL", fecha_venta = when, total = 10, saldo_pendiente = 10 };
+    db.AddRange(Dated(new(2025, 12, 31, 23, 59, 59)), Dated(new(2026, 1, 30, 23, 59, 59)), Dated(new(2026, 1, 31)));
+    await db.SaveChangesAsync();
+    var recent = await service.Historial(admin.id_usuario, c.id_cliente, new());
+    Check(recent.TotalRegistros == 33 && recent.Items[0].Fecha == new DateTime(2026, 1, 30, 23, 59, 59), "Últimos 30 días completos en Guatemala, incluyendo hoy");
+    Check((await service.Historial(admin.id_usuario, c.id_cliente, new() { Fecha = new(2026, 1, 1) })).TotalRegistros == 32, "Día seleccionado incluye todas sus ventas");
+    var old = await service.Historial(admin.id_usuario, c.id_cliente, new() { Fecha = new(2025, 12, 31) });
+    Check(old.TotalRegistros == 1 && old.Items[0].Fecha.Day == 31, "Calendario permite consultar días anteriores a los últimos 30");
+    Check((await service.Historial(admin.id_usuario, c.id_cliente, new() { Fecha = new(2026, 1, 15) })).TotalRegistros == 0, "Día sin ventas");
+    Check((await service.Resumen(admin.id_usuario, c.id_cliente)).CantidadVentas == 35, "Resumen mantiene todos los movimientos del cliente");
+    await Reject<ValidationException>(() => service.Historial(admin.id_usuario, c.id_cliente, new() { Fecha = new(2026, 1, 31) }));
+    await Reject<ValidationException>(() => service.Historial(admin.id_usuario, c.id_cliente, new() { Fecha = DateOnly.MaxValue }));
+    var beforeEdit = await service.Resumen(admin.id_usuario, c.id_cliente);
+    var creation = c.fecha_Creacion;
+    var updated = await service.Actualizar(admin.id_usuario, c.id_cliente, new() { Nombre = "  Nombre editado  ", Apellido = " Apellido nuevo ",
+        Nit = "12345", Dpi = "1234567890123", Telefono = "55555555", CorreoElectronico = " prueba@example.com ", Direccion = " Zona 2 " });
+    Check(updated.Cliente.nombre == "Nombre editado" && updated.Cliente.apellido == "Apellido nuevo" && updated.Cliente.telefono == "55555555"
+        && updated.Cliente.direccion == "Zona 2" && updated.Cliente.correo_electronico == "prueba@example.com", "Edita y recorta campos");
+    Check(updated.Cliente.id_Cliente == c.id_cliente && updated.CantidadVentas == beforeEdit.CantidadVentas
+        && updated.TotalComprado == beforeEdit.TotalComprado && updated.SaldoPendiente == beforeEdit.SaldoPendiente
+        && c.fecha_Creacion == creation && c.estado, "Conserva ID, historial, saldos, fecha de creación y estado");
+    Check((await service.Listar(admin.id_usuario, new() { Buscar = "Nombre editado" })).Items.Single().IdCliente == c.id_cliente, "Listado refleja edición");
+    var cleared = await service.Actualizar(admin.id_usuario, empty.id_cliente, new() { Nombre = "Sin opcionales", Apellido = " ", Direccion = " " });
+    Check(!cleared.Estado && cleared.Cliente.apellido == null && cleared.Cliente.direccion == null, "Vacíos se normalizan y conserva inactivo");
+    foreach (var invalid in new ActualizarClienteDto[] { new(), new() { Nombre = " " }, new() { Nombre = new string('a', 101) },
+        new() { Nombre = "Válido", Telefono = new string('x', 31) }, new() { Nombre = "Válido", CorreoElectronico = "invalido" },
+        new() { Nombre = "Válido", Direccion = new string('x', 201) } })
+        await Reject<ValidationException>(() => service.Actualizar(admin.id_usuario, c.id_cliente, invalid));
+    Check((await service.Resumen(admin.id_usuario, c.id_cliente)).Cliente.nombre == "Nombre editado", "Datos inválidos no modifican el cliente");
+    foreach (var telefono in new[] { "1", "1234567", "123456789", "abcdefgh", "1234567a", "+50212345678", "1234 5678", "１２３４５６７８", " " })
+        await Reject<ValidationException>(() => service.Actualizar(admin.id_usuario, c.id_cliente, new() { Nombre = "No guardar", Telefono = telefono }));
+    Check((await service.Resumen(admin.id_usuario, c.id_cliente)).Cliente.telefono == "55555555", "Teléfono inválido no modifica el registro");
+    var sinTelefono = await service.Actualizar(admin.id_usuario, empty.id_cliente, new() { Nombre = "Sin teléfono", Telefono = "" });
+    Check(sinTelefono.Cliente.telefono == null, "Teléfono vacío es opcional");
+    foreach (var invalido in new[] { "abc", "123A", "123K", "123-4", "1.2", "1e3", "１２３", " " })
+    {
+        await Reject<ValidationException>(() => service.Actualizar(admin.id_usuario, c.id_cliente, new() { Nombre = "No guardar", Dpi = invalido }));
+        await Reject<ValidationException>(() => service.Actualizar(admin.id_usuario, c.id_cliente, new() { Nombre = "No guardar", Nit = invalido }));
+    }
+    var documentos = await service.Actualizar(admin.id_usuario, empty.id_cliente, new() { Nombre = "Documentos", Dpi = "0012345678901", Nit = "0012345" });
+    Check(documentos.Cliente.dpi == "0012345678901" && documentos.Cliente.nit == "0012345", "Documentos numéricos conservan ceros iniciales");
+    var vacios = await service.Actualizar(admin.id_usuario, empty.id_cliente, new() { Nombre = "Documentos", Dpi = "", Nit = "" });
+    Check(vacios.Cliente.dpi == null && vacios.Cliente.nit == null, "Documentos vacíos opcionales");
+    await Reject<UnauthorizedAccessException>(() => service.Actualizar(seller.id_usuario, c.id_cliente, new() { Nombre = "No permitido" }));
+    await Reject<KeyNotFoundException>(() => service.Actualizar(admin.id_usuario, int.MaxValue, new() { Nombre = "No existe" }));
+    await Reject<ValidationException>(() => service.Actualizar(admin.id_usuario, 0, new() { Nombre = "No válido" }));
     admin.estado = false; await db.SaveChangesAsync();
+    await Reject<UnauthorizedAccessException>(() => service.Actualizar(admin.id_usuario, c.id_cliente, new() { Nombre = "No permitido" }));
     await Reject<UnauthorizedAccessException>(() => service.Listar(admin.id_usuario, new()));
     await tx.RollbackAsync();
     Console.WriteLine($"{passed} comprobaciones de clientes aprobadas en PostgreSQL; datos de prueba revertidos.");
+}
+
+sealed class FixedClock : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => new(2026, 1, 31, 5, 30, 0, TimeSpan.Zero);
 }

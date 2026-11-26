@@ -1,3 +1,5 @@
+import { EditClientDialog } from './EditClientDialog'
+import { lastSevenSaleDays } from '../../sales/utils/saleDateRange'
 import { ClientSaleDetails } from './ClientSaleDetails'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth'
@@ -62,27 +64,30 @@ export function ClientsPage() {
   </section>
 }
 function ClientDetails({ id, token, fail, onBack }: { id: number; token: string; fail: (e: unknown) => string; onBack: () => void }) {
+  const [editing, setEditing] = useState(false)
   const [selectedSale, setSelectedSale] = useState<ClientSale | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const [summary, setSummary] = useState<ClientSummary | null>(null)
   const [sales, setSales] = useState<ClientSalesPage | null>(null)
   const [page, setPage] = useState(1)
+  const [selectedDate, setSelectedDate] = useState('')
+  const today = lastSevenSaleDays().hasta
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   useEffect(() => { heading.current?.focus() }, [])
   useEffect(() => {
     const abort = new AbortController()
     setLoading(true); setError(''); setSales(null)
-    void Promise.all([loadClientSummary(token, id, abort.signal), loadClientSales(token, id, page, abort.signal)])
+    void Promise.all([loadClientSummary(token, id, abort.signal), loadClientSales(token, id, page, abort.signal, selectedDate)])
       .then(([s, h]) => { if (!abort.signal.aborted) { setSummary(s); setSales(h) } })
       .catch(e => { if (!abort.signal.aborted) { setSummary(null); setError(fail(e)) } })
       .finally(() => { if (!abort.signal.aborted) setLoading(false) })
     return () => abort.abort()
-  }, [id, token, page, fail])
+  }, [id, token, page, selectedDate, fail])
   const c = summary?.cliente
   return <section className="clients-panel" aria-label="Detalle del cliente">
     <div className="clients-toolbar clients-detail-heading">
-    <h2 ref={heading} tabIndex={-1}>{c ? [c.nombre, c.apellido].filter(Boolean).join(' ') : 'Detalle del cliente'}</h2><button type="button" className="clients-back-icon" onClick={onBack} aria-label="Regresar a clientes" title="Regresar a clientes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7M5 12h14" /></svg></button></div>
+    <h2 ref={heading} tabIndex={-1}>{c ? [c.nombre, c.apellido].filter(Boolean).join(' ') : 'Detalle del cliente'}</h2>{summary && !loading && <button type="button" className="clients-edit-trigger" onClick={() => setEditing(true)} aria-haspopup="dialog">Editar</button>}<button type="button" className="clients-back-icon" onClick={onBack} aria-label="Regresar a clientes" title="Regresar a clientes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7M5 12h14" /></svg></button></div>
     {error && <p role="alert">{error}</p>}
     {loading && <p role="status">Cargando historial…</p>}
     {summary && c && <>
@@ -91,12 +96,15 @@ function ClientDetails({ id, token, fail, onBack }: { id: number; token: string;
         <article><span>Total pagado</span><strong>{money.format(summary.totalPagado)}</strong></article>
         <article><span>Saldo pendiente</span><strong>{money.format(summary.saldoPendiente)}</strong></article></div>
     </>}
-    {!loading && sales && <><h3>Historial de ventas</h3>{sales.items.length === 0 ? <p>No hay ventas en esta página.</p> : <div className="clients-table-scroll"><table>
+    <div className="clients-history-toolbar"><div className="clients-history-title"><h3><span className="clients-history-desktop-title">Historial de ventas</span><span className="clients-history-mobile-title">Historial</span></h3>{!selectedDate && <span className="clients-history-period">últimos 30 días</span>}</div><label className="clients-history-date" title={selectedDate || 'Filtrar por fecha'}><span className="clients-history-date-label">Fecha</span><svg className="clients-history-calendar-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></svg><input type="date" aria-label="Filtrar ventas del cliente por fecha" onClick={e => { if (window.matchMedia('(max-width: 800px)').matches) { try { e.currentTarget.showPicker?.() } catch { /* El control nativo sigue disponible. */ } } }} value={selectedDate} max={today} onChange={e => { const value = e.target.value; if (value && value > today) return; setSelectedDate(value); setPage(1); setSelectedSale(null) }} /></label></div>
+
+    {!loading && sales && <>{sales.items.length === 0 ? <p>No hay ventas para la fecha o período seleccionado.</p> : <div className="clients-table-scroll"><table>
       <thead><tr><th>Venta</th><th>Fecha</th><th>Responsable</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Estado</th></tr></thead>
       <tbody>{sales.items.map(s => <tr key={s.idVenta} className="clients-sale-row" tabIndex={0} aria-haspopup="dialog" aria-label={`Ver detalles de venta ${s.idVenta}`} onClick={event => { event.currentTarget.focus(); setSelectedSale(s) }} onKeyDown={event => { if (event.target === event.currentTarget && !event.nativeEvent.isComposing && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setSelectedSale(s) } }}><td data-label="Venta">#{s.idVenta}</td><td data-label="Fecha">{date.format(new Date(s.fecha))}</td><td data-label="Responsable"><span className="clients-responsible-full">{s.responsable}</span><span className="clients-responsible-name">{s.nombreResponsable ?? s.responsable}</span></td>
         <td data-label="Total">{money.format(s.total)}</td><td data-label="Pagado">{money.format(s.pagado)}</td><td data-label="Saldo">{money.format(s.saldo)}</td><td data-label="Estado">{s.estado}</td>
         </tr>)}</tbody>
     </table></div>}<Pages page={page} more={sales.hayMas} loading={loading} onChange={setPage} /></>}
+    {editing && summary && <EditClientDialog summary={summary} token={token} fail={fail} onClose={() => setEditing(false)} onSaved={updated => { setSummary(updated); setEditing(false) }} />}
     {selectedSale && <ClientSaleDetails key={selectedSale.idVenta} sale={selectedSale} clientName={c ? [c.nombre, c.apellido].filter(Boolean).join(' ') : ''} token={token} fail={fail} onClose={() => setSelectedSale(null)} />}
   </section>
 }

@@ -26,6 +26,10 @@ public sealed class ClientesController(HistorialClienteService service) : Contro
         => service.Resumen(Usuario(), idCliente, ct);
 
     [HttpGet("{idCliente}/ventas")]
-    public Task<ClienteVentasPagina> Historial(int idCliente, [FromQuery] PaginaClientesFiltro filtro, CancellationToken ct)
+    public Task<ClienteVentasPagina> Historial(int idCliente, [FromQuery] HistorialClientesFiltro filtro, CancellationToken ct)
         => service.Historial(Usuario(), idCliente, filtro, ct);
+
+    [HttpPut("{idCliente}")]
+    public Task<ClienteResumen> Actualizar(int idCliente, [FromBody] ActualizarClienteDto datos, CancellationToken ct)
+        => service.Actualizar(Usuario(), idCliente, datos, ct);
 }

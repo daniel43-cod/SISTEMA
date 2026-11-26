@@ -43,6 +43,19 @@ export async function loadClients(token: string, pagina: number, buscar: string,
 export async function loadClientSummary(token: string, clientId: number, signal?: AbortSignal) {
   return parseClientSummary(await requestJson(`/clientes/${clientId}/resumen`, { token, signal }), clientId)
 }
-export async function loadClientSales(token: string, clientId: number, pagina: number, signal?: AbortSignal) {
-  return parseClientSales(await requestJson(`/clientes/${clientId}/ventas?pagina=${pagina}&tamanoPagina=30`, { token, signal }), clientId)
+export async function loadClientSales(token: string, clientId: number, pagina: number, signal?: AbortSignal, fecha?: string) {
+  const query = new URLSearchParams({ pagina: String(pagina), tamanoPagina: '30' }); if (fecha) query.set('fecha', fecha)
+  return parseClientSales(await requestJson(`/clientes/${clientId}/ventas?${query}`, { token, signal }), clientId)
+}
+
+export type ClientEdit = { nombre: string; apellido: string; nit: string; dpi: string; telefono: string; correoElectronico: string; direccion: string }
+export const clientPhoneInput = (value: string) => value.replace(/[^0-9]/g, '').slice(0, 8)
+export const validClientPhone = (value: string) => value === '' || /^[0-9]{8}$/.test(value)
+export const clientDocumentInput = (value: string) => value.replace(/[^0-9]/g, '').slice(0, 20)
+export const validClientDocument = (value: string) => /^[0-9]{0,20}$/.test(value)
+export async function updateClient(token: string, clientId: number, datos: ClientEdit) {
+  if (!validClientPhone(datos.telefono)) throw new ApiError('El teléfono debe tener exactamente 8 dígitos o quedar vacío.', 400)
+  if (!validClientDocument(datos.dpi)) throw new ApiError('El DPI debe contener únicamente números o quedar vacío.', 400)
+  if (!validClientDocument(datos.nit)) throw new ApiError('El NIT debe contener únicamente números o quedar vacío.', 400)
+  return parseClientSummary(await requestJson(`/clientes/${clientId}`, { method: 'PUT', token, body: datos, validationMessages: true }), clientId)
 }

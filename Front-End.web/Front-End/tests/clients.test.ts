@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseClients, parseClientSummary, parseClientSales, loadClients, loadClientSummary, loadClientSales } from '../src/features/clients/api/clientsApi.ts'
+import { parseClients, parseClientSummary, parseClientSales, updateClient, clientPhoneInput, validClientPhone, clientDocumentInput, validClientDocument, loadClients, loadClientSummary, loadClientSales } from '../src/features/clients/api/clientsApi.ts'
 import { getStaffNavigation } from '../src/app/navigation/navigationItems.ts'
 
 const client = { idCliente: 1, nombre: 'María López', nit: null, telefono: '55555555', direccion: 'Zona 1', estado: true }
@@ -55,6 +55,9 @@ test('Clientes: usa rutas administrativas y transmite cancelación y búsqueda',
     assert.ok(calls[0].includes('tamanoPagina=30') && calls[0].includes('Mar%C3%ADa+%26+L%C3%B3pez'))
     assert.ok(calls[1].includes('/clientes/1/resumen'))
     assert.ok(calls[2].includes('/clientes/1/ventas?pagina=1'))
+    assert.ok(!calls[2].includes('fecha='))
+    await loadClientSales('token', 1, 1, abort.signal, '2026-11-01')
+    assert.ok(calls[3].includes('fecha=2026-11-01'))
     abort.abort()
     assert.ok(signals.every(s => s.aborted))
   } finally { globalThis.fetch = original }
@@ -65,4 +68,50 @@ test('Clientes: acepta API anterior sin dirección y normaliza a null', () => {
   assert.equal(parseClients({ ...list, items: [previous] }).items[0].direccion, null)
   assert.equal(parseClients(list).items[0].direccion, direccion)
   assert.throws(() => parseClients({ ...list, items: [{ ...client, direccion: 123 }] }))
+})
+
+test('Clientes: edición usa PUT autenticado y devuelve resumen del mismo cliente', async () => {
+  const original = globalThis.fetch
+  const datos = { nombre: 'María', apellido: 'López', nit: '', dpi: '', telefono: '55555555', correoElectronico: '', direccion: 'Zona 1' }
+  globalThis.fetch = (async (input, init) => {
+    assert.ok(String(input).endsWith('/clientes/1'))
+    assert.equal(init?.method, 'PUT')
+    assert.equal((init?.headers as Record<string, string>).Authorization, 'Bearer token')
+    assert.deepEqual(JSON.parse(init?.body as string), datos)
+    return new Response(JSON.stringify(summary), { status: 200 })
+  }) as typeof fetch
+  try { assert.equal((await updateClient('token', 1, datos)).cliente.id_cliente, 1) }
+  finally { globalThis.fetch = original }
+})
+test('Clientes: teléfono admite solo ocho dígitos o vacío', () => {
+  for (const value of ['', '12345678', '00123456']) assert.ok(validClientPhone(value))
+  for (const value of ['1', '1234567', '123456789', '1234567a', 'abcdefgh', '+50212345678', '1234 5678', '１２３４５６７８', ' ']) assert.ok(!validClientPhone(value))
+  assert.equal(clientPhoneInput('12abc34'), '1234')
+  assert.equal(clientPhoneInput('1234567890'), '12345678')
+  assert.equal(clientPhoneInput(''), '')
+})
+test('Clientes: teléfono inválido impide enviar la edición', async () => {
+  const original = globalThis.fetch
+  let calls = 0
+  globalThis.fetch = (async () => { calls++; throw new Error('No debe enviarse') }) as typeof fetch
+  try {
+    await assert.rejects(updateClient('token', 1, { nombre: 'Cliente', apellido: '', nit: '', dpi: '', telefono: '123', correoElectronico: '', direccion: '' }), /8 dígitos/)
+    assert.equal(calls, 0)
+  } finally { globalThis.fetch = original }
+})
+test('Clientes: DPI y NIT solo numéricos u opcionales conservan ceros iniciales', () => {
+  for (const value of ['', '0012345', '1234567890123']) assert.ok(validClientDocument(value))
+  for (const value of ['abc', '123A', '123K', '123-4', '1.2', '1e3', '１２３', ' ', '1'.repeat(21)]) assert.ok(!validClientDocument(value))
+  assert.equal(clientDocumentInput('0012abc34'), '001234')
+})
+test('Clientes: documentos inválidos impiden enviar edición', async () => {
+  const original = globalThis.fetch
+  let calls = 0
+  globalThis.fetch = (async () => { calls++; throw new Error('No enviar') }) as typeof fetch
+  const datos = { nombre: 'Cliente', apellido: '', nit: '', dpi: '', telefono: '', correoElectronico: '', direccion: '' }
+  try {
+    await assert.rejects(updateClient('token', 1, { ...datos, dpi: '123A' }), /DPI/)
+    await assert.rejects(updateClient('token', 1, { ...datos, nit: '123K' }), /NIT/)
+    assert.equal(calls, 0)
+  } finally { globalThis.fetch = original }
 })
